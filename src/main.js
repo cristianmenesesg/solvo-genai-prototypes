@@ -1,5 +1,5 @@
 import './chrome.css'
-import { products, findProduct, findPrototype, hub, brands } from './catalog.js'
+import { products, findProduct, findPrototype, hub } from './catalog.js'
 
 const app = document.getElementById('app')
 const brandLink = document.getElementById('brand-tokens')
@@ -12,16 +12,6 @@ const topbar = (right = '') => `
     <a class="brand" href="#/"><span class="dot"></span> ${esc(hub.nombre)}</a>
     <div>${right}</div>
   </div>`
-
-const brandSwitch = (current) => `
-  <label class="brand-switch">brand (preview)
-    <select id="brandSel">${brands.map((b) => `<option value="${b}" ${b === current ? 'selected' : ''}>${b}</option>`).join('')}</select>
-  </label>`
-
-function wireBrandSel() {
-  const sel = document.getElementById('brandSel')
-  if (sel) sel.addEventListener('change', () => setBrand(sel.value))
-}
 
 function renderHome() {
   setBrand(hub.brand)
@@ -57,14 +47,13 @@ function renderProduct(pid) {
         <span class="badge">${x.versions.length} ${x.versions.length === 1 ? 'vista' : 'versiones'}</span>
       </div>
     </a>`).join('')
-  app.innerHTML = topbar(brandSwitch(p.designSystem)) + `
+  app.innerHTML = topbar() + `
     <div class="wrap">
       <div class="crumbs"><a href="#/">Productos</a><span class="sep">/</span><span>${esc(p.nombre)}</span></div>
       <div class="hero"><h1>${esc(p.nombre)}</h1><p>${esc(p.descripcion)}</p></div>
       <div class="section-title">Prototipos</div>
       <div class="grid">${cards}</div>
     </div>`
-  wireBrandSel()
 }
 
 function renderPrototype(pid, protoId) {
@@ -75,7 +64,7 @@ function renderPrototype(pid, protoId) {
   const tabs = x.versions.length > 1
     ? `<div class="tabs">${x.versions.map((v, i) => `<button class="tab ${i === 0 ? 'active' : ''}" data-i="${i}">${esc(v.label)}</button>`).join('')}</div>`
     : ''
-  app.innerHTML = topbar(brandSwitch(p.designSystem)) + `
+  app.innerHTML = topbar() + `
     <div class="wrap">
       <div class="crumbs"><a href="#/">Productos</a><span class="sep">/</span><a href="#/p/${p.id}">${esc(p.nombre)}</a><span class="sep">/</span><span>${esc(x.nombre)}</span></div>
       <div class="proto-head">
@@ -100,7 +89,6 @@ function renderPrototype(pid, protoId) {
   }
   app.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => setVer(Number(t.dataset.i))))
   setVer(0)
-  wireBrandSel()
 }
 
 function route() {

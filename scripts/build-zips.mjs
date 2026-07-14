@@ -44,8 +44,12 @@ ${proto.notas ? `\n> ${proto.notas}\n` : ''}`
 }
 
 async function main() {
-  await fs.rm(OUT_DL, { recursive: true, force: true })
+  // In-place: sobrescribir + podar (no rm -rf del dir servido — ver prep).
   await fs.mkdir(OUT_DL, { recursive: true })
+  const expected = new Set(products.flatMap((p) => p.prototipos.map((x) => `${x.bundle}.zip`)))
+  for (const e of await fs.readdir(OUT_DL)) {
+    if (!expected.has(e)) await fs.rm(path.join(OUT_DL, e), { force: true })
+  }
   let n = 0
   for (const prod of products) {
     for (const proto of prod.prototipos) {

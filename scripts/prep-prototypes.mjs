@@ -25,57 +25,6 @@ const LOGO_FILE = {
   softgic: 'Softgic_Logo_Color-scaled.png',
 }
 
-// :root re-mapeado para las apps con design system propio (oscuro/Inter).
-// Mapea sus variables al contrato; omite --text-*/--radius-*/--shadow-* para
-// que fluya el valor del brand (evita colisiones de nombre).
-const APP_ROOT = `:root {
-  /* Re-mapeado al contrato del design system (theming swappable por producto). */
-  --bg-primary: var(--bg-body);
-  --bg-secondary: var(--bg-muted);
-  --bg-tertiary: var(--bg-muted);
-  --bg-card: var(--bg-surface);
-  --bg-hover: var(--bg-muted);
-  --border-color: var(--border-default);
-  --border-light: var(--border-strong, var(--border-default));
-  --accent-primary: var(--color-primary);
-  --accent-secondary: var(--color-secondary);
-  --accent-success: var(--color-success);
-  --accent-warning: var(--color-warning);
-  --accent-danger: var(--color-error);
-  --accent-info: var(--color-info);
-  --font-family: var(--font-body);
-  --font-size-xs: var(--text-xs);
-  --font-size-sm: var(--text-sm);
-  --font-size-base: var(--text-base);
-  --font-size-lg: var(--text-lg);
-  --font-size-xl: var(--text-xl);
-  --font-size-2xl: var(--text-2xl);
-  --font-size-3xl: var(--text-3xl);
-  --spacing-xs: var(--space-1);
-  --spacing-sm: var(--space-2);
-  --spacing-md: var(--space-4);
-  --spacing-lg: var(--space-6);
-  --spacing-xl: var(--space-8);
-  --spacing-2xl: var(--space-12);
-  --sidebar-width: 220px;
-  --header-height: 56px;
-}`
-
-// Fixes para apps re-mapeadas de oscuro→claro: valores hardcodeados que
-// asumían fondo oscuro y rompen en claro.
-function lightFixes(css) {
-  // blanco-translúcido (bordes/hover/divisores) → negro-translúcido (visible en claro)
-  css = css.replace(/rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*(0?\.\d+)\s*\)/g, 'rgba(0,0,0,$1)')
-  // status colors brillantes (pensados para oscuro) → variante más oscura (contraste en claro)
-  const map = {
-    '#60a5fa': '#2563eb', '#4ade80': '#16a34a', '#22c55e': '#16a34a',
-    '#f87171': '#dc2626', '#c084fc': '#9333ea', '#facc15': '#ca8a04',
-    '#fbbf24': '#ca8a04', '#fb923c': '#ea580c', '#22d3ee': '#0891b2',
-  }
-  for (const [a, b] of Object.entries(map)) css = css.split(a).join(b)
-  return css
-}
-
 const exists = (p) => fs.access(p).then(() => true).catch(() => false)
 
 async function copyDir(src, dst) {
@@ -98,10 +47,53 @@ async function listHtml(dir) {
   return out
 }
 
+// Sync IN-PLACE: sobrescribe y poda, sin borrar/recrear carpetas que
+// siguen existiendo. Importante para `vite dev`: un rm -rf del árbol
+// servido mata el watcher de public/ y el server queda ciego (404s)
+// hasta reiniciar. Generated files (tokens.css, logo.png, ...) se podan
+// aquí y se regeneran después en el mismo run.
+async function walkRel(dir, base = dir) {
+  const out = []
+  for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+    if (e.name === '.git' || e.name.endsWith('.zip')) continue
+    const p = path.join(dir, e.name)
+    if (e.isDirectory()) out.push(...(await walkRel(p, base)))
+    else out.push(path.relative(base, p))
+  }
+  return out
+}
+
+async function removeEmptyDirs(dir, isRoot = true) {
+  for (const e of await fs.readdir(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) await removeEmptyDirs(path.join(dir, e.name), false)
+  }
+  if (!isRoot && (await fs.readdir(dir)).length === 0) await fs.rmdir(dir)
+}
+
+async function syncBundle(src, dst) {
+  if (await exists(dst)) {
+    const srcSet = new Set(await walkRel(src))
+    for (const rel of await walkRel(dst)) {
+      if (!srcSet.has(rel)) await fs.rm(path.join(dst, rel), { force: true })
+    }
+    await removeEmptyDirs(dst)
+  }
+  await copyDir(src, dst)
+}
+
+async function pruneStaleChildren(root, expected) {
+  if (!(await exists(root))) return
+  for (const e of await fs.readdir(root)) {
+    if (!expected.has(e)) await fs.rm(path.join(root, e), { recursive: true, force: true })
+  }
+}
+
 async function main() {
-  await fs.rm(OUT_PROTOS, { recursive: true, force: true })
-  await fs.rm(OUT_DS, { recursive: true, force: true })
   await fs.mkdir(OUT_PROTOS, { recursive: true })
+  // podar bundles que ya no están en el catálogo (sí es seguro: dejan de existir)
+  const expectedBundles = new Set(products.flatMap((p) => p.prototipos.map((x) => x.bundle)))
+  await pruneStaleChildren(OUT_PROTOS, expectedBundles)
+  await pruneStaleChildren(OUT_DS, new Set([...brands, 'contract.css']))
 
   // 1) Vendorizar design system: contract + tokens por brand + logo
   await fs.mkdir(OUT_DS, { recursive: true })
@@ -127,20 +119,11 @@ async function main() {
     for (const proto of prod.prototipos) {
       const src = path.join(SRC_PROTOS, proto.bundle)
       const dst = path.join(OUT_PROTOS, proto.bundle)
-      await copyDir(src, dst)
-
-      // Flatten source/ (caso landing)
-      const srcDir = path.join(dst, 'source')
-      if (await exists(srcDir)) {
-        for (const e of await fs.readdir(srcDir)) {
-          await fs.rename(path.join(srcDir, e), path.join(dst, e))
-        }
-        await fs.rm(srcDir, { recursive: true, force: true })
-      }
+      await syncBundle(src, dst)
 
       const htmls = await listHtml(dst)
       const combined = (await Promise.all(htmls.map((h) => fs.readFile(h, 'utf8')))).join('\n')
-      const needsTokens = /tokens\.css|design-system/.test(combined) || proto.remapApp
+      const needsTokens = /tokens\.css|design-system/.test(combined)
 
       // tokens.css local del bundle = contrato + brand del producto
       if (needsTokens) await fs.writeFile(path.join(dst, 'tokens.css'), brandTokens)
@@ -154,19 +137,6 @@ async function main() {
         if (!(await exists(expected))) await fs.copyFile(logoSrc, expected)
       }
 
-      // app re-mapeada: reescribir su :root, aplicar fixes de claro, e
-      // inyectar tokens.css antes de styles.css (más abajo).
-      if (proto.remapApp) {
-        for (const cf of await fs.readdir(dst)) {
-          if (!cf.endsWith('.css') || cf === 'tokens.css') continue
-          const cp = path.join(dst, cf)
-          let css = await fs.readFile(cp, 'utf8')
-          css = css.replace(/:root\s*\{[^}]*\}/, APP_ROOT)
-          css = lightFixes(css)
-          await fs.writeFile(cp, css)
-        }
-      }
-
       // Transformar cada HTML
       for (const h of htmls) {
         let html = await fs.readFile(h, 'utf8')
@@ -175,10 +145,6 @@ async function main() {
         // logos del design-system o assets/img -> local logo.png
         html = html.replace(/((?:src|href)=["'])[^"']*design-system\/[^"']*logos\/[^"']+\.png(["'])/g, '$1logo.png$2')
         html = html.replace(/((?:src|href)=["'])[^"']*assets\/img\/[^"']*\.png(["'])/g, '$1logo.png$2')
-        // apps: inyectar tokens.css al inicio del <head>
-        if (proto.remapApp) {
-          html = html.replace(/<head(\s[^>]*)?>/i, (m) => `${m}\n  <link rel="stylesheet" href="tokens.css" />`)
-        }
         await fs.writeFile(h, html)
       }
       count++
