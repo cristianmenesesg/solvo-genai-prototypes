@@ -4,8 +4,8 @@
    ======================================================================== */
 
 /* ---------- Badges de rol (faltan en styles.css) ---------- */
-.badge-role-recruiter { background: rgba(59,130,246,0.15); color: #60a5fa; }
-.badge-role-admin     { background: rgba(192,132,252,0.15); color: #c084fc; }
+.badge-role-recruiter { background: rgba(59,130,246,0.15); color: #2563eb; }
+.badge-role-admin     { background: rgba(192,132,252,0.15); color: #9333ea; }
 
 /* ---------- Tag input (keywords) en filters-bar ---------- */
 .tagbox {
@@ -14,7 +14,7 @@
   background: var(--bg-tertiary); border: 1px solid var(--border-color);
   border-radius: var(--radius-md); padding: 5px 8px;
 }
-.tagbox:focus-within { border-color: var(--text-secondary); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+.tagbox:focus-within { border-color: var(--text-secondary); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
 .tagbox input { background: none; border: none; outline: none; color: var(--text-primary);
   font-family: var(--font-family); font-size: var(--font-size-sm); flex: 1; min-width: 80px; padding: 2px; }
 .tagbox input::placeholder { color: var(--text-muted); }
@@ -46,7 +46,7 @@
 .cand-row { animation: tp-rowin .3s ease both; }
 .cand-row.is-selected { background: var(--bg-hover); }
 @keyframes tp-rowin { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-.cand-check input { width: 16px; height: 16px; accent-color: #60a5fa; cursor: pointer; }
+.cand-check input { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
 .cand-name { display: flex; align-items: center; gap: 10px; }
 .cand-avatar {
   width: 32px; height: 32px; border-radius: var(--radius-full); flex-shrink: 0;
@@ -63,7 +63,7 @@
 }
 .email-cell { font-size: var(--font-size-sm); color: var(--text-primary); }
 .email-cell.email-none { color: var(--text-muted); font-style: italic; }
-.cand-li { color: #60a5fa; font-size: var(--font-size-xs); font-weight: 500; }
+.cand-li { color: #2563eb; font-size: var(--font-size-xs); font-weight: 500; }
 
 .results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); }
 .results-head .table-title { color: var(--text-secondary); font-size: var(--font-size-sm); }
@@ -140,7 +140,7 @@
   border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: var(--spacing-md);
   color: var(--text-muted); transition: border-color .2s, box-shadow .2s;
 }
-.geo-search:focus-within { border-color: var(--text-secondary); box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+.geo-search:focus-within { border-color: var(--text-secondary); box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
 .geo-search svg { flex-shrink: 0; }
 .geo-search-input {
   flex: 1; min-width: 0; background: none; border: none; outline: none;
@@ -203,5 +203,5 @@
 .toggle-pill input { display: none; }
 .toggle-pill-track { width: 40px; height: 22px; background: var(--border-light); border-radius: 11px; position: relative; transition: background .25s ease; flex-shrink: 0; }
 .toggle-pill-knob { position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .25s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-.toggle-pill input:checked + .toggle-pill-track { background: #22c55e; }
+.toggle-pill input:checked + .toggle-pill-track { background: #16a34a; }
 .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob { transform: translateX(18px); }

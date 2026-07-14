@@ -681,7 +681,7 @@ tr:last-child td {
 .form-select:focus {
   outline: none;
   border-color: var(--text-secondary);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
 }
 
 .form-input::placeholder {
@@ -804,7 +804,7 @@ tr:last-child td {
 }
 
 .badge-success {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0,0,0,0.1);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
 }
@@ -1094,7 +1094,7 @@ tr:last-child td {
 .login-error {
   background-color: #2a1a1a;
   border: none;
-  border-left: 3px solid #f87171;
+  border-left: 3px solid #dc2626;
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
   color: #fca5a5;
@@ -1399,7 +1399,7 @@ tr:last-child td {
 .research-toggle-btn {
   background: none;
   border: none;
-  color: #60a5fa;
+  color: #2563eb;
   font-size: 13px;
   cursor: pointer;
   padding: 4px 0;
@@ -1424,27 +1424,27 @@ tr:last-child td {
 }
 
 .char-count-green {
-  color: #22c55e;
+  color: #16a34a;
 }
 
 .char-count-yellow {
-  color: #fbbf24;
+  color: #ca8a04;
 }
 
 .char-count-red {
-  color: #f87171;
+  color: #dc2626;
 }
 
 /* Modified field tracking */
 .field-modified {
-  border-color: #60a5fa !important;
+  border-color: #2563eb !important;
   background-color: rgba(96, 165, 250, 0.05);
 }
 
 .modified-counter {
   display: inline-block;
   background: #1a2a3a;
-  color: #60a5fa;
+  color: #2563eb;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 12px;
@@ -1538,21 +1538,21 @@ tr:last-child td {
 
 .badge-pipeline-contacted {
   background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  color: #2563eb;
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .badge-pipeline-proposal,
 .badge-pipeline-initial_appointment_held {
   background-color: rgba(234, 179, 8, 0.15);
-  color: #facc15;
+  color: #ca8a04;
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
 
 .badge-pipeline-won,
 .badge-pipeline-onboarding_started {
   background-color: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  color: #16a34a;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
@@ -1564,7 +1564,7 @@ tr:last-child td {
 
 .badge-pipeline-lost {
   background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -1577,13 +1577,13 @@ tr:last-child td {
 
 .badge-pipeline-prospecting {
   background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  color: #2563eb;
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .badge-pipeline-engaged {
   background-color: rgba(6, 182, 212, 0.15);
-  color: #22d3ee;
+  color: #0891b2;
   border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
@@ -1885,7 +1885,7 @@ tr:last-child td {
 .form-textarea:focus {
   outline: none;
   border-color: var(--text-secondary);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
 }
 
 .form-section {
@@ -2101,15 +2101,15 @@ tr:last-child td {
 }
 
 .toast-success {
-  border-left: 3px solid #4ade80;
+  border-left: 3px solid #16a34a;
 }
 
 .toast-error {
-  border-left: 3px solid #f87171;
+  border-left: 3px solid #dc2626;
 }
 
 .toast-info {
-  border-left: 3px solid #60a5fa;
+  border-left: 3px solid #2563eb;
 }
 
 @keyframes toast-in {
@@ -2136,7 +2136,7 @@ tr:last-child td {
   font-weight: 500;
   border-radius: var(--radius-sm);
   background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
+  color: #9333ea;
   border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
@@ -2144,7 +2144,7 @@ tr:last-child td {
   width: 12px;
   height: 12px;
   border: 2px solid rgba(168, 85, 247, 0.3);
-  border-top-color: #c084fc;
+  border-top-color: #9333ea;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -2172,13 +2172,13 @@ tr:last-child td {
 
 .research-badge-pending {
   background-color: rgba(251, 191, 36, 0.15);
-  color: #fbbf24;
+  color: #ca8a04;
   border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 .research-badge-completed {
   background-color: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  color: #16a34a;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
@@ -2238,7 +2238,7 @@ tr:last-child td {
 
 /* Button success state */
 .btn-success-state {
-  color: #22c55e !important;
+  color: #16a34a !important;
 }
 
 /* ============================================ */
@@ -2259,27 +2259,27 @@ tr:last-child td {
 
 .badge-role-comercial {
   background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
+  color: #2563eb;
 }
 
 .badge-role-sdr {
   background: rgba(251, 146, 60, 0.15);
-  color: #fb923c;
+  color: #ea580c;
 }
 
 .badge-role-coordinador {
   background: rgba(34, 197, 94, 0.15);
-  color: #22c55e;
+  color: #16a34a;
 }
 
 .badge-role-supervisor {
   background: rgba(34, 211, 238, 0.15);
-  color: #22d3ee;
+  color: #0891b2;
 }
 
 .badge-role-administrador {
   background: rgba(192, 132, 252, 0.15);
-  color: #c084fc;
+  color: #9333ea;
 }
 
 /* === Assignment Popup === */
@@ -2325,7 +2325,7 @@ tr:last-child td {
 }
 .assign-popup-field .btn-restore:hover { background: var(--bg-tertiary); color: var(--text-primary); }
 .assign-popup-note {
-  font-size: 12px; color: #fb923c; margin-top: 4px; padding-left: 2px;
+  font-size: 12px; color: #ea580c; margin-top: 4px; padding-left: 2px;
 }
 .assign-popup-type {
   font-size: 11px; padding: 2px 6px; border-radius: var(--radius-full);
@@ -2358,7 +2358,7 @@ tr:last-child td {
 }
 .assign-slot-type .badge-direct {
   display: inline-block; padding: 1px 5px; border-radius: var(--radius-full);
-  background: rgba(251,146,60,0.15); color: #fb923c; font-size: 10px; font-weight: 600;
+  background: rgba(251,146,60,0.15); color: #ea580c; font-size: 10px; font-weight: 600;
 }
 /* Export button */
 .btn-export {
@@ -2469,7 +2469,7 @@ tr:last-child td {
   border-radius: var(--radius-md);
   padding: 16px 20px;
   margin-bottom: 16px;
-  border-left: 3px solid #60a5fa;
+  border-left: 3px solid #2563eb;
 }
 
 .assignment-card .detail-card-title {
@@ -2530,12 +2530,12 @@ tr:last-child td {
 
 .assignment-inherited {
   background: rgba(59, 130, 246, 0.1);
-  color: #60a5fa;
+  color: #2563eb;
 }
 
 .assignment-override {
   background: rgba(234, 179, 8, 0.1);
-  color: #facc15;
+  color: #ca8a04;
 }
 
 .btn-restore-inherit {
@@ -2553,8 +2553,8 @@ tr:last-child td {
 }
 
 .btn-restore-inherit:hover {
-  border-color: #60a5fa;
-  color: #60a5fa;
+  border-color: #2563eb;
+  color: #2563eb;
 }
 
 /* === Unassigned Text === */
@@ -2574,7 +2574,7 @@ tr:last-child td {
 
 .override-indicator .override-icon {
   font-size: 0.7rem;
-  color: #facc15;
+  color: #ca8a04;
 }
 
 /* === Toggle Switch === */
@@ -2618,12 +2618,12 @@ tr:last-child td {
 
 .toggle-switch input:checked + .toggle-slider {
   background-color: rgba(34, 197, 94, 0.2);
-  border-color: #4ade80;
+  border-color: #16a34a;
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(16px);
-  background-color: #4ade80;
+  background-color: #16a34a;
 }
 
 /* === Admin Roles Page === */

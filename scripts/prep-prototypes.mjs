@@ -61,6 +61,21 @@ const APP_ROOT = `:root {
   --header-height: 56px;
 }`
 
+// Fixes para apps re-mapeadas de oscuro→claro: valores hardcodeados que
+// asumían fondo oscuro y rompen en claro.
+function lightFixes(css) {
+  // blanco-translúcido (bordes/hover/divisores) → negro-translúcido (visible en claro)
+  css = css.replace(/rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*(0?\.\d+)\s*\)/g, 'rgba(0,0,0,$1)')
+  // status colors brillantes (pensados para oscuro) → variante más oscura (contraste en claro)
+  const map = {
+    '#60a5fa': '#2563eb', '#4ade80': '#16a34a', '#22c55e': '#16a34a',
+    '#f87171': '#dc2626', '#c084fc': '#9333ea', '#facc15': '#ca8a04',
+    '#fbbf24': '#ca8a04', '#fb923c': '#ea580c', '#22d3ee': '#0891b2',
+  }
+  for (const [a, b] of Object.entries(map)) css = css.split(a).join(b)
+  return css
+}
+
 const exists = (p) => fs.access(p).then(() => true).catch(() => false)
 
 async function copyDir(src, dst) {
@@ -139,13 +154,16 @@ async function main() {
         if (!(await exists(expected))) await fs.copyFile(logoSrc, expected)
       }
 
-      // app re-mapeada: reescribir su :root e inyectar tokens.css antes de styles.css
+      // app re-mapeada: reescribir su :root, aplicar fixes de claro, e
+      // inyectar tokens.css antes de styles.css (más abajo).
       if (proto.remapApp) {
-        const stylesPath = path.join(dst, 'styles.css')
-        if (await exists(stylesPath)) {
-          let css = await fs.readFile(stylesPath, 'utf8')
+        for (const cf of await fs.readdir(dst)) {
+          if (!cf.endsWith('.css') || cf === 'tokens.css') continue
+          const cp = path.join(dst, cf)
+          let css = await fs.readFile(cp, 'utf8')
           css = css.replace(/:root\s*\{[^}]*\}/, APP_ROOT)
-          await fs.writeFile(stylesPath, css)
+          css = lightFixes(css)
+          await fs.writeFile(cp, css)
         }
       }
 
