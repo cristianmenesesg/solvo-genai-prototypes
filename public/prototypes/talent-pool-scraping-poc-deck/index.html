@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Talent Pool Scraping — POC · Solvo</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: #F5F6F8;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vh, 48px) clamp(20px, 3vw, 40px);
+  }
+
+  /* ============================ HEADER ============================ */
+  .page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    margin-bottom: clamp(16px, 2vh, 24px);
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .page-head .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .page-head .brand .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-secondary);
+  }
+  .page-head .meta {
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .page-head .meta span strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* ============================ BENTO GRID ============================ */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: clamp(12px, 1.5vw, 18px);
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 18px;
+    padding: clamp(20px, 2.4vw, 32px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.4vh, 18px);
+    min-width: 0;
+  }
+  .card.span-12 { grid-column: span 12; }
+  .card.span-8 { grid-column: span 8; }
+  .card.span-7 { grid-column: span 7; }
+  .card.span-6 { grid-column: span 6; }
+  .card.span-5 { grid-column: span 5; }
+  .card.span-4 { grid-column: span 4; }
+
+  .card.hero {
+    background:
+      radial-gradient(ellipse 70% 80% at 100% 0%, rgba(119,90,229,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgba(241,149,86,0.05) 0%, transparent 60%),
+      white;
+    padding: clamp(28px, 3.5vw, 44px);
+  }
+  .card.accent-purple {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+  }
+  .card.accent-purple .eyebrow,
+  .card.accent-purple h3,
+  .card.accent-purple .anchor-rule-strong { color: white; }
+  .card.accent-purple p { color: rgba(255,255,255,0.85); }
+
+  .card.dark {
+    background: #1A1330;
+    border-color: #2A2055;
+    color: white;
+  }
+  .card.dark p { color: rgba(255,255,255,0.7); }
+  .card.dark h2, .card.dark h3, .card.dark h4 { color: white; }
+
+  /* ============================ TYPOGRAPHY ============================ */
+  .eyebrow {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+  }
+  .eyebrow.primary { color: var(--color-primary); }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--text-primary);
+  }
+  h1 {
+    font-size: clamp(28px, 3.4vw, 44px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 22ch;
+  }
+  h2 {
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  h3 { font-size: clamp(16px, 1.4vw, 18px); font-weight: 600; }
+  h4 { font-size: clamp(13px, 1vw, 14px); font-weight: 600; }
+  p {
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+  p.lead {
+    font-size: clamp(14px, 1.1vw, 17px);
+    color: var(--text-primary);
+    max-width: 60ch;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--color-gray-100);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--color-secondary-700);
+  }
+  .card.dark code, .card.accent-purple code {
+    background: rgba(255,255,255,0.12);
+    color: white;
+  }
+
+  /* ============================ HERO ============================ */
+  .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 56px);
+    align-items: center;
+  }
+  .marketplace {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mp-side {
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: white;
+  }
+  .mp-side.ok { border-left: 3px solid var(--color-success); }
+  .mp-side.gap { border-left: 3px solid var(--color-error); background: #FFF7F7; }
+  .mp-side-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .mp-status {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .mp-status.ok { background: var(--color-success-light); color: var(--color-success-dark); }
+  .mp-status.gap { background: var(--color-error-light); color: var(--color-error-dark); }
+  .mp-flow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-weight: 500;
+    flex-wrap: wrap;
+  }
+  .mp-node {
+    padding: 4px 8px;
+    background: var(--color-gray-50);
+    border-radius: 4px;
+    border: 1px solid var(--border-default);
+  }
+  .mp-node.missing {
+    background: var(--color-error-light);
+    border-color: var(--color-error);
+    color: var(--color-error-dark);
+    border-style: dashed;
+  }
+  .mp-arrow { color: var(--color-gray-400); }
+
+  /* ============================ ANCHOR FILTER ============================ */
+  .anchor-rule {
+    padding: 14px 16px;
+    background: var(--color-secondary-50);
+    border-left: 3px solid var(--color-secondary);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--color-secondary-900);
+  }
+  .anchor-rule strong { font-family: var(--font-heading); font-weight: 700; }
+
+  .badge-key {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .badge-key .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #16A34A;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .badge-key .text { font-size: 13px; line-height: 1.5; }
+  .badge-key .text strong { font-family: var(--font-heading); font-weight: 700; }
+
+  /* Sources for anchor */
+  .source-eq {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .source-eq-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.18);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .source-eq-row:last-child { border-bottom: 0; }
+  .source-eq-row .src {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: white;
+  }
+  .source-eq-row .sig {
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* ============================ SOURCES ============================ */
+  .source-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .source-row {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed rgba(17,24,39,0.08);
+  }
+  .source-row:last-child { border-bottom: 0; }
+  .source-name {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+  .source-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .source-tag {
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .source-tag.primary { background: var(--color-secondary); color: white; }
+  .source-tag.secondary { background: var(--color-primary); color: white; }
+
+  /* ============================ SCHEMA PREVIEW ============================ */
+  .schema-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--color-secondary-50);
+    color: var(--color-secondary-800);
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid var(--color-secondary-200);
+    margin-bottom: 6px;
+  }
+  .schema-fields {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .schema-fields .f {
+    font-family: var(--font-mono);
+    color: var(--text-primary);
+    padding: 5px 0;
+    border-bottom: 1px dotted rgba(17,24,39,0.08);
+  }
+  .schema-fields .t {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 5px 0;
+    border-bottom: 1px dotted rgba(17,24,39,0.08);
+    text-align: right;
+  }
+  .schema-fields .f.anchor,
+  .schema-fields .t.anchor {
+    background: var(--color-secondary-50);
+    margin: 0 -4px;
+    padding: 5px 4px;
+    color: var(--color-secondary-800);
+    border-radius: 3px;
+    border-bottom: 1px dotted var(--color-secondary-200);
+  }
+  .schema-fields .badge {
+    display: inline-block;
+    padding: 0 6px;
+    background: var(--color-secondary);
+    color: white;
+    font-family: var(--font-heading);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    border-radius: 2px;
+    text-transform: uppercase;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  /* ============================ MECHANISM CARDS ============================ */
+  .mech-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .mech-bullets .b {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(17,24,39,0.08);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .mech-bullets .b:last-child { border-bottom: 0; }
+  .mech-bullets .b .ic {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-secondary);
+    letter-spacing: 0.04em;
+    background: var(--color-secondary-50);
+    border-radius: 3px;
+    padding: 2px 0;
+    text-align: center;
+    align-self: start;
+  }
+  .mech-bullets.primary .b .ic {
+    color: var(--color-primary);
+    background: var(--color-primary-50);
+  }
+  .mech-bullets .b strong {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .mech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 4px;
+  }
+  .mech-tag {
+    padding: 3px 8px;
+    background: var(--color-gray-100);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+  .mech-tag.solid {
+    background: var(--color-secondary);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .mech-tag.solid.primary {
+    background: var(--color-primary);
+  }
+
+  /* Code preview */
+  .code-preview {
+    background: #0F0A20;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    color: #C7CBE0;
+    overflow-x: auto;
+  }
+  .code-preview .ln { color: #6B6890; user-select: none; }
+  .code-preview .k { color: #B8AEFF; }
+  .code-preview .s { color: #F9C28A; }
+  .code-preview .p { color: #779FFF; }
+  .code-preview .c { color: #6B6890; font-style: italic; }
+  .code-preview .anchor { color: #FFE0A0; font-weight: 600; }
+  .code-preview pre { margin: 0; white-space: pre; }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .code-header .label-mini {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .code-header .source-pill {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    background: var(--color-gray-100);
+    color: var(--text-secondary);
+    border-radius: 3px;
+  }
+
+  /* ============================ PARAMS CALLOUT ============================ */
+  .params-callout {
+    background: var(--color-gray-50);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 4px;
+  }
+  .params-head {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+  }
+  .params-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px 24px;
+  }
+  .param .k {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+  }
+  .param .v {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+  .param .v code {
+    font-size: 11px;
+    padding: 1px 5px;
+  }
+
+  /* ============================ PIPELINE CONVERGE ============================ */
+  .pipe-upstream {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .pipe-upstream .pipe-node {
+    width: 100%;
+    max-width: 540px;
+  }
+  .pipe-branch-label {
+    grid-column: 1 / -1;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 4px;
+    margin-bottom: -4px;
+  }
+  .pipe {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 20px 16px;
+    position: relative;
+  }
+  .pipe-branch {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pipe-branch-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--color-gray-50);
+    border-radius: 6px;
+    border-left: 3px solid var(--color-secondary);
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .pipe-branch.primary .pipe-branch-head { border-left-color: var(--color-primary); }
+  .pipe-branch-head .pill {
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--color-secondary);
+    color: white;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .pipe-branch.primary .pipe-branch-head .pill { background: var(--color-primary); }
+  .pipe-node {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .pipe-node .sid {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-secondary);
+    letter-spacing: 0.06em;
+    padding-top: 1px;
+  }
+  .pipe-branch.primary .pipe-node .sid { color: var(--color-primary); }
+  .pipe-node .sname {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .pipe-node .sdesc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .pipe-node .sdesc code {
+    font-size: 0.9em;
+    padding: 1px 4px;
+  }
+  .pipe-merge {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-top: 4px;
+  }
+  .pipe-arrows {
+    width: 100%;
+    height: 32px;
+    position: relative;
+  }
+  .pipe-arrows svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .pipe-anchor {
+    background: var(--color-secondary);
+    color: white;
+    border-radius: 10px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 280px;
+    max-width: 480px;
+    box-shadow: 0 8px 24px -8px rgba(119,90,229,0.5);
+  }
+  .pipe-anchor .sid {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 18px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+  .pipe-anchor .info { flex: 1; }
+  .pipe-anchor .sname {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+  }
+  .pipe-anchor .sdesc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    margin-top: 2px;
+  }
+  .pipe-down-arrow {
+    width: 2px;
+    height: 24px;
+    background: linear-gradient(180deg, var(--color-secondary) 0%, var(--text-muted) 100%);
+    margin: 0 auto;
+  }
+  .pipe-downstream {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .pipe-downstream .pipe-node {
+    grid-template-columns: 32px 1fr;
+  }
+  .pipe-downstream .pipe-node .sid { color: var(--text-secondary); }
+  @media (max-width: 880px) {
+    .pipe { grid-template-columns: minmax(0, 1fr); }
+    .pipe-downstream { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* ============================ DEMO CTA ============================ */
+  .demo-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: clamp(20px, 3vw, 40px);
+    align-items: center;
+  }
+  .demo-cta-text { display: flex; flex-direction: column; gap: 10px; }
+  .demo-cta h3 { color: white; font-size: clamp(18px, 1.8vw, 24px); font-weight: 700; }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 22px;
+    background: var(--color-primary);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 0;
+    cursor: pointer;
+    transition: transform 150ms ease, background 150ms ease;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .cta-btn:hover { background: var(--color-primary-600); transform: translateX(2px); }
+  .cta-btn .arrow { transition: transform 200ms ease; }
+  .cta-btn:hover .arrow { transform: translateX(3px); }
+
+  /* ============================ SCOPE ============================ */
+  .scope-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .scope-col h4 {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .scope-col.in h4 { color: var(--color-success-dark); }
+  .scope-col.out h4 { color: var(--text-muted); }
+  .scope-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .scope-col li {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-primary);
+    padding-left: 16px;
+    position: relative;
+  }
+  .scope-col li::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+  .scope-col.in li::before { content: "✓"; color: var(--color-success); }
+  .scope-col.out li::before { content: "→"; color: var(--text-muted); }
+  .scope-col.out li { color: var(--text-secondary); }
+
+  /* ============================ RECOMENDACIÓN ============================ */
+  .reco-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 56px);
+    align-items: start;
+  }
+  .reco-decision h2 em { font-style: normal; color: var(--color-primary); }
+  .reco-reasons { display: flex; flex-direction: column; gap: 0; }
+  .reco-reason {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .reco-reason:last-child { border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .reco-reason .n {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--color-primary);
+  }
+  .reco-reason .txt {
+    font-size: clamp(12px, 0.95vw, 14px);
+    line-height: 1.5;
+    color: rgba(255,255,255,0.78);
+  }
+  .reco-reason .txt strong { color: white; font-family: var(--font-heading); font-weight: 600; }
+  .roadmap-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pill {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    border-left: 2px solid var(--color-secondary-400);
+  }
+  .pill.hot { border-left-color: var(--color-primary); background: rgba(241,149,86,0.1); }
+  .pill .n {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--color-secondary-300);
+  }
+  .pill.hot .n { color: var(--color-primary); }
+  .pill h4 {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 2px;
+  }
+  .pill p { font-size: 11px; color: rgba(255,255,255,0.6); margin: 0; line-height: 1.4; }
+
+  /* ============================ FOOTER ============================ */
+  .page-foot {
+    margin-top: clamp(20px, 3vh, 32px);
+    padding: 16px 24px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .page-foot a { color: var(--text-secondary); text-decoration: none; }
+  .page-foot a:hover { color: var(--color-secondary); }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 1100px) {
+    .hero-layout, .reco-layout, .demo-cta { grid-template-columns: minmax(0, 1fr); }
+    .card.span-7 { grid-column: span 12; }
+    .card.span-5 { grid-column: span 12; }
+    .card.span-6 { grid-column: span 12; }
+  }
+  @media (max-width: 720px) {
+    .scope-cols { grid-template-columns: minmax(0, 1fr); }
+    .page-head .meta { display: none; }
+    .source-row { grid-template-columns: 1fr auto; }
+    .source-row .source-desc { grid-column: 1 / -1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="page-head">
+    <div class="brand"><span class="dot"></span> Solvo GenAI · POC Proposal</div>
+    <div class="meta">
+      <span>Proyecto<strong>Talent Pool Scraping</strong></span>
+      <span>Cliente<strong>Solvo Global</strong></span>
+      <span>Fecha<strong>Mayo 2026</strong></span>
+    </div>
+  </header>
+
+  <main class="bento">
+
+    <!-- HERO -->
+    <section class="card hero span-12">
+      <div class="eyebrow">POC · Talent Pool Scraping</div>
+      <h1 style="margin-top: 12px;">Captura diaria de candidatos con indicador activo de búsqueda.</h1>
+      <p class="lead" style="margin-top: 18px; max-width: 80ch;">El flujo procesa listados públicos de LinkedIn e Indeed restringidos a una lista configurable de países fuera de Estados Unidos. Persiste únicamente perfiles con indicador "Buscando empleo" confirmado por el portal de origen y los deja consultables para el equipo.</p>
+    </section>
+
+    <!-- FILTRO ANCLA -->
+    <section class="card span-7">
+      <div class="eyebrow">Regla principal</div>
+      <h2>Indicador de búsqueda activa requerido para inserción.</h2>
+      <p>Antes de cualquier escritura en el pool, el flujo valida que el perfil declare explícitamente estar buscando empleo en su portal de origen. Sin esa señal, el registro se descarta. El campo <code>open_to_work</code> en la tabla <code>talent_pool.candidates</code> es <code>NOT NULL</code> y solo persiste con valor <code>true</code>.</p>
+      <div class="anchor-rule">
+        <strong>Filtro bloqueante.</strong> El flujo descarta cualquier perfil sin la señal del portal de origen antes de la operación de escritura. Se loguea la tasa de descarte por proveedor y portal en <code>execution_logs</code>.
+      </div>
+    </section>
+
+    <section class="card accent-purple span-5">
+      <div class="eyebrow" style="color: rgba(255,255,255,0.7);">Señal por portal</div>
+      <div class="badge-key">
+        <div class="icon">🟢</div>
+        <div class="text"><strong>Buscando empleo</strong><br>Indicador formal en cada portal</div>
+      </div>
+      <div class="source-eq">
+        <div class="source-eq-row">
+          <span class="src">LinkedIn</span>
+          <span class="sig">Badge oficial <strong>"Open to Work"</strong> en el perfil del candidato</span>
+        </div>
+        <div class="source-eq-row">
+          <span class="src">Indeed</span>
+          <span class="sig">Estado <strong>"Actively looking for work"</strong> declarado por el candidato</span>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 6px; line-height: 1.5;">Si un perfil no muestra este indicador explícitamente, queda fuera del pool. Sin excepciones.</p>
+    </section>
+
+    <!-- MECANISMOS DE SCRAPING -->
+    <section class="card span-12">
+      <div class="eyebrow">Mecanismos de scraping</div>
+      <h2>Dos proveedores disponibles para la extracción de listados.</h2>
+      <p>Ambos siguen el mismo patrón de invocación HTTP usado hoy en el scraping de vacantes (<code>general-us-openings</code>). Pueden correr en paralelo durante la evaluación; tras la validación, se asigna el proveedor por portal en la configuración del flujo.</p>
+
+      <div class="sources-grid">
+        <div class="source-card">
+          <div class="source-card-head">
+            <div class="name">Bright Data API</div>
+            <div class="tag primary">Opción A</div>
+          </div>
+          <div class="source-card-body">
+            <p>Plataforma de scraping con datasets pre-construidos por portal. Acceso vía Web Scraper API HTTP estándar — <strong>no MCP</strong>.</p>
+            <ul class="source-list">
+              <li><strong>Endpoint:</strong> Web Scraper API + datasets de LinkedIn / Indeed</li>
+              <li><strong>Modo:</strong> trabajos asíncronos, respuesta JSON estructurada</li>
+              <li><strong>Filtros nativos:</strong> país, rol, indicador <code>Open to Work</code> en LinkedIn</li>
+              <li><strong>Parsing:</strong> delegado al proveedor (sin XPath custom)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="source-card">
+          <div class="source-card-head">
+            <div class="name">Oxylabs API</div>
+            <div class="tag secondary">Opción B</div>
+          </div>
+          <div class="source-card-body">
+            <p>Mismo patrón usado hoy en <code>general-us-openings</code>. Request con <code>source: universal</code> y <code>parsing_instructions</code> definidas por el equipo.</p>
+            <ul class="source-list">
+              <li><strong>Endpoint:</strong> <code>/v1/queries</code> con <code>source: universal</code></li>
+              <li><strong>Modo:</strong> request síncrono o asíncrono con parsing_instructions</li>
+              <li><strong>Filtros:</strong> construcción de URL del portal (LinkedIn search, Indeed Resume) por país</li>
+              <li><strong>Parsing:</strong> XPath/CSS selectors mantenidos por el equipo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLUJO END-TO-END -->
+    <section class="card span-12">
+      <div class="eyebrow">Flujo end-to-end</div>
+      <h2>Plan diario parametrizado, extracción paralela y filtro ancla bloqueante.</h2>
+      <p>El flujo lee su configuración de una tabla de parámetros antes de cada corrida. Procesa los portales con cualquiera de los dos proveedores disponibles y solo persiste candidatos con indicador "Buscando empleo" confirmado por el portal de origen.</p>
+
+      <!-- Parámetros callout -->
+      <div class="params-callout">
+        <div class="params-head">Parámetros configurables del flujo</div>
+        <div class="params-grid">
+          <div class="param">
+            <div class="k">Lista de países</div>
+            <div class="v">Argentina, Brasil, Colombia, México, Perú, Chile, Costa Rica, Filipinas, India, Polonia, Rumania, Sudáfrica… (configurable, fuera de US)</div>
+          </div>
+          <div class="param">
+            <div class="k">Portales activos</div>
+            <div class="v">LinkedIn · Indeed</div>
+          </div>
+          <div class="param">
+            <div class="k">Rotación semanal</div>
+            <div class="v">2-3 países por día, L-V</div>
+          </div>
+          <div class="param">
+            <div class="k">Cupo diario por país</div>
+            <div class="v">30-60 candidatos (calibrable)</div>
+          </div>
+          <div class="param">
+            <div class="k">Proveedor por portal</div>
+            <div class="v">Bright Data API / Oxylabs API (asignable por portal)</div>
+          </div>
+          <div class="param">
+            <div class="k">Roles target</div>
+            <div class="v">Opcional — sin filtro inicial</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline visualization -->
+      <div class="pipe">
+
+        <!-- Upstream: sequential nodes full-width -->
+        <div class="pipe-upstream">
+          <div class="pipe-node">
+            <div class="sid">Q1</div>
+            <div>
+              <div class="sname">Plan diario por país</div>
+              <div class="sdesc">Lee la lista configurada y selecciona los países que corresponden al día según la rotación semanal.</div>
+            </div>
+          </div>
+          <div class="pipe-down-arrow"></div>
+          <div class="pipe-node">
+            <div class="sid">Q2</div>
+            <div>
+              <div class="sname">Construcción de búsquedas</div>
+              <div class="sdesc">Genera las URLs por (portal × país × filtros) que serán enviadas al proveedor de scraping asignado.</div>
+            </div>
+          </div>
+          <div class="pipe-down-arrow"></div>
+        </div>
+
+        <!-- Branch label -->
+        <div class="pipe-branch-label">Q3 · Extracción (dos opciones de proveedor)</div>
+
+        <!-- Two parallel branches: BD API + Oxylabs API -->
+        <div class="pipe-branch primary">
+          <div class="pipe-branch-head">
+            <span>Branch A · Bright Data API</span>
+          </div>
+          <div class="pipe-node">
+            <div class="sid">Q3a</div>
+            <div>
+              <div class="sname">Web Scraper API + datasets</div>
+              <div class="sdesc">Envía las URLs al proveedor y recibe los listados en JSON estructurado. Parsing delegado.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pipe-branch">
+          <div class="pipe-branch-head">
+            <span>Branch B · Oxylabs API</span>
+          </div>
+          <div class="pipe-node">
+            <div class="sid">Q3b</div>
+            <div>
+              <div class="sname">source: universal + parsing</div>
+              <div class="sdesc">Mismo patrón que <code>general-us-openings</code>. URLs enviadas con <code>parsing_instructions</code> custom.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Merge at filter ancla -->
+        <div class="pipe-merge">
+          <div class="pipe-arrows">
+            <svg viewBox="0 0 400 32" preserveAspectRatio="none">
+              <path d="M 100 0 L 100 16 L 200 16 L 200 32" stroke="var(--color-secondary)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <path d="M 300 0 L 300 16 L 200 16 L 200 32" stroke="var(--color-secondary)" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <polygon points="195,28 200,38 205,28" fill="var(--color-secondary)"/>
+            </svg>
+          </div>
+          <div class="pipe-anchor">
+            <div class="sid">Q4</div>
+            <div class="info">
+              <div class="sname">Filtro ancla · Buscando empleo</div>
+              <div class="sdesc">Bloqueante. Solo pasan perfiles con la señal confirmada por el portal de origen. Tasa de descarte logueada por proveedor.</div>
+            </div>
+          </div>
+          <div class="pipe-down-arrow"></div>
+        </div>
+
+        <!-- Downstream sequence -->
+        <div class="pipe-downstream">
+          <div class="pipe-node">
+            <div class="sid">Q5</div>
+            <div>
+              <div class="sname">Dedupe</div>
+              <div class="sdesc">Unicidad por <code>(source, source_id)</code>. Fallback por <code>profile_url</code>.</div>
+            </div>
+          </div>
+          <div class="pipe-node">
+            <div class="sid">Q6</div>
+            <div>
+              <div class="sname">Normalize</div>
+              <div class="sdesc">Parseo de ubicación, inferencia de seniority, normalización de habilidades.</div>
+            </div>
+          </div>
+          <div class="pipe-node">
+            <div class="sid">Q7</div>
+            <div>
+              <div class="sname">Persist + log</div>
+              <div class="sdesc">UPSERT en <code>talent_pool.candidates</code>. <code>execution_id</code> propagado a <code>execution_logs</code>.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- QUÉ INFORMACIÓN CAPTURAMOS -->
+    <section class="card span-12">
+      <div class="eyebrow">Información capturada</div>
+      <h2 style="font-size: clamp(18px, 1.7vw, 22px);">Qué datos se guardan de cada candidato.</h2>
+      <div class="schema-fields">
+        <div class="f">Nombre completo</div>
+        <div class="t">texto</div>
+        <div class="f">Titular del perfil</div>
+        <div class="t">texto</div>
+        <div class="f">Rol y empresa actual</div>
+        <div class="t">texto</div>
+        <div class="f">Ubicación (país, estado, ciudad)</div>
+        <div class="t">texto</div>
+        <div class="f">Nivel de seniority</div>
+        <div class="t">texto</div>
+        <div class="f">Habilidades</div>
+        <div class="t">lista</div>
+        <div class="f anchor">Indicador "Buscando empleo"<span class="badge">Obligatorio</span></div>
+        <div class="t anchor">sí/no</div>
+        <div class="f">Portal de origen</div>
+        <div class="t">LinkedIn / Indeed</div>
+        <div class="f">URL del perfil público</div>
+        <div class="t">enlace</div>
+        <div class="f">Fecha de captura</div>
+        <div class="t">timestamp</div>
+      </div>
+    </section>
+
+    <!-- DEMO CTA -->
+    <section class="card dark span-12">
+      <div class="demo-cta">
+        <div class="demo-cta-text">
+          <div class="eyebrow primary">Demostración</div>
+          <h3>Así se vería el pool de candidatos capturado.</h3>
+          <p style="margin: 0;">Vista funcional del pool: listado de candidatos con sus datos relevantes, indicador "Buscando empleo" visible, filtros por nivel, habilidades y ubicación, y métricas diarias de la captura.</p>
+        </div>
+        <a href="talent-pool-demo.html" class="cta-btn">Ver el pool funcionando <span class="arrow">→</span></a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-foot">
+    <span>Softgic · Product</span>
+    <span>Talent Pool Scraping · POC</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Búsqueda de candidatos · Solvo Recruiter Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menú"><span></span><span></span><span></span></button>
+    <div class="mobile-logo"><div class="logo-icon">SRP</div><span class="logo-text">Solvo Recruiter Platform</span></div>
+  </header>
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header"><h1 class="header-title">Búsqueda de candidatos</h1></header>
+
+      <div class="page-content">
+        <!-- Filtros / búsqueda -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Perfil de búsqueda</label>
+            <div class="combo" id="profileCombo" style="min-width:240px;">
+              <input id="profileInput" class="form-input sm" type="text" placeholder="Buscar perfil…" autocomplete="off" style="width:100%;">
+              <div class="combo-list" id="profileComboList" style="position:absolute; left:0; right:0; z-index:30;"></div>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Keywords (máx 3)</label>
+            <div class="tagbox" id="tagbox"><input type="text" placeholder="keyword + Enter"></div>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">&nbsp;</label>
+            <button class="btn btn-primary btn-sm" onclick="runSearch()" style="height:36px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              Buscar
+            </button>
+          </div>
+          <div class="filter-group" style="justify-content:flex-end;">
+            <span class="search-indicator" id="searchIndicator" style="display:none;">
+              <span class="spinner"></span> Buscando…
+            </span>
+          </div>
+        </div>
+        <p class="filter-hint">Trae los candidatos del perfil y aplica fuzzy sobre <code>headline</code>/<code>about</code>/<code>skills</code>. Los vigentes se muestran al instante; los vencidos se re-validan open-to-work en segundo plano (webhook n8n) y van apareciendo.</p>
+
+        <!-- Estado inicial / vacío -->
+        <div class="empty-state" id="emptyState" style="display:flex; flex-direction:column; align-items:center; padding:64px 24px; text-align:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <h3 id="emptyTitle" style="margin-top:14px; color:var(--text-primary); font-size:var(--font-size-lg);">Buscá candidatos open-to-work</h3>
+          <p id="emptyMsg" style="color:var(--text-muted); margin-top:6px; max-width:46ch;">Elegí un perfil y, opcionalmente, hasta 3 keywords. Pulsá Buscar: el sistema trae los candidatos vigentes, re-valida los vencidos en segundo plano y muestra el email ya capturado por el pipeline.</p>
+        </div>
+
+        <!-- Resultados -->
+        <div id="resultsCard" style="display:none;">
+          <div class="load-note" id="loadNote"><span class="spinner"></span> <span data-note></span></div>
+
+          <!-- Barra de filtros del listado (client-side, HUTPS-4.6-FE) -->
+          <div class="filters-bar" id="resultsFilters" style="align-items:flex-end;">
+            <div class="filter-group">
+              <label class="filter-label">Filtrar (headline, about, skills)</label>
+              <input type="text" class="form-input sm" id="fltText" placeholder="Texto…" style="min-width:190px;">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Idioma</label>
+              <select class="form-select sm" id="fltLang" style="min-width:150px;"><option value="">Todos los idiomas</option></select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Localización</label>
+              <select class="form-select sm" id="fltLoc" style="min-width:170px;"><option value="">Todas las localizaciones</option></select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">&nbsp;</label>
+              <label class="toggle-pill"><input type="checkbox" id="fltEmail"><span class="toggle-pill-track"><span class="toggle-pill-knob"></span></span> Con email</label>
+            </div>
+            <div class="filter-group" style="margin-left:auto;">
+              <label class="filter-label">&nbsp;</label>
+              <button class="btn btn-secondary btn-sm" onclick="clearFilters()" style="height:36px;">Limpiar</button>
+            </div>
+          </div>
+
+          <div class="results-head">
+            <span class="table-title"><span id="resultCount">0 candidatos</span></span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead><tr>
+                <th style="width:36px;"></th>
+                <th>Candidato</th>
+                <th>Headline</th>
+                <th>Skills</th>
+                <th>Idiomas</th>
+                <th>Verificado</th>
+                <th>Email</th>
+                <th>LinkedIn</th>
+              </tr></thead>
+              <tbody id="candRows"></tbody>
+            </table>
+          </div>
+
+          <div class="bulk-bar" id="bulkBar">
+            <span class="bulk-info"><b data-count>0</b> candidato(s) seleccionado(s)</span>
+            <button class="btn btn-primary btn-sm" onclick="openOutreach()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+              Enviar email de invitación
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drawer detalle -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+  <aside class="detail-drawer" id="drawer" aria-label="Detalle del candidato">
+    <div class="drawer-head">
+      <span class="cand-avatar" data-d-initials>—</span>
+      <div class="drawer-head-title">
+        <h3 data-d-name>—</h3>
+        <p data-d-headline>—</p>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <span class="detail-label">Estado</span>
+        <span class="badge badge-success">Open to work</span>
+      </div>
+      <div class="drawer-section">
+        <span class="detail-label">Datos</span>
+        <div class="drawer-kv"><b>Ubicación</b><span data-d-loc>—</span></div>
+        <div class="drawer-kv"><b>Idiomas</b><span data-d-langs>—</span></div>
+        <div class="drawer-kv"><b>Verificado</b><span data-d-verified>—</span></div>
+        <div class="drawer-kv"><b>Email</b><span data-d-email>—</span></div>
+      </div>
+      <div class="drawer-section">
+        <span class="detail-label">About</span>
+        <p data-d-about>—</p>
+      </div>
+      <div class="drawer-section">
+        <span class="detail-label">Skills</span>
+        <div data-d-skills></div>
+      </div>
+      <div class="drawer-section">
+        <a class="btn btn-secondary" href="#" target="_blank" rel="noopener" style="width:100%; justify-content:center;">Ver perfil en LinkedIn ↗</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal outreach -->
+  <div class="modal-overlay" id="modalOutreach">
+    <div class="modal" style="max-width:460px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Enviar email de invitación</h2>
+        <button class="modal-close" onclick="closeModal('modalOutreach')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary); font-size:var(--font-size-sm);">Se enviará el email de invitación (plantilla preconfigurada en Brevo) a <b style="color:var(--text-primary);" data-out-count>0</b> candidato(s) seleccionado(s).</p>
+        <p class="text-muted" style="font-size:var(--font-size-xs); margin-top:8px;">Los candidatos sin email válido se omiten y se reportan al finalizar.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalOutreach')">Cancelar</button>
+        <button class="btn btn-primary" onclick="confirmOutreach()">Confirmar envío</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    initSession();
+    renderSidebar('candidatos');
+    initTags();
+    initProfileCombo();
+    initFilters();
+    document.getElementById('modalOutreach').addEventListener('click', function(e){ if(e.target===this) closeModal('modalOutreach'); });
+  </script>
+</body>
+</html>

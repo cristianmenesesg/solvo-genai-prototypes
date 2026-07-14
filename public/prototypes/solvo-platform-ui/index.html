@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">S</div>
+        <h1 class="login-title">Solvo Platform</h1>
+        <p class="login-subtitle">Access your account to continue</p>
+      </div>
+
+      <div class="role-selector">
+        <span class="role-selector-label">Select a role to demo</span>
+        <div class="role-cards" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+          <button class="role-card active" data-role="comercial">
+            <span class="role-card-name">Comercial</span>
+            <span class="role-card-desc">Carlos Mendoza</span>
+          </button>
+          <button class="role-card" data-role="sdr">
+            <span class="role-card-name">SDR</span>
+            <span class="role-card-desc">Daniela López</span>
+          </button>
+          <button class="role-card" data-role="coordinador">
+            <span class="role-card-name">Coordinador</span>
+            <span class="role-card-desc">Ana Rodríguez</span>
+          </button>
+          <button class="role-card" data-role="supervisor">
+            <span class="role-card-name">Supervisor</span>
+            <span class="role-card-desc">Patricia Morales</span>
+          </button>
+          <button class="role-card" data-role="administrador">
+            <span class="role-card-name">Administrador</span>
+            <span class="role-card-desc">Pedro Sánchez</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="login-error" id="loginError">
+        Unauthorized user. Contact the administrator.
+      </div>
+
+      <div class="login-form">
+        <button type="button" class="btn btn-microsoft" id="microsoftLoginBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
+            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+          </svg>
+          Sign in with Microsoft
+        </button>
+
+        <p class="login-hint">
+          Use your corporate Microsoft account (@solvo.global)
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="rbac.js"></script>
+  <script>
+    const loginBtn = document.getElementById('microsoftLoginBtn');
+    const loginError = document.getElementById('loginError');
+    const roleCards = document.querySelectorAll('.role-card');
+    let selectedRole = 'comercial';
+
+    // Role card selection
+    roleCards.forEach(card => {
+      card.addEventListener('click', () => {
+        roleCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        selectedRole = card.dataset.role;
+      });
+    });
+
+    function setLoading(isLoading) {
+      loginBtn.disabled = isLoading;
+      if (isLoading) loginError.classList.remove('show');
+    }
+
+    function showError(message) {
+      loginError.textContent = message;
+      loginError.classList.add('show');
+    }
+
+    // Mock Microsoft SSO Login
+    loginBtn.addEventListener('click', function() {
+      setLoading(true);
+
+      setTimeout(() => {
+        const demoUser = DEMO_USERS[selectedRole];
+
+        // Save user with role (el rol es el permiso — no se almacenan permisos)
+        localStorage.setItem('user', JSON.stringify({
+          id: demoUser.id,
+          name: demoUser.name,
+          shortName: demoUser.shortName,
+          email: demoUser.email,
+          role: selectedRole
+        }));
+
+        window.location.href = 'dashboard.html';
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

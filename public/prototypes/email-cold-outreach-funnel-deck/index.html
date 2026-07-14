@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Funnel POC — Email Cold Outreach · Solvo</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: #F5F6F8;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: clamp(24px, 4vh, 48px) clamp(20px, 3vw, 40px);
+  }
+
+  /* ============================ HEADER ============================ */
+  .page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 14px;
+    margin-bottom: clamp(16px, 2vh, 24px);
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .page-head .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .page-head .brand .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-secondary);
+  }
+  .page-head .meta {
+    display: flex;
+    gap: 24px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .page-head .meta span strong {
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  /* ============================ BENTO GRID ============================ */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: clamp(12px, 1.5vw, 18px);
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 18px;
+    padding: clamp(20px, 2.4vw, 32px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.4vh, 18px);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    min-width: 0;
+  }
+  .card.span-12 { grid-column: span 12; }
+  .card.span-8 { grid-column: span 8; }
+  .card.span-7 { grid-column: span 7; }
+  .card.span-6 { grid-column: span 6; }
+  .card.span-5 { grid-column: span 5; }
+  .card.span-4 { grid-column: span 4; }
+
+  .card.hero {
+    background:
+      radial-gradient(ellipse 70% 80% at 100% 0%, rgba(119,90,229,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 60% at 0% 100%, rgba(241,149,86,0.05) 0%, transparent 60%),
+      white;
+    padding: clamp(28px, 3.5vw, 44px);
+  }
+  .card.dark {
+    background: #1A1330;
+    border-color: #2A2055;
+    color: white;
+  }
+  .card.dark p { color: rgba(255,255,255,0.7); }
+  .card.dark h2, .card.dark h3 { color: white; }
+
+  /* ============================ TYPOGRAPHY ============================ */
+  .eyebrow {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow.primary { color: var(--color-primary); }
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--text-primary);
+  }
+  h1 {
+    font-size: clamp(28px, 3.4vw, 44px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 22ch;
+  }
+  h2 {
+    font-size: clamp(20px, 2vw, 26px);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  h3 { font-size: clamp(16px, 1.4vw, 18px); font-weight: 600; }
+  h4 { font-size: clamp(13px, 1vw, 14px); font-weight: 600; }
+  p {
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+  p.lead {
+    font-size: clamp(14px, 1.1vw, 17px);
+    color: var(--text-primary);
+    max-width: 60ch;
+  }
+
+  /* ============================ HERO STATS ============================ */
+  .hero-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 56px);
+    align-items: center;
+  }
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .funnel-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--color-gray-50);
+    border-radius: 12px;
+    border-left: 3px solid var(--color-secondary);
+  }
+  .funnel-stat.bad { border-left-color: var(--color-error); background: #FFF5F5; }
+  .funnel-stat .n {
+    font-family: var(--font-heading);
+    font-size: clamp(24px, 2.6vw, 36px);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .funnel-stat .lbl {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .funnel-stat.bad .n { color: var(--color-error); }
+  .hero-arrow {
+    display: flex;
+    justify-content: center;
+    font-family: var(--font-heading);
+    color: var(--color-gray-400);
+    font-size: 18px;
+    padding: 4px 0;
+  }
+
+  /* ============================ CAUSE CARDS ============================ */
+  .card.cause { padding: clamp(20px, 2vw, 28px); gap: 10px; }
+  .card.cause .n {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 0.12em;
+  }
+  .card.cause h3 { font-size: clamp(15px, 1.3vw, 18px); }
+  .card.cause p { font-size: clamp(12px, 0.95vw, 14px); }
+
+  /* ============================ OPTION CARDS ============================ */
+  .card.option {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(24px, 2.6vw, 36px);
+  }
+  .option-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .option-letter {
+    font-family: var(--font-heading);
+    font-size: clamp(36px, 3.6vw, 48px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--color-primary);
+  }
+  .card.option.b .option-letter { color: var(--color-secondary); }
+  .option-title-block { flex: 1; min-width: 0; }
+  .option-kicker {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .option-name {
+    font-family: var(--font-heading);
+    font-size: clamp(17px, 1.6vw, 22px);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .option-desc {
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+  .feat-list { display: flex; flex-direction: column; gap: 0; }
+  .feat-list .feat {
+    display: grid;
+    grid-template-columns: 14px 1fr;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(17,24,39,0.08);
+    font-size: clamp(12px, 0.95vw, 14px);
+    line-height: 1.5;
+  }
+  .feat-list .feat:last-child { border-bottom: 0; }
+  .feat-list .feat::before {
+    content: "—";
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+  .card.option.b .feat-list .feat::before { color: var(--color-secondary); }
+  .feat-list .feat strong {
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-weight: 600;
+  }
+  .tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .tag {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .tag.fast { background: var(--color-success-light); color: var(--color-success-dark); }
+  .tag.slow { background: var(--color-warning-light); color: var(--color-warning-dark); }
+  .tag.low { background: var(--color-success-light); color: var(--color-success-dark); }
+  .tag.med { background: var(--color-warning-light); color: var(--color-warning-dark); }
+  .tag.high { background: var(--color-info-light); color: var(--color-info-dark); }
+  .tag.signal { background: var(--color-secondary-50); color: var(--color-secondary-700); }
+
+  .cta {
+    margin-top: auto;
+    padding-top: 18px;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    background: var(--color-primary);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 13px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: 0;
+    cursor: pointer;
+    transition: transform 150ms ease, background 150ms ease;
+    letter-spacing: 0.01em;
+  }
+  .cta-btn:hover { background: var(--color-primary-600); transform: translateX(2px); }
+  .cta-btn.secondary { background: var(--color-secondary); }
+  .cta-btn.secondary:hover { background: var(--color-secondary-600); }
+  .cta-btn .arrow { transition: transform 200ms ease; }
+  .cta-btn:hover .arrow { transform: translateX(3px); }
+
+  /* ============================ RECOMENDACIÓN ============================ */
+  .reco-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 56px);
+    align-items: start;
+  }
+  .reco-decision h2 em { font-style: normal; color: var(--color-primary); }
+  .reco-reasons { display: flex; flex-direction: column; gap: 0; }
+  .reco-reason {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-default);
+  }
+  .reco-reason:last-child { border-bottom: 1px solid var(--border-default); }
+  .reco-reason .n {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--color-secondary);
+  }
+  .reco-reason .txt {
+    font-size: clamp(12px, 0.95vw, 14px);
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+  .reco-reason .txt strong { color: var(--text-primary); font-family: var(--font-heading); font-weight: 600; }
+  .roadmap-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 0;
+  }
+  .pill {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--color-gray-50);
+    border-radius: 8px;
+    border-left: 2px solid var(--color-secondary);
+  }
+  .pill.hot { border-left-color: var(--color-primary); background: var(--color-primary-50); }
+  .pill .n {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--color-secondary);
+    line-height: 1.2;
+  }
+  .pill.hot .n { color: var(--color-primary); }
+  .pill h4 {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .pill p { font-size: 11px; color: var(--text-secondary); margin: 0; line-height: 1.4; }
+
+  /* ============================ FOOTER ============================ */
+  .page-foot {
+    margin-top: clamp(20px, 3vh, 32px);
+    padding: 16px 24px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .page-foot a { color: var(--text-secondary); text-decoration: none; }
+  .page-foot a:hover { color: var(--color-secondary); }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 1100px) {
+    .hero-layout, .reco-layout { grid-template-columns: minmax(0, 1fr); }
+    .card.span-4 { grid-column: span 6; }
+    .card.span-6 { grid-column: span 12; }
+    .card.span-7 { grid-column: span 12; }
+    .card.span-8 { grid-column: span 12; }
+  }
+  @media (max-width: 720px) {
+    .card.span-4 { grid-column: span 12; }
+    .page-head .meta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="page-head">
+    <div class="brand"><span class="dot"></span> Solvo GenAI · POC Proposal</div>
+    <div class="meta">
+      <span>Proyecto<strong>Email Cold Outreach</strong></span>
+      <span>Cliente<strong>Solvo Global</strong></span>
+      <span>Fecha<strong>Mayo 2026</strong></span>
+    </div>
+  </header>
+
+  <main class="bento">
+
+    <!-- HERO -->
+    <section class="card hero span-12">
+      <div class="eyebrow">Problema · Diagnóstico</div>
+      <div class="hero-layout">
+        <div>
+          <h1>608 prospectos llegan al booking. Cero agendan.</h1>
+          <p class="lead" style="margin-top: 18px;">El sistema de cold email funciona en cada etapa hasta el último paso. Deliverability casi perfecta, alta tasa de apertura, casi la mitad de los enviados terminan en Microsoft Bookings. El cliff es absoluto: nadie completa el agendamiento.</p>
+        </div>
+        <div class="hero-stats">
+          <div class="funnel-stat">
+            <div class="n">1.263</div>
+            <div class="lbl">Enviados</div>
+          </div>
+          <div class="hero-arrow">↓</div>
+          <div class="funnel-stat">
+            <div class="n">608</div>
+            <div class="lbl">Llegan al booking</div>
+          </div>
+          <div class="hero-arrow">↓</div>
+          <div class="funnel-stat bad">
+            <div class="n">0</div>
+            <div class="lbl">Meetings agendados</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CAUSAS -->
+    <section class="card cause span-4">
+      <div class="n">01 · RUPTURA</div>
+      <h3>Pérdida de contexto</h3>
+      <p>El subject prometía algo específico sobre las vacantes del prospecto. Microsoft Bookings es genérico, no repite el gancho. El prospecto siente que aterrizó en otro sitio.</p>
+    </section>
+
+    <section class="card cause span-4">
+      <div class="n">02 · VALOR</div>
+      <h3>Oferta no reafirmada</h3>
+      <p>Antes de pedir 30 minutos de agenda no se refresca la propuesta de Solvo: qué ahorra, qué outcome concreto se lleva de la reunión, qué hace distinto a Solvo.</p>
+    </section>
+
+    <section class="card cause span-4">
+      <div class="n">03 · FRICCIÓN</div>
+      <h3>Form antes que valor</h3>
+      <p>El booking exige datos, motivo y validación de slot sin haber vendido la reunión. El prospecto evalúa si justifica el tiempo y en la mayoría de casos decide que no.</p>
+    </section>
+
+    <!-- OPCIÓN A -->
+    <section class="card option span-6">
+      <div class="option-head">
+        <div class="option-letter">A</div>
+        <div class="option-title-block">
+          <div class="option-kicker">Propuesta</div>
+          <div class="option-name">Landing dedicada con calendario embebido</div>
+        </div>
+      </div>
+      <p class="option-desc">Página única que repite el gancho del email, reafirma la oferta de Solvo y permite agendar en un mismo flujo. Backend con Microsoft Graph API para disponibilidad real de los vendedores.</p>
+      <div class="feat-list">
+        <div class="feat"><span><strong>Hero con eco del email</strong> — continuidad de mensaje desde el subject</span></div>
+        <div class="feat"><span><strong>Proof contextual</strong> — outcome concreto de la reunión + social proof</span></div>
+        <div class="feat"><span><strong>Calendario inline</strong> — slots reales con round-robin entre vendedores</span></div>
+        <div class="feat"><span><strong>Form mínimo</strong> — solo nombre y email corporativo</span></div>
+      </div>
+      <div class="tags">
+        <span class="tag fast">Desarrollo ágil</span>
+        <span class="tag low">Riesgo técnico bajo</span>
+        <span class="tag low">Costo operativo bajo</span>
+      </div>
+      <div class="cta">
+        <a href="https://agentelanding.vercel.app/frontend/landing_puente_onesource.html" target="_blank" rel="noopener noreferrer" class="cta-btn">Ver demo de la landing <span class="arrow">→</span></a>
+      </div>
+    </section>
+
+    <!-- OPCIÓN B -->
+    <section class="card option b span-6">
+      <div class="option-head">
+        <div class="option-letter">B</div>
+        <div class="option-title-block">
+          <div class="option-kicker">Propuesta</div>
+          <div class="option-name">Landing conversacional con asistente IA</div>
+        </div>
+      </div>
+      <p class="option-desc">Página con agente conversacional que reconoce al prospecto desde un token del email, conversa sobre su contexto de hiring, atiende objeciones y al final propone agendar reunión.</p>
+      <div class="feat-list">
+        <div class="feat"><span><strong>Onboarding personalizado</strong> — saluda con nombre y empresa del prospecto</span></div>
+        <div class="feat"><span><strong>Qualifying scripteado</strong> — 4-6 turnos con quick-reply chips</span></div>
+        <div class="feat"><span><strong>Objection handling en vivo</strong> — respuestas pre-validadas</span></div>
+        <div class="feat"><span><strong>Cierre con MS Graph</strong> — sugiere slots al final del flujo</span></div>
+      </div>
+      <div class="tags">
+        <span class="tag slow">Mayor tiempo de desarrollo</span>
+        <span class="tag med">Requiere LLM + guardrails</span>
+        <span class="tag high">Costo operativo mayor</span>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="page-foot">
+    <span>Softgic · Product</span>
+    <span>Email Cold Outreach · POC</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

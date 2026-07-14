@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  PREVIEW (NO Brevo) — muestra los dos templates de confirmación renderizados con
+  datos de muestra, uno al lado del otro (prospect / account).
+  Solo para revisión visual; los templates reales viven en
+  brevo-booking-confirmation-prospect.html y brevo-booking-confirmation-account.html.
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview · Booking confirmation (MVP)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap');
+    body { margin:0; padding:0; background:#EEF2F4; -webkit-font-smoothing:antialiased; }
+    .wrap { display:flex; flex-wrap:wrap; gap:32px; justify-content:center; padding:32px 16px; }
+    .col { width:600px; max-width:100%; }
+    .tag { font-family:'Poppins',sans-serif; font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#006880; text-align:center; margin:0 0 12px; }
+    .card { background:#FFFFFF; border-radius:16px; overflow:hidden; }
+    .px-36 { }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- ============ VARIANTE PROSPECT ============ -->
+    <div class="col">
+      <p class="tag">recipient_type = "prospect" · subject: "Your meeting with Solvo is confirmed — Thursday, June 26, 2026"</p>
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="card" style="width:600px;max-width:100%;background:#FFFFFF;border-radius:16px;overflow:hidden;">
+        <tr><td align="left" style="padding:30px 36px 22px 36px;border-bottom:3px solid #008AAB;">
+          <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" width="140" style="display:block;width:140px;height:auto;" />
+        </td></tr>
+        <tr><td align="center" style="padding:36px 36px 0 36px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr>
+            <td align="center" valign="middle" width="84" height="84" style="width:84px;height:84px;background:#FFF3EB;border:3px solid #EE7623;border-radius:42px;font-family:'Poppins',sans-serif;font-size:42px;line-height:1;font-weight:700;color:#EE7623;">&#10003;</td>
+          </tr></table>
+        </td></tr>
+        <tr><td align="center" style="padding:22px 36px 0 36px;"><h1 style="margin:0;font-family:'Poppins',sans-serif;font-size:26px;line-height:1.2;font-weight:700;color:#008AAB;letter-spacing:-0.01em;">You're all set, Sarah!</h1></td></tr>
+        <tr><td align="center" style="padding:8px 36px 0 36px;"><p style="margin:0;font-family:'Open Sans',sans-serif;font-size:15px;line-height:1.6;color:#4B5563;">Your meeting with Solvo Global is confirmed.</p></td></tr>
+        <tr><td style="padding:26px 36px 0 36px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:14px;">
+            <tr><td style="padding:20px 22px 6px 22px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EE7623;">Meeting details</td></tr>
+            <tr><td style="padding:10px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Date</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Thursday, June 26, 2026</td></tr></table></td></tr>
+            <tr><td style="padding:0 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Time</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">10:00 – 10:25 AM <span style="font-family:'Open Sans',sans-serif;font-size:13px;font-weight:400;color:#9CA3AF;">EST (America/New_York)</span></td></tr></table></td></tr>
+            <tr><td style="padding:0 22px 18px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Format</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Video call · Microsoft Teams</td></tr><tr><td style="padding-top:4px;font-family:'Open Sans',sans-serif;font-size:12.5px;line-height:1.5;color:#9CA3AF;">The Microsoft Teams join link is in your calendar invitation.</td></tr></table></td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding:24px 36px 4px 36px;">
+          <a href="#" style="display:inline-block;padding:15px 36px;font-family:'Open Sans',sans-serif;font-size:15px;font-weight:700;line-height:1;color:#FFFFFF;text-decoration:none;border-radius:9px;background:#EE7623;">Join the meeting</a>
+        </td></tr>
+        <tr><td align="center" style="padding:10px 36px 0 36px;"><p style="margin:0;font-family:'Open Sans',sans-serif;font-size:12px;line-height:1.5;color:#9CA3AF;">The same link is in your calendar invite.</p></td></tr>
+        <tr><td style="padding:24px 36px 0 36px;"><p style="margin:0;font-family:'Open Sans',sans-serif;font-size:14.5px;line-height:1.7;color:#3D4451;">In this short call we'll review your open roles and walk you through how Solvo connects you with pre-vetted global professionals — the expected savings and a realistic onboarding timeline. No pitch, just answers.</p></td></tr>
+        <tr><td style="padding:14px 36px 0 36px;"><p style="margin:0;font-family:'Open Sans',sans-serif;font-size:14.5px;line-height:1.7;color:#3D4451;">Need to reschedule? Just reply to this email and we'll find a better time.</p></td></tr>
+        <tr><td style="font-size:0;line-height:0;height:30px;">&nbsp;</td></tr>
+        <tr><td align="center" style="padding:20px 36px 32px 36px;border-top:1px solid #E4E7EC;font-family:'Open Sans',sans-serif;font-size:11px;line-height:1.7;color:#9CA3AF;text-align:center;">Solvo Global · 1475 S. Price Rd., Chandler, AZ 85286<br />You're receiving this because you booked a meeting with Solvo Global.<br /><a href="#" style="color:#9CA3AF;text-decoration:underline;">Privacy Policy</a></td></tr>
+      </table>
+    </div>
+
+    <!-- ============ VARIANTE ACCOUNT ============ -->
+    <div class="col">
+      <p class="tag">recipient_type = "account" · subject: "New meeting booked: Sarah Chen (Acme Corp) — Thursday, June 26, 2026"</p>
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="card" style="width:600px;max-width:100%;background:#FFFFFF;border-radius:16px;overflow:hidden;">
+        <tr><td align="left" style="padding:30px 36px 22px 36px;border-bottom:3px solid #008AAB;">
+          <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" width="140" style="display:block;width:140px;height:auto;" />
+        </td></tr>
+        <tr><td style="padding:34px 36px 0 36px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#E6F5F9;border-radius:999px;padding:6px 13px;font-family:'Poppins',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#006880;">New meeting booked</td></tr></table>
+        </td></tr>
+        <tr><td style="padding:14px 36px 0 36px;"><h1 style="margin:0;font-family:'Poppins',sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#111827;letter-spacing:-0.01em;">Meeting with Sarah Chen</h1></td></tr>
+        <tr><td style="padding:6px 36px 0 36px;"><p style="margin:0;font-family:'Open Sans',sans-serif;font-size:14.5px;line-height:1.6;color:#4B5563;">Acme Corp — booked from the cold outreach scheduling landing.</p></td></tr>
+        <tr><td style="padding:26px 36px 0 36px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:14px;">
+            <tr><td style="padding:20px 22px 6px 22px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EE7623;">Meeting details</td></tr>
+            <tr><td style="padding:10px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Date</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Thursday, June 26, 2026</td></tr></table></td></tr>
+            <tr><td style="padding:0 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Time</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">10:00 – 10:25 AM <span style="font-family:'Open Sans',sans-serif;font-size:13px;font-weight:400;color:#9CA3AF;">EST (America/New_York)</span></td></tr></table></td></tr>
+            <tr><td style="padding:0 22px 18px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Format</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Video call · Microsoft Teams</td></tr><tr><td style="padding-top:4px;font-family:'Open Sans',sans-serif;font-size:12.5px;line-height:1.5;color:#9CA3AF;">The Microsoft Teams join link is in your calendar invitation.</td></tr></table></td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:18px 36px 0 36px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:14px;">
+            <tr><td style="padding:20px 22px 6px 22px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#008AAB;">Prospect</td></tr>
+            <tr><td style="padding:10px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Name</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Sarah Chen</td></tr></table></td></tr>
+            <tr><td style="padding:0 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Email</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;"><a href="mailto:sarah.chen@acmecorp.com" style="color:#006880;text-decoration:none;">sarah.chen@acmecorp.com</a></td></tr></table></td></tr>
+            <tr><td style="padding:0 22px 18px 22px;"><table width="100%" style="border-top:1px solid #ECEEF1;"><tr><td style="padding:12px 0 2px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Company</td></tr><tr><td style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:600;color:#111827;">Acme Corp</td></tr></table></td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:18px 36px 0 36px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF8F2;border:1px solid #F6D9BF;border-radius:14px;">
+            <tr><td style="padding:16px 20px;font-family:'Open Sans',sans-serif;font-size:14px;line-height:1.65;color:#7A4A22;">The event is already on the scheduling account's calendar with the Teams link. <strong style="color:#B35215;">Reassign it manually to the right sales rep</strong> and they'll be added to the meeting.</td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="font-size:0;line-height:0;height:30px;">&nbsp;</td></tr>
+        <tr><td align="center" style="padding:20px 36px 32px 36px;border-top:1px solid #E4E7EC;font-family:'Open Sans',sans-serif;font-size:11px;line-height:1.7;color:#9CA3AF;text-align:center;">Solvo Global · Sales scheduling automation<br />Internal notification — generated by the cold outreach booking workflow.</td></tr>
+      </table>
+    </div>
+
+  </div>
+</body>
+</html>

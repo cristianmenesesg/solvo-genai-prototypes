@@ -1,0 +1,173 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light" />
+  <title>New meeting booked</title>
+  <!--[if mso]>
+  <style type="text/css">
+    table, td, a { font-family: Arial, sans-serif !important; }
+  </style>
+  <![endif]-->
+  <style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Open+Sans:wght@400;600&display=swap');
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+    @media only screen and (max-width: 640px) {
+      .container { width: 100% !important; }
+      .px-36 { padding-left: 24px !important; padding-right: 24px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#EEF2F4;-webkit-font-smoothing:antialiased;">
+
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;color:#EEF2F4;">
+    {{ params.first_name }} {{ params.last_name }} from {{ params.company_name }} booked a call on {{ params.slot_date }}.
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#EEF2F4;">
+    <tr>
+      <td align="center" style="padding:24px 0;">
+
+        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#FFFFFF;border-radius:16px;overflow:hidden;">
+
+          <tr>
+            <td class="px-36" align="left" style="padding:30px 36px 22px 36px;border-bottom:3px solid #008AAB;">
+              <a href="https://solvoglobal.com" target="_blank" style="text-decoration:none;border:0;outline:none;">
+                <img src="https://img.mailinblue.com/10372911/images/content_library/original/69f8ecdf629a9c11258ebc1a.png" alt="Solvo Global" width="140" height="43" border="0" style="display:block;width:140px;height:auto;border:0;outline:none;text-decoration:none;line-height:100%;" />
+              </a>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="px-36" style="padding:34px 36px 0 36px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="background:#E6F5F9;border-radius:999px;padding:6px 13px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#006880;">
+                    New meeting booked
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-36" style="padding:14px 36px 0 36px;">
+              <h1 style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#111827;letter-spacing:-0.01em;">
+                Meeting with {{ params.first_name }} {{ params.last_name }}
+              </h1>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-36" style="padding:6px 36px 0 36px;">
+              <p style="margin:0;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:14.5px;line-height:1.6;color:#4B5563;">
+                {{ params.company_name }} &mdash; booked from the cold outreach scheduling landing.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="px-36" style="padding:26px 36px 0 36px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:14px;">
+                <tr>
+                  <td style="padding:20px 22px 6px 22px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#EE7623;">
+                    Meeting details
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Date</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;">{{ params.slot_date }}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Time</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;">{{ params.slot_time }} <span style="font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:13px;font-weight:400;color:#9CA3AF;">{{ params.slot_timezone }}</span></td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 18px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Format</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;">Video call &middot; Microsoft Teams</td></tr>
+                      <tr><td style="padding-top:4px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;font-weight:400;color:#9CA3AF;">The Microsoft Teams link is in the calendar invitation on the account.</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="px-36" style="padding:18px 36px 0 36px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E5E7EB;border-radius:14px;">
+                <tr>
+                  <td style="padding:20px 22px 6px 22px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#008AAB;">
+                    Prospect
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Name</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;">{{ params.first_name }} {{ params.last_name }}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Email</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;"><a href="mailto:{{ params.prospect_email }}" style="color:#006880;text-decoration:none;">{{ params.prospect_email }}</a></td></tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 22px 18px 22px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #ECEEF1;">
+                      <tr><td style="padding:12px 0 2px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#9CA3AF;">Company</td></tr>
+                      <tr><td style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;color:#111827;">{{ params.company_name }}</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-36" style="padding:18px 36px 0 36px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF8F2;border:1px solid #F6D9BF;border-radius:14px;">
+                <tr>
+                  <td style="padding:16px 20px;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.65;color:#7A4A22;">
+                    The event is already on the scheduling account's calendar with the Teams link. <strong style="color:#B35215;">Reassign it manually to the right sales rep</strong> and they'll be added to the meeting.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr><td style="font-size:0;line-height:0;height:30px;">&nbsp;</td></tr>
+
+          <tr>
+            <td class="px-36" align="center" style="padding:20px 36px 32px 36px;border-top:1px solid #E4E7EC;font-family:'Open Sans',Arial,Helvetica,sans-serif;font-size:11px;line-height:1.7;color:#9CA3AF;text-align:center;">
+              Solvo Global &middot; Sales scheduling automation<br />
+              Internal notification &mdash; generated by the cold outreach booking workflow.
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

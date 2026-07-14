@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>You're all set · Solvo Global</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background:
+      radial-gradient(720px 420px at 92% -8%, rgba(0,138,171,0.10), transparent 72%),
+      radial-gradient(640px 460px at 4% 104%, rgba(238,118,35,0.09), transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #F4F6F7 100%);
+    background-attachment: fixed;
+  }
+
+  /* ============================ DEMO BANNER ============================ */
+  .demo-banner {
+    background: var(--color-gray-900);
+    color: #fff;
+    padding: 8px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .demo-banner .tag {
+    background: var(--color-primary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 9px;
+  }
+  .demo-banner a {
+    color: #fff;
+    text-decoration: none;
+    padding: 4px 11px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    transition: background var(--transition-fast);
+  }
+  .demo-banner a:hover { background: rgba(255,255,255,0.10); }
+
+  /* ============================ HEADER ============================ */
+  .lp-header {
+    flex-shrink: 0;
+    padding: 20px clamp(20px, 4vw, 44px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lp-header img { height: 26px; width: auto; display: block; }
+  .lp-header .meta {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ============================ STAGE ============================ */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(20px, 4vh, 48px) clamp(20px, 5vw, 44px) clamp(40px, 7vh, 72px);
+  }
+  .shell {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  .shell > * { animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+  .shell > *:nth-child(1) { animation-delay: 80ms; }
+  .shell > *:nth-child(2) { animation-delay: 170ms; }
+  .shell > *:nth-child(3) { animation-delay: 260ms; }
+  .shell > *:nth-child(4) { animation-delay: 350ms; }
+  .shell > *:nth-child(5) { animation-delay: 440ms; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================ SUCCESS HEAD ============================ */
+  .check {
+    width: 84px; height: 84px;
+    border-radius: 50%;
+    background: var(--color-primary-50);
+    border: 2px solid var(--color-primary-200);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  .check svg { width: 38px; height: 38px; }
+  .check svg path {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: draw 520ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    animation-delay: 360ms;
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(27px, 4.4vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  h1 em { font-style: normal; color: var(--color-primary); }
+  .lead {
+    font-size: 14.5px;
+    color: var(--text-secondary);
+    margin-bottom: clamp(22px, 4vh, 32px);
+    max-width: 38ch;
+  }
+
+  /* ============================ MEETING CARD ============================ */
+  .card {
+    width: 100%;
+    background: #fff;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-default);
+    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    padding: 8px 22px;
+    text-align: left;
+    margin-bottom: 18px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 42px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--color-gray-100);
+  }
+  .row:last-child { border-bottom: 0; }
+  .row-icon {
+    width: 42px; height: 42px;
+    border-radius: var(--radius-md);
+    background: var(--color-secondary-50);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-secondary);
+  }
+  .row-icon svg { width: 20px; height: 20px; }
+  .row-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .row-value {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .row-value .sub {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-top: 1px;
+  }
+  .row-value .tz { color: var(--text-muted); font-weight: 400; }
+
+  /* ============================ ICS BUTTON ============================ */
+  .ics-btn {
+    width: 100%;
+    appearance: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    border: 0;
+    background: var(--color-secondary);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 16px 30px -16px rgba(0,138,171,0.65);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .ics-btn:hover { background: var(--color-secondary-700); transform: translateY(-2px); }
+  .ics-btn svg { width: 16px; height: 16px; }
+
+  .rebook {
+    margin-top: 16px;
+    appearance: none;
+    background: none;
+    border: 0;
+    color: var(--text-muted);
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+  .rebook:hover { color: var(--text-secondary); }
+
+  /* ============================ EMPTY STATE ============================ */
+  .empty .check {
+    background: var(--color-gray-100);
+    border-color: var(--border-strong);
+  }
+  .empty .check svg path { animation: none; stroke-dashoffset: 0; }
+
+  @media (max-width: 560px) {
+    .demo-banner { padding: 7px 14px; }
+    .demo-banner span.label { display: none; }
+    .lp-header { padding: 16px 18px; }
+    .lp-header .meta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <span class="label"><span class="tag">Demo</span> Confirmaci&oacute;n &mdash; Email Cold Outreach POC</span>
+  <a href="landing.html">&larr; Scheduling</a>
+</div>
+
+<header class="lp-header">
+  <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
+  <span class="meta">Talent Partner</span>
+</header>
+
+<main class="stage">
+  <div class="shell" id="shell"><!-- rendered by JS --></div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var ICON = {
+    check:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="#EE7623" stroke-width="3" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg>',
+    checkMuted:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="3" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg>',
+    date:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/>' +
+      '<path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>',
+    time:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>' +
+      '<path d="M12 7.5V12l3 2.5"/></svg>',
+    video:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="13" height="11" rx="2.5"/>' +
+      '<path d="M15.5 10 L21.5 7 V17 L15.5 14"/></svg>',
+    download:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5V14.5"/>' +
+      '<path d="M7.5 10.5 L12 15 L16.5 10.5"/><path d="M4.5 19.5H19.5"/></svg>',
+    rep:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.8"/>' +
+      '<path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"/></svg>'
+  };
+
+  /* ===== Lee el meeting transmitido desde la pagina de agendamiento ===== */
+  function readMeeting() {
+    var q = new URLSearchParams(window.location.search);
+    var start = q.get("start"), end = q.get("end"), tz = q.get("tz"),
+        name = q.get("name"), rep = q.get("rep"), repRole = q.get("repRole");
+    if (!start || !end) {
+      try {
+        var s = JSON.parse(sessionStorage.getItem("lag_meeting") || "null");
+        if (s) {
+          start = s.start; end = s.end; tz = tz || s.tz;
+          name = name || s.name; rep = rep || s.rep; repRole = repRole || s.repRole;
+        }
+      } catch (e) {}
+    }
+    if (!start || !end) return null;
+    var sd = new Date(start), ed = new Date(end);
+    if (isNaN(sd) || isNaN(ed)) return null;
+    return {
+      start: sd, end: ed, tz: tz || "America/New_York",
+      name: (name || "").trim(), rep: (rep || "").trim(), repRole: (repRole || "").trim()
+    };
+  }
+
+  function fmtDate(d, tz) {
+    return d.toLocaleDateString("en-US",
+      { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: tz });
+  }
+  function fmtTime(d, tz) {
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: tz });
+  }
+  function tzAbbr(d, tz) {
+    try {
+      var parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "short" })
+        .formatToParts(d);
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].type === "timeZoneName") return parts[i].value;
+      }
+    } catch (e) {}
+    return tz;
+  }
+
+  /* ===== Genera el archivo .ics (RFC 5545 minimo), client-side ===== */
+  function icsStamp(d) {
+    return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  }
+  function buildIcs(m) {
+    return [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Solvo Global//Scheduling POC//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      "UID:lag-" + m.start.getTime() + "@solvoglobal.net",
+      "DTSTAMP:" + icsStamp(new Date()),
+      "DTSTART:" + icsStamp(m.start),
+      "DTEND:" + icsStamp(m.end),
+      "SUMMARY:Solvo Global — Intro call" + (m.rep ? " with " + m.rep : ""),
+      "DESCRIPTION:Your 25-minute meeting with a Solvo Global advisor. " +
+        "The video call link is in your calendar invite.",
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+  }
+  function downloadIcs(m) {
+    var blob = new Blob([buildIcs(m)], { type: "text/calendar;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "solvo-meeting.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+  }
+
+  /* ===== Render ===== */
+  var shell = document.getElementById("shell");
+  var meeting = readMeeting();
+
+  if (!meeting) {
+    document.body.classList.add("empty");
+    shell.innerHTML =
+      '<div class="check">' + ICON.checkMuted + '</div>' +
+      '<h1>No meeting to show</h1>' +
+      '<p class="lead">We couldn\'t find a confirmed meeting. Start from the scheduling ' +
+      'page to book a time.</p>' +
+      '<a class="ics-btn" href="landing.html" style="text-decoration:none;background:var(--color-secondary);">' +
+      'Go to scheduling</a>';
+    return;
+  }
+
+  var greet = meeting.name
+    ? "You're all set, <em>" + meeting.name + "</em>."
+    : "You're <em>all set</em>.";
+  var abbr = tzAbbr(meeting.start, meeting.tz);
+
+  var repRow = meeting.rep
+    ? '<div class="row">' +
+        '<div class="row-icon">' + ICON.rep + '</div>' +
+        '<div><div class="row-label">With</div>' +
+        '<div class="row-value">' + meeting.rep +
+          (meeting.repRole ? '<span class="sub">' + meeting.repRole + ' &middot; Solvo Global</span>' : '') +
+        '</div></div>' +
+      '</div>'
+    : '';
+
+  shell.innerHTML =
+    '<div class="check">' + ICON.check + '</div>' +
+    '<h1>' + greet + '</h1>' +
+    '<p class="lead">Your 25-minute call is confirmed. The calendar invite ' +
+    'with the meeting link is on its way to your inbox.</p>' +
+    '<div class="card">' +
+      '<div class="row">' +
+        '<div class="row-icon">' + ICON.date + '</div>' +
+        '<div><div class="row-label">Date</div>' +
+        '<div class="row-value">' + fmtDate(meeting.start, meeting.tz) + '</div></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<div class="row-icon">' + ICON.time + '</div>' +
+        '<div><div class="row-label">Time</div>' +
+        '<div class="row-value">' + fmtTime(meeting.start, meeting.tz) + ' &ndash; ' +
+          fmtTime(meeting.end, meeting.tz) +
+          ' <span class="tz">' + abbr + '</span></div></div>' +
+      '</div>' +
+      repRow +
+      '<div class="row">' +
+        '<div class="row-icon">' + ICON.video + '</div>' +
+        '<div><div class="row-label">Format</div>' +
+        '<div class="row-value">Video call' +
+          '<span class="sub">Join link included in your calendar invite</span></div></div>' +
+      '</div>' +
+    '</div>' +
+    '<button type="button" class="ics-btn" id="ics-btn">' + ICON.download +
+      ' Add to calendar (.ics)</button>' +
+    '<a class="rebook" href="landing.html">Book a different time</a>';
+
+  document.getElementById("ics-btn").addEventListener("click", function () {
+    downloadIcs(meeting);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,105 @@
+/* ============================================================
+   Chrome del hub. Estilado con el CONTRATO de tokens del design
+   system → se re-themea al cambiar el brand del producto.
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-body);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal, 1.5);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+h1, h2, h3 { font-family: var(--font-heading); margin: 0; line-height: 1.15; }
+
+/* ---- Top bar ---- */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: color-mix(in srgb, var(--bg-body) 88%, transparent);
+  backdrop-filter: saturate(1.2) blur(8px);
+  border-bottom: 1px solid var(--border-default);
+}
+.topbar .brand { display: flex; align-items: center; gap: var(--space-3); font-family: var(--font-heading); font-weight: var(--font-bold); }
+.topbar .brand .dot { width: 12px; height: 12px; border-radius: var(--radius-full); background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)); }
+.brand-switch { display: flex; align-items: center; gap: var(--space-2); color: var(--text-muted); font-size: var(--text-sm); }
+.brand-switch select {
+  font: inherit; font-size: var(--text-sm); color: var(--text-primary);
+  background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-md); padding: var(--space-1) var(--space-2);
+}
+
+/* ---- Layout ---- */
+.wrap { max-width: 1120px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-16); }
+.crumbs { display: flex; gap: var(--space-2); align-items: center; color: var(--text-muted); font-size: var(--text-sm); margin-bottom: var(--space-5); }
+.crumbs a:hover { color: var(--color-primary); }
+.crumbs .sep { opacity: .5; }
+
+.hero h1 { font-size: var(--text-4xl, 2.25rem); font-weight: var(--font-extrabold, 800); letter-spacing: -0.02em; }
+.hero p { color: var(--text-secondary); max-width: 62ch; margin-top: var(--space-3); font-size: var(--text-lg); }
+.section-title { font-size: var(--text-xl); font-weight: var(--font-bold); margin: var(--space-10) 0 var(--space-5); }
+
+/* ---- Grids & cards ---- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-5); }
+.card {
+  display: block; background: var(--bg-surface); border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl, 16px); padding: var(--space-6);
+  transition: transform var(--transition-fast, .15s) ease, box-shadow var(--transition-fast, .15s) ease, border-color var(--transition-fast, .15s) ease;
+}
+.card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-default)); }
+.card h3 { font-size: var(--text-lg); font-weight: var(--font-bold); }
+.card p { color: var(--text-secondary); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
+.card .meta { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: var(--space-1);
+  font-size: var(--text-xs); font-weight: var(--font-semibold);
+  padding: 2px var(--space-2); border-radius: var(--radius-full);
+  background: var(--bg-muted); color: var(--text-secondary); border: 1px solid var(--border-default);
+}
+.badge.accent { background: color-mix(in srgb, var(--color-primary) 14%, transparent); color: var(--color-primary-700, var(--color-primary)); border-color: transparent; }
+
+/* ---- Prototype viewer ---- */
+.proto-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.proto-head h1 { font-size: var(--text-2xl); font-weight: var(--font-bold); }
+.proto-head .note { color: var(--text-muted); font-size: var(--text-sm); margin-top: var(--space-2); }
+.toolbar { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  font: inherit; font-size: var(--text-sm); font-weight: var(--font-semibold); cursor: pointer;
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-md);
+  border: 1px solid var(--border-default); background: var(--bg-surface); color: var(--text-primary);
+}
+.btn:hover { border-color: var(--color-primary); }
+.btn.primary { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-white, #fff); }
+.btn.primary:hover { background: var(--color-primary-600, var(--color-primary)); }
+
+.tabs { display: flex; gap: var(--space-1); flex-wrap: wrap; margin: var(--space-5) 0 var(--space-4); border-bottom: 1px solid var(--border-default); }
+.tab {
+  font: inherit; font-size: var(--text-sm); font-weight: var(--font-semibold); cursor: pointer;
+  padding: var(--space-2) var(--space-4); border: 0; background: none; color: var(--text-secondary);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+
+.viewer {
+  background: var(--bg-muted); border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl, 16px); overflow: hidden; box-shadow: var(--shadow-md);
+}
+.viewer .bar { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-default); background: var(--bg-surface); }
+.viewer .bar .dots { display: flex; gap: 6px; }
+.viewer .bar .dots i { width: 10px; height: 10px; border-radius: var(--radius-full); background: var(--border-strong, var(--border-default)); display: block; }
+.viewer .bar .url { font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono, monospace); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.viewer iframe { display: block; width: 100%; height: 78vh; border: 0; background: #fff; }
+
+.empty { color: var(--text-muted); padding: var(--space-10); text-align: center; }
+
+@media (max-width: 640px) {
+  .wrap { padding: var(--space-6) var(--space-4) var(--space-12); }
+  .viewer iframe { height: 68vh; }
+}

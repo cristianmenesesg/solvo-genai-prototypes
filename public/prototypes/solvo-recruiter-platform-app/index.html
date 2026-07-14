@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar sesión · Solvo Recruiter Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">SRP</div>
+        <h1 class="login-title">Solvo Recruiter Platform</h1>
+        <p class="login-subtitle">Accedé con tu cuenta corporativa</p>
+      </div>
+
+      <div class="role-selector">
+        <span class="role-selector-label">Seleccioná un rol para la demo</span>
+        <div class="role-cards" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button class="role-card active" data-role="recruiter">
+            <span class="role-card-name">Recruiter</span>
+            <span class="role-card-desc">Carlos Ortega</span>
+          </button>
+          <button class="role-card" data-role="admin">
+            <span class="role-card-name">Admin</span>
+            <span class="role-card-desc">Laura Méndez</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="login-form">
+        <button type="button" class="btn btn-microsoft" id="microsoftLoginBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
+            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+          </svg>
+          Iniciar sesión con Microsoft
+        </button>
+        <p class="login-hint">Usá tu cuenta corporativa de Microsoft (@solvo.global)</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const loginBtn = document.getElementById('microsoftLoginBtn');
+    const roleCards = document.querySelectorAll('.role-card');
+    let selectedRole = 'recruiter';
+    roleCards.forEach(card => card.addEventListener('click', () => {
+      roleCards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      selectedRole = card.dataset.role;
+    }));
+    loginBtn.addEventListener('click', () => {
+      loginBtn.disabled = true;
+      setTimeout(() => {
+        localStorage.setItem('tps_user', JSON.stringify(DEMO_USERS[selectedRole]));
+        window.location.href = 'candidatos.html';
+      }, 800);
+    });
+  </script>
+</body>
+</html>

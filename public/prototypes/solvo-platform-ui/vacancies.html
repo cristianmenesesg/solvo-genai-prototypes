@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vacancies - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by rbac.js) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Vacancies</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Filters -->
+        <div class="filters-bar">
+          <!-- Remote Viable toggle (active by default) -->
+          <div class="filter-group">
+            <label class="filter-label">Remote Viable</label>
+            <label class="toggle-pill" id="remoteViablePill">
+              <input type="checkbox" id="remoteViableFilter" checked>
+              <span class="toggle-pill-track">
+                <span class="toggle-pill-knob"></span>
+              </span>
+              <span class="toggle-pill-text" id="remoteViableLabel">On</span>
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Search title</label>
+            <div class="search-input-wrapper">
+              <input type="text" class="form-input sm search-input" placeholder="Job title..." id="searchInput">
+              <span class="search-indicator" id="searchIndicator">
+                <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                Searching...
+              </span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Description</label>
+            <div class="search-input-wrapper">
+              <input type="text" class="form-input sm search-input" placeholder="Search description..." id="descriptionFilter" style="min-width: 140px;">
+              <span class="search-indicator" id="descriptionSearchIndicator">
+                <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                Searching...
+              </span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select class="form-select sm" id="statusFilter">
+              <option value="">All</option>
+              <option value="detected">Detected</option>
+              <option value="contacted">Contacted</option>
+              <option value="proposal">Proposal</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Source</label>
+            <select class="form-select sm" id="sourceFilter">
+              <option value="">All</option>
+              <option value="general_us">General US</option>
+              <option value="current_client">Current Client</option>
+              <option value="on_demand">On-Demand</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Salary Range</label>
+            <select class="form-select sm" id="salaryFilter">
+              <option value="">All</option>
+              <option value="0-50">$0 - $50K</option>
+              <option value="50-100">$50K - $100K</option>
+              <option value="100-150">$100K - $150K</option>
+              <option value="150+">$150K+</option>
+            </select>
+          </div>
+
+          <!-- Comercial filter (coord/supervisor/admin only) -->
+          <div class="filter-group" id="comercialFilterGroup" style="display: none;">
+            <label class="filter-label">Comercial asignado</label>
+            <div id="comercialFilterSearchbox" style="min-width: 180px;"></div>
+          </div>
+
+          <!-- SDR filter (coord/supervisor/admin only) -->
+          <div class="filter-group" id="sdrFilterGroup" style="display: none;">
+            <label class="filter-label">SDR asignado</label>
+            <div id="sdrFilterSearchbox" style="min-width: 180px;"></div>
+          </div>
+
+          <!-- Assignment Type filter (coord/supervisor/admin only) -->
+          <div class="filter-group" id="assignTypeFilterGroup" style="display: none;">
+            <label class="filter-label">Assignment Type</label>
+            <select class="form-select sm" id="assignTypeFilter">
+              <option value="">All</option>
+              <option value="inherited">Inherited</option>
+              <option value="direct">Direct</option>
+            </select>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+            Clear
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <div class="table-header-with-actions">
+            <div class="table-header-left">
+              <span class="table-title" id="tableTitle">0 vacancies found</span>
+            </div>
+            <div class="table-header-right">
+              <button class="btn btn-secondary btn-sm" id="exportBtn" onclick="handleExportCSV()" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" x2="12" y1="15" y2="3"></line>
+                </svg>
+                Exportar CSV
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openScrapePopup({})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                  <path d="M3 21v-5h5"></path>
+                </svg>
+                Scrapear vacantes
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                New Vacancy
+              </button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr id="tableHead">
+                <!-- Rendered by JS based on role -->
+              </tr>
+            </thead>
+            <tbody id="vacanciesTable">
+              <!-- Rows rendered by JS -->
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-icon">📋</div>
+            <h3 class="empty-state-title" id="emptyStateTitle">No results</h3>
+            <p class="empty-state-description" id="emptyStateDescription">No vacancies found with the applied filters</p>
+            <button class="btn btn-secondary" onclick="clearFilters()" id="emptyStateClearBtn">Clear filters</button>
+          </div>
+
+          <div class="table-pagination" id="paginationContainer">
+            <div class="pagination-info" id="paginationInfo">
+              Showing 0 of 0
+            </div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>Previous</button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Vacancy Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal" style="max-width: 650px; max-height: 90vh;">
+      <div class="modal-header">
+        <h2 class="modal-title">New Vacancy</h2>
+        <button class="modal-close" onclick="closeCreateModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px);">
+        <form id="createVacancyForm">
+          <!-- Section 1: Basic Information -->
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Job Title *</label>
+              <input type="text" class="form-input" id="createTitle" placeholder="E.g.: Senior Software Engineer" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Company</label>
+              <input type="text" class="form-input" id="createCompany" placeholder="Search company..." list="companiesList">
+              <datalist id="companiesList"></datalist>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Job Description</label>
+              <textarea class="form-textarea" id="createDescription" rows="3" placeholder="Detailed job description..."></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Location (State)</label>
+                <input type="text" class="form-input" id="createLocation" list="usStatesListVacancy" placeholder="Search state...">
+                <datalist id="usStatesListVacancy">
+                  <option value="Alabama"><option value="Alaska"><option value="Arizona">
+                  <option value="Arkansas"><option value="California"><option value="Colorado">
+                  <option value="Connecticut"><option value="Delaware"><option value="Florida">
+                  <option value="Georgia"><option value="Hawaii"><option value="Idaho">
+                  <option value="Illinois"><option value="Indiana"><option value="Iowa">
+                  <option value="Kansas"><option value="Kentucky"><option value="Louisiana">
+                  <option value="Maine"><option value="Maryland"><option value="Massachusetts">
+                  <option value="Michigan"><option value="Minnesota"><option value="Mississippi">
+                  <option value="Missouri"><option value="Montana"><option value="Nebraska">
+                  <option value="Nevada"><option value="New Hampshire"><option value="New Jersey">
+                  <option value="New Mexico"><option value="New York"><option value="North Carolina">
+                  <option value="North Dakota"><option value="Ohio"><option value="Oklahoma">
+                  <option value="Oregon"><option value="Pennsylvania"><option value="Rhode Island">
+                  <option value="South Carolina"><option value="South Dakota"><option value="Tennessee">
+                  <option value="Texas"><option value="Utah"><option value="Vermont">
+                  <option value="Virginia"><option value="Washington"><option value="West Virginia">
+                  <option value="Wisconsin"><option value="Wyoming">
+                </datalist>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department</label>
+                <select class="form-select" id="createDepartment">
+                  <option value="">Select...</option>
+                  <option value="engineering">Engineering</option>
+                  <option value="sales">Sales</option>
+                  <option value="operations">Operations</option>
+                  <option value="hr">HR</option>
+                  <option value="finance">Finance</option>
+                  <option value="marketing">Marketing</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Work Type -->
+          <div class="form-section">
+            <h4 class="form-section-title">Work Type</h4>
+            <div class="form-group">
+              <label class="form-label">Work Mode</label>
+              <select class="form-select" id="createModality">
+                <option value="">Select...</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="on-site">On-site</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-check">
+                <input type="checkbox" id="createRemoteViable">
+                <span>Viable for remote work</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 3: Compensation -->
+          <div class="form-section">
+            <h4 class="form-section-title">Compensation</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Minimum Salary (USD)</label>
+                <input type="number" class="form-input" id="createSalaryMin" placeholder="E.g.: 80000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Maximum Salary (USD)</label>
+                <input type="number" class="form-input" id="createSalaryMax" placeholder="E.g.: 120000">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Notes -->
+          <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+            <h4 class="form-section-title">Notes</h4>
+            <div class="form-group">
+              <textarea class="form-textarea" id="createNotes" rows="2" placeholder="Internal notes about this vacancy..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              Will be automatically assigned: <strong>source = 'manual'</strong>, <strong>status = 'detected'</strong>
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+        <button class="btn btn-primary" id="createVacancyBtn" onclick="createVacancy()">Create Vacancy</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Toggle pill for remote viable filter */
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      height: 32px;
+    }
+    .toggle-pill input { display: none; }
+    .toggle-pill-track {
+      width: 40px;
+      height: 22px;
+      background: var(--border-primary, #444);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.25s ease;
+      flex-shrink: 0;
+    }
+    .toggle-pill-knob {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.25s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-pill input:checked + .toggle-pill-track {
+      background: #22c55e;
+    }
+    .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob {
+      transform: translateX(18px);
+    }
+    .toggle-pill-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary, #aaa);
+      min-width: 20px;
+      transition: color 0.2s;
+    }
+    .toggle-pill input:checked ~ .toggle-pill-text {
+      color: #22c55e;
+    }
+
+    /* Remote badge */
+    .badge-remote {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+    .badge-remote.no {
+      background: rgba(107, 114, 128, 0.15);
+      color: #9ca3af;
+    }
+
+    /* Direct assignment badge */
+    .badge-assign-direct {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.15);
+      color: #a78bfa;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    /* Salary column */
+    .salary-text {
+      font-size: 13px;
+      white-space: nowrap;
+    }
+  </style>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // === SESSION INIT ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('vacancies');
+
+    // === RBAC FLAGS ===
+    const isAdmin = canViewAll();           // coord, supervisor, admin
+    const isComercial = user.role === 'comercial';
+    const isSDR = user.role === 'sdr';
+
+    // Show export button only for coord/supervisor/admin
+    if (canExport()) {
+      document.getElementById('exportBtn').style.display = '';
+    }
+
+    // Populate companies datalist from MOCK_COMPANIES
+    const companiesList = document.getElementById('companiesList');
+    MOCK_COMPANIES.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      companiesList.appendChild(opt);
+    });
+
+    // === FILTER SEARCHBOXES (coord/supervisor/admin only) ===
+    let comercialFilterSB = null;
+    let sdrFilterSB = null;
+
+    if (isAdmin) {
+      document.getElementById('comercialFilterGroup').style.display = '';
+      document.getElementById('sdrFilterGroup').style.display = '';
+      document.getElementById('assignTypeFilterGroup').style.display = '';
+
+      comercialFilterSB = renderFilterSearchbox('comercialFilterSearchbox', getActiveCommercials(), {
+        placeholder: 'Filter by comercial...',
+        onSelect: () => applyFilters(true)
+      });
+      sdrFilterSB = renderFilterSearchbox('sdrFilterSearchbox', getActiveSDRs(), {
+        placeholder: 'Filter by SDR...',
+        onSelect: () => applyFilters(true)
+      });
+    }
+
+    // === HELPER: resolve company name ===
+    function getCompanyName(companyId) {
+      const company = MOCK_COMPANIES.find(c => c.id === companyId);
+      return company ? company.name : '—';
+    }
+
+    // === HELPER: member display with type indicator ===
+    function getMemberDisplay(memberId, assignType) {
+      if (!memberId) return '<span class="text-unassigned">—</span>';
+      const member = getMemberById(memberId);
+      const name = member ? member.shortName : '—';
+      if (assignType === 'direct') {
+        return `${name} <span class="badge-assign-direct">directa</span>`;
+      }
+      return name; // inherited = plain text
+    }
+
+    // === STATUS HELPERS ===
+    function getStatusLabel(status) {
+      const labels = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
+      return labels[status] || status;
+    }
+
+    function getSourceLabel(source) {
+      const labels = { general_us: 'General US', current_client: 'Current Client', on_demand: 'On-Demand', manual: 'Manual' };
+      return labels[source] || source;
+    }
+
+    // === RENDER TABLE HEAD ===
+    function renderTableHead() {
+      const thead = document.getElementById('tableHead');
+      let html = '';
+
+      html += '<th>Title <span class="sort-icon">↕</span></th>';
+      html += '<th>Company <span class="sort-icon">↕</span></th>';
+      html += '<th>Status <span class="sort-icon">↕</span></th>';
+
+      if (isAdmin) {
+        // coord/supervisor/admin: show both Comercial and SDR
+        html += '<th>Comercial <span class="sort-icon">↕</span></th>';
+        html += '<th>SDR <span class="sort-icon">↕</span></th>';
+      } else if (isComercial) {
+        // comercial view: read-only SDR
+        html += '<th>SDR</th>';
+      } else if (isSDR) {
+        // sdr view: read-only Comercial
+        html += '<th>Comercial</th>';
+      }
+
+      html += '<th>Salary <span class="sort-icon">↕</span></th>';
+      html += '<th>Remote</th>';
+
+      thead.innerHTML = html;
+    }
+
+    // === SKELETON LOADING ===
+    function renderSkeletonTable() {
+      const tbody = document.getElementById('vacanciesTable');
+      const colCount = isAdmin ? 7 : 6;
+      const skeletonRows = Array(8).fill(0).map(() => {
+        let cells = '';
+        cells += '<td><div class="table-skeleton" style="width: 180px;"></div></td>';  // title
+        cells += '<td><div class="table-skeleton" style="width: 140px;"></div></td>';  // company
+        cells += '<td><div class="table-skeleton" style="width: 80px; height: 24px; border-radius: 12px;"></div></td>'; // status
+        if (isAdmin) {
+          cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // comercial
+          cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // sdr
+        } else {
+          cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // single assignment col
+        }
+        cells += '<td><div class="table-skeleton" style="width: 90px;"></div></td>';  // salary
+        cells += '<td><div class="table-skeleton" style="width: 50px;"></div></td>';  // remote
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      tbody.innerHTML = skeletonRows;
+      document.getElementById('emptyState').style.display = 'none';
+      document.querySelector('table').style.display = '';
+    }
+
+    // === RENDER TABLE ===
+    function renderTable(data) {
+      const tbody = document.getElementById('vacanciesTable');
+      const table = document.querySelector('.table-container table');
+      const emptyState = document.getElementById('emptyState');
+
+      if (data.length === 0) {
+        table.style.display = 'none';
+        emptyState.style.display = 'flex';
+        updateResultsCount(0);
+        return;
+      }
+
+      table.style.display = '';
+      emptyState.style.display = 'none';
+      updateResultsCount(data.length);
+
+      tbody.innerHTML = data.map(v => {
+        let row = '';
+
+        // Title
+        row += `<td><span class="font-medium">${v.title}</span></td>`;
+
+        // Company
+        const companyName = getCompanyName(v.companyId);
+        row += `<td><a href="company-detail.html?id=${v.companyId}" class="text-secondary" onclick="event.stopPropagation();">${companyName}</a></td>`;
+
+        // Status
+        row += `<td><span class="badge-pipeline badge-pipeline-${v.status}">${getStatusLabel(v.status)}</span></td>`;
+
+        // Assignment columns vary by role
+        if (isAdmin) {
+          row += `<td>${getMemberDisplay(v.comercialId, v.comercialType)}</td>`;
+          row += `<td>${getMemberDisplay(v.sdrId, v.sdrType)}</td>`;
+        } else if (isComercial) {
+          row += `<td>${getMemberDisplay(v.sdrId, null)}</td>`;
+        } else if (isSDR) {
+          row += `<td>${getMemberDisplay(v.comercialId, null)}</td>`;
+        }
+
+        // Salary
+        row += `<td><span class="salary-text">${v.salary || '—'}</span></td>`;
+
+        // Remote
+        row += `<td><span class="badge-remote ${v.remoteViable ? '' : 'no'}">${v.remoteViable ? 'Yes' : 'No'}</span></td>`;
+
+        return `<tr onclick="goToDetail('${v.id}')" style="cursor: pointer;">${row}</tr>`;
+      }).join('');
+    }
+
+    function updateResultsCount(count) {
+      document.getElementById('tableTitle').textContent = `${count.toLocaleString()} vacancies found`;
+      document.getElementById('paginationInfo').textContent = count > 50
+        ? `Showing 1-50 of ${count.toLocaleString()}`
+        : `Showing ${count > 0 ? '1-' + count : '0'} of ${count.toLocaleString()}`;
+    }
+
+    // === NAVIGATION ===
+    function goToDetail(vacancyId) {
+      window.location.href = `vacancy-detail.html?id=${vacancyId}`;
+    }
+
+    // === FILTERING ===
+    function filterVacancies() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const description = document.getElementById('descriptionFilter').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const source = document.getElementById('sourceFilter').value;
+      const salaryBucket = document.getElementById('salaryFilter').value;
+      const remoteViable = document.getElementById('remoteViableFilter').checked;
+
+      // Admin-only filters
+      const comercialFilter = comercialFilterSB ? comercialFilterSB.getValue() : 'all';
+      const sdrFilter = sdrFilterSB ? sdrFilterSB.getValue() : 'all';
+      const assignType = isAdmin ? document.getElementById('assignTypeFilter').value : '';
+
+      let baseData = getVisibleVacancies();
+
+      return baseData.filter(v => {
+        if (search && !v.title.toLowerCase().includes(search)) return false;
+        if (description && !(v.description || '').toLowerCase().includes(description)) return false;
+        if (status && v.status !== status) return false;
+        if (source && v.source !== source) return false;
+        if (remoteViable && !v.remoteViable) return false;
+
+        // Salary bucket filter
+        if (salaryBucket && v.salaryBucket !== salaryBucket) return false;
+
+        // Comercial filter (admin views)
+        if (comercialFilter && comercialFilter !== 'all') {
+          if (comercialFilter === 'unassigned') {
+            if (v.comercialId !== null) return false;
+          } else {
+            if (v.comercialId !== comercialFilter) return false;
+          }
+        }
+
+        // SDR filter (admin views)
+        if (sdrFilter && sdrFilter !== 'all') {
+          if (sdrFilter === 'unassigned') {
+            if (v.sdrId !== null) return false;
+          } else {
+            if (v.sdrId !== sdrFilter) return false;
+          }
+        }
+
+        // Assignment type filter (applies to both comercial and sdr types)
+        if (assignType) {
+          const matchComercial = v.comercialType === assignType;
+          const matchSdr = v.sdrType === assignType;
+          if (!matchComercial && !matchSdr) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function applyFilters(showSkeleton = true) {
+      if (showSkeleton) {
+        renderSkeletonTable();
+        setTimeout(() => {
+          const filtered = filterVacancies();
+          renderTable(filtered);
+        }, 300);
+      } else {
+        const filtered = filterVacancies();
+        renderTable(filtered);
+      }
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('descriptionFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('sourceFilter').value = '';
+      document.getElementById('salaryFilter').value = '';
+      document.getElementById('remoteViableFilter').checked = true;
+      document.getElementById('remoteViableLabel').textContent = 'On';
+      if (comercialFilterSB) comercialFilterSB.reset();
+      if (sdrFilterSB) sdrFilterSB.reset();
+      if (isAdmin) document.getElementById('assignTypeFilter').value = '';
+      applyFilters(true);
+    }
+
+    // === DEBOUNCE FOR TEXT INPUTS ===
+    let searchDebounceTimer = null;
+    let descDebounceTimer = null;
+    const DEBOUNCE_DELAY = 400;
+
+    function showSearchIndicator(indicatorId, show) {
+      const indicator = document.getElementById(indicatorId);
+      if (indicator) indicator.classList.toggle('show', show);
+    }
+
+    function handleSearchInput() {
+      showSearchIndicator('searchIndicator', true);
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyFilters(false);
+        showSearchIndicator('searchIndicator', false);
+      }, DEBOUNCE_DELAY);
+    }
+
+    function handleDescriptionInput() {
+      showSearchIndicator('descriptionSearchIndicator', true);
+      clearTimeout(descDebounceTimer);
+      descDebounceTimer = setTimeout(() => {
+        applyFilters(false);
+        showSearchIndicator('descriptionSearchIndicator', false);
+      }, DEBOUNCE_DELAY);
+    }
+
+    // Event listeners
+    document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+    document.getElementById('descriptionFilter').addEventListener('input', handleDescriptionInput);
+    document.getElementById('statusFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('sourceFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('salaryFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('remoteViableFilter').addEventListener('change', function() {
+      document.getElementById('remoteViableLabel').textContent = this.checked ? 'On' : 'Off';
+      applyFilters(true);
+    });
+    if (isAdmin) {
+      document.getElementById('assignTypeFilter').addEventListener('change', () => applyFilters(true));
+    }
+
+    // === EXPORT CSV ===
+    function handleExportCSV() {
+      const data = filterVacancies();
+
+      openExportPopup({
+        entityLabel: 'vacantes',
+        entityCount: data.length,
+        showContactsOption: false,
+        onExport: () => {
+          const rows = data.map(v => {
+            const comercial = v.comercialId ? getMemberById(v.comercialId) : null;
+            const sdr = v.sdrId ? getMemberById(v.sdrId) : null;
+            const coordinator = MOCK_COMPANIES.find(c => c.id === v.companyId);
+            return {
+              Titulo: v.title,
+              Empresa: getCompanyName(v.companyId),
+              Status: getStatusLabel(v.status),
+              Salario: v.salary || '',
+              'Remote Viable': v.remoteViable ? 'Sí' : 'No',
+              Fuente: getSourceLabel(v.source),
+              Descripcion: v.description || '',
+              'Fecha Deteccion': v.detectedAt,
+              'Comercial Asignado': comercial ? comercial.name : '',
+              'Tipo Asignacion Comercial': v.comercialType || '',
+              'SDR Asignado': sdr ? sdr.name : '',
+              'Tipo Asignacion SDR': v.sdrType || ''
+            };
+          });
+          exportToCSV(rows, `vacantes_${new Date().toISOString().slice(0,10)}.csv`);
+        }
+      });
+    }
+
+    // === CREATE MODAL ===
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('active');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+    }
+
+    function createVacancy() {
+      const title = document.getElementById('createTitle').value.trim();
+      if (!title) {
+        document.getElementById('createTitle').classList.add('error');
+        showToast('Job title is required', 'error');
+        return;
+      }
+
+      showToast('Vacancy created successfully', 'success');
+      closeCreateModal();
+      setTimeout(() => {
+        goToDetail('vac-new');
+      }, 500);
+    }
+
+    // === EMPTY STATE FOR PERSONAL ROLES ===
+    function setupPersonalEmptyState() {
+      if (isPersonalRole()) {
+        const myVacancies = getVisibleVacancies();
+        if (myVacancies.length === 0) {
+          document.getElementById('emptyStateTitle').textContent = 'No vacancies assigned';
+          document.getElementById('emptyStateDescription').textContent = 'You have no vacancies assigned to your role';
+          document.getElementById('emptyStateClearBtn').style.display = 'none';
+        }
+      }
+    }
+
+    // === CLOSE MODALS ===
+    document.getElementById('createModal').addEventListener('click', function(e) {
+      if (e.target === this) closeCreateModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeCreateModal();
+      }
+    });
+
+    // === INITIAL RENDER ===
+    renderTableHead();
+    setupPersonalEmptyState();
+    renderSkeletonTable();
+    setTimeout(() => {
+      const initialData = getVisibleVacancies();
+      renderTable(initialData);
+    }, 800);
+  </script>
+</body>
+</html>

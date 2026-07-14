@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vacancy Detail - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .vacancy-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .vacancy-meta a { color: var(--color-primary, #775AE5); text-decoration: none; font-size: 14px; }
+    .vacancy-meta a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by rbac.js) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Vacancy Detail</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="vacancies.html" class="breadcrumb-item">Vacancies</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current" id="breadcrumbName">Product Manager</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title" id="vacancyTitle">Product Manager</h2>
+            <div class="vacancy-meta">
+              <span class="badge-pipeline badge-pipeline-detected" id="pipelineBadge">Detected</span>
+              <a href="company-detail.html?id=comp-001" id="companyLink">TechCorp Solutions</a>
+            </div>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="openEditModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+              </svg>
+              Edit
+            </button>
+          </div>
+        </div>
+
+        <!-- Assignment Section (rendered by rbac.js renderAssignmentSection) -->
+        <div id="assignmentSection"></div>
+
+        <!-- Tabs -->
+        <div class="detail-tabs">
+          <button class="detail-tab-btn active" onclick="switchTab('general', this)">General</button>
+          <button class="detail-tab-btn" onclick="switchTab('seguimiento', this)">Follow-up</button>
+        </div>
+
+        <!-- Tab: General -->
+        <div id="tab-general" class="detail-tab-content active">
+          <div class="detail-card">
+            <div class="detail-card-title">Vacancy Information</div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <span class="detail-value"><span class="badge-pipeline badge-pipeline-detected" id="detailStatus">Detected</span></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Source</span>
+                <span class="detail-value" id="detailSource">current_client</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">State</span>
+                <span class="detail-value" id="detailState">FL</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Remote Viable</span>
+                <span class="detail-value" id="detailRemote">Yes</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Salary</span>
+                <span class="detail-value" id="detailSalary">$110K - $140K</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Detected</span>
+                <span class="detail-value" id="detailDetected">Apr 12, 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Description</div>
+            <div class="research-value-wrapper">
+              <div class="research-value research-truncatable" id="detailDescription" data-expanded="false" style="white-space: pre-wrap; line-height: 1.6;">
+                Drive product strategy for SaaS platform.
+              </div>
+              <button class="research-toggle-btn" id="descriptionToggleBtn" onclick="toggleDescription()" style="display: none;">See more &darr;</button>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Company</div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Company</span>
+                <span class="detail-value"><a href="company-detail.html?id=comp-001" id="detailCompanyLink">TechCorp Solutions</a></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Type</span>
+                <span class="detail-value"><span class="badge badge-success" id="detailCompanyType">Client</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Follow-up -->
+        <div id="tab-seguimiento" class="detail-tab-content">
+          <div class="detail-card">
+            <div class="detail-card-title">
+              Pipeline History
+              <button class="btn btn-primary btn-sm" onclick="openStateChangeModal()">Change Status</button>
+            </div>
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Change</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable">
+                <!-- Rows rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Vacancy Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width: 600px; max-height: 90vh;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h2 class="modal-title">Edit Vacancy</h2>
+          <span class="modified-counter" id="modifiedCounter" style="display: none;">0 fields modified</span>
+        </div>
+        <button class="modal-close" onclick="closeEditModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px);">
+        <form id="editVacancyForm">
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Job Title *</label>
+              <input type="text" class="form-input" id="editTitle" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="editDescription" rows="4"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Salary</label>
+                <input type="text" class="form-input" id="editSalary" placeholder="$100K - $130K">
+              </div>
+              <div class="form-group">
+                <label class="form-label">State Code</label>
+                <input type="text" class="form-input" id="editState" placeholder="FL">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-check">
+                <input type="checkbox" id="editRemoteViable">
+                <span>Remote Viable</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 8px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              <strong>Note:</strong> Status changes use the "Change Status" button in the Follow-up tab.
+            </p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveVacancyBtn" onclick="saveVacancy()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Change Modal -->
+  <div class="modal-overlay" id="stateChangeModal">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Status</h2>
+        <button class="modal-close" onclick="closeStateChangeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="state-change-current">
+          <span class="text-muted">Current status:</span>
+          <span class="badge-pipeline" id="currentStateBadge">Detected</span>
+        </div>
+        <form id="stateChangeForm">
+          <div class="form-group">
+            <label class="form-label">New Status *</label>
+            <select class="form-select" id="newState" required>
+              <option value="">Select status...</option>
+              <option value="detected">Detected</option>
+              <option value="contacted">Contacted</option>
+              <option value="proposal">Proposal</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note * <span class="text-muted">(min 10 chars)</span></label>
+            <textarea class="form-textarea" id="stateChangeNote" placeholder="Describe the reason..." minlength="10" maxlength="500" required></textarea>
+            <div class="char-count"><span id="noteCount">0</span>/500</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags <span class="text-muted">(optional)</span></label>
+            <div class="tags-input" id="tagsInput">
+              <input type="text" placeholder="Type and press Enter..." id="tagInputField">
+            </div>
+            <p class="text-muted text-xs" style="margin-top: 4px;">E.g.: #call, #email, #proposal</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStateChangeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStateChange()">Confirm Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // === SESSION ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('vacancies');
+
+    // === RESOLVE VACANCY ===
+    const params = new URLSearchParams(window.location.search);
+    const vacancyId = params.get('id') || 'vac-003';
+    const vacancy = MOCK_VACANCIES.find(v => v.id === vacancyId) || MOCK_VACANCIES.find(v => v.id === 'vac-003');
+    const company = MOCK_COMPANIES.find(c => c.id === vacancy.companyId);
+
+    // Local mutable copy of assignment fields
+    let vacData = {
+      comercialId: vacancy.comercialId,
+      comercialType: vacancy.comercialType,
+      sdrId: vacancy.sdrId,
+      sdrType: vacancy.sdrType
+    };
+
+    // === HELPERS ===
+    const STATUS_LABELS = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
+    const SOURCE_LABELS = { general_us: 'General US', current_client: 'Current Client' };
+    const COMPANY_TYPE_LABELS = { client: 'Client', prospecto: 'Prospect', inactivo: 'Inactive' };
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // === POPULATE PAGE HEADER ===
+    document.title = vacancy.title + ' - Solvo Platform';
+    document.getElementById('breadcrumbName').textContent = vacancy.title;
+    document.getElementById('vacancyTitle').textContent = vacancy.title;
+
+    const pBadge = document.getElementById('pipelineBadge');
+    pBadge.textContent = STATUS_LABELS[vacancy.status] || vacancy.status;
+    pBadge.className = 'badge-pipeline badge-pipeline-' + vacancy.status;
+
+    const cLink = document.getElementById('companyLink');
+    cLink.textContent = company ? company.name : '—';
+    cLink.href = company ? 'company-detail.html?id=' + company.id : '#';
+
+    // === POPULATE GENERAL TAB ===
+    const dStatus = document.getElementById('detailStatus');
+    dStatus.textContent = STATUS_LABELS[vacancy.status] || vacancy.status;
+    dStatus.className = 'badge-pipeline badge-pipeline-' + vacancy.status;
+    document.getElementById('detailSource').textContent = SOURCE_LABELS[vacancy.source] || vacancy.source;
+    document.getElementById('detailState').textContent = vacancy.stateCode;
+    document.getElementById('detailRemote').textContent = vacancy.remoteViable ? 'Yes' : 'No';
+    document.getElementById('detailSalary').textContent = vacancy.salary;
+    document.getElementById('detailDetected').textContent = formatDate(vacancy.detectedAt);
+    document.getElementById('detailDescription').textContent = vacancy.description;
+
+    const dcLink = document.getElementById('detailCompanyLink');
+    dcLink.textContent = company ? company.name : '—';
+    dcLink.href = company ? 'company-detail.html?id=' + company.id : '#';
+    const dcType = document.getElementById('detailCompanyType');
+    dcType.textContent = company ? (COMPANY_TYPE_LABELS[company.type] || company.type) : '—';
+    if (company && company.type === 'client') { dcType.className = 'badge badge-success'; }
+    else if (company && company.type === 'prospecto') { dcType.className = 'badge badge-info'; }
+    else { dcType.className = 'badge badge-neutral'; }
+
+    // Description expand/collapse
+    function toggleDescription() {
+      const el = document.getElementById('detailDescription');
+      const btn = document.getElementById('descriptionToggleBtn');
+      const expanded = el.dataset.expanded === 'true';
+      el.dataset.expanded = expanded ? 'false' : 'true';
+      el.classList.toggle('expanded', !expanded);
+      btn.textContent = expanded ? 'See more \u2193' : 'See less \u2191';
+    }
+    function checkDescriptionTruncation() {
+      const el = document.getElementById('detailDescription');
+      const btn = document.getElementById('descriptionToggleBtn');
+      btn.style.display = el.scrollHeight > 120 ? 'block' : 'none';
+    }
+    checkDescriptionTruncation();
+
+    // === ASSIGNMENT SECTION ===
+    function renderAssignment() {
+      renderAssignmentSection('assignmentSection', {
+        comercialId: vacData.comercialId,
+        sdrId: vacData.sdrId,
+        coordinatorId: company ? company.coordinatorId : null,
+        comercialType: vacData.comercialType,
+        sdrType: vacData.sdrType,
+        companyName: company ? company.name : null,
+        showInheritance: true,
+        onManage: function() {
+          openAssignmentPopup({
+            title: vacancy.title,
+            currentComercialId: vacData.comercialId,
+            currentSdrId: vacData.sdrId,
+            currentCoordinatorId: company ? company.coordinatorId : null,
+            comercialType: vacData.comercialType,
+            sdrType: vacData.sdrType,
+            showInheritance: true,
+            inheritedComercialId: company ? company.comercialId : null,
+            inheritedSdrId: company ? company.sdrId : null,
+            onSave: function(newComercialId, newSdrId) {
+              // Determine new types
+              if (newComercialId !== vacData.comercialId) {
+                vacData.comercialId = newComercialId;
+                // If restored to company value -> inherited, else -> direct override
+                vacData.comercialType = (company && newComercialId === company.comercialId) ? 'inherited' : (newComercialId ? 'direct' : null);
+              }
+              if (newSdrId !== vacData.sdrId) {
+                vacData.sdrId = newSdrId;
+                vacData.sdrType = (company && newSdrId === company.sdrId) ? 'inherited' : (newSdrId ? 'direct' : null);
+              }
+              renderAssignment();
+            }
+          });
+        }
+      });
+    }
+    renderAssignment();
+
+    // === TAB SWITCHING ===
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.detail-tab-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // === FOLLOW-UP HISTORY (mock) ===
+    const stateHistory = [
+      { date: '2026-04-12', user: 'System', from: null, to: 'detected', note: 'Vacancy detected from current client pipeline. Matched to TechCorp Solutions.' },
+    ];
+
+    // Skeleton then render
+    (function() {
+      const tbody = document.getElementById('historyTable');
+      tbody.innerHTML = Array(2).fill(0).map(() => `
+        <tr><td><div class="table-skeleton" style="width:80px"></div></td><td><div class="table-skeleton" style="width:100px"></div></td><td><div class="table-skeleton" style="width:100px"></div></td><td><div class="table-skeleton" style="width:200px"></div></td></tr>
+      `).join('');
+      setTimeout(() => {
+        if (!stateHistory.length) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No history yet</td></tr>';
+          return;
+        }
+        tbody.innerHTML = stateHistory.map(h => `<tr>
+          <td>${formatDate(h.date)}</td>
+          <td>${h.user}</td>
+          <td>${h.from && h.to
+            ? `<span class="badge-pipeline badge-pipeline-${h.from}" style="font-size:10px">${STATUS_LABELS[h.from] || h.from}</span> <span style="margin:0 4px">&rarr;</span> <span class="badge-pipeline badge-pipeline-${h.to}" style="font-size:10px">${STATUS_LABELS[h.to] || h.to}</span>`
+            : h.to
+              ? `<span class="badge-pipeline badge-pipeline-${h.to}" style="font-size:10px">${STATUS_LABELS[h.to] || h.to}</span>`
+              : '<span class="text-muted" style="font-size:11px">&mdash; Note &mdash;</span>'
+          }</td>
+          <td><span class="history-note">${h.note}</span></td>
+        </tr>`).join('');
+      }, 500);
+    })();
+
+    // === EDIT MODAL ===
+    const originals = {};
+
+    function openEditModal() {
+      document.getElementById('editTitle').value = vacancy.title;
+      document.getElementById('editDescription').value = vacancy.description;
+      document.getElementById('editSalary').value = vacancy.salary;
+      document.getElementById('editState').value = vacancy.stateCode;
+      document.getElementById('editRemoteViable').checked = vacancy.remoteViable;
+      originals.title = vacancy.title;
+      originals.description = vacancy.description;
+      originals.salary = vacancy.salary;
+      originals.state = vacancy.stateCode;
+      originals.remote = vacancy.remoteViable;
+      document.getElementById('editModal').classList.add('active');
+      updateModifiedCounter();
+    }
+
+    function closeEditModal() {
+      const count = countModified();
+      if (count > 0 && !confirm('Discard changes?')) return;
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    function countModified() {
+      let c = 0;
+      if (document.getElementById('editTitle').value !== originals.title) c++;
+      if (document.getElementById('editDescription').value !== originals.description) c++;
+      if (document.getElementById('editSalary').value !== originals.salary) c++;
+      if (document.getElementById('editState').value !== originals.state) c++;
+      if (document.getElementById('editRemoteViable').checked !== originals.remote) c++;
+      return c;
+    }
+
+    function updateModifiedCounter() {
+      const count = countModified();
+      const counter = document.getElementById('modifiedCounter');
+      const btn = document.getElementById('saveVacancyBtn');
+      if (count > 0) {
+        counter.style.display = 'inline-block';
+        counter.textContent = count + ' field' + (count > 1 ? 's' : '') + ' modified';
+        btn.disabled = false; btn.style.opacity = '1';
+      } else {
+        counter.style.display = 'none';
+        btn.disabled = true; btn.style.opacity = '0.5';
+      }
+    }
+
+    ['editTitle','editDescription','editSalary','editState'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', updateModifiedCounter);
+    });
+    document.getElementById('editRemoteViable').addEventListener('change', updateModifiedCounter);
+
+    function saveVacancy() {
+      vacancy.title = document.getElementById('editTitle').value;
+      vacancy.description = document.getElementById('editDescription').value;
+      vacancy.salary = document.getElementById('editSalary').value;
+      vacancy.stateCode = document.getElementById('editState').value;
+      vacancy.remoteViable = document.getElementById('editRemoteViable').checked;
+      // Re-populate page
+      document.getElementById('breadcrumbName').textContent = vacancy.title;
+      document.getElementById('vacancyTitle').textContent = vacancy.title;
+      document.title = vacancy.title + ' - Solvo Platform';
+      document.getElementById('detailSalary').textContent = vacancy.salary;
+      document.getElementById('detailState').textContent = vacancy.stateCode;
+      document.getElementById('detailRemote').textContent = vacancy.remoteViable ? 'Yes' : 'No';
+      document.getElementById('detailDescription').textContent = vacancy.description;
+      checkDescriptionTruncation();
+      document.getElementById('editModal').classList.remove('active');
+      document.getElementById('modifiedCounter').style.display = 'none';
+      showToast('Vacancy updated successfully', 'success');
+    }
+
+    // === STATE CHANGE MODAL ===
+    function openStateChangeModal() {
+      const badge = document.getElementById('currentStateBadge');
+      badge.textContent = STATUS_LABELS[vacancy.status] || vacancy.status;
+      badge.className = 'badge-pipeline badge-pipeline-' + vacancy.status;
+      document.getElementById('stateChangeModal').classList.add('active');
+    }
+    function closeStateChangeModal() {
+      document.getElementById('stateChangeModal').classList.remove('active');
+      tags = [];
+      renderTags();
+    }
+    function saveStateChange() {
+      const note = document.getElementById('stateChangeNote').value;
+      if (note.length < 10) { showToast('Note must be at least 10 characters', 'error'); return; }
+      const newStatus = document.getElementById('newState').value;
+      if (!newStatus) { showToast('Select a status', 'error'); return; }
+      const oldStatus = vacancy.status;
+      vacancy.status = newStatus;
+      // Update badges
+      const pBadge = document.getElementById('pipelineBadge');
+      pBadge.textContent = STATUS_LABELS[newStatus];
+      pBadge.className = 'badge-pipeline badge-pipeline-' + newStatus;
+      const dStatus = document.getElementById('detailStatus');
+      dStatus.textContent = STATUS_LABELS[newStatus];
+      dStatus.className = 'badge-pipeline badge-pipeline-' + newStatus;
+      // Add to history
+      stateHistory.unshift({ date: new Date().toISOString().slice(0,10), user: user.name, from: oldStatus, to: newStatus, note: note });
+      const tbody = document.getElementById('historyTable');
+      tbody.innerHTML = stateHistory.map(h => `<tr>
+        <td>${formatDate(h.date)}</td>
+        <td>${h.user}</td>
+        <td>${h.from && h.to
+          ? `<span class="badge-pipeline badge-pipeline-${h.from}" style="font-size:10px">${STATUS_LABELS[h.from] || h.from}</span> <span style="margin:0 4px">&rarr;</span> <span class="badge-pipeline badge-pipeline-${h.to}" style="font-size:10px">${STATUS_LABELS[h.to] || h.to}</span>`
+          : h.to
+            ? `<span class="badge-pipeline badge-pipeline-${h.to}" style="font-size:10px">${STATUS_LABELS[h.to] || h.to}</span>`
+            : '<span class="text-muted" style="font-size:11px">&mdash; Note &mdash;</span>'
+        }</td>
+        <td><span class="history-note">${h.note}</span></td>
+      </tr>`).join('');
+      closeStateChangeModal();
+      showToast('Status updated to ' + STATUS_LABELS[newStatus], 'success');
+    }
+
+    // === TAGS ===
+    let tags = [];
+    function renderTags() {
+      const container = document.getElementById('tagsInput');
+      const input = document.getElementById('tagInputField');
+      container.innerHTML = '';
+      tags.forEach((tag, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = tag + ' <span class="tag-chip-remove" onclick="removeTag(' + i + ')">&times;</span>';
+        container.appendChild(chip);
+      });
+      container.appendChild(input);
+    }
+    function removeTag(i) { tags.splice(i, 1); renderTags(); }
+    document.getElementById('tagInputField').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = this.value.trim();
+        if (v) { tags.push(v.startsWith('#') ? v : '#' + v); this.value = ''; renderTags(); }
+      }
+    });
+
+    // Character count
+    document.getElementById('stateChangeNote').addEventListener('input', function() {
+      const count = this.value.length;
+      const el = document.getElementById('noteCount');
+      el.textContent = count;
+      const parent = el.parentElement;
+      parent.classList.remove('char-count-green','char-count-yellow','char-count-red');
+      if (count < 10) parent.classList.add('char-count-red');
+      else if (count <= 400) parent.classList.add('char-count-green');
+      else if (count <= 450) parent.classList.add('char-count-yellow');
+      else parent.classList.add('char-count-red');
+    });
+
+    // === MODAL CLOSE HANDLERS ===
+    ['editModal','stateChangeModal'].forEach(id => {
+      document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) {
+          if (id === 'editModal') closeEditModal();
+          else closeStateChangeModal();
+        }
+      });
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { closeEditModal(); closeStateChangeModal(); }
+    });
+  </script>
+</body>
+</html>

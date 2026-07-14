@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Book a meeting · Solvo Global</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background:
+      radial-gradient(720px 420px at 92% -8%, rgba(0,138,171,0.10), transparent 72%),
+      radial-gradient(640px 460px at 4% 104%, rgba(238,118,35,0.09), transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #F4F6F7 100%);
+    background-attachment: fixed;
+  }
+
+  /* ============================ DEMO BANNER ============================ */
+  .demo-banner {
+    background: var(--color-gray-900);
+    color: #fff;
+    padding: 8px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .demo-banner .tag {
+    background: var(--color-primary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 9px;
+  }
+  .demo-banner a {
+    color: #fff;
+    text-decoration: none;
+    padding: 4px 11px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    transition: background var(--transition-fast);
+  }
+  .demo-banner a:hover { background: rgba(255,255,255,0.10); }
+
+  /* ============================ HEADER ============================ */
+  .lp-header {
+    flex-shrink: 0;
+    padding: 20px clamp(20px, 4vw, 44px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lp-header img { height: 26px; width: auto; display: block; }
+  .lp-header .meta {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ============================ STAGE / SCREENS ============================ */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 3vh, 40px) clamp(20px, 5vw, 44px) clamp(36px, 6vh, 64px);
+  }
+  .screen { display: none; width: 100%; }
+  .screen.is-active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen.is-active > * {
+    animation: rise 560ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .screen.is-active > *:nth-child(1) { animation-delay: 60ms; }
+  .screen.is-active > *:nth-child(2) { animation-delay: 130ms; }
+  .screen.is-active > *:nth-child(3) { animation-delay: 200ms; }
+  .screen.is-active > *:nth-child(4) { animation-delay: 270ms; }
+  .screen.is-active > *:nth-child(5) { animation-delay: 340ms; }
+  .screen.is-active > *:nth-child(6) { animation-delay: 410ms; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================ TYPOGRAPHY ============================ */
+  .eyebrow {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  h1.headline {
+    font-family: var(--font-heading);
+    font-size: clamp(29px, 4.4vw, 44px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    max-width: 18ch;
+    text-align: center;
+    text-wrap: balance;
+  }
+  .subline {
+    font-size: clamp(14.5px, 1.15vw, 16.5px);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 48ch;
+    text-align: center;
+    text-wrap: pretty;
+  }
+
+  /* ============================ SCREEN: PICK ============================ */
+  .pick-inner {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 2.4vh, 24px);
+  }
+  .day-label {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .day-label b { color: var(--text-primary); font-weight: 700; }
+
+  .slot-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 560px;
+  }
+  .slot-card {
+    appearance: none;
+    border: 1px solid var(--border-default);
+    background: #fff;
+    border-radius: var(--radius-xl);
+    padding: 22px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  }
+  .slot-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary-300);
+    box-shadow: 0 18px 34px -20px rgba(238,118,35,0.45);
+  }
+  .slot-card:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+  .slot-card .ico {
+    width: 30px; height: 30px;
+    color: var(--color-secondary);
+  }
+  .slot-card .ico svg { width: 100%; height: 100%; }
+  .slot-card .part {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .slot-card .time {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.4vw, 25px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .slot-card .time small {
+    font-size: 0.62em;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: 2px;
+  }
+  .slot-card .meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .slot-card .when {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    color: var(--text-secondary);
+  }
+
+  /* skeleton */
+  .slot-card.skeleton {
+    cursor: default;
+    pointer-events: none;
+    gap: 12px;
+  }
+  .slot-card.skeleton .sk {
+    border-radius: var(--radius-md);
+    background: linear-gradient(100deg, var(--color-gray-100) 30%, var(--color-gray-200) 50%, var(--color-gray-100) 70%);
+    background-size: 220% 100%;
+    animation: shimmer 1.3s ease-in-out infinite;
+  }
+  .slot-card.skeleton .sk.a { width: 30px; height: 30px; border-radius: 50%; }
+  .slot-card.skeleton .sk.b { width: 56px; height: 9px; }
+  .slot-card.skeleton .sk.c { width: 84px; height: 18px; }
+  @keyframes shimmer {
+    from { background-position: 140% 0; }
+    to   { background-position: -40% 0; }
+  }
+
+  .link-btn {
+    appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 6px;
+    transition: gap var(--transition-fast), color var(--transition-fast);
+  }
+  .link-btn:hover { color: var(--color-secondary-700); gap: 11px; }
+  .link-btn .arr { transition: transform var(--transition-fast); }
+
+  .microcopy {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .microcopy .dot-sep::before {
+    content: "·";
+    margin: 0 7px;
+    color: var(--border-strong);
+  }
+  .microcopy .tz { color: var(--text-secondary); }
+
+  /* feedback states (pick) */
+  .notice {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 24px 22px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .notice .n-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .notice.error .n-icon { background: var(--color-error-light); color: var(--color-error); }
+  .notice.empty .n-icon { background: var(--color-gray-100); color: var(--text-muted); }
+  .notice h3 {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .notice p { font-size: 13.5px; color: var(--text-secondary); }
+
+  /* ============================ BACK LINK ============================ */
+  .back-link {
+    align-self: center;
+    appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    transition: color var(--transition-fast), gap var(--transition-fast);
+  }
+  .back-link:hover { color: var(--text-secondary); gap: 10px; }
+
+  /* ============================ SCREEN: CALENDAR ============================ */
+  .cal-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    overflow: hidden;
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+  }
+  .cal-month {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .cal-arrows { display: flex; gap: 6px; }
+  .cal-arrows button {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .cal-arrows button:hover:not(:disabled) {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: #fff;
+  }
+  .cal-arrows button:disabled { opacity: 0.32; cursor: not-allowed; }
+
+  .cal-grid-wrap { padding: 0 16px 6px; }
+  .cal-dow, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-dow > div {
+    font-family: var(--font-heading);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 4px 0 8px;
+  }
+  .cal-day {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    aspect-ratio: 1;
+    min-height: 38px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: default;
+    position: relative;
+    padding: 0;
+    transition: all var(--transition-fast);
+  }
+  .cal-day.available {
+    color: var(--text-primary);
+    background: #fff;
+    border-color: var(--border-default);
+    cursor: pointer;
+  }
+  .cal-day.available::after {
+    content: "";
+    position: absolute;
+    left: 50%; bottom: 5px;
+    transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  .cal-day.available:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--color-secondary-200); }
+  .cal-day.muted { opacity: 0.28; }
+  .cal-day.selected {
+    background: var(--text-primary);
+    color: #fff;
+    border-color: var(--text-primary);
+    font-weight: 700;
+  }
+  .cal-day.selected::after { background: #fff; }
+
+  .cal-slots {
+    border-top: 1px solid var(--border-default);
+    padding: 14px 18px 18px;
+    background: var(--color-gray-50);
+  }
+  .cal-slots-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 11px;
+  }
+  .cal-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+  .cal-slot {
+    appearance: none;
+    padding: 11px 4px;
+    border-radius: var(--radius-md);
+    background: #fff;
+    border: 1px solid var(--border-default);
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .cal-slot:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+  .cal-slots-hint {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding: 8px 0;
+  }
+
+  /* ============================ SCREEN: CONFIRM ============================ */
+  .confirm-inner {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .slot-hero { text-align: center; }
+  .slot-hero .sh-day {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 6px;
+  }
+  .slot-hero .sh-time {
+    font-family: var(--font-heading);
+    font-size: clamp(30px, 5vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    line-height: 1.05;
+  }
+  .slot-hero .sh-tz {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .rep-card {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 15px 17px;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rep-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .rep-who { display: flex; align-items: center; gap: 12px; }
+  .rep-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .rep-meta { min-width: 0; }
+  .rep-name {
+    font-family: var(--font-heading);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .rep-role {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  .rep-foot {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 9px;
+    border-top: 1px solid var(--color-gray-100);
+  }
+  .rep-foot svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  /* ============================ SCREEN: START (demo setup) ============================ */
+  .setup-card {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    padding: clamp(24px, 3.4vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+  .setup-eyebrow {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-gray-100);
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+  }
+  .setup-eyebrow svg { width: 13px; height: 13px; }
+  .setup-title {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.4vw, 25px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.18;
+  }
+  .setup-note {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .setup-form { display: flex; flex-direction: column; gap: 11px; margin-top: 6px; }
+  .setup-row { display: flex; gap: 10px; }
+  .setup-form label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .setup-form input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .setup-form input:focus {
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px var(--color-secondary-50);
+  }
+  .setup-form input.invalid { border-color: var(--color-error); }
+  .setup-err {
+    display: none;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--color-error-dark);
+  }
+  .setup-err.show { display: block; }
+  .setup-btn {
+    margin-top: 5px;
+    appearance: none;
+    padding: 13px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    border: 0;
+    cursor: pointer;
+    box-shadow: 0 14px 28px -14px rgba(238,118,35,0.6);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .setup-btn:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+
+  .confirm-btn {
+    width: 100%;
+    appearance: none;
+    padding: 15px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14.5px;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .confirm-btn:hover:not(:disabled) {
+    background: var(--color-primary-600);
+    transform: translateY(-2px);
+  }
+  .confirm-btn:disabled {
+    background: var(--color-gray-300);
+    color: var(--color-gray-500);
+    box-shadow: none;
+    cursor: progress;
+  }
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 640ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .confirm-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .confirm-note::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--color-success);
+  }
+
+  .err-msg {
+    display: none;
+    width: 100%;
+    background: var(--color-error-light);
+    border: 1px solid #F6C9C9;
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    font-size: 12.5px;
+    color: var(--color-error-dark);
+    line-height: 1.5;
+  }
+  .err-msg.show { display: block; animation: rise 320ms ease backwards; }
+  .err-msg b { font-family: var(--font-heading); font-weight: 700; }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 560px) {
+    .demo-banner { padding: 7px 14px; }
+    .demo-banner span.label { display: none; }
+    .lp-header { padding: 16px 18px; }
+    .lp-header .meta { display: none; }
+    .slot-cards { grid-template-columns: 1fr; max-width: 320px; }
+    .slot-card { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 16px 18px; }
+    .slot-card .ico { width: 26px; height: 26px; }
+    .slot-card .meta { align-items: flex-start; gap: 3px; }
+  }
+</style>
+</head>
+<body data-screen="start">
+
+<div class="demo-banner">
+  <span class="label"><span class="tag">Demo</span> Landing de Agendamiento &mdash; Email Cold Outreach POC</span>
+</div>
+
+<header class="lp-header">
+  <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
+  <span class="meta">Talent Partner</span>
+</header>
+
+<main class="stage">
+
+  <!-- ====================== SCREEN: START (demo setup) ====================== -->
+  <section class="screen is-active" id="screen-start">
+    <div class="setup-card">
+      <span class="setup-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.4" fill="#fff"/>
+          <line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.4" fill="#fff"/>
+        </svg>
+        Demo setup
+      </span>
+      <h2 class="setup-title">Set the prospect for this run</h2>
+      <p class="setup-note">
+        In production the prospect's identity arrives from the email link &mdash; the
+        landing has no form. For this demo, enter it here: the booking invite is sent
+        to this address.
+      </p>
+      <div class="setup-form">
+        <div class="setup-row">
+          <label>First name
+            <input type="text" id="su-first" autocomplete="off" spellcheck="false" />
+          </label>
+          <label>Last name
+            <input type="text" id="su-last" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+        <label>Work email
+          <input type="email" id="su-email" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="setup-err" id="su-err">Enter a first name and a valid work email.</div>
+        <button type="button" class="setup-btn" id="start-btn">Start demo &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: PICK ====================== -->
+  <section class="screen" id="screen-pick">
+    <div class="pick-inner">
+      <span class="eyebrow">Book your intro call</span>
+      <h1 class="headline">Stop losing months to roles you can't fill.</h1>
+      <p class="subline">
+        Book 25 minutes with a Solvo advisor &mdash; leave with a concrete plan,
+        your estimated savings, and a real onboarding timeline.
+      </p>
+      <div class="day-label" id="day-label">Loading availability&hellip;</div>
+      <div class="slot-cards" id="slot-cards"><!-- rendered by JS --></div>
+      <button type="button" class="link-btn" id="see-calendar">
+        See another day <span class="arr">&rarr;</span>
+      </button>
+      <div class="microcopy">
+        <span>25-minute call</span><span class="dot-sep"></span><span>Calendar invite right away</span><br>
+        <span class="tz" id="tz-line">Times shown in your timezone</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: CALENDAR ====================== -->
+  <section class="screen" id="screen-calendar">
+    <button type="button" class="back-link" data-back="pick">&larr; Back to suggested times</button>
+    <span class="eyebrow" style="margin-top:14px;">Pick another day</span>
+    <div class="cal-card" style="margin-top:16px;">
+      <div class="cal-head">
+        <span class="cal-month" id="cal-month">May 2026</span>
+        <div class="cal-arrows">
+          <button type="button" id="cal-prev" aria-label="Previous month">&lsaquo;</button>
+          <button type="button" id="cal-next" aria-label="Next month">&rsaquo;</button>
+        </div>
+      </div>
+      <div class="cal-grid-wrap">
+        <div class="cal-dow">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"><!-- rendered by JS --></div>
+      </div>
+      <div class="cal-slots">
+        <div class="cal-slots-label" id="cal-slots-label">Select a day</div>
+        <div class="cal-slots-grid" id="cal-slots-grid">
+          <div class="cal-slots-hint">Days with a dot have open times.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: CONFIRM ====================== -->
+  <section class="screen" id="screen-confirm">
+    <button type="button" class="back-link" id="confirm-back">&larr; Change time</button>
+    <div class="confirm-inner" style="margin-top:14px;">
+      <div class="slot-hero">
+        <div class="sh-day" id="ch-day">Thursday, May 22</div>
+        <div class="sh-time" id="ch-time">4:00 &ndash; 4:25 PM</div>
+        <div class="sh-tz" id="ch-tz">America/New_York</div>
+      </div>
+
+      <div class="rep-card">
+        <div class="rep-label">Meeting with</div>
+        <div class="rep-who">
+          <div class="rep-avatar" id="rep-avatar">DO</div>
+          <div class="rep-meta">
+            <div class="rep-name" id="rep-name">Daniela Ortiz</div>
+            <div class="rep-role" id="rep-role">Talent Advisor &middot; Solvo Global</div>
+          </div>
+        </div>
+        <div class="rep-foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2.5"/>
+          </svg>
+          Assigned from the advisors free at this time.
+        </div>
+      </div>
+
+      <div class="err-msg" id="err-msg"></div>
+
+      <button type="button" class="confirm-btn" id="confirm-btn">Confirm meeting</button>
+      <div class="confirm-note">You'll get the calendar invite right away.</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ====================================================================
+     CONFIG  ·  para el POC todo corre con datos mock dentro de este JS
+     ==================================================================== */
+
+  /* Prospecto hardcodeado (HU-LAG-1.1-FE) — editable en pantalla Confirm */
+  var prospect = {
+    first_name: "Sarah",
+    last_name:  "Chen",
+    email:      "sarah.chen@acmecorp.com",
+    company_name: "Acme Corp"
+  };
+
+  /* Interruptores de simulacion para el equipo de desarrollo.
+     failAvailability: simula caida del servicio /availability
+     bookResult: "ok" | "slot_taken" | "error" — respuesta simulada de /book */
+  var MOCK = {
+    failAvailability: false,
+    bookResult: "ok"
+  };
+
+  /* Reglas del agendamiento (espejo de HU-LAG-1.1-BE) */
+  var SLOT_MIN   = 25;
+  var TODAY      = "2026-05-21";                       // "hoy" del demo
+  var NOW        = new Date("2026-05-21T12:00:00-04:00"); // "ahora" del demo
+  var LEAD_MS    = 2 * 60 * 60 * 1000;                 // 2h de anticipacion minima
+  var WINDOW_DAYS = 28;                                // ventana de 4 semanas
+  var REP_OFFSET = "-04:00";                           // America/New_York en mayo/junio 2026 (EDT)
+  var IDEAL = { morning: 8 * 60 + 30, midday: 11 * 60 + 30, afternoon: 15 * 60 };
+
+  /* Disponibilidad mock del sales rep — horarios en su zona (America/New_York).
+     Escenario demo: manana (vie 22) solo tiene tarde; el mediodia mas proximo
+     cae el lun 25 y la manana el mar 26 — cada franja en un dia distinto. */
+  var AVAILABILITY = {
+    "2026-05-21": ["15:00", "15:30", "16:00"],
+    "2026-05-22": ["15:00", "16:00"],
+    "2026-05-25": ["11:30", "13:00", "16:30"],
+    "2026-05-26": ["09:00", "10:30", "15:00"],
+    "2026-05-27": ["09:00", "09:30", "12:00", "13:30", "16:00"],
+    "2026-05-28": ["11:00", "14:30"],
+    "2026-05-29": ["09:00", "10:00", "12:30", "15:00", "16:00"],
+    "2026-06-01": ["09:30", "13:00", "15:30"],
+    "2026-06-02": ["10:00", "11:00", "14:00", "16:00"],
+    "2026-06-03": ["09:00", "12:30", "15:00"],
+    "2026-06-08": ["09:30", "11:00", "14:30"],
+    "2026-06-10": ["10:00", "13:00", "15:30", "16:30"]
+  };
+
+  /* Pool de sales reps (mock). En el POC real el sistema asigna, al confirmar
+     el horario, un rep disponible para ese slot — aqui se deriva por slot de
+     forma estable para simular ese comportamiento en el demo. */
+  var REPS = [
+    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO" },
+    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB" },
+    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN" }
+  ];
+  function repForSlot(dateKey, slot) {
+    var s = dateKey + slot, h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return REPS[Math.abs(h) % REPS.length];
+  }
+
+  var TZ = (function () {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"; }
+    catch (e) { return "America/New_York"; }
+  })();
+
+  var MONTHS = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+
+  /* ====================================================================
+     HELPERS
+     ==================================================================== */
+
+  function toMin(hhmm) {
+    var p = hhmm.split(":");
+    return (+p[0]) * 60 + (+p[1]);
+  }
+  function ymd(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+  /* Aritmetica de fechas-clave en UTC puro — estable ante cualquier
+     timezone del runtime (no se mezcla con lecturas de fecha local) */
+  function keyToUTC(key) {
+    var p = key.split("-");
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]);
+  }
+  function utcToKey(ms) {
+    var d = new Date(ms);
+    return d.getUTCFullYear() + "-" +
+      String(d.getUTCMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getUTCDate()).padStart(2, "0");
+  }
+  function addDaysKey(key, n) {
+    return utcToKey(keyToUTC(key) + n * 86400000);
+  }
+  var TOMORROW       = addDaysKey(TODAY, 1);
+  var WINDOW_END_KEY = addDaysKey(TODAY, WINDOW_DAYS);
+
+  /* Instante real (UTC) a partir de un dia + hora pared en zona del rep */
+  function instantOf(dateKey, hhmm) {
+    return new Date(dateKey + "T" + hhmm + ":00" + REP_OFFSET);
+  }
+  /* Un slot es reservable si respeta el lead time y cae dentro de la ventana */
+  function bookable(dateKey, hhmm) {
+    if (dateKey < TODAY || dateKey > WINDOW_END_KEY) return false;
+    var inst = instantOf(dateKey, hhmm);
+    return inst.getTime() - NOW.getTime() >= LEAD_MS;
+  }
+  function bookableSlots(dateKey) {
+    return (AVAILABILITY[dateKey] || []).filter(function (s) { return bookable(dateKey, s); });
+  }
+  function fmtTime(inst) {
+    return inst.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ });
+  }
+  function fmtDayLong(inst) {
+    return inst.toLocaleDateString("en-US",
+      { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
+  }
+
+  /* ====================================================================
+     STATE
+     ==================================================================== */
+  var selected = null;           // { dateKey, slot }  — el slot elegido
+  var cameFrom = "pick";         // pantalla previa a Confirm
+  var calView  = { y: 2026, m: 4 }; // mes visible en el calendario (0-index)
+
+  function show(screen) {
+    document.body.dataset.screen = screen;
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove("is-active");
+    var el = document.getElementById("screen-" + screen);
+    void el.offsetWidth;            // reinicia las animaciones de entrada
+    el.classList.add("is-active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  /* ====================================================================
+     SCREEN 1 · PICK — proximo espacio disponible por cada momento del dia
+     ==================================================================== */
+
+  /* Franjas del dia (minutos desde medianoche) y su hora ideal. Cada franja
+     se resuelve de forma independiente, por lo que las tarjetas pueden caer
+     en dias distintos. */
+  var MOMENTS = [
+    { part: "Morning",   lo: 0,       hi: 11 * 60, ideal: IDEAL.morning   },
+    { part: "Midday",    lo: 11 * 60, hi: 14 * 60, ideal: IDEAL.midday    },
+    { part: "Afternoon", lo: 14 * 60, hi: 24 * 60, ideal: IDEAL.afternoon }
+  ];
+
+  /* Para cada franja, el proximo dia (>= manana) con un slot reservable en su
+     rango; la tarjeta toma el slot de ese dia mas cercano a la hora ideal.
+     Devuelve hasta 3 entradas { part, dateKey, slot }, una por franja con
+     disponibilidad en la ventana. */
+  function nextSlotsPerMoment() {
+    var keys = Object.keys(AVAILABILITY).sort();
+    return MOMENTS.map(function (m) {
+      for (var i = 0; i < keys.length; i++) {
+        var dateKey = keys[i];
+        if (dateKey < TOMORROW) continue;
+        var cands = bookableSlots(dateKey).filter(function (s) {
+          var x = toMin(s); return x >= m.lo && x < m.hi;
+        });
+        if (!cands.length) continue;
+        var slot = cands.reduce(function (best, s) {
+          return Math.abs(toMin(s) - m.ideal) < Math.abs(toMin(best) - m.ideal) ? s : best;
+        });
+        return { part: m.part, dateKey: dateKey, slot: slot };
+      }
+      return null;
+    }).filter(function (x) { return x; });
+  }
+
+  /* Etiqueta de fecha por tarjeta: "Tomorrow, Fri May 22" para el proximo dia
+     habil; el dia abreviado para los mas lejanos. */
+  function whenLabel(dateKey) {
+    var inst = instantOf(dateKey, "12:00");
+    var wd = inst.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ });
+    var md = inst.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: TZ });
+    return (dateKey === TOMORROW) ? ("Tomorrow, " + wd + " " + md) : (wd + " " + md);
+  }
+
+  var ICON = {
+    Morning:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 4V2"/><path d="M5 9l-1.5-1.5"/><path d="M19 9l1.5-1.5"/>' +
+      '<path d="M3 17h18"/><path d="M6 21h12"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/></svg>',
+    Midday:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="12" cy="12" r="4.4"/><path d="M12 3v2.2"/><path d="M12 18.8V21"/>' +
+      '<path d="M3 12h2.2"/><path d="M18.8 12H21"/><path d="M5.6 5.6l1.6 1.6"/>' +
+      '<path d="M16.8 16.8l1.6 1.6"/><path d="M18.4 5.6l-1.6 1.6"/><path d="M7.2 16.8l-1.6 1.6"/></svg>',
+    Afternoon:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M3 18h18"/><path d="M6 22h12"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/>' +
+      '<path d="M12 5.5l-2 2.5h4l-2-2.5"/></svg>'
+  };
+
+  function renderSkeleton() {
+    var wrap = document.getElementById("slot-cards");
+    wrap.innerHTML = "";
+    for (var i = 0; i < 3; i++) {
+      var c = document.createElement("div");
+      c.className = "slot-card skeleton";
+      c.innerHTML = '<div class="sk a"></div><div class="sk b"></div><div class="sk c"></div>';
+      wrap.appendChild(c);
+    }
+  }
+
+  function renderNotice(kind, title, text, action) {
+    var wrap = document.getElementById("slot-cards");
+    document.getElementById("day-label").style.display = "none";
+    wrap.style.display = "block";
+    wrap.innerHTML = "";
+    var ic = kind === "error"
+      ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5"/><path d="M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>';
+    var box = document.createElement("div");
+    box.className = "notice " + kind;
+    box.innerHTML =
+      '<div class="n-icon">' + ic + '</div>' +
+      '<h3>' + title + '</h3>' +
+      '<p>' + text + '</p>';
+    if (action) {
+      var btn = document.createElement("button");
+      btn.className = "link-btn";
+      btn.innerHTML = action.label;
+      btn.addEventListener("click", action.fn);
+      box.appendChild(btn);
+    }
+    wrap.appendChild(box);
+  }
+
+  function renderPick() {
+    var wrap = document.getElementById("slot-cards");
+    var dayLabel = document.getElementById("day-label");
+
+    if (MOCK.failAvailability) {
+      renderNotice("error", "We couldn't load availability",
+        "Something went wrong reaching the calendar. Please try again.",
+        { label: 'Try again &nbsp;&#8635;', fn: loadPick });
+      return;
+    }
+
+    var cards = nextSlotsPerMoment();
+    if (!cards.length) {
+      renderNotice("empty", "No times in the next 4 weeks",
+        "There's no open slot right now. Try the calendar to look further ahead.",
+        { label: 'Open the calendar &rarr;', fn: function () { openCalendar(); } });
+      return;
+    }
+
+    /* Encabezado generico: cada tarjeta trae su propia fecha */
+    dayLabel.style.display = "flex";
+    dayLabel.innerHTML = "Next available times";
+
+    wrap.style.display = "grid";
+    wrap.innerHTML = "";
+    cards.forEach(function (c) {
+      var inst = instantOf(c.dateKey, c.slot);
+      var t = fmtTime(inst);
+      var parts = t.split(" ");        // "4:00" "PM"
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot-card";
+      btn.innerHTML =
+        '<span class="ico">' + ICON[c.part] + '</span>' +
+        '<span class="meta">' +
+          '<span class="part">' + c.part + '</span>' +
+          '<span class="time">' + parts[0] + '<small>' + (parts[1] || "") + '</small></span>' +
+          '<span class="when">' + whenLabel(c.dateKey) + '</span>' +
+        '</span>';
+      btn.addEventListener("click", function () { choose(c.dateKey, c.slot, "pick"); });
+      wrap.appendChild(btn);
+    });
+
+    /* Si alguna franja no tiene disponibilidad, el calendario gana protagonismo */
+    var link = document.getElementById("see-calendar");
+    link.style.fontWeight = cards.length < 3 ? "700" : "600";
+    link.style.color = cards.length < 3 ? "var(--color-primary)" : "var(--color-secondary)";
+  }
+
+  /* Carga de la pantalla Pick con su estado de skeleton */
+  function loadPick() {
+    document.getElementById("day-label").style.display = "flex";
+    document.getElementById("day-label").textContent = "Loading availability…";
+    document.getElementById("slot-cards").style.display = "grid";
+    renderSkeleton();
+    setTimeout(renderPick, 650);     // simula la latencia del servicio /availability
+  }
+
+  /* ====================================================================
+     SCREEN 2 · CALENDAR
+     ==================================================================== */
+
+  function openCalendar() {
+    renderCalendar();
+    show("calendar");
+  }
+
+  function renderCalendar() {
+    document.getElementById("cal-month").textContent = MONTHS[calView.m] + " " + calView.y;
+    var grid = document.getElementById("cal-grid");
+    grid.innerHTML = "";
+
+    var first = new Date(calView.y, calView.m, 1);
+    var startDow = (first.getDay() + 6) % 7;          // semana inicia lunes
+    var start = new Date(calView.y, calView.m, 1 - startDow);
+
+    for (var i = 0; i < 42; i++) {
+      var date = new Date(start);
+      date.setDate(start.getDate() + i);
+      var key = ymd(date);
+      var cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "cal-day";
+      cell.textContent = date.getDate();
+
+      var inMonth = date.getMonth() === calView.m;
+      if (!inMonth) cell.classList.add("muted");
+      if (key === TODAY) cell.classList.add("today");
+
+      if (inMonth && bookableSlots(key).length) {
+        cell.classList.add("available");
+        if (selected && selected.dateKey === key) cell.classList.add("selected");
+        (function (k) {
+          cell.addEventListener("click", function () { selectCalDay(k); });
+        })(key);
+      } else {
+        cell.disabled = true;
+      }
+      grid.appendChild(cell);
+      if (i >= 34 && date.getMonth() !== calView.m && date.getDay() === 0) break;
+    }
+
+    document.getElementById("cal-prev").disabled = (calView.y === 2026 && calView.m <= 4);
+    document.getElementById("cal-next").disabled = (calView.y === 2026 && calView.m >= 5);
+  }
+
+  function selectCalDay(key) {
+    var cells = document.querySelectorAll(".cal-day.selected");
+    for (var i = 0; i < cells.length; i++) cells[i].classList.remove("selected");
+    var grid = document.getElementById("cal-grid");
+    var btns = grid.querySelectorAll(".cal-day.available");
+    btns.forEach(function (b) { if (b.textContent == (+key.split("-")[2])) b.classList.add("selected"); });
+
+    var label = document.getElementById("cal-slots-label");
+    var box = document.getElementById("cal-slots-grid");
+    label.textContent = instantOf(key, "12:00")
+      .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
+    box.innerHTML = "";
+    bookableSlots(key).forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "cal-slot";
+      b.textContent = fmtTime(instantOf(key, s));
+      b.addEventListener("click", function () { choose(key, s, "calendar"); });
+      box.appendChild(b);
+    });
+  }
+
+  /* ====================================================================
+     SCREEN 3 · CONFIRM
+     ==================================================================== */
+
+  function choose(dateKey, slot, from) {
+    selected = { dateKey: dateKey, slot: slot };
+    cameFrom = from;
+    renderConfirm();
+    show("confirm");
+  }
+
+  function renderConfirm() {
+    var startI = instantOf(selected.dateKey, selected.slot);
+    var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
+    document.getElementById("ch-day").textContent = fmtDayLong(startI);
+    document.getElementById("ch-time").innerHTML =
+      fmtTime(startI) + " &ndash; " + fmtTime(endI);
+    document.getElementById("ch-tz").textContent = TZ;
+
+    /* El rep queda fijado por el horario elegido */
+    var rep = repForSlot(selected.dateKey, selected.slot);
+    selected.rep = rep;
+    document.getElementById("rep-avatar").textContent = rep.initials;
+    document.getElementById("rep-name").textContent = rep.name;
+    document.getElementById("rep-role").textContent = rep.role + " · Solvo Global";
+
+    resetConfirmBtn();
+    hideError();
+  }
+
+  function resetConfirmBtn() {
+    var btn = document.getElementById("confirm-btn");
+    btn.disabled = false;
+    btn.textContent = "Confirm meeting";
+  }
+  function showError(html) {
+    var el = document.getElementById("err-msg");
+    el.innerHTML = html;
+    el.classList.add("show");
+  }
+  function hideError() {
+    document.getElementById("err-msg").classList.remove("show");
+  }
+
+  /* Confirmacion del booking — llamada simulada a POST /book */
+  document.getElementById("confirm-btn").addEventListener("click", function () {
+    if (!selected) return;
+    var btn = document.getElementById("confirm-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Confirming…';
+    hideError();
+
+    setTimeout(function () {
+      if (MOCK.bookResult === "slot_taken") {
+        resetConfirmBtn();
+        showError('<b>That time was just taken.</b> We refreshed the calendar &mdash; please pick another slot.');
+        renderCalendar();
+        setTimeout(function () { show("calendar"); }, 1400);
+        return;
+      }
+      if (MOCK.bookResult === "error") {
+        resetConfirmBtn();
+        showError('<b>Something went wrong.</b> Your time is still selected &mdash; tap Confirm to try again.');
+        return;
+      }
+      /* exito — se transmiten los detalles del meeting a la pagina de confirmacion */
+      var startI = instantOf(selected.dateKey, selected.slot);
+      var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
+      var rep = selected.rep || repForSlot(selected.dateKey, selected.slot);
+      var meeting = {
+        start: startI.toISOString(),
+        end: endI.toISOString(),
+        tz: TZ,
+        name: prospect.first_name,
+        rep: rep.name,
+        repRole: rep.role
+      };
+      try { sessionStorage.setItem("lag_meeting", JSON.stringify(meeting)); } catch (e) {}
+      var qs = "?start=" + encodeURIComponent(meeting.start) +
+               "&end=" + encodeURIComponent(meeting.end) +
+               "&tz=" + encodeURIComponent(meeting.tz) +
+               "&name=" + encodeURIComponent(meeting.name) +
+               "&rep=" + encodeURIComponent(meeting.rep) +
+               "&repRole=" + encodeURIComponent(meeting.repRole);
+      window.location.href = "confirmacion.html" + qs;
+    }, 950);
+  });
+
+  /* ====================================================================
+     NAVEGACION
+     ==================================================================== */
+  document.getElementById("see-calendar").addEventListener("click", openCalendar);
+  document.getElementById("confirm-back").addEventListener("click", function () {
+    show(cameFrom);
+  });
+  document.querySelectorAll(".back-link[data-back]").forEach(function (b) {
+    b.addEventListener("click", function () { show(b.dataset.back); });
+  });
+  document.getElementById("cal-prev").addEventListener("click", function () {
+    if (calView.m > 0) { calView.m--; } else { calView.m = 11; calView.y--; }
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", function () {
+    if (calView.m < 11) { calView.m++; } else { calView.m = 0; calView.y++; }
+    renderCalendar();
+  });
+
+  /* ====================================================================
+     SCREEN 0 · START (demo setup) — captura del prospecto para el demo
+     ==================================================================== */
+  document.getElementById("su-first").value = prospect.first_name;
+  document.getElementById("su-last").value = prospect.last_name;
+  document.getElementById("su-email").value = prospect.email;
+
+  document.getElementById("start-btn").addEventListener("click", function () {
+    var fEl = document.getElementById("su-first");
+    var eEl = document.getElementById("su-email");
+    var f = fEl.value.trim();
+    var l = document.getElementById("su-last").value.trim();
+    var e = eEl.value.trim();
+    var okF = !!f;
+    var okE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    fEl.classList.toggle("invalid", !okF);
+    eEl.classList.toggle("invalid", !okE);
+    document.getElementById("su-err").classList.toggle("show", !(okF && okE));
+    if (!okF || !okE) return;
+    prospect.first_name = f;
+    prospect.last_name = l;
+    prospect.email = e;
+    show("pick");
+    loadPick();
+  });
+
+  /* ====================================================================
+     INIT
+     ==================================================================== */
+  document.getElementById("tz-line").textContent = "Times shown in your timezone (" + TZ + ")";
+})();
+</script>
+
+</body>
+</html>

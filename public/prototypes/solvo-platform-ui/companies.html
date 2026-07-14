@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Companies - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by rbac.js) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Companies</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Filters -->
+        <div class="filters-bar">
+          <!-- Remote Viable toggle (active by default) -->
+          <div class="filter-group">
+            <label class="filter-label">Remote Viable</label>
+            <label class="toggle-pill" id="remoteViablePill">
+              <input type="checkbox" id="remoteViableFilter" checked>
+              <span class="toggle-pill-track">
+                <span class="toggle-pill-knob"></span>
+              </span>
+              <span class="toggle-pill-text" id="remoteViableLabel">On</span>
+            </label>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <div class="search-input-wrapper">
+              <input type="text" class="form-input sm search-input" placeholder="Company name..." id="searchInput">
+              <span class="search-indicator" id="searchIndicator">
+                <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                Searching...
+              </span>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Type</label>
+            <select class="form-select sm" id="typeFilter">
+              <option value="">All</option>
+              <option value="prospecto">Prospect</option>
+              <option value="cliente">Client</option>
+              <option value="inactivo">Inactive</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Pipeline</label>
+            <select class="form-select sm" id="pipelineFilter">
+              <option value="">All</option>
+              <option value="lead">Lead</option>
+              <option value="prospecting">Prospecting</option>
+              <option value="engaged">Engaged</option>
+              <option value="initial_appointment_held">Initial Appointment Held</option>
+              <option value="onboarding_started">Onboarding Started</option>
+              <option value="client">Client</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Industry</label>
+            <select class="form-select sm" id="industryFilter">
+              <option value="">All</option>
+              <option value="Technology">Technology</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Finance">Finance</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Manufacturing">Manufacturing</option>
+              <option value="Education">Education</option>
+              <option value="Retail">Retail</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label">Contacts</label>
+            <select class="form-select sm" id="contactsFilter">
+              <option value="">All</option>
+              <option value="with">With contacts</option>
+              <option value="without">Without contacts</option>
+            </select>
+          </div>
+
+          <!-- Comercial filter (coord/supervisor/admin only) -->
+          <div class="filter-group" id="comercialFilterGroup" style="display: none;">
+            <label class="filter-label">Comercial asignado</label>
+            <div id="comercialFilterSearchbox" style="min-width: 200px;"></div>
+          </div>
+
+          <!-- SDR filter (coord/supervisor/admin only) -->
+          <div class="filter-group" id="sdrFilterGroup" style="display: none;">
+            <label class="filter-label">SDR asignado</label>
+            <div id="sdrFilterSearchbox" style="min-width: 200px;"></div>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" onclick="clearFilters()">
+            Clear filters
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <div class="table-header-with-actions">
+            <div class="table-header-left">
+              <span class="table-title">0 companies found</span>
+            </div>
+            <div class="table-header-right">
+              <button class="btn btn-secondary btn-sm" id="exportBtn" onclick="handleExportCSV()" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" x2="12" y1="15" y2="3"></line>
+                </svg>
+                Exportar CSV
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="openScrapeByName()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                  <path d="M3 21v-5h5"></path>
+                </svg>
+                Scrapear vacantes
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                New Company
+              </button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr id="tableHeaderRow">
+                <!-- Rendered by JS based on role -->
+              </tr>
+            </thead>
+            <tbody id="companiesTable">
+              <!-- Skeleton rows shown during loading -->
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #666;">
+              <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
+              <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
+              <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
+            </svg>
+            <p id="emptyStateMessage" style="color: #888; margin-top: 12px;">No companies found with those filters</p>
+            <button class="btn btn-secondary btn-sm" id="emptyStateClearBtn" onclick="clearFilters()" style="margin-top: 8px;">Clear filters</button>
+          </div>
+
+          <div class="table-pagination">
+            <div class="pagination-info" id="paginationInfo">
+              Showing 0 of 0
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Company Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">New Company</h2>
+        <button class="modal-close" onclick="closeCreateModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="createCompanyForm">
+          <!-- Section 1: Basic Information -->
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Name *</label>
+              <input type="text" class="form-input" id="createName" placeholder="Company name" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Industry</label>
+              <select class="form-select" id="createIndustry">
+                <option value="">Select...</option>
+                <option value="Technology">Technology</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Financial Services">Financial Services</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Retail">Retail</option>
+                <option value="Energy">Energy</option>
+                <option value="Education">Education</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Construction">Construction</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location (State)</label>
+              <input type="text" class="form-input" id="createLocation" list="usStatesList" placeholder="Search state...">
+              <datalist id="usStatesList">
+                <option value="Alabama">
+                <option value="Alaska">
+                <option value="Arizona">
+                <option value="Arkansas">
+                <option value="California">
+                <option value="Colorado">
+                <option value="Connecticut">
+                <option value="Delaware">
+                <option value="Florida">
+                <option value="Georgia">
+                <option value="Hawaii">
+                <option value="Idaho">
+                <option value="Illinois">
+                <option value="Indiana">
+                <option value="Iowa">
+                <option value="Kansas">
+                <option value="Kentucky">
+                <option value="Louisiana">
+                <option value="Maine">
+                <option value="Maryland">
+                <option value="Massachusetts">
+                <option value="Michigan">
+                <option value="Minnesota">
+                <option value="Mississippi">
+                <option value="Missouri">
+                <option value="Montana">
+                <option value="Nebraska">
+                <option value="Nevada">
+                <option value="New Hampshire">
+                <option value="New Jersey">
+                <option value="New Mexico">
+                <option value="New York">
+                <option value="North Carolina">
+                <option value="North Dakota">
+                <option value="Ohio">
+                <option value="Oklahoma">
+                <option value="Oregon">
+                <option value="Pennsylvania">
+                <option value="Rhode Island">
+                <option value="South Carolina">
+                <option value="South Dakota">
+                <option value="Tennessee">
+                <option value="Texas">
+                <option value="Utah">
+                <option value="Vermont">
+                <option value="Virginia">
+                <option value="Washington">
+                <option value="West Virginia">
+                <option value="Wisconsin">
+                <option value="Wyoming">
+              </datalist>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <input type="url" class="form-input" id="createWebsite" placeholder="https://example.com">
+            </div>
+          </div>
+
+          <!-- Section 2: Company Details -->
+          <div class="form-section">
+            <h4 class="form-section-title">Company Details</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Number of Employees</label>
+                <input type="number" class="form-input" id="createEmployees" placeholder="E.g.: 500" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Annual Revenue (USD)</label>
+                <input type="number" class="form-input" id="createRevenue" placeholder="Optional" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Founded</label>
+              <input type="number" class="form-input" id="createYearFounded" placeholder="E.g.: 2010" min="1800" max="2026">
+            </div>
+          </div>
+
+          <!-- Section 3: Classification -->
+          <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+            <h4 class="form-section-title">Classification</h4>
+            <div class="form-group">
+              <label class="form-label">Relationship Type</label>
+              <select class="form-select" id="createRelationType">
+                <option value="prospecto" selected>Prospect</option>
+                <option value="cliente">Client</option>
+                <option value="inactivo">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              The <strong>pipeline_stage</strong> is automatically assigned as <strong>lead</strong>.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCreateModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="createCompany()">Create Company</button>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Toggle pill for remote viable filter */
+    .toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      height: 32px;
+    }
+    .toggle-pill input { display: none; }
+    .toggle-pill-track {
+      width: 40px;
+      height: 22px;
+      background: var(--border-primary, #444);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.25s ease;
+      flex-shrink: 0;
+    }
+    .toggle-pill-knob {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.25s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle-pill input:checked + .toggle-pill-track {
+      background: #22c55e;
+    }
+    .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob {
+      transform: translateX(18px);
+    }
+    .toggle-pill-text {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary, #aaa);
+      min-width: 20px;
+      transition: color 0.2s;
+    }
+    .toggle-pill input:checked ~ .toggle-pill-text {
+      color: #22c55e;
+    }
+  </style>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // === SESSION INIT (RBAC) ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('companies');
+
+    // === RBAC FLAGS ===
+    const showDualColumns = canViewAll();  // coord/supervisor/admin see both Comercial + SDR columns
+    const isComercial = user.role === 'comercial';
+    const isSDR = user.role === 'sdr';
+
+    // Show export button only for coord/supervisor/admin
+    if (canExport()) {
+      document.getElementById('exportBtn').style.display = '';
+    }
+
+    // === TABLE HEADER SETUP (RBAC) ===
+    function setupTableHeader() {
+      const headerRow = document.getElementById('tableHeaderRow');
+      let headerHTML = '';
+
+      headerHTML += '<th>Company <span class="sort-icon">&#8597;</span></th>';
+      headerHTML += '<th>Industry <span class="sort-icon">&#8597;</span></th>';
+      headerHTML += '<th>Location <span class="sort-icon">&#8597;</span></th>';
+      headerHTML += '<th>Pipeline <span class="sort-icon">&#8597;</span></th>';
+
+      if (showDualColumns) {
+        // Coord/Supervisor/Admin: see both assignment columns
+        headerHTML += '<th>Comercial <span class="sort-icon">&#8597;</span></th>';
+        headerHTML += '<th>SDR <span class="sort-icon">&#8597;</span></th>';
+      } else if (isComercial) {
+        // Comercial sees SDR column (the other role)
+        headerHTML += '<th>SDR <span class="sort-icon">&#8597;</span></th>';
+      } else if (isSDR) {
+        // SDR sees Comercial column (the other role)
+        headerHTML += '<th>Comercial <span class="sort-icon">&#8597;</span></th>';
+      }
+
+      headerHTML += '<th>Remote</th>';
+
+      headerRow.innerHTML = headerHTML;
+    }
+
+    // === FILTER SEARCHBOXES (coord/supervisor/admin) ===
+    let comercialFilterSearchbox = null;
+    let sdrFilterSearchbox = null;
+
+    function setupAssignmentFilters() {
+      if (!canViewAll()) return;
+
+      // Comercial filter
+      document.getElementById('comercialFilterGroup').style.display = '';
+      comercialFilterSearchbox = renderFilterSearchbox('comercialFilterSearchbox', getActiveCommercials(), {
+        placeholder: 'Filter by comercial...',
+        labelField: 'name',
+        onSelect: () => applyFilters(true)
+      });
+
+      // SDR filter
+      document.getElementById('sdrFilterGroup').style.display = '';
+      sdrFilterSearchbox = renderFilterSearchbox('sdrFilterSearchbox', getActiveSDRs(), {
+        placeholder: 'Filter by SDR...',
+        labelField: 'name',
+        onSelect: () => applyFilters(true)
+      });
+    }
+
+    // === RENDER FUNCTIONS ===
+
+    // Render skeleton loading rows
+    function renderSkeletonTable() {
+      const tbody = document.getElementById('companiesTable');
+      const colCount = getColumnCount();
+      const skeletonRows = Array(8).fill(0).map(() => {
+        let cells = '';
+        for (let i = 0; i < colCount; i++) {
+          const widths = [160, 100, 90, 120, 100, 100, 60];
+          const w = widths[i % widths.length];
+          cells += `<td><div class="table-skeleton" style="width: ${w}px;"></div></td>`;
+        }
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      tbody.innerHTML = skeletonRows;
+      document.getElementById('emptyState').style.display = 'none';
+    }
+
+    function getColumnCount() {
+      if (showDualColumns) return 7; // Company, Industry, Location, Pipeline, Comercial, SDR, Remote
+      return 6; // Company, Industry, Location, Pipeline, [other role], Remote
+    }
+
+    // Render table with data
+    function renderTable(data) {
+      if (data === undefined) data = getVisibleCompanies();
+      const tbody = document.getElementById('companiesTable');
+      const emptyState = document.getElementById('emptyState');
+      const emptyMsg = document.getElementById('emptyStateMessage');
+      const emptyClearBtn = document.getElementById('emptyStateClearBtn');
+
+      if (data.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'flex';
+
+        // Different empty state message for personal role with no assignments
+        if (isPersonalRole() && getVisibleCompanies().length === 0) {
+          emptyMsg.textContent = 'No tienes empresas asignadas';
+          emptyClearBtn.style.display = 'none';
+        } else {
+          emptyMsg.textContent = 'No companies found with those filters';
+          emptyClearBtn.style.display = '';
+        }
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      tbody.innerHTML = data.map(company => {
+        let cells = '';
+
+        // Company name
+        cells += `<td><span class="font-medium">${company.name}</span></td>`;
+        // Industry
+        cells += `<td>${company.industry}</td>`;
+        // Location
+        cells += `<td>${company.location}</td>`;
+        // Pipeline
+        cells += `<td><span class="badge-pipeline badge-pipeline-${company.pipelineStage}" onclick="event.stopPropagation();">${getPipelineLabel(company.pipelineStage)}</span></td>`;
+
+        if (showDualColumns) {
+          // Comercial column
+          const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
+          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+          // SDR column
+          const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
+          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+        } else if (isComercial) {
+          // Comercial sees SDR column (read-only)
+          const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
+          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+        } else if (isSDR) {
+          // SDR sees Comercial column (read-only)
+          const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
+          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+        }
+
+        // Remote Viable
+        cells += `<td>${company.remoteViable
+          ? '<span style="color: #22c55e; font-size: 13px;" title="Remote Viable">&#10003;</span>'
+          : '<span style="color: var(--text-muted); font-size: 13px;" title="Not Remote Viable">&mdash;</span>'}</td>`;
+
+        return `<tr onclick="goToDetail('${company.id}')" style="cursor: pointer;">${cells}</tr>`;
+      }).join('');
+
+    }
+
+    // Pipeline label mapping
+    function getPipelineLabel(stage) {
+      const labels = {
+        lead: 'Lead',
+        prospecting: 'Prospecting',
+        engaged: 'Engaged',
+        initial_appointment_held: 'Initial Appointment Held',
+        onboarding_started: 'Onboarding Started',
+        client: 'Client',
+        lost: 'Lost'
+      };
+      return labels[stage] || stage;
+    }
+
+    // Navigation
+    function goToDetail(companyId) {
+      window.location.href = `company-detail.html?id=${companyId}`;
+    }
+
+    // === SCRAPE VACANCIES ON-DEMAND (por nombre) ===
+    function openScrapeByName() {
+      openScrapePopup({}); // sin empresa pre-llenada → campo de nombre editable
+    }
+
+    // Create Modal
+    function openCreateModal() {
+      document.getElementById('createModal').classList.add('active');
+    }
+
+    function closeCreateModal() {
+      document.getElementById('createModal').classList.remove('active');
+    }
+
+    function createCompany() {
+      showToast('Company created successfully', 'success');
+      closeCreateModal();
+      setTimeout(() => {
+        goToDetail('comp-new');
+      }, 1000);
+    }
+
+    // === EXPORT CSV ===
+    function handleExportCSV() {
+      const data = filterCompanies();
+      const allContacts = data.flatMap(c => getContactsForCompany(c.id));
+
+      openExportPopup({
+        entityLabel: 'empresas',
+        entityCount: data.length,
+        contactsCount: allContacts.length,
+        showContactsOption: true,
+        onExport: (includeContacts) => {
+          const today = new Date().toISOString().slice(0,10);
+
+          // CSV 1: Empresas
+          const companyRows = data.map(c => {
+            const comercial = c.comercialId ? getMemberById(c.comercialId) : null;
+            const sdr = c.sdrId ? getMemberById(c.sdrId) : null;
+            const coordinator = c.coordinatorId ? getMemberById(c.coordinatorId) : null;
+            return {
+              Empresa: c.name,
+              Industria: c.industry,
+              Ubicacion: c.location,
+              Website: c.website || '',
+              'LinkedIn Empresa': c.linkedinId ? 'https://linkedin.com/company/' + c.linkedinId : '',
+              Pipeline: getPipelineLabel(c.pipelineStage),
+              Tipo: c.type,
+              'Comercial Asignado': comercial ? comercial.name : '',
+              'SDR Asignado': sdr ? sdr.name : '',
+              'Coordinador': coordinator ? coordinator.name : '',
+              'Remote Viable': c.remoteViable ? 'Sí' : 'No',
+              Contactos: getContactsForCompany(c.id).length
+            };
+          });
+          exportToCSV(companyRows, `empresas_${today}.csv`);
+
+          // CSV 2: Contactos (archivo separado)
+          if (includeContacts && allContacts.length > 0) {
+            const contactRows = allContacts.map(ct => {
+              const company = MOCK_COMPANIES.find(c => c.id === ct.companyId);
+              return {
+                Empresa: company ? company.name : '',
+                'Website Empresa': company ? (company.website || '') : '',
+                'LinkedIn Empresa': company && company.linkedinId ? 'https://linkedin.com/company/' + company.linkedinId : '',
+                'Nombre Contacto': ct.fullName,
+                Cargo: ct.position || '',
+                Departamento: ct.department || '',
+                'Nivel Seniority': ct.seniorityLevel || '',
+                Email: ct.email || '',
+                Telefono: ct.phone || '',
+                'LinkedIn Contacto': ct.linkedinUrl || ''
+              };
+            });
+            setTimeout(() => exportToCSV(contactRows, `contactos_${today}.csv`), 500);
+          }
+        }
+      });
+    }
+
+    // === FILTERS ===
+    let searchDebounceTimer = null;
+    const DEBOUNCE_DELAY = 400;
+
+    function showSearchIndicator(show) {
+      const indicator = document.getElementById('searchIndicator');
+      indicator.style.display = show ? 'flex' : 'none';
+    }
+
+    function filterCompanies() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const typeFilter = document.getElementById('typeFilter').value;
+      const pipelineFilter = document.getElementById('pipelineFilter').value;
+      const industryFilter = document.getElementById('industryFilter').value;
+      const contactsFilter = document.getElementById('contactsFilter').value;
+      const remoteViableFilter = document.getElementById('remoteViableFilter').checked;
+      const comercialFilterValue = comercialFilterSearchbox ? comercialFilterSearchbox.getValue() : 'all';
+      const sdrFilterValue = sdrFilterSearchbox ? sdrFilterSearchbox.getValue() : 'all';
+
+      let base = getVisibleCompanies();
+
+      return base.filter(company => {
+        const matchesSearch = !searchTerm || company.name.toLowerCase().includes(searchTerm);
+        const matchesType = !typeFilter || company.type === typeFilter;
+        const matchesPipeline = !pipelineFilter || company.pipelineStage === pipelineFilter;
+        const matchesIndustry = !industryFilter || company.industry === industryFilter;
+        const matchesRemoteViable = !remoteViableFilter || company.remoteViable === true;
+
+        // Contacts filter
+        let matchesContacts = true;
+        if (contactsFilter === 'with') {
+          matchesContacts = getContactsForCompany(company.id).length > 0;
+        } else if (contactsFilter === 'without') {
+          matchesContacts = getContactsForCompany(company.id).length === 0;
+        }
+
+        // Comercial filter
+        let matchesComercial = true;
+        if (comercialFilterValue && comercialFilterValue !== 'all') {
+          if (comercialFilterValue === 'unassigned') {
+            matchesComercial = company.comercialId === null;
+          } else {
+            matchesComercial = company.comercialId === comercialFilterValue;
+          }
+        }
+
+        // SDR filter
+        let matchesSDR = true;
+        if (sdrFilterValue && sdrFilterValue !== 'all') {
+          if (sdrFilterValue === 'unassigned') {
+            matchesSDR = company.sdrId === null;
+          } else {
+            matchesSDR = company.sdrId === sdrFilterValue;
+          }
+        }
+
+        return matchesSearch && matchesType && matchesPipeline && matchesIndustry && matchesContacts && matchesRemoteViable && matchesComercial && matchesSDR;
+      });
+    }
+
+    function applyFilters(showSkeleton = false) {
+      if (showSkeleton) {
+        renderSkeletonTable();
+      }
+
+      setTimeout(() => {
+        const filtered = filterCompanies();
+        renderTable(filtered);
+        updateResultsCount(filtered.length);
+        showSearchIndicator(false);
+      }, showSkeleton ? 600 : 200);
+    }
+
+    function updateResultsCount(count) {
+      const titleEl = document.querySelector('.table-title');
+      if (titleEl) {
+        titleEl.textContent = `${count.toLocaleString()} companies found`;
+      }
+      const paginationInfo = document.getElementById('paginationInfo');
+      if (paginationInfo) {
+        paginationInfo.textContent = `Showing ${count} of ${count}`;
+      }
+    }
+
+    function handleSearchInput() {
+      showSearchIndicator(true);
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyFilters(false);
+      }, DEBOUNCE_DELAY);
+    }
+
+    // Setup filter event listeners
+    document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+    document.getElementById('typeFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('pipelineFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('industryFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('contactsFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('remoteViableFilter').addEventListener('change', function() {
+      document.getElementById('remoteViableLabel').textContent = this.checked ? 'On' : 'Off';
+      applyFilters(true);
+    });
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('typeFilter').value = '';
+      document.getElementById('pipelineFilter').value = '';
+      document.getElementById('industryFilter').value = '';
+      document.getElementById('contactsFilter').value = '';
+      document.getElementById('remoteViableFilter').checked = true;
+      document.getElementById('remoteViableLabel').textContent = 'On';
+      if (comercialFilterSearchbox) comercialFilterSearchbox.reset();
+      if (sdrFilterSearchbox) sdrFilterSearchbox.reset();
+      showSearchIndicator(false);
+      applyFilters(true);
+    }
+
+    // Close modal on overlay click
+    document.getElementById('createModal').addEventListener('click', function(e) {
+      if (e.target === this) closeCreateModal();
+    });
+
+    // Close modal on ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeCreateModal();
+      }
+    });
+
+    // === INITIALIZATION ===
+    setupTableHeader();
+    setupAssignmentFilters();
+    renderSkeletonTable();
+    setTimeout(() => {
+      const visible = getVisibleCompanies();
+      renderTable(visible);
+      updateResultsCount(visible.length);
+    }, 800);
+  </script>
+</body>
+</html>

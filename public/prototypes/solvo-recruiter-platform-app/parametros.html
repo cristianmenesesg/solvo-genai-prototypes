@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parámetros · Solvo Recruiter Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menú"><span></span><span></span><span></span></button>
+    <div class="mobile-logo"><div class="logo-icon">SRP</div><span class="logo-text">Solvo Recruiter Platform</span></div>
+  </header>
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header"><h1 class="header-title">Parámetros</h1></header>
+
+      <div class="page-content">
+        <!-- Cadencia y vigencia -->
+        <div class="detail-card">
+          <div class="detail-card-title">Cadencia y vigencia</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Frecuencia de corrida — <code>frequency_days</code></label>
+              <input class="form-input param-input" type="number" value="7" min="1">
+              <p class="filter-hint">Cada cuántos días corre el pipeline programado. Default: 7 días.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vigencia del candidato — <code>validity_days</code></label>
+              <input class="form-input param-input" type="number" value="2" min="1">
+              <p class="filter-hint">Días que un candidato sigue vigente según su último análisis OTW. Si la consulta del recruiter supera este valor, se re-valida on-demand.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cobertura geográfica -->
+        <div class="detail-card" style="margin-top:16px;">
+          <div class="geo-head">
+            <div>
+              <div class="detail-card-title" style="margin:0;">Cobertura geográfica</div>
+              <div class="geo-summary" id="geoSummary"></div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Agregar ciudad</button>
+          </div>
+
+          <div class="geo-toolbar">
+            <div class="geo-search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input id="geoSearch" class="geo-search-input" type="text" placeholder="Buscar país o ciudad…" autocomplete="off">
+            </div>
+            <div class="geo-filter" id="statusFilter">
+              <button class="btn btn-sm btn-outline active" type="button" data-status="all">Todas</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="active">Activas</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="inactive">Inactivas</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="loc-table">
+              <thead>
+                <tr>
+                  <th>Ciudad</th>
+                  <th style="width:30%;">País</th>
+                  <th class="loc-toggle">Activa</th>
+                  <th class="loc-action"></th>
+                </tr>
+              </thead>
+              <tbody id="locBody"></tbody>
+            </table>
+            <div class="table-pagination" id="locPager" style="display:none;">
+              <span class="pagination-info" id="pagerInfo"></span>
+              <div class="pagination-controls">
+                <button class="pagination-btn" id="pagerPrev" type="button">‹ Anterior</button>
+                <span class="pagination-info" id="pagerPages"></span>
+                <button class="pagination-btn" id="pagerNext" type="button">Siguiente ›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="autosave-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+          Los cambios se guardan automáticamente.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: agregar ciudad -->
+  <div class="modal-overlay" id="modalAddLoc">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Agregar ciudad</h2>
+        <button class="modal-close" onclick="closeModal('modalAddLoc')" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label">País</label>
+          <div class="combo" id="countryCombo">
+            <input id="locCountryInput" class="form-input" type="text" placeholder="Buscar o elegir país…" autocomplete="off">
+            <div class="combo-list" id="countryComboList"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ciudad</label>
+          <input id="locNameInput" class="form-input" type="text" placeholder="Ej: Medellín Area Metropolitana" autocomplete="off">
+          <p class="filter-hint">Tal como se busca en LinkedIn (ej: Medellín Area Metropolitana).</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modalAddLoc')">Cancelar</button>
+        <button class="btn btn-primary" id="addLocOk">Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js"></script>
+  <script>
+    initSession();
+    if (!canAccessAdmin()) window.location.href = 'candidatos.html';
+    renderSidebar('parametros');
+
+    /* ---------------- Datos de cobertura ---------------- */
+    const LOCATIONS = [
+      { country:'Argentina', locs:[ {n:'Buenos Aires',a:true}, {n:'Córdoba, Argentina',a:true}, {n:'La Plata',a:false}, {n:'Mendoza',a:false}, {n:'Rosario',a:false} ] },
+      { country:'Belice',    locs:[ {n:'Belmopan',a:false}, {n:'Belize City',a:false}, {n:'Corozal District',a:false}, {n:'Orange Walk Town',a:false}, {n:'San Ignacio',a:false} ] },
+      { country:'Colombia',  locs:[ {n:'Bogotá',a:true}, {n:'Medellín',a:true}, {n:'Medellín Area Metropolitana',a:true}, {n:'Barranquilla',a:true}, {n:'Cali',a:false}, {n:'Armenia',a:false}, {n:'Bucaramanga',a:false}, {n:'Ibagué',a:false} ] },
+      { country:'Guatemala', locs:[ {n:'Guatemala City',a:false}, {n:'Escuintla',a:false}, {n:'Mixco',a:false}, {n:'Quetzaltenango',a:false}, {n:'Villa Nueva',a:false} ] },
+      { country:'Honduras',  locs:[ {n:'San Pedro Sula',a:false}, {n:'Choloma',a:false}, {n:'El Progreso',a:false}, {n:'La Ceiba',a:false}, {n:'Tegucigalpa',a:false} ] },
+      { country:'Kenia',     locs:[ {n:'Nairobi',a:true} ] },
+      { country:'México',    locs:[ {n:'Chihuahua',a:true}, {n:'Mérida',a:true}, {n:'Mexico City',a:false}, {n:'Aguascalientes',a:false}, {n:'Yucatán',a:false} ] },
+      { country:'Perú',      locs:[ {n:'Lima',a:true}, {n:'Arequipa',a:false}, {n:'Chiclayo',a:false}, {n:'Piura',a:false}, {n:'Trujillo',a:false} ] },
+    ];
+
+    const COUNTRY_CATALOG = ['Argentina','Belice','Brasil','Chile','Colombia','Ecuador','Filipinas','Guatemala','Honduras','India','Kenia','México','Perú','Sudáfrica','Uruguay'];
+
+    const PAGE_SIZE = 15;
+    let geoFilter = '';
+    let statusFilter = 'all';   // 'all' | 'active' | 'inactive'
+    let page = 0;
+
+    /* ---------------- Utilidades ---------------- */
+    function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+    function paisWord(n){ return n === 1 ? 'país' : 'países'; }
+    function ubicWord(n){ return n === 1 ? 'ciudad' : 'ciudades'; }
+    function allCountries(){
+      const set = new Set(COUNTRY_CATALOG);
+      LOCATIONS.forEach(c => set.add(c.country));
+      return [...set].sort((a,b) => a.localeCompare(b,'es'));
+    }
+
+    function updateSummary(){
+      const active = LOCATIONS.reduce((s,c)=> s + c.locs.filter(l=>l.a).length, 0);
+      document.getElementById('geoSummary').textContent =
+        `${active} ${ubicWord(active)} activas · ${LOCATIONS.length} ${paisWord(LOCATIONS.length)}`;
+    }
+
+    function filteredRows(){
+      const f = norm(geoFilter.trim());
+      const rows = [];
+      LOCATIONS.forEach((c, ci) => c.locs.forEach((l, li) => {
+        const matchText = !f || norm(c.country).includes(f) || norm(l.n).includes(f);
+        const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? l.a : !l.a);
+        if (matchText && matchStatus) rows.push({ c, ci, li, l });
+      }));
+      rows.sort((a,b) => a.c.country.localeCompare(b.c.country,'es') || a.l.n.localeCompare(b.l.n,'es'));
+      return rows;
+    }
+
+    /* ---------------- Render de la tabla + paginador ---------------- */
+    const locBody = document.getElementById('locBody');
+    const geoSearch = document.getElementById('geoSearch');
+
+    function emptyRow(text, withBtn){
+      return `<tr><td colspan="4"><div class="geo-empty"><p>${text}</p>${withBtn ? `<button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Agregar ciudad</button>` : ''}</div></td></tr>`;
+    }
+
+    function renderGeo(){
+      updateSummary();
+      const pager = document.getElementById('locPager');
+      const total = LOCATIONS.reduce((s,c)=> s + c.locs.length, 0);
+
+      if (total === 0){
+        locBody.innerHTML = emptyRow('Sin ciudades en cobertura.', true);
+        pager.style.display = 'none';
+        return;
+      }
+
+      const rows = filteredRows();
+      if (!rows.length){
+        const label = geoFilter.trim()
+          ? `Sin resultados para “${esc(geoFilter.trim())}”.`
+          : (statusFilter === 'active' ? 'No hay ciudades activas.' : 'No hay ciudades inactivas.');
+        locBody.innerHTML = emptyRow(label, false);
+        pager.style.display = 'none';
+        return;
+      }
+
+      const pages = Math.ceil(rows.length / PAGE_SIZE);
+      if (page >= pages) page = pages - 1;
+      if (page < 0) page = 0;
+      const start = page * PAGE_SIZE;
+      const slice = rows.slice(start, start + PAGE_SIZE);
+
+      locBody.innerHTML = slice.map(({c, ci, li, l}) => `
+        <tr data-ci="${ci}" data-li="${li}">
+          <td class="loc-name">${esc(l.n)}</td>
+          <td><span class="badge badge-info">${esc(c.country)}</span></td>
+          <td class="loc-toggle">
+            <label class="toggle-pill">
+              <input type="checkbox" data-act="toggle-loc" ${l.a?'checked':''}>
+              <span class="toggle-pill-track"><span class="toggle-pill-knob"></span></span>
+            </label>
+          </td>
+          <td class="loc-action">
+            <button class="geo-remove-loc" data-act="del-loc" title="Quitar ciudad" aria-label="Quitar ciudad">✕</button>
+          </td>
+        </tr>`).join('');
+
+      pager.style.display = '';
+      document.getElementById('pagerInfo').textContent = `${start + 1}–${start + slice.length} de ${rows.length}`;
+      document.getElementById('pagerPages').textContent = `Página ${page + 1} de ${pages}`;
+      document.getElementById('pagerPrev').disabled = page === 0;
+      document.getElementById('pagerNext').disabled = page >= pages - 1;
+    }
+
+    /* ---------------- Interacción de la tabla ---------------- */
+    locBody.addEventListener('change', (e) => {
+      const cb = e.target.closest('[data-act="toggle-loc"]');
+      if (!cb) return;
+      const tr = cb.closest('tr');
+      LOCATIONS[+tr.dataset.ci].locs[+tr.dataset.li].a = cb.checked;
+      updateSummary();
+      if (statusFilter !== 'all') renderGeo();   // la fila puede salir del filtro actual
+      showToast('Guardado','success');
+    });
+
+    /* ---------------- Auto-guardado de cadencia y vigencia ---------------- */
+    document.querySelectorAll('.param-input').forEach(inp => {
+      inp.addEventListener('change', () => showToast('Parámetros guardados','success'));
+    });
+
+    locBody.addEventListener('click', (e) => {
+      const del = e.target.closest('[data-act="del-loc"]');
+      if (!del) return;
+      const tr = del.closest('tr');
+      const ci = +tr.dataset.ci, li = +tr.dataset.li;
+      LOCATIONS[ci].locs.splice(li, 1);
+      if (!LOCATIONS[ci].locs.length) LOCATIONS.splice(ci, 1);
+      renderGeo();
+      showToast('Ciudad quitada','info');
+    });
+
+    /* ---------------- Buscador + filtro de estado + paginador ---------------- */
+    geoSearch.addEventListener('input', (e) => { geoFilter = e.target.value; page = 0; renderGeo(); });
+
+    function setStatus(s){
+      statusFilter = s;
+      document.querySelectorAll('#statusFilter [data-status]').forEach(x => x.classList.toggle('active', x.dataset.status === s));
+    }
+    document.getElementById('statusFilter').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-status]');
+      if (!b) return;
+      setStatus(b.dataset.status);
+      page = 0;
+      renderGeo();
+    });
+
+    document.getElementById('pagerPrev').addEventListener('click', () => { if (page > 0){ page--; renderGeo(); } });
+    document.getElementById('pagerNext').addEventListener('click', () => { page++; renderGeo(); });
+
+    /* ---------------- Agregar ciudad (modal + combo de país) ---------------- */
+    const countryInput = document.getElementById('locCountryInput');
+    const nameInput = document.getElementById('locNameInput');
+    const combo = document.getElementById('countryCombo');
+
+    function renderCombo(){
+      const q = countryInput.value.trim();
+      const f = norm(q);
+      const list = allCountries().filter(c => !f || norm(c).includes(f));
+      const el = document.getElementById('countryComboList');
+      el.innerHTML = list.length
+        ? list.map(c => `<button type="button" class="combo-option" data-country="${esc(c)}">${esc(c)}</button>`).join('')
+        : `<p class="geo-city-empty" style="padding:9px 12px;">${q ? `Sin coincidencias — se creará “${esc(q)}”.` : 'Escribí un país.'}</p>`;
+    }
+
+    function openAddLoc(){
+      countryInput.value = '';
+      nameInput.value = '';
+      combo.classList.remove('open');
+      openModal('modalAddLoc');
+      setTimeout(() => countryInput.focus(), 210);
+    }
+
+    countryInput.addEventListener('focus', () => { renderCombo(); combo.classList.add('open'); });
+    countryInput.addEventListener('input', () => { renderCombo(); combo.classList.add('open'); });
+    countryInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){ e.preventDefault(); combo.classList.remove('open'); nameInput.focus(); }
+    });
+    document.getElementById('countryComboList').addEventListener('click', (e) => {
+      const opt = e.target.closest('[data-country]');
+      if (!opt) return;
+      countryInput.value = opt.dataset.country;
+      combo.classList.remove('open');
+      nameInput.focus();
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#countryCombo')) combo.classList.remove('open');
+    });
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter'){ e.preventDefault(); document.getElementById('addLocOk').click(); }
+    });
+
+    document.getElementById('addLocOk').addEventListener('click', () => {
+      const country = countryInput.value.trim();
+      const name = nameInput.value.trim();
+      if (!country){ showToast('Elegí o escribí un país','info'); countryInput.focus(); return; }
+      if (!name){ showToast('Escribí la ciudad','info'); nameInput.focus(); return; }
+      let entry = LOCATIONS.find(c => norm(c.country) === norm(country));
+      if (entry && entry.locs.some(l => norm(l.n) === norm(name))){
+        showToast('Esa ciudad ya existe','info'); return;
+      }
+      if (!entry){
+        entry = { country, locs: [] };
+        LOCATIONS.push(entry);
+        LOCATIONS.sort((a,b) => a.country.localeCompare(b.country,'es'));
+      }
+      entry.locs.push({ n: name, a: false });
+      closeModal('modalAddLoc');
+      // mostrar la fila nueva: limpiar búsqueda, ver todas y saltar a su página
+      geoFilter = ''; geoSearch.value = '';
+      setStatus('all');
+      const idx = filteredRows().findIndex(r => norm(r.c.country) === norm(country) && norm(r.l.n) === norm(name));
+      page = idx >= 0 ? Math.floor(idx / PAGE_SIZE) : 0;
+      renderGeo();
+      showToast('Ciudad agregada','success');
+    });
+
+    document.getElementById('modalAddLoc').addEventListener('click', function(e){ if (e.target === this) closeModal('modalAddLoc'); });
+
+    renderGeo();
+  </script>
+</body>
+</html>

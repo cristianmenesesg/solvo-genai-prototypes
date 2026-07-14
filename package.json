@@ -1,0 +1,19 @@
+{
+  "name": "solvo-genai-prototypes",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Showcase de prototipos de Solvo GenAI, por producto, con design system swappable y descarga por prototipo.",
+  "scripts": {
+    "sync": "node scripts/prep-prototypes.mjs && node scripts/build-zips.mjs",
+    "prep": "node scripts/prep-prototypes.mjs",
+    "zips": "node scripts/build-zips.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "jszip": "^3.10.1",
+    "vite": "^6.0.7"
+  }
+}

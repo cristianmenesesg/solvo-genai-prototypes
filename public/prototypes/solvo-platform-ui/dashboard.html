@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by RBAC) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Dashboard</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- KPIs de Vacantes -->
+        <div class="kpi-section-header">
+          <h2 class="text-secondary text-sm font-semibold" style="text-transform: uppercase; letter-spacing: 0.05em;" id="vacanciesTitle">Vacancies Pipeline</h2>
+          <span class="kpi-updated-at" id="vacanciesUpdatedAt">Loading...</span>
+        </div>
+
+        <div class="kpi-grid" id="vacanciesKpiGrid">
+          <div class="kpi-card" id="kpi-vacancies-24h">
+            <div class="kpi-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div class="kpi-label">Detected 24h</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-vacancies-month">
+            <div class="kpi-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+              </svg>
+            </div>
+            <div class="kpi-label">Detected Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-vacancies-contacted">
+            <div class="kpi-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </div>
+            <div class="kpi-label">Contacted Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-vacancies-won">
+            <div class="kpi-icon green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="kpi-label">Won Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-vacancies-lost">
+            <div class="kpi-icon orange">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" x2="9" y1="9" y2="15"></line>
+                <line x1="9" x2="15" y1="9" y2="15"></line>
+              </svg>
+            </div>
+            <div class="kpi-label">Lost Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs de Companies -->
+        <div class="kpi-section-header mt-lg">
+          <h2 class="text-secondary text-sm font-semibold" style="text-transform: uppercase; letter-spacing: 0.05em;" id="companiesTitle">Companies Pipeline</h2>
+          <span class="kpi-updated-at" id="companiesUpdatedAt">Loading...</span>
+        </div>
+
+        <div class="kpi-grid" id="companiesKpiGrid">
+          <div class="kpi-card" id="kpi-companies-24h">
+            <div class="kpi-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div class="kpi-label">Detected 24h</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-companies-month">
+            <div class="kpi-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                <line x1="16" x2="16" y1="2" y2="6"></line>
+                <line x1="8" x2="8" y1="2" y2="6"></line>
+                <line x1="3" x2="21" y1="10" y2="10"></line>
+              </svg>
+            </div>
+            <div class="kpi-label">Detected Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-companies-prospecting">
+            <div class="kpi-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+              </svg>
+            </div>
+            <div class="kpi-label">Prospecting Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-companies-onboarding">
+            <div class="kpi-icon green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="kpi-label">Onboarding Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+
+          <div class="kpi-card" id="kpi-companies-lost">
+            <div class="kpi-icon orange">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" x2="9" y1="9" y2="15"></line>
+                <line x1="9" x2="15" y1="9" y2="15"></line>
+              </svg>
+            </div>
+            <div class="kpi-label">Lost Month</div>
+            <div class="kpi-value-container">
+              <div class="kpi-skeleton"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="rbac.js"></script>
+  <script>
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('dashboard');
+
+    // ============================================
+    // KPI Loading Logic — driven by RBAC data
+    // ============================================
+
+    // --- Compute KPI numbers from MOCK data ---
+
+    function isDetected24h(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      return (now - d) < 24 * 60 * 60 * 1000;
+    }
+
+    function isDetectedThisMonth(dateStr) {
+      const d = new Date(dateStr);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+
+    function computeVacancyKpis(vacancies) {
+      return {
+        detected24h: vacancies.filter(v => isDetected24h(v.detectedAt)).length,
+        detectedMonth: vacancies.filter(v => isDetectedThisMonth(v.detectedAt)).length,
+        contactedMonth: vacancies.filter(v => v.status === 'contacted').length,
+        wonMonth: vacancies.filter(v => v.status === 'won').length,
+        lostMonth: vacancies.filter(v => v.status === 'lost').length
+      };
+    }
+
+    function computeCompanyKpis(companies) {
+      return {
+        detected24h: 0, // companies don't have detectedAt — show 0 for personal, mock for team
+        detectedMonth: companies.length,
+        prospectingMonth: companies.filter(c => c.pipelineStage === 'prospecting').length,
+        onboardingMonth: companies.filter(c => c.pipelineStage === 'onboarding_started').length,
+        lostMonth: companies.filter(c => c.pipelineStage === 'lost').length
+      };
+    }
+
+    // Team-level aggregate KPIs (all records, for coord/supervisor/admin)
+    const teamVacancyKpis = {
+      detected24h: 127,
+      detectedMonth: 2847,
+      contactedMonth: 423,
+      wonMonth: 89,
+      lostMonth: 156
+    };
+
+    const teamCompanyKpis = {
+      detected24h: 12,
+      detectedMonth: 156,
+      prospectingMonth: 87,
+      onboardingMonth: 23,
+      lostMonth: 34
+    };
+
+    // --- Simulate API call ---
+    function simulateApiCall(data, delay = 1500) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          if (Math.random() < 0.1) {
+            reject(new Error('Connection error'));
+          } else {
+            resolve(data);
+          }
+        }, delay);
+      });
+    }
+
+    // --- Card helpers ---
+    function updateKpiCard(cardId, value) {
+      const card = document.getElementById(cardId);
+      const container = card.querySelector('.kpi-value-container');
+      container.innerHTML = `<div class="kpi-value">${value.toLocaleString()}</div>`;
+      card.classList.remove('error');
+    }
+
+    function showKpiError(cardId, onRetry) {
+      const card = document.getElementById(cardId);
+      const container = card.querySelector('.kpi-value-container');
+      card.classList.add('error');
+      container.innerHTML = `
+        <div class="kpi-error-value">-</div>
+        <button class="btn-retry" onclick="${onRetry}">&#x21bb; Retry</button>
+      `;
+    }
+
+    function showKpiSkeleton(cardId) {
+      const card = document.getElementById(cardId);
+      const container = card.querySelector('.kpi-value-container');
+      container.innerHTML = '<div class="kpi-skeleton"></div>';
+      card.classList.remove('error');
+    }
+
+    function formatUpdatedAt(date) {
+      const now = new Date();
+      const diff = Math.floor((now - date) / 1000 / 60);
+      if (diff < 1) return 'Updated now';
+      if (diff === 1) return '1 min ago';
+      return `${diff} min ago`;
+    }
+
+    // --- Empty state ---
+    function showEmptyState() {
+      const pageContent = document.querySelector('.page-content');
+      pageContent.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4rem 1rem; text-align:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--neutral-400)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem;">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+            <line x1="16" x2="16" y1="2" y2="6"></line>
+            <line x1="8" x2="8" y1="2" y2="6"></line>
+            <line x1="3" x2="21" y1="10" y2="10"></line>
+          </svg>
+          <h2 style="margin:0 0 .5rem; font-size:1.125rem; color:var(--neutral-700, #374151);">No tienes asignaciones activas</h2>
+          <p style="margin:0; color:var(--neutral-500, #6b7280); max-width:360px; line-height:1.5;">
+            Cuando se te asignen vacantes o empresas, tus KPIs apareceran aqui.
+          </p>
+        </div>
+      `;
+    }
+
+    // --- Load vacancies KPIs ---
+    async function loadVacanciesKpis() {
+      const cardIds = [
+        'kpi-vacancies-24h',
+        'kpi-vacancies-month',
+        'kpi-vacancies-contacted',
+        'kpi-vacancies-won',
+        'kpi-vacancies-lost'
+      ];
+
+      cardIds.forEach(id => showKpiSkeleton(id));
+      document.getElementById('vacanciesUpdatedAt').textContent = 'Loading...';
+
+      try {
+        let data;
+        if (canViewTeamKPIs()) {
+          data = await simulateApiCall(teamVacancyKpis);
+        } else {
+          const myVacancies = getVisibleVacancies();
+          data = await simulateApiCall(computeVacancyKpis(myVacancies));
+        }
+        updateKpiCard('kpi-vacancies-24h', data.detected24h);
+        updateKpiCard('kpi-vacancies-month', data.detectedMonth);
+        updateKpiCard('kpi-vacancies-contacted', data.contactedMonth);
+        updateKpiCard('kpi-vacancies-won', data.wonMonth);
+        updateKpiCard('kpi-vacancies-lost', data.lostMonth);
+        document.getElementById('vacanciesUpdatedAt').textContent = formatUpdatedAt(new Date());
+      } catch (error) {
+        cardIds.forEach(id => showKpiError(id, 'loadVacanciesKpis()'));
+        document.getElementById('vacanciesUpdatedAt').textContent = 'Error loading';
+      }
+    }
+
+    // --- Load companies KPIs ---
+    async function loadCompaniesKpis() {
+      const cardIds = [
+        'kpi-companies-24h',
+        'kpi-companies-month',
+        'kpi-companies-prospecting',
+        'kpi-companies-onboarding',
+        'kpi-companies-lost'
+      ];
+
+      cardIds.forEach(id => showKpiSkeleton(id));
+      document.getElementById('companiesUpdatedAt').textContent = 'Loading...';
+
+      try {
+        let data;
+        if (canViewTeamKPIs()) {
+          data = await simulateApiCall(teamCompanyKpis, 2000);
+        } else {
+          const myCompanies = getVisibleCompanies();
+          data = await simulateApiCall(computeCompanyKpis(myCompanies), 2000);
+        }
+        updateKpiCard('kpi-companies-24h', data.detected24h);
+        updateKpiCard('kpi-companies-month', data.detectedMonth);
+        updateKpiCard('kpi-companies-prospecting', data.prospectingMonth);
+        updateKpiCard('kpi-companies-onboarding', data.onboardingMonth);
+        updateKpiCard('kpi-companies-lost', data.lostMonth);
+        document.getElementById('companiesUpdatedAt').textContent = formatUpdatedAt(new Date());
+      } catch (error) {
+        cardIds.forEach(id => showKpiError(id, 'loadCompaniesKpis()'));
+        document.getElementById('companiesUpdatedAt').textContent = 'Error loading';
+      }
+    }
+
+    // === RBAC: Setup dashboard for role ===
+    function setupDashboardForRole() {
+      const vacTitle = document.getElementById('vacanciesTitle');
+      const compTitle = document.getElementById('companiesTitle');
+
+      if (canViewTeamKPIs()) {
+        if (vacTitle) vacTitle.textContent = 'KPIs del Equipo — Vacancies Pipeline';
+        if (compTitle) compTitle.textContent = 'KPIs del Equipo — Companies Pipeline';
+      } else {
+        if (vacTitle) vacTitle.textContent = 'Mis KPIs — Vacancies Pipeline';
+        if (compTitle) compTitle.textContent = 'Mis KPIs — Companies Pipeline';
+
+        // Empty state: personal role with zero assignments
+        const myVacancies = getVisibleVacancies();
+        const myCompanies = getVisibleCompanies();
+        if (myVacancies.length === 0 && myCompanies.length === 0) {
+          showEmptyState();
+          return; // skip KPI load — nothing to show
+        }
+      }
+
+      // Load KPIs
+      loadVacanciesKpis();
+      loadCompaniesKpis();
+
+      // Auto-refresh every 5 minutes
+      setInterval(() => {
+        loadVacanciesKpis();
+        loadCompaniesKpis();
+      }, 5 * 60 * 1000);
+    }
+
+    setupDashboardForRole();
+  </script>
+</body>
+</html>

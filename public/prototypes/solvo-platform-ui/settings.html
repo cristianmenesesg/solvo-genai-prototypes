@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuración - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .settings-layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+    .settings-nav { min-width: 220px; display: flex; flex-direction: column; gap: 4px; }
+    .settings-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-md, 8px);
+      background: transparent; border: none; cursor: pointer;
+      color: var(--text-secondary); font-size: 14px; text-align: left; width: 100%;
+      transition: background 0.15s, color 0.15s;
+    }
+    .settings-nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+    .settings-nav-item.active { background: var(--bg-tertiary); color: var(--text-primary); font-weight: 600; }
+    .settings-nav-item svg { flex-shrink: 0; }
+    .settings-content { flex: 1; min-width: 320px; max-width: 640px; }
+    .settings-section { display: none; }
+    .settings-section.active { display: block; }
+    .settings-soon { margin-top: 16px; font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+    /* Toggle pill (reused from companies filters) */
+    .toggle-pill { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; height: 38px; }
+    .toggle-pill input { display: none; }
+    .toggle-pill-track { width: 40px; height: 22px; background: var(--border-primary, #444); border-radius: 11px; position: relative; transition: background 0.25s ease; flex-shrink: 0; }
+    .toggle-pill-knob { position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.25s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .toggle-pill input:checked + .toggle-pill-track { background: #22c55e; }
+    .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob { transform: translateX(18px); }
+    .toggle-pill-text { font-size: 13px; font-weight: 500; color: var(--text-secondary, #aaa); min-width: 20px; transition: color 0.2s; }
+    .toggle-pill input:checked ~ .toggle-pill-text { color: #22c55e; }
+  </style>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by RBAC) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Configuraci&oacute;n</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="dashboard.html" class="breadcrumb-item">Dashboard</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-item">Administraci&oacute;n</span>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current">Configuraci&oacute;n</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title">Configuraci&oacute;n</h2>
+            <p class="page-header-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+              Ajustes globales de la plataforma
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <!-- Section navigation (global; extensible) -->
+          <aside class="settings-nav" id="settingsNav">
+            <button class="settings-nav-item active" data-section="ondemand" onclick="showSection('ondemand', this)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
+              </svg>
+              Scraping On-Demand
+            </button>
+            <!-- Futuras secciones de configuración global se agregan aquí -->
+          </aside>
+
+          <!-- Section content -->
+          <div class="settings-content">
+            <!-- Section: Scraping On-Demand -->
+            <div class="settings-section active" id="section-ondemand">
+              <div class="detail-card">
+                <div class="detail-card-title">Scraping On-Demand</div>
+                <p class="text-muted text-sm" style="margin-top: 4px;">
+                  Gobierna la ventana del scrapeo de vacantes por demanda.
+                </p>
+
+                <div class="form-group" style="margin-top: 16px;">
+                  <label class="form-label">Ventana (d&iacute;as)</label>
+                  <input type="number" class="form-input" id="windowDays" min="1" style="max-width: 160px;">
+                  <p class="text-muted text-sm" style="margin-top: 6px;">
+                    Rige a la vez el <strong>cool-down</strong> (una empresa scrapeada dentro de la ventana no se vuelve a scrapear) y la <strong>antig&uuml;edad m&aacute;xima</strong> de las vacantes a traer. M&iacute;nimo <span id="minWindow">1</span> d&iacute;a.
+                  </p>
+                  <div class="form-error" id="windowError" style="display:none; color:#f87171; font-size:13px; margin-top:4px;"></div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:24px;">
+                  <button class="btn btn-primary" onclick="saveOndemandConfig()">Guardar cambios</button>
+                  <button class="btn btn-secondary" onclick="loadOndemandConfig()">Restablecer</button>
+                </div>
+              </div>
+            </div>
+            <!-- Otras secciones (placeholder para futuro) -->
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // === Session & Access Guard (admin only) ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    if (!requireAdmin()) throw new Error('Access denied');
+    renderSidebar('settings');
+
+    // === Section navigation (global config page) ===
+    function showSection(sectionId, btn) {
+      document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+      const section = document.getElementById('section-' + sectionId);
+      if (section) section.classList.add('active');
+      if (btn) btn.classList.add('active');
+    }
+
+    // === Section: On-Demand scraping config ===
+    function loadOndemandConfig() {
+      const cfg = getOdConfig();
+      document.getElementById('windowDays').value = cfg.windowDays;
+      document.getElementById('minWindow').textContent = cfg.minWindowDays;
+      document.getElementById('windowError').style.display = 'none';
+    }
+
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function saveOndemandConfig() {
+      const cfg = getOdConfig();
+      const windowDays = parseInt(document.getElementById('windowDays').value, 10);
+      document.getElementById('windowError').style.display = 'none';
+
+      if (isNaN(windowDays) || windowDays < cfg.minWindowDays) {
+        showFieldError('windowError', 'Debe ser un número ≥ ' + cfg.minWindowDays + ' día(s).');
+        return;
+      }
+
+      setOdConfig({ windowDays: windowDays });
+      showToast('Configuración guardada', 'success');
+    }
+
+    // === Initial render ===
+    loadOndemandConfig();
+  </script>
+</body>
+</html>

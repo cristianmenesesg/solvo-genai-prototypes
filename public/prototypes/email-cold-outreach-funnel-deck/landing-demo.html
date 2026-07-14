@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cubrí tus roles senior · Solvo Global</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: #FAFAFB;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.55;
+  }
+
+  /* Back to proposal banner */
+  .demo-banner {
+    background: #111827;
+    color: white;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    gap: 16px;
+  }
+  .demo-banner .tag {
+    background: var(--color-primary);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .demo-banner a {
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    transition: background 150ms ease;
+  }
+  .demo-banner a:hover { background: rgba(255,255,255,0.08); }
+
+  /* Header */
+  .lp-header {
+    padding: 20px 32px;
+    background: white;
+    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lp-logo {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--color-secondary);
+    letter-spacing: -0.03em;
+  }
+  .lp-logo span { color: var(--color-primary); }
+  .lp-header-meta {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  /* Page container */
+  .lp-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vh, 56px) clamp(20px, 4vw, 48px);
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 60px);
+    align-items: start;
+  }
+
+  /* Hero */
+  .lp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .lp-pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    animation: ping 1.6s ease-in-out infinite;
+  }
+  @keyframes ping { 50% { transform: scale(1.5); opacity: 0.4; } }
+  h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(28px, 4.2vw, 44px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 18px;
+  }
+  h1 em { font-style: italic; color: var(--color-secondary); font-weight: 700; }
+  .lp-sub {
+    font-size: clamp(15px, 1.2vw, 17px);
+    color: var(--text-secondary);
+    line-height: 1.55;
+    max-width: 50ch;
+    margin-bottom: 24px;
+  }
+
+  /* Proof */
+  .lp-proof {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-default);
+    margin-bottom: 28px;
+  }
+  .lp-avatars { display: flex; }
+  .lp-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 3px solid white;
+    margin-left: -10px;
+    background: var(--color-secondary);
+  }
+  .lp-avatar:nth-child(1) { margin-left: 0; background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%); }
+  .lp-avatar:nth-child(2) { background: linear-gradient(135deg, var(--color-secondary-400) 0%, var(--color-secondary) 100%); }
+  .lp-avatar:nth-child(3) { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-400) 100%); }
+  .lp-avatar:nth-child(4) { background: linear-gradient(135deg, var(--color-secondary-300) 0%, var(--color-secondary) 100%); }
+  .lp-proof-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .lp-proof-text strong { color: var(--text-primary); font-family: var(--font-heading); font-weight: 700; }
+
+  /* Meeting bullets */
+  .lp-meeting-block { padding: 8px 0; }
+  .lp-meeting-title {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .lp-bullets { display: flex; flex-direction: column; gap: 10px; }
+  .lp-bullet {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 12px;
+    align-items: start;
+    font-size: 14px;
+    color: var(--text-primary);
+    line-height: 1.5;
+  }
+  .lp-bullet .check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .lp-bullet strong { font-family: var(--font-heading); font-weight: 700; color: var(--text-primary); }
+
+  /* Calendar widget */
+  .lp-widget {
+    background: white;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 24px 60px -30px rgba(17,24,39,0.18), 0 4px 12px -4px rgba(17,24,39,0.08);
+    border: 1px solid var(--border-default);
+    position: sticky;
+    top: 100px;
+  }
+  .lp-widget-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-default);
+  }
+  .lp-widget-head h3 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+  }
+  .lp-widget-head .duration {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .lp-cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .lp-cal-nav h4 {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .lp-cal-nav-btns { display: flex; gap: 4px; }
+  .lp-cal-nav-btns span {
+    width: 26px; height: 26px;
+    border-radius: 5px;
+    background: var(--color-gray-50);
+    border: 1px solid var(--border-default);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .lp-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .lp-cal-grid .h {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    text-align: center;
+    padding: 4px 0;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .lp-cal-grid .d {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: white;
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    transition: all 120ms ease;
+  }
+  .lp-cal-grid .d:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .lp-cal-grid .d.muted { color: var(--text-muted); opacity: 0.35; cursor: not-allowed; }
+  .lp-cal-grid .d.selected {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+    font-weight: 700;
+  }
+  .lp-cal-grid .d.muted:hover { border-color: var(--border-default); color: var(--text-muted); }
+
+  .lp-slots-label {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin: 16px 0 8px;
+    letter-spacing: 0.04em;
+  }
+  .lp-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .lp-slot {
+    padding: 10px 8px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid var(--border-default);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 120ms ease;
+  }
+  .lp-slot:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .lp-slot.selected {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+    font-weight: 700;
+  }
+  .lp-slot.disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+
+  .lp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-default);
+  }
+  .lp-input {
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid var(--border-default);
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 150ms ease;
+  }
+  .lp-input:focus { border-color: var(--color-secondary); }
+  .lp-input::placeholder { color: var(--text-muted); }
+  .lp-cta {
+    padding: 14px 18px;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 8px 20px -6px rgba(238,118,35,0.4);
+    transition: transform 150ms ease, background 150ms ease;
+    border: 0;
+    margin-top: 4px;
+  }
+  .lp-cta:hover { transform: translateY(-1px); background: var(--color-primary-600); }
+  .lp-trust {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .lp-trust::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+  }
+
+  @media (max-width: 880px) {
+    .lp-container { grid-template-columns: minmax(0, 1fr); }
+    .lp-widget { position: static; }
+  }
+  @media (max-width: 540px) {
+    .lp-header { padding: 16px 20px; }
+    .demo-banner { padding: 8px 14px; font-size: 11px; }
+    .demo-banner span:first-child { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <span><span class="tag">Demo</span> Vista de la landing propuesta (Opción A)</span>
+  <a href="index.html">← Volver a la propuesta</a>
+</div>
+
+<header class="lp-header">
+  <div class="lp-logo">solvo<span>.</span></div>
+  <div class="lp-header-meta">Talent Partner · Solvo Global</div>
+</header>
+
+<main class="lp-container">
+
+  <!-- Hero column -->
+  <section>
+    <div class="lp-pill">Para Acme Corp · 3 vacantes abiertas</div>
+    <h1>Cubrí los roles senior de Acme con <em>talento global</em> en 21 días.</h1>
+    <p class="lp-sub">Llamada de 25 minutos. Saldrás con un plan concreto de cómo cubrir tus vacantes de Senior Engineering, cuánto ahorrás vs. hiring local y un timeline real de onboarding.</p>
+
+    <div class="lp-proof">
+      <div class="lp-avatars">
+        <div class="lp-avatar"></div>
+        <div class="lp-avatar"></div>
+        <div class="lp-avatar"></div>
+        <div class="lp-avatar"></div>
+      </div>
+      <div class="lp-proof-text">
+        <strong>1,000+ empresas</strong> ya confían en Solvo<br>
+        Ahorro promedio <strong>hasta 60%</strong> vs. hiring local
+      </div>
+    </div>
+
+    <div class="lp-meeting-block">
+      <div class="lp-meeting-title">Qué vas a recibir en 25 minutos</div>
+      <div class="lp-bullets">
+        <div class="lp-bullet">
+          <div class="check">✓</div>
+          <div><strong>Cálculo de ahorro</strong> sobre tus 3 vacantes abiertas actuales, con números reales de tu industria y stack.</div>
+        </div>
+        <div class="lp-bullet">
+          <div class="check">✓</div>
+          <div><strong>Tres perfiles preseleccionados</strong> de nuestro pool, alineados a los stacks y seniority que necesitás.</div>
+        </div>
+        <div class="lp-bullet">
+          <div class="check">✓</div>
+          <div><strong>Timeline real de onboarding</strong> con hitos concretos y costos detallados, sin sorpresas.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendar widget column -->
+  <aside class="lp-widget">
+    <div class="lp-widget-head">
+      <h3>Reservá tu llamada</h3>
+      <div class="duration">25 min</div>
+    </div>
+
+    <div class="lp-cal-nav">
+      <h4>Marzo 2026</h4>
+      <div class="lp-cal-nav-btns">
+        <span>‹</span>
+        <span>›</span>
+      </div>
+    </div>
+
+    <div class="lp-cal-grid">
+      <div class="h">L</div><div class="h">M</div><div class="h">M</div><div class="h">J</div><div class="h">V</div><div class="h">S</div><div class="h">D</div>
+      <div class="d muted">23</div>
+      <div class="d muted">24</div>
+      <div class="d muted">25</div>
+      <div class="d muted">26</div>
+      <div class="d muted">27</div>
+      <div class="d muted">28</div>
+      <div class="d">1</div>
+      <div class="d">2</div>
+      <div class="d">3</div>
+      <div class="d">4</div>
+      <div class="d">5</div>
+      <div class="d selected">6</div>
+      <div class="d">7</div>
+      <div class="d muted">8</div>
+      <div class="d">9</div>
+      <div class="d">10</div>
+      <div class="d">11</div>
+      <div class="d">12</div>
+      <div class="d">13</div>
+      <div class="d">14</div>
+      <div class="d muted">15</div>
+      <div class="d">16</div>
+      <div class="d">17</div>
+      <div class="d">18</div>
+      <div class="d">19</div>
+      <div class="d">20</div>
+      <div class="d">21</div>
+      <div class="d muted">22</div>
+    </div>
+
+    <div class="lp-slots-label">Horarios disponibles · Viernes 6 marzo</div>
+    <div class="lp-slots">
+      <div class="lp-slot">9:00 AM</div>
+      <div class="lp-slot selected">10:30 AM</div>
+      <div class="lp-slot">11:30 AM</div>
+      <div class="lp-slot disabled">14:00 PM</div>
+      <div class="lp-slot">15:30 PM</div>
+      <div class="lp-slot">16:30 PM</div>
+    </div>
+
+    <div class="lp-form">
+      <input type="text" class="lp-input" placeholder="Tu nombre" value="Sarah Chen" />
+      <input type="email" class="lp-input" placeholder="Email corporativo" value="sarah@acmecorp.com" />
+      <button class="lp-cta">Confirmar meeting · Vie 6 · 10:30 AM</button>
+      <div class="lp-trust">Recibirás la invitación de calendario en 30 segundos</div>
+    </div>
+  </aside>
+
+</main>
+
+</body>
+</html>

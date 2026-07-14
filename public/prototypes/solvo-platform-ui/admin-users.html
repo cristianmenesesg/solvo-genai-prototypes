@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Dual-assignment column helpers */
+    .col-assignment { text-align: center; min-width: 80px; }
+    .col-assignment-header { font-size: 0.72rem; line-height: 1.2; text-align: center; }
+    .col-assignment-header small { display: block; font-weight: 400; color: var(--text-muted); }
+    .count-zero { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by RBAC) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Usuarios</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="dashboard.html" class="breadcrumb-item">Dashboard</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-item">Administraci&oacute;n</span>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current">Usuarios</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title">Usuarios</h2>
+            <p class="page-header-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Los usuarios y roles se gestionan desde Microsoft Entra ID</p>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Rol</label>
+            <select class="form-select" id="filterRole" onchange="filterUsers()">
+              <option value="">Todos los roles</option>
+              <option value="comercial">Comercial</option>
+              <option value="sdr">SDR</option>
+              <option value="coordinador">Coordinador</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="administrador">Administrador</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Buscar</label>
+            <input type="text" class="form-input" id="filterSearch" placeholder="Nombre o email..." oninput="filterUsers()">
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>&Uacute;ltimo login</th>
+                <th class="col-assignment-header">Empresas<small>Comercial</small></th>
+                <th class="col-assignment-header">Empresas<small>SDR</small></th>
+                <th class="col-assignment-header">Vacantes<small>Comercial</small></th>
+                <th class="col-assignment-header">Vacantes<small>SDR</small></th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // === Session & Access Guard ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    if (!requireAdmin()) throw new Error('Access denied');
+    renderSidebar('admin-users');
+
+    // === Mock last-login dates ===
+    const MOCK_LAST_LOGIN = {
+      'uuid-staff-001': '2026-04-13 09:14',
+      'uuid-staff-002': '2026-04-13 08:47',
+      'uuid-staff-003': '2026-04-12 17:32',
+      'uuid-staff-004': '2026-04-13 10:05',
+      'uuid-staff-005': '2026-04-11 14:22',
+      'uuid-staff-006': '2026-04-13 09:58',
+      'uuid-staff-007': '2026-04-12 16:10',
+      'uuid-staff-008': '2026-04-13 07:30',
+      'uuid-staff-009': '2026-04-12 11:45',
+      'uuid-staff-010': '2026-04-10 15:03',
+      'uuid-staff-011': '2026-04-13 08:22'
+    };
+
+    // === Render Users Table ===
+    function renderUsersTable(data) {
+      const members = data || TEAM_MEMBERS;
+      const tbody = document.getElementById('usersTableBody');
+
+      if (members.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              No se encontraron usuarios con esos filtros
+            </td>
+          </tr>`;
+        return;
+      }
+
+      tbody.innerHTML = members.map(member => {
+        const roleData = ROLES[member.roleKey];
+        const roleName = roleData ? roleData.name : member.roleKey;
+        const lastLogin = MOCK_LAST_LOGIN[member.id] || '—';
+
+        const fmtCount = (n) => n > 0
+          ? `<strong>${n.toLocaleString()}</strong>`
+          : `<span class="count-zero">0</span>`;
+
+        return `
+          <tr>
+            <td class="font-medium">${member.name}</td>
+            <td class="text-secondary">${member.email}</td>
+            <td>
+              <span class="badge badge-role badge-role-${member.roleKey}">${roleName}</span>
+            </td>
+            <td class="text-secondary" style="white-space:nowrap;">${lastLogin}</td>
+            <td class="col-assignment">${fmtCount(member.companiesAsComercial)}</td>
+            <td class="col-assignment">${fmtCount(member.companiesAsSDR)}</td>
+            <td class="col-assignment">${fmtCount(member.vacanciesAsComercial)}</td>
+            <td class="col-assignment">${fmtCount(member.vacanciesAsSDR)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    // === Filter Users ===
+    function filterUsers() {
+      const roleFilter = document.getElementById('filterRole').value;
+      const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
+
+      const filtered = TEAM_MEMBERS.filter(member => {
+        const matchesRole = !roleFilter || member.roleKey === roleFilter;
+        const matchesSearch = !searchFilter ||
+          member.name.toLowerCase().includes(searchFilter) ||
+          member.email.toLowerCase().includes(searchFilter);
+
+        return matchesRole && matchesSearch;
+      });
+
+      renderUsersTable(filtered);
+    }
+
+    // === Initial render ===
+    renderUsersTable();
+  </script>
+</body>
+</html>

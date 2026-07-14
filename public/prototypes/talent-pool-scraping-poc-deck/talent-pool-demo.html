@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Talent Pool · Vista funcional</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: #F5F6F8;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* Demo banner */
+  .demo-banner {
+    background: #111827;
+    color: white;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    gap: 16px;
+  }
+  .demo-banner .tag {
+    background: var(--color-primary);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .demo-banner a {
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    transition: background 150ms ease;
+  }
+  .demo-banner a:hover { background: rgba(255,255,255,0.08); }
+
+  /* App shell */
+  .app-shell {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: clamp(20px, 3vh, 32px) clamp(20px, 3vw, 36px);
+  }
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .app-title-block { display: flex; align-items: center; gap: 12px; }
+  .app-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 18px;
+  }
+  .app-title {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+  .app-subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .run-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .run-badge .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--color-success);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% { opacity: 0.4; }
+  }
+  .run-badge .exec {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 4px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat.anchor { border-left: 3px solid var(--color-secondary); }
+  .stat .v {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .stat .v small { font-size: 0.55em; color: var(--text-muted); font-weight: 500; margin-left: 2px; }
+  .stat .v .ok { color: var(--color-success); }
+  .stat .k {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .stat .delta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+  .stat .delta.up { color: var(--color-success); }
+
+  /* Filters */
+  .filters-bar {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-right: 6px;
+  }
+  .filter-chip {
+    padding: 6px 12px;
+    background: var(--color-gray-50);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 150ms ease;
+  }
+  .filter-chip:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .filter-chip.active {
+    background: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+  }
+  .filter-chip.anchor {
+    background: var(--color-secondary-50);
+    color: var(--color-secondary-800);
+    border-color: var(--color-secondary-200);
+  }
+  .filter-chip .x { opacity: 0.6; font-size: 11px; }
+  .filter-search {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 14px;
+    background: var(--color-gray-50);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text-primary);
+    outline: none;
+  }
+  .filter-search:focus { border-color: var(--color-secondary); background: white; }
+
+  /* Table */
+  .table-wrap {
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .table-head {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1.2fr) minmax(140px, 0.9fr) 100px minmax(180px, 1.4fr) 110px 100px 60px;
+    gap: 0;
+    padding: 12px 18px;
+    background: var(--color-gray-50);
+    border-bottom: 1px solid var(--border-default);
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 700;
+  }
+  .table-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.8fr) minmax(160px, 1.2fr) minmax(140px, 0.9fr) 100px minmax(180px, 1.4fr) 110px 100px 60px;
+    gap: 0;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-default);
+    align-items: center;
+    transition: background 120ms ease;
+  }
+  .table-row:hover { background: var(--color-gray-50); }
+  .table-row:last-child { border-bottom: 0; }
+
+  .candidate {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .candidate-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--color-secondary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .candidate-avatar.c1 { background: linear-gradient(135deg, #775AE5 0%, #F19556 100%); }
+  .candidate-avatar.c2 { background: linear-gradient(135deg, #3869E0 0%, #775AE5 100%); }
+  .candidate-avatar.c3 { background: linear-gradient(135deg, #F19556 0%, #F7B886 100%); }
+  .candidate-avatar.c4 { background: linear-gradient(135deg, #5038B3 0%, #3869E0 100%); }
+  .candidate-avatar.c5 { background: linear-gradient(135deg, #789FFF 0%, #3869E0 100%); }
+  .candidate-avatar.c6 { background: linear-gradient(135deg, #F4A66D 0%, #C46828 100%); }
+  .candidate-avatar.c7 { background: linear-gradient(135deg, #8D74EA 0%, #5038B3 100%); }
+  .candidate-avatar.c8 { background: linear-gradient(135deg, #F19556 0%, #775AE5 100%); }
+  .candidate-info { min-width: 0; }
+  .candidate-name {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .candidate-headline {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.3;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cell {
+    font-size: 12px;
+    color: var(--text-primary);
+    min-width: 0;
+    overflow: hidden;
+  }
+  .cell .top {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cell .bot {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .seniority {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 3px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .seniority.senior { background: var(--color-secondary-50); color: var(--color-secondary-800); }
+  .seniority.lead { background: var(--color-primary-50); color: var(--color-primary-700); }
+  .seniority.mid { background: var(--color-gray-100); color: var(--text-secondary); }
+  .seniority.c-level { background: #1F2937; color: white; }
+
+  .skills {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .skill {
+    padding: 2px 8px;
+    background: var(--color-gray-100);
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .skill.more {
+    background: var(--color-gray-200);
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
+  }
+
+  .source-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+  .source-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .source-dot.linkedin { background: #0A66C2; }
+  .source-dot.indeed { background: #2557A7; }
+  .source-dot.github { background: #24292E; }
+  .source-dot.stackoverflow { background: #F48024; }
+  .source-dot.wellfound { background: #00B5AD; }
+
+  .otw-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
+    border-radius: 3px;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .otw-badge::before {
+    content: "";
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--color-success);
+  }
+
+  .row-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--color-gray-50);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 150ms ease;
+    border: 1px solid var(--border-default);
+    font-size: 12px;
+  }
+  .row-link:hover {
+    background: var(--color-secondary);
+    color: white;
+    border-color: var(--color-secondary);
+  }
+
+  /* Pagination */
+  .table-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-top: 1px solid var(--border-default);
+    background: var(--color-gray-50);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .table-foot .summary { font-size: 11px; letter-spacing: 0.04em; }
+  .table-foot .summary strong { color: var(--text-primary); }
+  .pagination {
+    display: flex;
+    gap: 4px;
+  }
+  .pagination button {
+    width: 28px; height: 28px;
+    border-radius: 5px;
+    background: white;
+    border: 1px solid var(--border-default);
+    font-family: var(--font-heading);
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .pagination button.active {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: white;
+  }
+
+  /* Schema callout */
+  .schema-callout {
+    margin-top: 18px;
+    background: white;
+    border: 1px solid var(--border-default);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .schema-callout .label-min {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .schema-callout code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--color-secondary-50);
+    color: var(--color-secondary-800);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--color-secondary-200);
+  }
+  .schema-callout .arrow { color: var(--text-muted); }
+  .schema-callout .desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .table-head, .table-row {
+      grid-template-columns: minmax(200px, 1.6fr) minmax(140px, 1fr) 100px 110px 60px;
+    }
+    .col-location, .col-skills, .col-source { display: none; }
+  }
+  @media (max-width: 760px) {
+    .table-head, .table-row {
+      grid-template-columns: 1.6fr 100px 60px;
+      padding: 12px;
+    }
+    .col-role, .col-seniority { display: none; }
+    .demo-banner span:first-child { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <span><span class="tag">Demo funcional</span> Vista interna del pool de candidatos capturado</span>
+  <a href="index.html">← Volver a la propuesta</a>
+</div>
+
+<div class="app-shell">
+
+  <header class="app-header">
+    <div class="app-title-block">
+      <div class="app-icon">T</div>
+      <div>
+        <div class="app-title">Talent Pool</div>
+        <div class="app-subtitle">Candidatos capturados · LinkedIn + Indeed</div>
+      </div>
+    </div>
+    <div class="run-badge">
+      <span class="dot"></span>
+      <span>Última corrida: hace 12 min</span>
+      <span class="exec">· 9:00 AM EST</span>
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <section class="stats-row">
+    <div class="stat anchor">
+      <div class="v">247</div>
+      <div class="k">Capturados hoy</div>
+      <div class="delta up">↑ 18% vs. promedio semanal</div>
+    </div>
+    <div class="stat">
+      <div class="v"><span class="ok">100<small>%</small></span></div>
+      <div class="k">Buscando empleo</div>
+      <div class="delta">Indicador confirmado en todos</div>
+    </div>
+    <div class="stat">
+      <div class="v">87<small>%</small></div>
+      <div class="k">Información completa</div>
+      <div class="delta up">↑ 4% sobre el objetivo</div>
+    </div>
+    <div class="stat">
+      <div class="v">2.3<small>%</small></div>
+      <div class="k">Repetidos</div>
+      <div class="delta">Dentro del rango esperado</div>
+    </div>
+    <div class="stat">
+      <div class="v">12.4<small>k</small></div>
+      <div class="k">Total acumulado</div>
+      <div class="delta">Desde el inicio del POC</div>
+    </div>
+  </section>
+
+  <!-- FILTERS -->
+  <section class="filters-bar">
+    <span class="filter-label">Filtros</span>
+    <span class="filter-chip anchor">Buscando empleo <span class="x">obligatorio</span></span>
+    <span class="filter-chip active">Nivel: Senior <span class="x">×</span></span>
+    <span class="filter-chip">Ubicación: US</span>
+    <span class="filter-chip">Habilidad: React</span>
+    <span class="filter-chip">+ agregar filtro</span>
+    <input type="search" class="filter-search" placeholder="Buscar por nombre, rol o empresa..." />
+  </section>
+
+  <!-- TABLE -->
+  <section class="table-wrap">
+    <div class="table-head">
+      <div>Candidato</div>
+      <div class="col-role">Rol actual</div>
+      <div class="col-location">Ubicación</div>
+      <div class="col-seniority">Seniority</div>
+      <div class="col-skills">Habilidades</div>
+      <div class="col-source">Portal</div>
+      <div>Buscando empleo</div>
+      <div></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c1">SC</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Sarah Chen</div>
+          <div class="candidate-headline">Senior Software Engineer · ex-Stripe</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Senior Backend Engineer</div>
+        <div class="bot">Acme Corp</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Austin, TX</div>
+        <div class="bot">United States</div>
+      </div>
+      <div class="col-seniority"><span class="seniority senior">Senior</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Python</span>
+        <span class="skill">Go</span>
+        <span class="skill">AWS</span>
+        <span class="skill more">+4</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link" title="Ver perfil">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c2">MR</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Marcus Rodriguez</div>
+          <div class="candidate-headline">Engineering Manager · 8 years experience</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Engineering Manager</div>
+        <div class="bot">FinTech Startup</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Remote · Latam</div>
+        <div class="bot">Argentina</div>
+      </div>
+      <div class="col-seniority"><span class="seniority lead">Lead</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Leadership</span>
+        <span class="skill">Node.js</span>
+        <span class="skill more">+6</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c3">AP</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Aisha Patel</div>
+          <div class="candidate-headline">Full-stack developer · TypeScript enthusiast</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Senior Frontend Developer</div>
+        <div class="bot">Independent</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Brooklyn, NY</div>
+        <div class="bot">United States</div>
+      </div>
+      <div class="col-seniority"><span class="seniority senior">Senior</span></div>
+      <div class="skills col-skills">
+        <span class="skill">React</span>
+        <span class="skill">TypeScript</span>
+        <span class="skill">Next.js</span>
+        <span class="skill more">+3</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot indeed"></span>Indeed</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c4">DK</div>
+        <div class="candidate-info">
+          <div class="candidate-name">David Kowalski</div>
+          <div class="candidate-headline">DevOps & Cloud Infrastructure</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Senior DevOps Engineer</div>
+        <div class="bot">Healthcare SaaS</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Chicago, IL</div>
+        <div class="bot">United States</div>
+      </div>
+      <div class="col-seniority"><span class="seniority senior">Senior</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Kubernetes</span>
+        <span class="skill">Terraform</span>
+        <span class="skill">AWS</span>
+        <span class="skill more">+5</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot indeed"></span>Indeed</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c5">EO</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Elena Okonkwo</div>
+          <div class="candidate-headline">Product Engineer · ML practitioner</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Senior ML Engineer</div>
+        <div class="bot">Edtech</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Lisbon</div>
+        <div class="bot">Portugal · Remote</div>
+      </div>
+      <div class="col-seniority"><span class="seniority senior">Senior</span></div>
+      <div class="skills col-skills">
+        <span class="skill">PyTorch</span>
+        <span class="skill">Python</span>
+        <span class="skill">FastAPI</span>
+        <span class="skill more">+4</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c6">JT</div>
+        <div class="candidate-info">
+          <div class="candidate-name">James Thompson</div>
+          <div class="candidate-headline">Backend specialist · Distributed systems</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Staff Engineer</div>
+        <div class="bot">E-commerce Platform</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">Seattle, WA</div>
+        <div class="bot">United States</div>
+      </div>
+      <div class="col-seniority"><span class="seniority lead">Lead</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Java</span>
+        <span class="skill">Kafka</span>
+        <span class="skill">Redis</span>
+        <span class="skill more">+7</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c7">NF</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Natalia Ferreira</div>
+          <div class="candidate-headline">Senior data engineer · Building data platforms</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Senior Data Engineer</div>
+        <div class="bot">Marketing Analytics Co</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">São Paulo</div>
+        <div class="bot">Brazil · Remote</div>
+      </div>
+      <div class="col-seniority"><span class="seniority senior">Senior</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Snowflake</span>
+        <span class="skill">dbt</span>
+        <span class="skill">Python</span>
+        <span class="skill more">+5</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-row">
+      <div class="candidate">
+        <div class="candidate-avatar c8">RH</div>
+        <div class="candidate-info">
+          <div class="candidate-name">Ravi Hernandez</div>
+          <div class="candidate-headline">CTO · Looking for new opportunities</div>
+        </div>
+      </div>
+      <div class="cell col-role">
+        <div class="top">Chief Technology Officer</div>
+        <div class="bot">Series-B Startup</div>
+      </div>
+      <div class="cell col-location">
+        <div class="top">San Francisco, CA</div>
+        <div class="bot">United States</div>
+      </div>
+      <div class="col-seniority"><span class="seniority c-level">C-Level</span></div>
+      <div class="skills col-skills">
+        <span class="skill">Strategy</span>
+        <span class="skill">Scaling</span>
+        <span class="skill more">+8</span>
+      </div>
+      <div class="col-source"><span class="source-cell"><span class="source-dot linkedin"></span>LinkedIn</span></div>
+      <div><span class="otw-badge">Activo</span></div>
+      <div><a href="#" class="row-link">↗</a></div>
+    </div>
+
+    <div class="table-foot">
+      <div class="summary">Mostrando <strong>1-8</strong> de <strong>247</strong> candidatos capturados hoy</div>
+      <div class="pagination">
+        <button>‹</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>…</button>
+        <button>31</button>
+        <button>›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- POOL CALLOUT -->
+  <div class="schema-callout">
+    <span class="label-min">Cómo se usa</span>
+    <span class="desc">El equipo puede explorar el pool aplicando los filtros que necesite — nivel, habilidades, ubicación, portal de origen — y exportar los candidatos relevantes. Toda la información queda lista para que en la fase 2 se cruce automáticamente con las vacantes activas del sistema.</span>
+  </div>
+
+</div>
+
+</body>
+</html>

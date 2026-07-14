@@ -1,0 +1,16 @@
+/* ============================================================
+   Contrato base del design system.
+   Se carga ANTES del tokens.css del brand para dar fallbacks a
+   los tokens que SOLO define solvo-genai (--color-accent*, --bg-brand*),
+   de modo que el swap entre brands (solvo-global / softgic / solvo-genai)
+   nunca deje variables sin resolver.
+   var() resuelve en tiempo de uso, así que estos fallbacks toman el
+   valor del brand activo automáticamente.
+   ============================================================ */
+:root {
+  --color-accent1: var(--color-secondary);
+  --color-accent2: var(--color-primary);
+  --color-neutral-accent: #8f939e;
+  --bg-brand: var(--color-primary);
+  --bg-brand-alt: var(--color-secondary);
+}

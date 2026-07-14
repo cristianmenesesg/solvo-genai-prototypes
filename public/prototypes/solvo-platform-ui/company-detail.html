@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="tokens.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Detail - Solvo Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .btn-danger { background: #dc3545; color: white; border: none; }
+    .btn-danger:hover { background: #c82333; }
+  </style>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by rbac.js) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Company Detail</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <a href="companies.html" class="breadcrumb-item">Companies</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current" id="breadcrumbName">TechCorp Solutions</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title" id="companyName">TechCorp Solutions</h2>
+            <span class="badge-pipeline badge-pipeline-onboarding_started" id="pipelineBadge" onclick="openStateChangeModal()">Onboarding Started</span>
+            <span class="assigned-info" id="assignedInfo" style="display: none;">
+              <span class="text-muted">Comercial:</span>
+              <span id="assignedComercialName"></span>
+              <span class="text-muted" style="margin-left: 8px;">SDR:</span>
+              <span id="assignedSdrName"></span>
+            </span>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="openEditModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+              </svg>
+              Edit
+            </button>
+          </div>
+        </div>
+
+        <!-- Assignment Section (rendered by rbac.js renderAssignmentSection) -->
+        <div class="assignment-card" id="assignmentSection">
+          <!-- renderAssignmentSection() fills this -->
+        </div>
+
+        <!-- Tabs -->
+        <div class="detail-tabs">
+          <button class="detail-tab-btn active" onclick="switchTab('general', this)">General</button>
+          <button class="detail-tab-btn" onclick="switchTab('research', this)">Research</button>
+          <button class="detail-tab-btn" onclick="switchTab('seguimiento', this)">Follow-up</button>
+          <button class="detail-tab-btn" onclick="switchTab('vacantes', this)">Vacancies</button>
+        </div>
+
+        <!-- Tab: General -->
+        <div id="tab-general" class="detail-tab-content active">
+          <div class="detail-card">
+            <div class="detail-card-title">Company Information</div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Industry</span>
+                <span class="detail-value" id="detailIndustry">Technology</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Location</span>
+                <span class="detail-value" id="detailLocation">Miami, FL</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Website</span>
+                <span class="detail-value"><a href="#" id="detailWebsite" target="_blank">https://techcorp.com</a></span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Relationship Type</span>
+                <span class="detail-value"><span class="badge badge-success" id="detailType">Client</span></span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Employees</span>
+                <span class="detail-value" id="detailEmployees">750</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Year Founded</span>
+                <span class="detail-value" id="detailYearFounded">2010</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-item">
+                <span class="detail-label">Annual Revenue</span>
+                <span class="detail-value" id="detailRevenue">$12M USD</span>
+              </div>
+              <div class="detail-item">
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">
+              Contacts
+              <span class="text-muted text-sm" id="contactCount">(2)</span>
+              <button class="btn btn-ghost btn-sm" onclick="openAddContactModal()" style="margin-left: auto;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <line x1="19" x2="19" y1="8" y2="14"></line>
+                  <line x1="22" x2="16" y1="11" y2="11"></line>
+                </svg>
+                Add Contact
+              </button>
+            </div>
+            <div id="contactsList">
+              <!-- Contacts rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Research -->
+        <div id="tab-research" class="detail-tab-content">
+          <div class="detail-card">
+            <div class="detail-card-title">
+              Research Information
+              <button class="btn btn-ghost btn-sm" onclick="openEditResearchModal()" id="editResearchBtn">Edit</button>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Value Proposition</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchValueProp" data-expanded="false">
+                  Innovative technology solutions that transform the way companies operate, increasing operational efficiency by an average of 40%. This value proposition focuses on complete digital transformation of organizations, offering tools that optimize processes, reduce operating costs, and improve team productivity.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchValueProp')">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Mission</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchMission" data-expanded="false">
+                  Empowering organizations with cutting-edge technology to drive their digital transformation.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchMission')" style="display: none;">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Vision</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchVision" data-expanded="false">
+                  To be the global leader in enterprise technology solutions by 2030.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchVision')" style="display: none;">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Sales Pitch</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchSalesPitch" data-expanded="false">
+                  TechCorp offers customized solutions with demonstrable ROI within 6 months. Their team of 500+ engineers guarantees 24/7 support and continuous updates. Additionally, they hold ISO 27001, SOC 2 Type II certifications, and comply with GDPR and CCPA, ensuring the security and privacy of enterprise data.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchSalesPitch')">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Strengths &amp; Differentiators</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchStrengths" data-expanded="false">
+                  Industry-leading technology with 99.9% uptime SLA. Proprietary AI platform that reduces implementation time by 60%. Strong partnerships with AWS and Google Cloud. Certified by ISO 27001 and SOC 2 Type II, positioning them above competitors in security compliance.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchStrengths')">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="research-item">
+              <div class="research-label">Company History</div>
+              <div class="research-value-wrapper">
+                <div class="research-value research-truncatable" id="researchHistory" data-expanded="false">
+                  Founded in 2010 in Miami by former Google engineers. Started as a consulting firm, pivoted to SaaS in 2015. Series A ($5M) in 2017, Series B ($25M) in 2020. Expanded to LATAM in 2022 with offices in Colombia and Mexico. Currently serving 200+ enterprise clients across 12 countries.
+                </div>
+                <button class="research-toggle-btn" onclick="toggleResearchText('researchHistory')">See more &#8595;</button>
+              </div>
+            </div>
+
+            <div class="detail-row" style="margin-top: 24px;">
+              <div class="detail-item">
+                <span class="detail-label">Last Research</span>
+                <span class="detail-value" id="researchDate">Dec 15, 2025</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Seguimiento -->
+        <div id="tab-seguimiento" class="detail-tab-content">
+          <div class="detail-card">
+            <div class="detail-card-title">
+              State History
+              <button class="btn btn-primary btn-sm" onclick="openStateChangeModal()">Change State</button>
+            </div>
+
+            <!-- Filters for CRM table -->
+            <div class="filters-bar" style="margin-bottom: 16px; padding: 12px; background: var(--bg-secondary);">
+              <div class="filter-group">
+                <label class="filter-label">From</label>
+                <input type="date" class="form-input sm" id="historyDateFrom">
+              </div>
+              <div class="filter-group">
+                <label class="filter-label">To</label>
+                <input type="date" class="form-input sm" id="historyDateTo">
+              </div>
+              <div class="filter-group">
+                <label class="filter-label">Sales Rep</label>
+                <select class="form-select sm" id="historyUser">
+                  <option value="">All</option>
+                  <option value="1">Carlos Mendoza</option>
+                  <option value="2">Mar&iacute;a Garc&iacute;a</option>
+                  <option value="3">Juan P&eacute;rez</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label class="filter-label">State</label>
+                <select class="form-select sm" id="historyState">
+                  <option value="">All</option>
+                  <option value="lead">Lead</option>
+                  <option value="prospecting">Prospecting</option>
+                  <option value="engaged">Engaged</option>
+                  <option value="initial_appointment_held">Initial Appointment Held</option>
+                  <option value="onboarding_started">Onboarding Started</option>
+                  <option value="client">Client</option>
+                  <option value="lost">Lost</option>
+                </select>
+              </div>
+            </div>
+
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Change</th>
+                  <th>Note</th>
+                  <th>Tags</th>
+                </tr>
+              </thead>
+              <tbody id="historyTable">
+                <!-- Rows rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab: Vacantes -->
+        <div id="tab-vacantes" class="detail-tab-content">
+          <div class="detail-card">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+              <div class="detail-card-title" style="margin:0;">
+                Client Vacancies
+                <span class="text-muted text-sm" id="vacantesCount">(0)</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span id="odCooldownStatus" class="text-muted text-sm"></span>
+                <button class="btn btn-secondary btn-sm" id="odScrapeBtn" onclick="scrapeThisCompany()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
+                  </svg>
+                  Scrape vacancies now
+                </button>
+              </div>
+            </div>
+
+            <table class="history-table" id="vacantesTable">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Status</th>
+                  <th>Comercial</th>
+                  <th>SDR</th>
+                  <th>Type</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="vacantesList">
+                <!-- Rows rendered by JS -->
+              </tbody>
+            </table>
+
+            <div class="empty-state" id="vacantesEmpty" style="display: none;">
+              <div class="empty-state-text">No vacancies registered for this company</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Edit Company Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Company</h2>
+        <button class="modal-close" onclick="closeEditModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="editCompanyForm">
+          <!-- Section 1: Basic Information -->
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Name *</label>
+              <input type="text" class="form-input" id="editName" value="TechCorp Solutions" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Industry</label>
+              <select class="form-select" id="editIndustry">
+                <option value="">Select...</option>
+                <option value="Technology" selected>Technology</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Financial Services">Financial Services</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Retail">Retail</option>
+                <option value="Energy">Energy</option>
+                <option value="Education">Education</option>
+                <option value="Logistics">Logistics</option>
+                <option value="Construction">Construction</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Location (State)</label>
+              <input type="text" class="form-input" id="editLocation" value="Florida" list="usStatesListEdit" placeholder="Search state...">
+              <datalist id="usStatesListEdit">
+                <option value="Alabama">
+                <option value="Alaska">
+                <option value="Arizona">
+                <option value="Arkansas">
+                <option value="California">
+                <option value="Colorado">
+                <option value="Connecticut">
+                <option value="Delaware">
+                <option value="Florida">
+                <option value="Georgia">
+                <option value="Hawaii">
+                <option value="Idaho">
+                <option value="Illinois">
+                <option value="Indiana">
+                <option value="Iowa">
+                <option value="Kansas">
+                <option value="Kentucky">
+                <option value="Louisiana">
+                <option value="Maine">
+                <option value="Maryland">
+                <option value="Massachusetts">
+                <option value="Michigan">
+                <option value="Minnesota">
+                <option value="Mississippi">
+                <option value="Missouri">
+                <option value="Montana">
+                <option value="Nebraska">
+                <option value="Nevada">
+                <option value="New Hampshire">
+                <option value="New Jersey">
+                <option value="New Mexico">
+                <option value="New York">
+                <option value="North Carolina">
+                <option value="North Dakota">
+                <option value="Ohio">
+                <option value="Oklahoma">
+                <option value="Oregon">
+                <option value="Pennsylvania">
+                <option value="Rhode Island">
+                <option value="South Carolina">
+                <option value="South Dakota">
+                <option value="Tennessee">
+                <option value="Texas">
+                <option value="Utah">
+                <option value="Vermont">
+                <option value="Virginia">
+                <option value="Washington">
+                <option value="West Virginia">
+                <option value="Wisconsin">
+                <option value="Wyoming">
+              </datalist>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <div class="input-with-action">
+                <input type="url" class="form-input" id="editWebsite" value="https://techcorp.com" placeholder="https://...">
+                <button type="button" class="btn btn-ghost btn-sm input-action-btn" id="editInvestigateBtn" onclick="investigateFromEdit()" title="Run Research Pipeline (Apollo + Bright Data + AI) — sends name, location and website">
+                  &#128269; Investigate
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Company Details -->
+          <div class="form-section">
+            <h4 class="form-section-title">Company Details</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Number of Employees</label>
+                <input type="number" class="form-input" id="editEmployees" value="750" min="1" placeholder="E.g.: 500">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Annual Revenue (USD)</label>
+                <input type="number" class="form-input" id="editRevenue" value="" min="0" placeholder="Optional">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Founded</label>
+              <input type="number" class="form-input" id="editYearFounded" value="2010" min="1800" max="2026" placeholder="E.g.: 2010">
+            </div>
+          </div>
+
+          <!-- Section 3: Classification -->
+          <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+            <h4 class="form-section-title">Classification</h4>
+            <div class="form-group">
+              <label class="form-label">Relationship Type</label>
+              <select class="form-select" id="editRelationType">
+                <option value="prospecto">Prospect</option>
+                <option value="cliente" selected>Client</option>
+                <option value="inactivo">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              <strong>Note:</strong> Pipeline state is not editable from here. Use the "Change State" button to modify it with a follow-up note.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCompany()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Research Modal -->
+  <div class="modal-overlay" id="editResearchModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Research</h2>
+        <button class="modal-close" onclick="closeEditResearchModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="editResearchForm">
+          <div class="form-group">
+            <label class="form-label">Value Proposition</label>
+            <textarea class="form-textarea" id="editValueProp" maxlength="2000">Innovative technology solutions that transform the way companies operate, increasing operational efficiency by an average of 40%.</textarea>
+            <div class="char-count"><span id="valuePropCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mission</label>
+            <textarea class="form-textarea" id="editMission" maxlength="2000">Empowering organizations with cutting-edge technology to drive their digital transformation.</textarea>
+            <div class="char-count"><span id="missionCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vision</label>
+            <textarea class="form-textarea" id="editVision" maxlength="2000">To be the global leader in enterprise technology solutions by 2030.</textarea>
+            <div class="char-count"><span id="visionCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sales Pitch</label>
+            <textarea class="form-textarea" id="editSalesPitch" maxlength="2000">TechCorp offers customized solutions with demonstrable ROI within 6 months. Their team of 500+ engineers guarantees 24/7 support and continuous updates.</textarea>
+            <div class="char-count"><span id="salesPitchCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Strengths &amp; Differentiators</label>
+            <textarea class="form-textarea" id="editStrengths" maxlength="2000">Industry-leading technology with 99.9% uptime SLA. Proprietary AI platform that reduces implementation time by 60%. Strong partnerships with AWS and Google Cloud.</textarea>
+            <div class="char-count"><span id="strengthsCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Company History</label>
+            <textarea class="form-textarea" id="editHistory" maxlength="2000">Founded in 2010 in Miami by former Google engineers. Started as a consulting firm, pivoted to SaaS in 2015. Series A ($5M) in 2017, Series B ($25M) in 2020.</textarea>
+            <div class="char-count"><span id="historyCount">0</span>/2000</div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditResearchModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveResearch()">Save Research</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Change Modal -->
+  <div class="modal-overlay" id="stateChangeModal">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Pipeline State</h2>
+        <button class="modal-close" onclick="closeStateChangeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="state-change-current">
+          <span class="text-muted">Current state:</span>
+          <span class="badge-pipeline badge-pipeline-onboarding_started" id="currentStateBadge">Onboarding Started</span>
+        </div>
+
+        <form id="stateChangeForm">
+          <div class="form-group">
+            <label class="form-label">New State *</label>
+            <select class="form-select" id="newState" required>
+              <option value="">Select state...</option>
+              <option value="lead">Lead</option>
+              <option value="prospecting">Prospecting</option>
+              <option value="engaged">Engaged</option>
+              <option value="initial_appointment_held">Initial Appointment Held</option>
+              <option value="onboarding_started">Onboarding Started</option>
+              <option value="client">Client</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Note * <span class="text-muted">(minimum 10 characters)</span></label>
+            <textarea class="form-textarea" id="stateChangeNote" placeholder="Describe the reason for the state change..." minlength="10" maxlength="500" required></textarea>
+            <div class="char-count"><span id="noteCount">0</span>/500</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags <span class="text-muted">(optional)</span></label>
+            <div class="tags-input" id="tagsInput">
+              <input type="text" placeholder="Type and press Enter..." id="tagInputField">
+            </div>
+            <p class="text-muted text-xs" style="margin-top: 4px;">E.g.: #followup, #meeting, #proposal</p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStateChangeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStateChange()">Confirm Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Contact Modal -->
+  <div class="modal-overlay" id="addContactModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Contact</h2>
+        <button class="modal-close" onclick="closeAddContactModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addContactForm">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" id="newContactName" placeholder="E.g.: John Smith" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Position</label>
+            <input type="text" class="form-input" id="newContactTitle" placeholder="E.g.: HR Director">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-select" id="newContactDepartment">
+                <option value="">Select...</option>
+                <option value="finance">Finance</option>
+                <option value="operations">Operations</option>
+                <option value="hr">HR</option>
+                <option value="it">IT</option>
+                <option value="sales">Sales</option>
+                <option value="executive">Executive</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Seniority Level</label>
+              <select class="form-select" id="newContactSeniority">
+                <option value="">Select...</option>
+                <option value="C-level">C-level</option>
+                <option value="VP">VP</option>
+                <option value="Director">Director</option>
+                <option value="Manager">Manager</option>
+                <option value="Individual Contributor">Individual Contributor</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="newContactEmail" placeholder="email@company.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-input" id="newContactPhone" placeholder="+1 (555) 123-4567">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">LinkedIn URL</label>
+            <input type="text" class="form-input" id="newContactLinkedin" placeholder="linkedin.com/in/username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-check">
+              <input type="checkbox" id="newContactPrimary">
+              <span>Mark as primary contact</span>
+            </label>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddContactModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewContact()">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    // Initialize session and sidebar via RBAC
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('companies');
+
+    // === Load company from MOCK_COMPANIES (rbac.js) ===
+    const params = new URLSearchParams(window.location.search);
+    const companyIdParam = params.get('id') || 'comp-001';
+    const company = MOCK_COMPANIES.find(c => c.id === companyIdParam) || MOCK_COMPANIES[0];
+
+    // Extended local data for display (fields not in MOCK_COMPANIES)
+    const COMPANY_EXTENDED = {
+      'comp-001': {
+        website: 'https://techcorp.com',
+        size_employees: 750,
+        revenue_usd: 12000000,
+        year_founded: 2010,
+        contacts: [
+          { id: 1, full_name: 'John Smith', job_title: 'HR Director', department: 'hr', seniority_level: 'Director', email: 'john.smith@techcorp.com', phone: '+1 (305) 555-0124', linkedin_url: 'linkedin.com/in/johnsmith', is_primary: true },
+          { id: 2, full_name: 'Sarah Johnson', job_title: 'Talent Acquisition Manager', department: 'hr', seniority_level: 'Manager', email: 'sarah.j@techcorp.com', phone: '+1 (305) 555-0125', linkedin_url: 'linkedin.com/in/sarahjohnson', is_primary: false }
+        ],
+        research: {
+          value_proposition: 'Innovative technology solutions that transform the way companies operate, increasing operational efficiency by an average of 40%.',
+          mission: 'Empowering organizations with cutting-edge technology to drive their digital transformation.',
+          vision: 'To be the global leader in enterprise technology solutions by 2030.',
+          sales_pitch: 'TechCorp offers customized solutions with demonstrable ROI within 6 months. Their team of 500+ engineers guarantees 24/7 support and continuous updates.',
+          strengths_differentiators: 'Industry-leading technology with 99.9% uptime SLA. Proprietary AI platform that reduces implementation time by 60%. Strong partnerships with AWS and Google Cloud. Certified by ISO 27001 and SOC 2 Type II, positioning them above competitors in security compliance.',
+          company_history: 'Founded in 2010 in Miami by former Google engineers. Started as a consulting firm, pivoted to SaaS in 2015. Series A ($5M) in 2017, Series B ($25M) in 2020. Expanded to LATAM in 2022 with offices in Colombia and Mexico. Currently serving 200+ enterprise clients across 12 countries.',
+          last_research_date: '2025-12-15'
+        }
+      },
+      'comp-002': {
+        website: 'https://globalhealth.com',
+        size_employees: 1200,
+        revenue_usd: 45000000,
+        year_founded: 2005,
+        contacts: [
+          { id: 3, full_name: 'Emily Davis', job_title: 'VP of Operations', department: 'operations', seniority_level: 'VP', email: 'emily.davis@globalhealth.com', phone: '+1 (212) 555-0201', linkedin_url: 'linkedin.com/in/emilydavis', is_primary: true }
+        ],
+        research: {
+          value_proposition: 'Leading healthcare provider with a network of 15 clinics across the Northeast US.',
+          mission: 'Improving community health through accessible and innovative medical services.',
+          vision: 'To be the most trusted healthcare partner in the Northeast by 2028.',
+          sales_pitch: 'GlobalHealth is expanding rapidly and needs staffing solutions for their new clinics.',
+          strengths_differentiators: 'Strong brand recognition in NY market. Partnerships with major insurance providers.',
+          company_history: 'Founded in 2005 in New York. Expanded to 15 locations by 2024.',
+          last_research_date: '2026-01-10'
+        }
+      }
+    };
+
+    // Merge extended data with MOCK_COMPANIES entry
+    const ext = COMPANY_EXTENDED[company.id] || COMPANY_EXTENDED['comp-001'];
+    const companyData = {
+      ...company,
+      website: ext.website,
+      size_employees: ext.size_employees,
+      revenue_usd: ext.revenue_usd,
+      year_founded: ext.year_founded,
+      contacts: ext.contacts,
+      research: ext.research
+    };
+
+    // Filter vacancies from MOCK_VACANCIES for this company
+    const companyVacancies = MOCK_VACANCIES.filter(v => v.companyId === company.id);
+
+    // State history
+    const STATE_HISTORIES = {
+      'comp-001': [
+        { date: '2025-12-10', user: 'Carlos Mendoza', from: 'initial_appointment_held', to: 'onboarding_started', note: 'Contract signed. Onboarding started.', tags: ['#closing', '#contract'] },
+        { date: '2025-11-28', user: 'Carlos Mendoza', from: 'engaged', to: 'initial_appointment_held', note: 'First appointment held, commercial proposal for 5 initial positions.', tags: ['#proposal'] },
+        { date: '2025-11-15', user: 'Maria Garcia', from: 'prospecting', to: 'engaged', note: 'Successful meeting with HR Director. Interest confirmed.', tags: ['#meeting', '#followup'] },
+        { date: '2025-10-20', user: 'Carlos Mendoza', from: 'lead', to: 'prospecting', note: 'Started investigation and first contact.', tags: [] }
+      ],
+      'comp-002': [
+        { date: '2026-01-10', user: 'Ana Rodriguez', from: null, to: 'prospecting', note: 'Identified via prospect research. Healthcare sector with high staffing needs.', tags: ['#research'] }
+      ]
+    };
+    const stateHistory = STATE_HISTORIES[company.id] || STATE_HISTORIES['comp-001'];
+
+    let tags = [];
+
+    // === Render the full page ===
+    function renderPage() {
+      renderAssignment();
+      updatePageHeader();
+      renderContacts();
+      renderHistorySkeleton();
+      setTimeout(() => { renderHistory(); }, 600);
+      renderVacancies();
+      renderOdCooldownStatus();
+      checkResearchTruncation();
+      openTabFromQuery();
+    }
+
+    // Abre un tab desde ?tab= (usado por el botón "Aceptar" del popup de procesamiento on-demand).
+    function openTabFromQuery() {
+      var tabParam = params.get('tab');
+      if (!tabParam) return;
+      var btn = Array.prototype.filter.call(document.querySelectorAll('.detail-tab-btn'), function (b) {
+        return (b.getAttribute('onclick') || '').indexOf("'" + tabParam + "'") !== -1;
+      })[0];
+      if (btn) switchTab(tabParam, btn);
+    }
+
+    // === Assignment Section (uses rbac.js renderAssignmentSection) ===
+    function renderAssignment() {
+      renderAssignmentSection('assignmentSection', {
+        comercialId: company.comercialId,
+        sdrId: company.sdrId,
+        coordinatorId: company.coordinatorId,
+        onManage: function() {
+          openAssignmentPopup({
+            title: company.name,
+            currentComercialId: company.comercialId,
+            currentSdrId: company.sdrId,
+            currentCoordinatorId: company.coordinatorId,
+            onSave: function(comId, sdrId) {
+              company.comercialId = comId;
+              company.sdrId = sdrId;
+              if (!company.coordinatorId) company.coordinatorId = getCurrentUser().id;
+              renderPage();
+            }
+          });
+        }
+      });
+    }
+
+    // === Page Header ===
+    function updatePageHeader() {
+      document.getElementById('breadcrumbName').textContent = company.name;
+      document.getElementById('companyName').textContent = company.name;
+      document.title = company.name + ' - Solvo Platform';
+
+      // Pipeline badge
+      const pipelineLabel = getPipelineLabel(company.pipelineStage);
+      const badge = document.getElementById('pipelineBadge');
+      badge.textContent = pipelineLabel;
+      badge.className = 'badge-pipeline badge-pipeline-' + company.pipelineStage;
+
+      // Current state badge in modal
+      const currentStateBadge = document.getElementById('currentStateBadge');
+      currentStateBadge.textContent = pipelineLabel;
+      currentStateBadge.className = 'badge-pipeline badge-pipeline-' + company.pipelineStage;
+
+      // Assignment info in header
+      const assignedInfo = document.getElementById('assignedInfo');
+      const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
+      const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
+
+      if (comercial || sdr) {
+        assignedInfo.style.display = 'inline-flex';
+        document.getElementById('assignedComercialName').textContent = comercial ? comercial.shortName : 'Sin asignar';
+        document.getElementById('assignedSdrName').textContent = sdr ? sdr.shortName : 'Sin asignar';
+      } else {
+        assignedInfo.style.display = 'none';
+      }
+    }
+
+    // === Tab switching ===
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.detail-tab-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // === Contact editing ===
+    let editingContactId = null;
+
+    function renderContacts() {
+      const container = document.getElementById('contactsList');
+      document.getElementById('contactCount').textContent = '(' + companyData.contacts.length + ')';
+
+      if (companyData.contacts.length === 0) {
+        container.innerHTML = '<p class="text-muted">This company has no registered contacts</p>';
+        return;
+      }
+
+      container.innerHTML = companyData.contacts.map(function(contact) {
+        if (editingContactId === contact.id) {
+          return '\
+            <div class="contact-card contact-card-editing">\
+              <div class="contact-edit-form">\
+                <div class="form-row">\
+                  <div class="form-group">\
+                    <label class="form-label">Name *</label>\
+                    <input type="text" class="form-input" id="editContactName" value="' + contact.full_name + '" required>\
+                  </div>\
+                  <div class="form-group">\
+                    <label class="form-label">Position</label>\
+                    <input type="text" class="form-input" id="editContactTitle" value="' + contact.job_title + '">\
+                  </div>\
+                </div>\
+                <div class="form-row">\
+                  <div class="form-group">\
+                    <label class="form-label">Department</label>\
+                    <select class="form-select" id="editContactDepartment">\
+                      <option value="">Select...</option>\
+                      <option value="finance" ' + (contact.department === 'finance' ? 'selected' : '') + '>Finance</option>\
+                      <option value="operations" ' + (contact.department === 'operations' ? 'selected' : '') + '>Operations</option>\
+                      <option value="hr" ' + (contact.department === 'hr' ? 'selected' : '') + '>HR</option>\
+                      <option value="it" ' + (contact.department === 'it' ? 'selected' : '') + '>IT</option>\
+                      <option value="sales" ' + (contact.department === 'sales' ? 'selected' : '') + '>Sales</option>\
+                      <option value="executive" ' + (contact.department === 'executive' ? 'selected' : '') + '>Executive</option>\
+                    </select>\
+                  </div>\
+                  <div class="form-group">\
+                    <label class="form-label">Seniority Level</label>\
+                    <select class="form-select" id="editContactSeniority">\
+                      <option value="">Select...</option>\
+                      <option value="C-level" ' + (contact.seniority_level === 'C-level' ? 'selected' : '') + '>C-level</option>\
+                      <option value="VP" ' + (contact.seniority_level === 'VP' ? 'selected' : '') + '>VP</option>\
+                      <option value="Director" ' + (contact.seniority_level === 'Director' ? 'selected' : '') + '>Director</option>\
+                      <option value="Manager" ' + (contact.seniority_level === 'Manager' ? 'selected' : '') + '>Manager</option>\
+                      <option value="Individual Contributor" ' + (contact.seniority_level === 'Individual Contributor' ? 'selected' : '') + '>Individual Contributor</option>\
+                    </select>\
+                  </div>\
+                </div>\
+                <div class="form-row">\
+                  <div class="form-group">\
+                    <label class="form-label">Email</label>\
+                    <input type="email" class="form-input" id="editContactEmail" value="' + (contact.email || '') + '" placeholder="email@company.com">\
+                  </div>\
+                  <div class="form-group">\
+                    <label class="form-label">Phone</label>\
+                    <input type="tel" class="form-input" id="editContactPhone" value="' + (contact.phone || '') + '" placeholder="+1 (555) 123-4567">\
+                  </div>\
+                </div>\
+                <div class="form-group">\
+                  <label class="form-label">LinkedIn URL</label>\
+                  <input type="text" class="form-input" id="editContactLinkedin" value="' + (contact.linkedin_url || '') + '" placeholder="linkedin.com/in/username">\
+                </div>\
+                <div class="form-group">\
+                  <label class="form-check">\
+                    <input type="checkbox" id="editContactPrimary" ' + (contact.is_primary ? 'checked' : '') + '>\
+                    <span>Primary contact</span>\
+                  </label>\
+                </div>\
+                <div class="contact-edit-actions">\
+                  <button class="btn btn-secondary btn-sm" onclick="cancelEditContact()">Cancel</button>\
+                  <button class="btn btn-primary btn-sm" onclick="saveContact(' + contact.id + ')">Save</button>\
+                </div>\
+              </div>\
+            </div>';
+        } else {
+          return '\
+            <div class="contact-card contact-card-editable">\
+              <button class="contact-edit-btn" onclick="editContact(' + contact.id + ')" title="Edit contact">\
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>\
+                </svg>\
+              </button>\
+              <div class="contact-header">\
+                <div>\
+                  <div class="contact-name">' + contact.full_name + '</div>\
+                  <div class="contact-title">' + contact.job_title + (contact.department || contact.seniority_level ? ' &middot; ' + [getDepartmentLabel(contact.department), contact.seniority_level].filter(Boolean).join(' &middot; ') : '') + '</div>\
+                </div>\
+                ' + (contact.is_primary ? '<span class="badge badge-success">Primary</span>' : '') + '\
+              </div>\
+              <div class="contact-info">\
+                ' + (contact.email ? '<span>&#128231; ' + contact.email + '</span>' : '') + '\
+                ' + (contact.phone ? '<span>&#128222; ' + contact.phone + '</span>' : '') + '\
+                ' + (contact.linkedin_url ? '<span>&#128279; <a href="https://' + contact.linkedin_url + '" target="_blank">' + contact.linkedin_url + '</a></span>' : '') + '\
+              </div>\
+            </div>';
+        }
+      }).join('');
+    }
+
+    // === Render state history ===
+    function renderHistory() {
+      const tbody = document.getElementById('historyTable');
+
+      if (stateHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No change history</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = stateHistory.map(function(h) {
+        return '<tr>' +
+          '<td>' + formatDate(h.date) + '</td>' +
+          '<td>' + h.user + '</td>' +
+          '<td>' +
+            '<span class="badge-pipeline badge-pipeline-' + h.from + '" style="font-size: 10px;">' + getPipelineLabel(h.from) + '</span>' +
+            '<span class="state-change-arrow" style="margin: 0 4px;">&rarr;</span>' +
+            '<span class="badge-pipeline badge-pipeline-' + h.to + '" style="font-size: 10px;">' + getPipelineLabel(h.to) + '</span>' +
+          '</td>' +
+          '<td><span class="history-note">' + h.note + '</span></td>' +
+          '<td><div class="history-tags">' + h.tags.map(function(t) { return '<span class="history-tag">' + t + '</span>'; }).join('') + '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    // === Render vacancies (updated: Comercial, SDR, Type columns) ===
+    function renderVacancies() {
+      const tbody = document.getElementById('vacantesList');
+      const empty = document.getElementById('vacantesEmpty');
+      const table = document.getElementById('vacantesTable');
+      document.getElementById('vacantesCount').textContent = '(' + companyVacancies.length + ')';
+
+      if (companyVacancies.length === 0) {
+        table.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      table.style.display = '';
+      empty.style.display = 'none';
+
+      tbody.innerHTML = companyVacancies.map(function(v) {
+        var comercial = v.comercialId ? getMemberById(v.comercialId) : null;
+        var sdr = v.sdrId ? getMemberById(v.sdrId) : null;
+        var comercialName = comercial ? comercial.shortName : '<span class="text-muted">Sin asignar</span>';
+        var sdrName = sdr ? sdr.shortName : '<span class="text-muted">Sin asignar</span>';
+
+        // Type badge: show comercialType (inherited/direct)
+        var typeLabel = '';
+        if (v.comercialType === 'inherited') {
+          typeLabel = '<span class="text-muted" style="font-size: 12px;">heredada</span>';
+        } else if (v.comercialType === 'direct') {
+          typeLabel = '<span class="badge-direct" style="font-size: 12px;">directa</span>';
+        } else {
+          typeLabel = '<span class="text-muted" style="font-size: 12px;">&mdash;</span>';
+        }
+
+        var originBadge = v.source === 'on_demand' ? ' <span class="badge-direct" style="font-size:11px;">On-Demand</span>' : '';
+
+        return '<tr onclick="goToVacancy(\'' + v.id + '\')" style="cursor: pointer;">' +
+          '<td><span class="font-medium">' + v.title + '</span>' + originBadge + '</td>' +
+          '<td><span class="badge-pipeline badge-pipeline-' + v.status + '">' + getVacancyStatusLabel(v.status) + '</span></td>' +
+          '<td>' + comercialName + '</td>' +
+          '<td>' + sdrName + '</td>' +
+          '<td>' + typeLabel + '</td>' +
+          '<td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); goToVacancy(\'' + v.id + '\')">View</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    // === On-Demand scrape (this company) ===
+    // The button always opens the confirmation popup; the cooldown block is enforced inside the popup.
+    function renderOdCooldownStatus() {
+      var statusEl = document.getElementById('odCooldownStatus');
+      var btn = document.getElementById('odScrapeBtn');
+      if (!statusEl || !btn) return;
+      var info = getCooldownInfo(company);
+      if (info.blocked) {
+        statusEl.textContent = 'Scraped ' + info.daysSince + 'd ago · eligible in ' + info.eligibleInDays + 'd';
+      } else {
+        statusEl.textContent = info.lastScrapedAt ? ('Last on-demand scrape ' + info.daysSince + 'd ago') : 'Never scraped on-demand';
+      }
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.cursor = '';
+    }
+
+    function scrapeThisCompany() {
+      // 3er punto de entrada: empresa preseleccionada (nombre no editable, badges y cool-down de esta empresa).
+      openScrapePopup({ company: company });
+    }
+
+    // === Helper functions ===
+    function getDepartmentLabel(dept) {
+      var labels = { finance: 'Finance', operations: 'Operations', hr: 'HR', it: 'IT', sales: 'Sales', executive: 'Executive' };
+      return labels[dept] || dept || '';
+    }
+
+    function getPipelineLabel(stage) {
+      var labels = {
+        lead: 'Lead', prospecting: 'Prospecting', engaged: 'Engaged',
+        initial_appointment_held: 'Initial Appointment Held', onboarding_started: 'Onboarding Started', client: 'Client', lost: 'Lost'
+      };
+      return labels[stage] || stage || '';
+    }
+
+    function getVacancyStatusLabel(status) {
+      var labels = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
+      return labels[status] || status;
+    }
+
+    function formatDate(dateStr) {
+      var date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function goToVacancy(id) {
+      window.location.href = 'vacancy-detail.html?id=' + id;
+    }
+
+    function editContact(id) {
+      editingContactId = id;
+      renderContacts();
+    }
+
+    function cancelEditContact() {
+      editingContactId = null;
+      renderContacts();
+    }
+
+    function saveContact(id) {
+      var name = document.getElementById('editContactName').value.trim();
+      var title = document.getElementById('editContactTitle').value.trim();
+      var department = document.getElementById('editContactDepartment').value;
+      var seniority = document.getElementById('editContactSeniority').value;
+      var email = document.getElementById('editContactEmail').value.trim();
+      var phone = document.getElementById('editContactPhone').value.trim();
+      var linkedin = document.getElementById('editContactLinkedin').value.trim();
+      var isPrimary = document.getElementById('editContactPrimary').checked;
+
+      if (!name) { showToast('Name is required', 'error'); return; }
+      if (email && !isValidEmail(email)) { showToast('Invalid email format', 'error'); return; }
+      if (linkedin && !linkedin.includes('linkedin.com')) { showToast('Invalid LinkedIn URL', 'error'); return; }
+
+      if (isPrimary) {
+        companyData.contacts.forEach(function(c) { if (c.id !== id) c.is_primary = false; });
+      }
+
+      var contact = companyData.contacts.find(function(c) { return c.id === id; });
+      if (contact) {
+        contact.full_name = name;
+        contact.job_title = title;
+        contact.department = department || null;
+        contact.seniority_level = seniority || null;
+        contact.email = email || null;
+        contact.phone = phone || null;
+        contact.linkedin_url = linkedin || null;
+        contact.is_primary = isPrimary;
+      }
+
+      editingContactId = null;
+      renderContacts();
+      showToast('Contact updated successfully', 'success');
+    }
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // === Modals ===
+    function openEditModal() {
+      document.getElementById('editModal').classList.add('active');
+    }
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+    function saveCompany() {
+      showToast('Company updated successfully', 'success');
+      closeEditModal();
+    }
+
+    function investigateFromEdit() {
+      var companyName = document.getElementById('editName').value || company.name;
+      var companyLocation = document.getElementById('editLocation').value || company.location || '';
+      var companyWebsite = document.getElementById('editWebsite').value || companyData.website || '';
+
+      var payload = {
+        company_name: companyName,
+        company_domain: companyWebsite || undefined,
+        location: companyLocation || undefined
+      };
+      console.log('Research Pipeline webhook payload:', payload);
+      showToast('Investigation started for "' + companyName + '". Research Pipeline will use Apollo + Bright Data. Estimated time: ~5 min', 'info');
+    }
+
+    function openEditResearchModal() {
+      document.getElementById('editResearchModal').classList.add('active');
+      updateCharCounts();
+    }
+    function closeEditResearchModal() {
+      document.getElementById('editResearchModal').classList.remove('active');
+    }
+    function saveResearch() {
+      showToast('Research updated successfully', 'success');
+      closeEditResearchModal();
+    }
+
+    function openAddContactModal() {
+      document.getElementById('addContactModal').classList.add('active');
+      document.getElementById('addContactForm').reset();
+    }
+    function closeAddContactModal() {
+      document.getElementById('addContactModal').classList.remove('active');
+    }
+
+    function saveNewContact() {
+      var name = document.getElementById('newContactName').value.trim();
+      var title = document.getElementById('newContactTitle').value.trim();
+      var department = document.getElementById('newContactDepartment').value;
+      var seniority = document.getElementById('newContactSeniority').value;
+      var email = document.getElementById('newContactEmail').value.trim();
+      var phone = document.getElementById('newContactPhone').value.trim();
+      var linkedin = document.getElementById('newContactLinkedin').value.trim();
+      var isPrimary = document.getElementById('newContactPrimary').checked;
+
+      if (!name) { showToast('Name is required', 'error'); return; }
+      if (email && !isValidEmail(email)) { showToast('Invalid email format', 'error'); return; }
+      if (linkedin && !linkedin.includes('linkedin.com')) { showToast('Invalid LinkedIn URL', 'error'); return; }
+
+      if (isPrimary) {
+        companyData.contacts.forEach(function(c) { c.is_primary = false; });
+      }
+
+      var newId = Math.max.apply(null, companyData.contacts.map(function(c) { return c.id; }).concat([0])) + 1;
+      companyData.contacts.push({
+        id: newId, full_name: name, job_title: title || '', department: department || null,
+        seniority_level: seniority || null, email: email || null, phone: phone || null,
+        linkedin_url: linkedin || null, is_primary: isPrimary
+      });
+
+      renderContacts();
+      closeAddContactModal();
+      showToast('Contact added successfully', 'success');
+    }
+
+    function openStateChangeModal() {
+      document.getElementById('stateChangeModal').classList.add('active');
+    }
+    function closeStateChangeModal() {
+      document.getElementById('stateChangeModal').classList.remove('active');
+      tags = [];
+      renderTags();
+    }
+    function saveStateChange() {
+      var note = document.getElementById('stateChangeNote').value;
+      if (note.length < 10) { showToast('Note must be at least 10 characters', 'error'); return; }
+      showToast('State updated successfully', 'success');
+      closeStateChangeModal();
+    }
+
+    // === Tags ===
+    function renderTags() {
+      var container = document.getElementById('tagsInput');
+      var input = document.getElementById('tagInputField');
+      container.innerHTML = '';
+      tags.forEach(function(tag, i) {
+        var chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = tag + ' <span class="tag-chip-remove" onclick="removeTag(' + i + ')">x</span>';
+        container.appendChild(chip);
+      });
+      container.appendChild(input);
+    }
+
+    function removeTag(index) {
+      tags.splice(index, 1);
+      renderTags();
+    }
+
+    document.getElementById('tagInputField').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var value = this.value.trim();
+        if (value) {
+          tags.push(value.startsWith('#') ? value : '#' + value);
+          this.value = '';
+          renderTags();
+        }
+      }
+    });
+
+    // === Character counts ===
+    function updateCharCounts() {
+      ['valueProp', 'mission', 'vision', 'salesPitch', 'strengths', 'history'].forEach(function(field) {
+        var el = document.getElementById('edit' + field.charAt(0).toUpperCase() + field.slice(1));
+        var count = document.getElementById(field + 'Count');
+        if (el && count) {
+          count.textContent = el.value.length;
+          el.addEventListener('input', function() { count.textContent = el.value.length; });
+        }
+      });
+    }
+
+    document.getElementById('stateChangeNote').addEventListener('input', function() {
+      var count = this.value.length;
+      var countEl = document.getElementById('noteCount');
+      countEl.textContent = count;
+      var charCountEl = countEl.parentElement;
+      charCountEl.classList.remove('char-count-green', 'char-count-yellow', 'char-count-red');
+      if (count < 10) charCountEl.classList.add('char-count-red');
+      else if (count <= 400) charCountEl.classList.add('char-count-green');
+      else if (count <= 450) charCountEl.classList.add('char-count-yellow');
+      else charCountEl.classList.add('char-count-red');
+    });
+
+    // === Research text toggle ===
+    function toggleResearchText(elementId) {
+      var el = document.getElementById(elementId);
+      var btn = el.parentElement.querySelector('.research-toggle-btn');
+      var isExpanded = el.dataset.expanded === 'true';
+      if (isExpanded) {
+        el.dataset.expanded = 'false';
+        el.classList.remove('expanded');
+        btn.textContent = 'See more \u2193';
+      } else {
+        el.dataset.expanded = 'true';
+        el.classList.add('expanded');
+        btn.textContent = 'See less \u2191';
+      }
+    }
+
+    function checkResearchTruncation() {
+      var items = document.querySelectorAll('.research-truncatable');
+      items.forEach(function(item) {
+        var btn = item.parentElement.querySelector('.research-toggle-btn');
+        if (item.textContent.length > 200) btn.style.display = 'inline-block';
+        else btn.style.display = 'none';
+      });
+    }
+
+    // === Skeleton loading ===
+    function renderHistorySkeleton() {
+      var tbody = document.getElementById('historyTable');
+      var rows = '';
+      for (var i = 0; i < 5; i++) {
+        rows += '<tr>' +
+          '<td><div class="table-skeleton" style="width: 80px;"></div></td>' +
+          '<td><div class="table-skeleton" style="width: 100px;"></div></td>' +
+          '<td><div class="table-skeleton" style="width: 160px;"></div></td>' +
+          '<td><div class="table-skeleton" style="width: 200px;"></div></td>' +
+          '<td><div class="table-skeleton" style="width: 80px;"></div></td>' +
+        '</tr>';
+      }
+      tbody.innerHTML = rows;
+    }
+
+    // === Toast (page-local, simple version) ===
+    function showToast(message, type) {
+      type = type || 'info';
+      var container = document.getElementById('toastContainer');
+      var toast = document.createElement('div');
+      toast.className = 'toast toast-' + type;
+      toast.innerHTML = '<span>' + message + '</span>';
+      container.appendChild(toast);
+      setTimeout(function() { toast.remove(); }, 4000);
+    }
+
+    // === Close modals on overlay click / Escape ===
+    ['editModal', 'editResearchModal', 'stateChangeModal', 'addContactModal'].forEach(function(id) {
+      document.getElementById(id).addEventListener('click', function(e) {
+        if (e.target === this) {
+          if (id === 'editModal') closeEditModal();
+          else if (id === 'editResearchModal') closeEditResearchModal();
+          else if (id === 'addContactModal') closeAddContactModal();
+          else closeStateChangeModal();
+        }
+      });
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeEditModal();
+        closeEditResearchModal();
+        closeStateChangeModal();
+        closeAddContactModal();
+      }
+    });
+
+    // === Populate static fields from companyData ===
+    var typeLabels = { client: 'Client', prospecto: 'Prospect', inactivo: 'Inactive' };
+    document.getElementById('detailIndustry').textContent = companyData.industry;
+    document.getElementById('detailLocation').textContent = companyData.location;
+    var websiteEl = document.getElementById('detailWebsite');
+    websiteEl.textContent = companyData.website;
+    websiteEl.href = companyData.website;
+    document.getElementById('detailType').textContent = typeLabels[companyData.type] || companyData.type;
+    document.getElementById('detailEmployees').textContent = companyData.size_employees.toLocaleString();
+    document.getElementById('detailYearFounded').textContent = companyData.year_founded;
+    var revenueM = companyData.revenue_usd / 1000000;
+    document.getElementById('detailRevenue').textContent = '$' + revenueM + 'M USD';
+
+    // Populate Research fields
+    if (companyData.research) {
+      document.getElementById('researchValueProp').textContent = companyData.research.value_proposition || '';
+      document.getElementById('researchMission').textContent = companyData.research.mission || '';
+      document.getElementById('researchVision').textContent = companyData.research.vision || '';
+      document.getElementById('researchSalesPitch').textContent = companyData.research.sales_pitch || '';
+      document.getElementById('researchStrengths').textContent = companyData.research.strengths_differentiators || '';
+      document.getElementById('researchHistory').textContent = companyData.research.company_history || '';
+    }
+
+    // === Init page ===
+    renderPage();
+  </script>
+</body>
+</html>

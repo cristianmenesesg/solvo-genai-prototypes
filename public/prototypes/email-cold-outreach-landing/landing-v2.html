@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Talent ready for your roles · Solvo Global</title>
+<link rel="stylesheet" href="tokens.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    line-height: 1.55;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background:
+      radial-gradient(720px 420px at 92% -8%, rgba(0,138,171,0.10), transparent 72%),
+      radial-gradient(640px 460px at 4% 104%, rgba(238,118,35,0.09), transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #F4F6F7 100%);
+    background-attachment: fixed;
+  }
+
+  /* ============================ DEMO BANNER ============================ */
+  .demo-banner {
+    background: var(--color-gray-900);
+    color: #fff;
+    padding: 8px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .demo-banner .tag {
+    background: var(--color-primary);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-right: 9px;
+  }
+  .demo-switch { display: flex; gap: 8px; }
+  .demo-switch a {
+    color: #fff;
+    text-decoration: none;
+    padding: 4px 11px;
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+  }
+  .demo-switch a:hover { background: rgba(255,255,255,0.10); }
+  .demo-switch a.active { background: var(--color-primary); border-color: var(--color-primary); }
+
+  /* ============================ HEADER ============================ */
+  .lp-header {
+    flex-shrink: 0;
+    padding: 20px clamp(20px, 4vw, 44px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .lp-header img { height: 26px; width: auto; display: block; }
+  .lp-header .meta {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ============================ STAGE / SCREENS ============================ */
+  .stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 3vh, 40px) clamp(20px, 5vw, 44px) clamp(36px, 6vh, 64px);
+  }
+  .screen { display: none; width: 100%; }
+  .screen.is-active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .screen.is-active > * {
+    animation: rise 560ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .screen.is-active > *:nth-child(1) { animation-delay: 60ms; }
+  .screen.is-active > *:nth-child(2) { animation-delay: 130ms; }
+  .screen.is-active > *:nth-child(3) { animation-delay: 200ms; }
+  .screen.is-active > *:nth-child(4) { animation-delay: 270ms; }
+  .screen.is-active > *:nth-child(5) { animation-delay: 340ms; }
+  .screen.is-active > *:nth-child(6) { animation-delay: 410ms; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================ TYPOGRAPHY ============================ */
+  .eyebrow {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  h1.headline {
+    font-family: var(--font-heading);
+    font-size: clamp(29px, 4.4vw, 44px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    max-width: 20ch;
+    text-align: center;
+    text-wrap: balance;
+  }
+  h1.headline em { font-style: normal; color: var(--color-primary); }
+  .subline {
+    font-size: clamp(14.5px, 1.15vw, 16.5px);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 54ch;
+    text-align: center;
+    text-wrap: pretty;
+  }
+
+  /* ============================ SCREEN: SHOWCASE ============================ */
+  .showcase-inner {
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 3vh, 30px);
+  }
+  .sc-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 13px;
+    text-align: center;
+  }
+  .sc-anon {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--color-gray-100);
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+  }
+  .sc-anon svg { width: 13px; height: 13px; }
+
+  /* candidate grid */
+  .cand-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+  }
+
+  /* candidate card */
+  .cand-card {
+    text-align: left;
+    border: 1px solid var(--border-default);
+    background: #fff;
+    border-radius: var(--radius-xl);
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  }
+  .cand-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary-300);
+    box-shadow: 0 20px 38px -22px rgba(238,118,35,0.45);
+  }
+  .cand-card:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+  .cand-top { display: flex; align-items: center; gap: 13px; }
+
+  .cand-avatar {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(17,24,39,0.06);
+  }
+  .cand-avatar.lg { width: 76px; height: 76px; }
+  .cand-avatar .ph {
+    position: absolute;
+    inset: 0;
+    filter: blur(7px);
+    transform: scale(1.22);
+  }
+  .cand-avatar.lg .ph { filter: blur(9px); }
+  .cand-avatar .lock {
+    position: absolute;
+    right: -2px; bottom: -2px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .cand-avatar .lock svg { width: 11px; height: 11px; }
+  .cand-avatar.lg .lock { width: 26px; height: 26px; }
+  .cand-avatar.lg .lock svg { width: 14px; height: 14px; }
+
+  /* blurred faux-portraits (no real person) */
+  .ph-1 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(50,32,22,0.24), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #ECC09A 0%, #D89F73 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B07A52 0%, transparent 72%),
+    linear-gradient(180deg, #D7E6EB 0%, #BBD2DB 100%); }
+  .ph-2 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(30,20,14,0.30), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #C98E63 0%, #B0744A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #8C5733 0%, transparent 72%),
+    linear-gradient(180deg, #F0E2D4 0%, #DDC7B2 100%); }
+  .ph-3 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(70,55,35,0.20), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #F2D2B3 0%, #E2B68C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #C99A6E 0%, transparent 72%),
+    linear-gradient(180deg, #E7E9EE 0%, #CDD2DC 100%); }
+  .ph-4 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(40,28,18,0.26), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #D8A878 0%, #BE885A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #99693E 0%, transparent 72%),
+    linear-gradient(180deg, #DCE8E0 0%, #BFD3C6 100%); }
+  .ph-5 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(25,16,10,0.34), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #B07A4F 0%, #94603A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #6F4626 0%, transparent 72%),
+    linear-gradient(180deg, #DCE4F0 0%, #BCC9E0 100%); }
+  .ph-6 { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(60,46,30,0.22), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #EAC195 0%, #D6A36C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B5824F 0%, transparent 72%),
+    linear-gradient(180deg, #F1E7D6 0%, #E0CBA9 100%); }
+
+  .cand-id { min-width: 0; }
+  .cand-title {
+    font-family: var(--font-heading);
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .cand-loc {
+    margin-top: 3px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .cand-loc svg { width: 12px; height: 12px; flex-shrink: 0; color: var(--text-muted); }
+
+  .cand-summary {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cand-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 3px 9px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .chip.hard {
+    background: var(--color-secondary-50);
+    color: var(--color-secondary-700);
+    border-color: var(--color-secondary-100);
+  }
+  .chip.soft {
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    border-color: var(--color-primary-100);
+  }
+
+  .cand-foot {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-gray-100);
+  }
+  .cand-avail {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cand-avail i {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.16);
+  }
+  .cand-open {
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .cand-open svg { width: 14px; height: 14px; transition: transform var(--transition-fast); }
+  .cand-card:hover .cand-open svg { transform: translateX(3px); }
+
+  /* ============================ CAROUSEL (featured fallback) ============================ */
+  .cand-carousel {
+    width: 100%;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+  }
+  .cand-track {
+    display: flex;
+    gap: 16px;
+    width: max-content;
+    padding: 6px 0;
+    animation: marquee 52s linear infinite;
+  }
+  .cand-carousel:hover .cand-track,
+  .cand-carousel:focus-within .cand-track { animation-play-state: paused; }
+  .cand-carousel .cand-card { width: 300px; flex-shrink: 0; }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cand-track { animation: none; }
+    .cand-carousel { overflow-x: auto; }
+  }
+
+  /* ============================ SCHEDULING CTA BLOCK ============================ */
+  .sc-cta {
+    width: 100%;
+    max-width: 560px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 30px 60px -40px rgba(17,24,39,0.30), var(--shadow-sm);
+    padding: clamp(22px, 3vw, 30px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .sc-cta .t {
+    font-family: var(--font-heading);
+    font-size: clamp(19px, 2.1vw, 23px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+  .sc-cta .s {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    max-width: 44ch;
+  }
+  .sc-book {
+    margin-top: 4px;
+    appearance: none;
+    padding: 14px 26px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14.5px;
+    border: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .sc-book:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+
+  /* ============================ DRAWER ============================ */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-base), visibility var(--transition-base);
+    z-index: var(--z-modal-bg);
+  }
+  .drawer-overlay.show { opacity: 1; visibility: visible; }
+
+  .cand-drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 468px;
+    max-width: 94vw;
+    background: #fff;
+    box-shadow: var(--shadow-2xl);
+    z-index: var(--z-modal);
+    transform: translateX(100%);
+    transition: transform 300ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  .cand-drawer.open { transform: none; }
+
+  .drawer-head {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid var(--border-default);
+    position: relative;
+  }
+  .drawer-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 32px; height: 32px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: #fff;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .drawer-close:hover { background: var(--color-gray-100); color: var(--text-primary); }
+  .drawer-close svg { width: 16px; height: 16px; }
+  .dh-id { min-width: 0; }
+  .dh-title {
+    font-family: var(--font-heading);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.15;
+  }
+  .dh-loc {
+    margin-top: 5px;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dh-loc svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-muted); }
+
+  .drawer-body {
+    padding: 22px 24px 26px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .dr-section-label {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .dr-prose { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+  .dr-prose p + p { margin-top: 10px; }
+
+  .dr-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .dr-kv {
+    flex: 1;
+    min-width: 130px;
+    background: var(--color-gray-50);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    padding: 11px 13px;
+  }
+  .dr-kv .k {
+    font-family: var(--font-heading);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .dr-kv .v {
+    margin-top: 4px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .dr-kv .v small { display: block; font-weight: 400; font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  .drawer-foot {
+    margin-top: auto;
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border-default);
+    background: #fff;
+  }
+  .drawer-foot .dr-note {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .drawer-foot .dr-note svg { width: 12px; height: 12px; }
+  .drawer-foot .btn {
+    width: 100%;
+    appearance: none;
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .drawer-foot .btn:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+
+  /* ============================ PICK ============================ */
+  .pick-inner {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 2.4vh, 24px);
+  }
+  .day-label {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .day-label b { color: var(--text-primary); font-weight: 700; }
+
+  .slot-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 560px;
+  }
+  .slot-card {
+    appearance: none;
+    border: 1px solid var(--border-default);
+    background: #fff;
+    border-radius: var(--radius-xl);
+    padding: 22px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  }
+  .slot-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary-300);
+    box-shadow: 0 18px 34px -20px rgba(238,118,35,0.45);
+  }
+  .slot-card:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 2px; }
+  .slot-card .ico { width: 30px; height: 30px; color: var(--color-secondary); }
+  .slot-card .ico svg { width: 100%; height: 100%; }
+  .slot-card .part {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .slot-card .time {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.4vw, 25px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .slot-card .time small { font-size: 0.62em; font-weight: 600; color: var(--text-secondary); margin-left: 2px; }
+  .slot-card .meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .slot-card .when {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    color: var(--text-secondary);
+  }
+  .slot-card.skeleton { cursor: default; pointer-events: none; gap: 12px; }
+  .slot-card.skeleton .sk {
+    border-radius: var(--radius-md);
+    background: linear-gradient(100deg, var(--color-gray-100) 30%, var(--color-gray-200) 50%, var(--color-gray-100) 70%);
+    background-size: 220% 100%;
+    animation: shimmer 1.3s ease-in-out infinite;
+  }
+  .slot-card.skeleton .sk.a { width: 30px; height: 30px; border-radius: 50%; }
+  .slot-card.skeleton .sk.b { width: 56px; height: 9px; }
+  .slot-card.skeleton .sk.c { width: 84px; height: 18px; }
+  @keyframes shimmer { from { background-position: 140% 0; } to { background-position: -40% 0; } }
+
+  .link-btn {
+    appearance: none; background: none; border: 0; cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 13.5px; font-weight: 600;
+    color: var(--color-secondary);
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 6px;
+    transition: gap var(--transition-fast), color var(--transition-fast);
+  }
+  .link-btn:hover { color: var(--color-secondary-700); gap: 11px; }
+  .link-btn .arr { transition: transform var(--transition-fast); }
+
+  .microcopy { text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .microcopy .dot-sep::before { content: "·"; margin: 0 7px; color: var(--border-strong); }
+  .microcopy .tz { color: var(--text-secondary); }
+
+  .notice {
+    width: 100%; max-width: 460px; background: #fff;
+    border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+    padding: 24px 22px; text-align: center; box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+  }
+  .notice .n-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .notice.error .n-icon { background: var(--color-error-light); color: var(--color-error); }
+  .notice.empty .n-icon { background: var(--color-gray-100); color: var(--text-muted); }
+  .notice h3 { font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: var(--text-primary); }
+  .notice p { font-size: 13.5px; color: var(--text-secondary); }
+
+  /* ============================ BACK LINK ============================ */
+  .back-link {
+    align-self: center; appearance: none; background: none; border: 0; cursor: pointer;
+    font-family: var(--font-heading); font-size: 12.5px; font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 8px;
+    transition: color var(--transition-fast), gap var(--transition-fast);
+  }
+  .back-link:hover { color: var(--text-secondary); gap: 10px; }
+
+  /* ============================ CALENDAR ============================ */
+  .cal-card {
+    width: 100%; max-width: 420px; background: #fff;
+    border: 1px solid var(--border-default); border-radius: var(--radius-xl);
+    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    overflow: hidden;
+  }
+  .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; }
+  .cal-month { font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .cal-arrows { display: flex; gap: 6px; }
+  .cal-arrows button {
+    width: 30px; height: 30px; border-radius: var(--radius-md);
+    border: 1px solid var(--border-default); background: #fff; color: var(--text-secondary);
+    font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .cal-arrows button:hover:not(:disabled) { background: var(--color-secondary); border-color: var(--color-secondary); color: #fff; }
+  .cal-arrows button:disabled { opacity: 0.32; cursor: not-allowed; }
+  .cal-grid-wrap { padding: 0 16px 6px; }
+  .cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow > div {
+    font-family: var(--font-heading); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+    text-align: center; color: var(--text-muted); padding: 4px 0 8px;
+  }
+  .cal-day {
+    appearance: none; border: 1px solid transparent; background: transparent;
+    aspect-ratio: 1; min-height: 38px; border-radius: var(--radius-md);
+    font-family: var(--font-heading); font-size: 13px; font-weight: 500;
+    color: var(--text-muted); cursor: default; position: relative; padding: 0;
+    transition: all var(--transition-fast);
+  }
+  .cal-day.available { color: var(--text-primary); background: #fff; border-color: var(--border-default); cursor: pointer; }
+  .cal-day.available::after {
+    content: ""; position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%);
+    width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary);
+  }
+  .cal-day.available:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--color-secondary-200); }
+  .cal-day.muted { opacity: 0.28; }
+  .cal-day.selected { background: var(--text-primary); color: #fff; border-color: var(--text-primary); font-weight: 700; }
+  .cal-day.selected::after { background: #fff; }
+  .cal-slots { border-top: 1px solid var(--border-default); padding: 14px 18px 18px; background: var(--color-gray-50); }
+  .cal-slots-label {
+    font-family: var(--font-heading); font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 11px;
+  }
+  .cal-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .cal-slot {
+    appearance: none; padding: 11px 4px; border-radius: var(--radius-md); background: #fff;
+    border: 1px solid var(--border-default); font-family: var(--font-heading);
+    font-size: 12.5px; font-weight: 600; color: var(--text-primary); cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .cal-slot:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-1px); }
+  .cal-slots-hint { grid-column: 1 / -1; text-align: center; font-size: 12.5px; color: var(--text-muted); padding: 8px 0; }
+
+  /* ============================ CONFIRM ============================ */
+  .confirm-inner { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .slot-hero { text-align: center; }
+  .slot-hero .sh-day {
+    font-family: var(--font-heading); font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--color-secondary); margin-bottom: 6px;
+  }
+  .slot-hero .sh-time {
+    font-family: var(--font-heading); font-size: clamp(30px, 5vw, 40px); font-weight: 700;
+    letter-spacing: -0.025em; color: var(--text-primary); line-height: 1.05;
+  }
+  .slot-hero .sh-tz { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
+  .rep-card {
+    width: 100%; background: #fff; border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg); padding: 15px 17px; box-shadow: var(--shadow-xs);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .rep-label {
+    font-family: var(--font-heading); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+  .rep-who { display: flex; align-items: center; gap: 12px; }
+  .rep-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+    color: #fff; font-family: var(--font-heading); font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .rep-meta { min-width: 0; }
+  .rep-name { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; color: var(--text-primary); }
+  .rep-role { font-size: 12.5px; color: var(--text-secondary); }
+  .rep-foot {
+    font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;
+    padding-top: 9px; border-top: 1px solid var(--color-gray-100);
+  }
+  .rep-foot svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .confirm-btn {
+    width: 100%; appearance: none; padding: 15px 18px; border-radius: var(--radius-lg);
+    background: var(--color-primary); color: #fff; font-family: var(--font-heading);
+    font-weight: 700; font-size: 14.5px; border: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .confirm-btn:hover:not(:disabled) { background: var(--color-primary-600); transform: translateY(-2px); }
+  .confirm-btn:disabled { background: var(--color-gray-300); color: var(--color-gray-500); box-shadow: none; cursor: progress; }
+  .spinner {
+    width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin 640ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .confirm-note { font-size: 12px; color: var(--text-muted); text-align: center; display: flex; align-items: center; gap: 7px; }
+  .confirm-note::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--color-success); }
+  .err-msg {
+    display: none; width: 100%; background: var(--color-error-light); border: 1px solid #F6C9C9;
+    border-radius: var(--radius-md); padding: 11px 14px; font-size: 12.5px; color: var(--color-error-dark); line-height: 1.5;
+  }
+  .err-msg.show { display: block; animation: rise 320ms ease backwards; }
+  .err-msg b { font-family: var(--font-heading); font-weight: 700; }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 860px) {
+    .cand-grid { grid-template-columns: 1fr; max-width: 440px; }
+  }
+  @media (max-width: 560px) {
+    .demo-banner { padding: 7px 14px; flex-wrap: wrap; }
+    .demo-banner span.label { display: none; }
+    .lp-header { padding: 16px 18px; }
+    .lp-header .meta { display: none; }
+    .slot-cards { grid-template-columns: 1fr; max-width: 320px; }
+    .slot-card { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 16px 18px; }
+    .slot-card .ico { width: 26px; height: 26px; }
+    .slot-card .meta { align-items: flex-start; gap: 3px; }
+    .cand-drawer { width: 100vw; }
+  }
+</style>
+</head>
+<body data-screen="showcase">
+
+<div class="demo-banner">
+  <span class="label"><span class="tag">Demo</span> Landing v2 &mdash; Showcase de Talento (Release 2)</span>
+  <span class="demo-switch">
+    <a id="demo-matched" class="active">Matched (3)</a>
+    <a id="demo-featured">Featured fallback</a>
+  </span>
+</div>
+
+<header class="lp-header">
+  <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
+  <span class="meta">Talent Partner</span>
+</header>
+
+<main class="stage">
+
+  <!-- ====================== SCREEN: SHOWCASE ====================== -->
+  <section class="screen is-active" id="screen-showcase">
+    <div class="showcase-inner">
+      <div class="sc-head">
+        <span class="eyebrow" id="sc-eyebrow">Available now</span>
+        <h1 class="headline" id="sc-headline">Talent ready for your open roles</h1>
+        <p class="subline" id="sc-subline"></p>
+        <span class="sc-anon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+          </svg>
+          Identities protected &mdash; full names shared after you book
+        </span>
+      </div>
+
+      <div id="sc-vitrina" style="width:100%;"><!-- grid or carousel rendered by JS --></div>
+
+      <div class="sc-cta">
+        <div class="t">Ready to meet them?</div>
+        <div class="s">Book a 25-minute intro call with a Solvo advisor and we'll walk you through the profiles that fit your roles.</div>
+        <button type="button" class="sc-book" id="sc-book">Book my intro call &rarr;</button>
+        <button type="button" class="link-btn" id="sc-pickdate">or pick a specific date <span class="arr">&rarr;</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: PICK ====================== -->
+  <section class="screen" id="screen-pick">
+    <button type="button" class="back-link" data-back="showcase">&larr; Back to candidates</button>
+    <div class="pick-inner" style="margin-top:14px;">
+      <span class="eyebrow">Book your intro call</span>
+      <h1 class="headline">Stop losing months to roles you can't fill.</h1>
+      <p class="subline">
+        Book 25 minutes with a Solvo advisor &mdash; leave with a concrete plan,
+        your estimated savings, and a real onboarding timeline.
+      </p>
+      <div class="day-label" id="day-label">Loading availability&hellip;</div>
+      <div class="slot-cards" id="slot-cards"><!-- rendered by JS --></div>
+      <button type="button" class="link-btn" id="see-calendar">
+        See another day <span class="arr">&rarr;</span>
+      </button>
+      <div class="microcopy">
+        <span>25-minute call</span><span class="dot-sep"></span><span>Calendar invite right away</span><br>
+        <span class="tz" id="tz-line">Times shown in your timezone</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: CALENDAR ====================== -->
+  <section class="screen" id="screen-calendar">
+    <button type="button" class="back-link" data-back="pick">&larr; Back to suggested times</button>
+    <span class="eyebrow" style="margin-top:14px;">Pick another day</span>
+    <div class="cal-card" style="margin-top:16px;">
+      <div class="cal-head">
+        <span class="cal-month" id="cal-month">May 2026</span>
+        <div class="cal-arrows">
+          <button type="button" id="cal-prev" aria-label="Previous month">&lsaquo;</button>
+          <button type="button" id="cal-next" aria-label="Next month">&rsaquo;</button>
+        </div>
+      </div>
+      <div class="cal-grid-wrap">
+        <div class="cal-dow">
+          <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"><!-- rendered by JS --></div>
+      </div>
+      <div class="cal-slots">
+        <div class="cal-slots-label" id="cal-slots-label">Select a day</div>
+        <div class="cal-slots-grid" id="cal-slots-grid">
+          <div class="cal-slots-hint">Days with a dot have open times.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SCREEN: CONFIRM ====================== -->
+  <section class="screen" id="screen-confirm">
+    <button type="button" class="back-link" id="confirm-back">&larr; Change time</button>
+    <div class="confirm-inner" style="margin-top:14px;">
+      <div class="slot-hero">
+        <div class="sh-day" id="ch-day">Thursday, May 22</div>
+        <div class="sh-time" id="ch-time">4:00 &ndash; 4:25 PM</div>
+        <div class="sh-tz" id="ch-tz">America/New_York</div>
+      </div>
+
+      <div class="rep-card">
+        <div class="rep-label">Meeting with</div>
+        <div class="rep-who">
+          <div class="rep-avatar" id="rep-avatar">DO</div>
+          <div class="rep-meta">
+            <div class="rep-name" id="rep-name">Daniela Ortiz</div>
+            <div class="rep-role" id="rep-role">Talent Advisor &middot; Solvo Global</div>
+          </div>
+        </div>
+        <div class="rep-foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2.5"/>
+          </svg>
+          Assigned from the advisors free at this time.
+        </div>
+      </div>
+
+      <div class="err-msg" id="err-msg"></div>
+
+      <button type="button" class="confirm-btn" id="confirm-btn">Confirm meeting</button>
+      <div class="confirm-note">You'll get the calendar invite right away.</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ====================== DRAWER: candidate detail ====================== -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+<aside class="cand-drawer" id="cand-drawer" role="dialog" aria-modal="true" aria-labelledby="dh-title">
+  <div class="drawer-head">
+    <div class="cand-avatar lg"><div class="ph" id="dh-avatar"></div><span class="lock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    </span></div>
+    <div class="dh-id">
+      <div class="dh-title" id="dh-title">Senior Sales Representative</div>
+      <div class="dh-loc" id="dh-loc"></div>
+    </div>
+    <button type="button" class="drawer-close" id="drawer-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+    <div class="dr-section">
+      <div class="dr-section-label">Professional summary</div>
+      <div class="dr-prose" id="dr-prose"></div>
+    </div>
+    <div class="dr-section">
+      <div class="dr-section-label">Hard skills</div>
+      <div class="cand-skills" id="dr-hard"></div>
+    </div>
+    <div class="dr-section">
+      <div class="dr-section-label">Soft skills</div>
+      <div class="cand-skills" id="dr-soft"></div>
+    </div>
+    <div class="dr-section">
+      <div class="dr-section-label">At a glance</div>
+      <div class="dr-meta" id="dr-meta"></div>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <div class="dr-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      Names, photo and contact shared once you book a call.
+    </div>
+    <button type="button" class="btn" id="drawer-book">Book a call to meet talent like this &rarr;</button>
+  </div>
+</aside>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ====================================================================
+     CONFIG  ·  prototipo v2 — todo corre con datos mock dentro de este JS
+     ==================================================================== */
+
+  /* Identidad del prospecto: en producción llega del link del cold email.
+     Para el prototipo se lee de la URL (?first_name=&last_name=&email=) o
+     se usa el default. */
+  var params = new URLSearchParams(location.search);
+  var prospect = {
+    first_name: params.get("first_name") || "Sarah",
+    last_name:  params.get("last_name")  || "Chen",
+    email:      params.get("email")      || "sarah.chen@acmecorp.com",
+    company_name: params.get("company")  || "Acme Corp"
+  };
+
+  /* Perfiles matcheados que vienen del flujo ECO por el CTA (?profiles=csv).
+     Si no viene el param, el demo arranca con un escenario matcheado. */
+  var DEFAULT_MATCHED = ["sales-rep", "customer-service-rep", "executive-assistant"];
+  var urlProfiles = (params.get("profiles") || "")
+    .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+  var hasProfilesParam = params.has("profiles");
+
+  /* Interruptores de simulación del agendamiento (espejo de v1). */
+  var MOCK = { failAvailability: false, bookResult: "ok" };
+
+  /* ====================================================================
+     CATÁLOGO DE CANDIDATOS DUMMY (anónimos por construcción)
+     Simula talent_showcase: cada candidato asociado a un profile_id.
+     ==================================================================== */
+  var CATALOG = {
+    "sales-rep": {
+      id: "ts-001", profile_id: "sales-rep", face: "ph-1",
+      display_title: "Senior Sales Representative", country: "Colombia",
+      years_experience: 7, languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["B2B SaaS sales", "HubSpot CRM", "Pipeline forecasting", "Cold outreach", "Contract negotiation"],
+      soft_skills: ["Resilience", "Active listening", "Consultative selling"],
+      short_summary: "Quota-crushing closer with 7 years selling B2B software to US mid-market accounts — consistently above 120% of target.",
+      long_summary: "<p>Senior commercial professional with seven years owning the full sales cycle for B2B SaaS products sold into the US mid-market. Spent the last three years at a US-based software scale-up, carrying a seven-figure annual quota and finishing above 120% of target in eight of the last ten quarters.</p><p>Strong at multi-threaded deals: discovery, technical demos alongside sales engineers, and procurement and legal negotiation. Comfortable in HubSpot and outbound-heavy motions, and used to working US business hours from a dedicated home office.</p>"
+    },
+    "customer-service-rep": {
+      id: "ts-002", profile_id: "customer-service-rep", face: "ph-2",
+      display_title: "Customer Service Representative", country: "Mexico",
+      years_experience: 5, languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Zendesk", "Live chat & voice", "CRM ticketing", "SLA management", "Order management"],
+      soft_skills: ["Empathy", "Patience", "Clear communication"],
+      short_summary: "5 years in US customer support — 96% CSAT across chat, email and phone for a high-volume e-commerce brand.",
+      long_summary: "<p>Customer support specialist with five years handling US consumers across phone, email and live chat for a high-volume e-commerce brand. Sustained a 96% CSAT and a sub-two-minute first response time on chat.</p><p>Experienced with Zendesk, order and returns management, and de-escalation of sensitive cases. Neutral accent and fully fluent written English; comfortable with peak-season volumes and rotating US-timezone shifts.</p>"
+    },
+    "executive-assistant": {
+      id: "ts-003", profile_id: "executive-assistant", face: "ph-3",
+      display_title: "Executive Assistant", country: "Argentina",
+      years_experience: 9, languages: ["Spanish (native)", "English (C2)"],
+      hard_skills: ["Calendar & travel", "Inbox triage", "Expense reporting", "Board prep", "Google Workspace"],
+      soft_skills: ["Discretion", "Anticipation", "Organization"],
+      short_summary: "Right hand to two US founders for 9 years — owns calendars, travel and board prep with total discretion.",
+      long_summary: "<p>Seasoned executive assistant with nine years supporting C-level executives at US startups, most recently as the right hand to two co-founders. Owns complex calendars across time zones, international travel, expense reporting and board-meeting preparation.</p><p>Trusted with highly confidential information and known for anticipating needs before they're voiced. Polished English in writing and on calls; fluent in Google Workspace, Notion and common scheduling tools.</p>"
+    },
+    "paralegal": {
+      id: "ts-004", profile_id: "paralegal", face: "ph-4",
+      display_title: "Paralegal", country: "Peru",
+      years_experience: 6, languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Legal research", "Document drafting", "Case management", "E-filing", "Discovery support"],
+      soft_skills: ["Attention to detail", "Confidentiality", "Time management"],
+      short_summary: "6 years supporting US litigation teams — drafting, discovery and case management for a personal-injury firm.",
+      long_summary: "<p>Paralegal with six years supporting US law firms, most recently a personal-injury practice. Handles legal research, drafting of pleadings and correspondence, discovery support and case management end to end.</p><p>Familiar with US court e-filing and case-management platforms, and comfortable interfacing with clients and courts in written English. Detail-obsessed and used to strict deadlines and confidentiality requirements.</p>"
+    },
+    "sales-development-rep": {
+      id: "ts-005", profile_id: "sales-development-rep", face: "ph-5",
+      display_title: "Sales Development Representative", country: "Guatemala",
+      years_experience: 4, languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Outbound prospecting", "Cold calling", "Email sequencing", "Salesforce", "Lead qualification"],
+      soft_skills: ["Persistence", "Coachability", "Curiosity"],
+      short_summary: "Books 30+ qualified meetings a month for US reps — high-volume calls, email and LinkedIn outreach.",
+      long_summary: "<p>SDR with four years generating pipeline for US software companies. Consistently books 30+ qualified meetings per month through high-volume cold calling, email sequences and LinkedIn outreach.</p><p>Disciplined with Salesforce hygiene and qualification frameworks. Energetic on the phone with clear, confident English and a track record of feeding clean pipeline to closing reps.</p>"
+    },
+    "collections-specialist": {
+      id: "ts-006", profile_id: "collections-specialist", face: "ph-6",
+      display_title: "Collections Specialist", country: "Honduras",
+      years_experience: 5, languages: ["Spanish (native)", "English (B2)"],
+      hard_skills: ["AR collections", "Payment negotiation", "Aging reports", "QuickBooks", "Dispute resolution"],
+      soft_skills: ["Tact", "Persistence", "Numeracy"],
+      short_summary: "Recovers overdue receivables for US clients while keeping customer relationships intact.",
+      long_summary: "<p>Collections specialist with five years managing accounts-receivable for US businesses. Reduced average days-sales-outstanding and recovered significant overdue balances while preserving customer relationships.</p><p>Skilled at payment-plan negotiation, aging analysis and dispute resolution, with hands-on QuickBooks experience. Firm but tactful on collection calls in professional English.</p>"
+    },
+    "intake-specialist": {
+      id: "ts-007", profile_id: "intake-specialist", face: "ph-2",
+      display_title: "Intake Specialist", country: "Mexico",
+      years_experience: 4, languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Client intake", "Case screening", "CRM data entry", "Appointment setting", "HIPAA awareness"],
+      soft_skills: ["Empathy", "Active listening", "Composure"],
+      short_summary: "The first voice clients hear — screens and onboards new cases for a US law firm with warmth and accuracy.",
+      long_summary: "<p>Intake specialist with four years as the first point of contact for new clients at a US law firm. Screens inbound leads, captures case details accurately and books consultations, balancing empathy with efficiency.</p><p>Comfortable with sensitive conversations, CRM data entry and HIPAA-aware handling of personal information. Warm, reassuring phone presence in fluent English.</p>"
+    },
+    "administrative-assistant": {
+      id: "ts-008", profile_id: "administrative-assistant", face: "ph-1",
+      display_title: "Administrative Assistant", country: "Colombia",
+      years_experience: 6, languages: ["Spanish (native)", "English (B2)"],
+      hard_skills: ["Scheduling", "Data entry", "Document management", "Microsoft 365", "Vendor coordination"],
+      soft_skills: ["Reliability", "Multitasking", "Proactivity"],
+      short_summary: "Keeps US teams running — scheduling, documents and data entry handled before anyone has to ask.",
+      long_summary: "<p>Administrative assistant with six years supporting US teams remotely. Handles scheduling, document management, data entry and vendor coordination, keeping day-to-day operations running smoothly.</p><p>Highly reliable and proactive, with strong Microsoft 365 skills and a knack for spotting and fixing small problems early. Clear written English and steady follow-through.</p>"
+    }
+  };
+
+  /* Set destacado para el carrusel de fallback (talent_showcase.featured) */
+  var FEATURED = ["sales-rep", "executive-assistant", "customer-service-rep",
+                  "paralegal", "sales-development-rep", "administrative-assistant"];
+
+  /* ====================================================================
+     ICONOS
+     ==================================================================== */
+  var IC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+  var IC_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>';
+  var IC_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+
+  /* ====================================================================
+     SHOWCASE  ·  vitrina de candidatos / carrusel destacado
+     ==================================================================== */
+
+  /* Simula GET /showcase-talent?profiles=... */
+  function fetchShowcase(profileIds) {
+    if (profileIds && profileIds.length) {
+      var out = [];
+      profileIds.forEach(function (pid) { if (CATALOG[pid]) out.push(CATALOG[pid]); });
+      if (out.length) return { mode: "matched", candidates: out };
+    }
+    return { mode: "featured", candidates: FEATURED.map(function (pid) { return CATALOG[pid]; }) };
+  }
+
+  function avatarHtml(c, big) {
+    return '<div class="cand-avatar' + (big ? ' lg' : '') + '">' +
+      '<div class="ph ' + c.face + '"></div>' +
+      '<span class="lock">' + IC_LOCK + '</span></div>';
+  }
+
+  function cardEl(c) {
+    var div = document.createElement("div");
+    div.className = "cand-card";
+    div.setAttribute("role", "button");
+    div.tabIndex = 0;
+    var skills =
+      c.hard_skills.slice(0, 3).map(function (s) { return '<span class="chip hard">' + s + '</span>'; }).join("") +
+      c.soft_skills.slice(0, 1).map(function (s) { return '<span class="chip soft">' + s + '</span>'; }).join("");
+    div.innerHTML =
+      '<div class="cand-top">' + avatarHtml(c, false) +
+        '<div class="cand-id">' +
+          '<div class="cand-title">' + c.display_title + '</div>' +
+          '<div class="cand-loc">' + IC_PIN + c.country + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<p class="cand-summary">' + c.short_summary + '</p>' +
+      '<div class="cand-skills">' + skills + '</div>' +
+      '<div class="cand-foot">' +
+        '<span class="cand-avail"><i></i>Available now</span>' +
+        '<span class="cand-open">View profile ' + IC_ARR + '</span>' +
+      '</div>';
+    div.addEventListener("click", function () { openDrawer(c); });
+    div.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(c); }
+    });
+    return div;
+  }
+
+  function renderShowcase(profileIds) {
+    var data = fetchShowcase(profileIds);
+    var eyebrow = document.getElementById("sc-eyebrow");
+    var headline = document.getElementById("sc-headline");
+    var subline = document.getElementById("sc-subline");
+    var vitrina = document.getElementById("sc-vitrina");
+    vitrina.innerHTML = "";
+
+    if (data.mode === "matched") {
+      eyebrow.textContent = "Matched to your open roles";
+      headline.innerHTML = "Talent ready for your roles, <em>" + prospect.first_name + "</em>.";
+      subline.textContent = "These anonymized profiles match the roles we saw you're hiring for — a preview of professionals Solvo can place. Open one to see the full profile.";
+      var grid = document.createElement("div");
+      grid.className = "cand-grid";
+      data.candidates.forEach(function (c) { grid.appendChild(cardEl(c)); });
+      vitrina.appendChild(grid);
+    } else {
+      eyebrow.textContent = "Solvo talent pool";
+      headline.innerHTML = "A glimpse of the talent <em>Solvo</em> places.";
+      subline.textContent = "Professionals our US clients hire every week. Book a quick call and we'll surface the ones that fit your open roles.";
+      var carousel = document.createElement("div");
+      carousel.className = "cand-carousel";
+      var track = document.createElement("div");
+      track.className = "cand-track";
+      /* se duplica el contenido para un loop continuo sin saltos */
+      data.candidates.concat(data.candidates).forEach(function (c) { track.appendChild(cardEl(c)); });
+      carousel.appendChild(track);
+      vitrina.appendChild(carousel);
+    }
+  }
+
+  /* ====================================================================
+     DRAWER  ·  detalle del candidato
+     ==================================================================== */
+  var overlay = document.getElementById("drawer-overlay");
+  var drawer = document.getElementById("cand-drawer");
+  var lastFocus = null;
+
+  function openDrawer(c) {
+    lastFocus = document.activeElement;
+    document.getElementById("dh-avatar").className = "ph " + c.face;
+    document.getElementById("dh-title").textContent = c.display_title;
+    document.getElementById("dh-loc").innerHTML = IC_PIN + c.country;
+    document.getElementById("dr-prose").innerHTML = c.long_summary;
+    document.getElementById("dr-hard").innerHTML =
+      c.hard_skills.map(function (s) { return '<span class="chip hard">' + s + '</span>'; }).join("");
+    document.getElementById("dr-soft").innerHTML =
+      c.soft_skills.map(function (s) { return '<span class="chip soft">' + s + '</span>'; }).join("");
+    document.getElementById("dr-meta").innerHTML =
+      '<div class="dr-kv"><div class="k">Experience</div><div class="v">' + c.years_experience + ' years</div></div>' +
+      '<div class="dr-kv"><div class="k">Based in</div><div class="v">' + c.country + '</div></div>' +
+      '<div class="dr-kv"><div class="k">Languages</div><div class="v">' +
+        c.languages[0] + (c.languages[1] ? '<small>' + c.languages[1] + '</small>' : '') + '</div></div>' +
+      '<div class="dr-kv"><div class="k">Status</div><div class="v">Available now</div></div>';
+    overlay.classList.add("show");
+    drawer.classList.add("open");
+    document.body.style.overflow = "hidden";
+    document.getElementById("drawer-close").focus();
+  }
+
+  function closeDrawer() {
+    overlay.classList.remove("show");
+    drawer.classList.remove("open");
+    document.body.style.overflow = "";
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+
+  document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+  overlay.addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && drawer.classList.contains("open")) closeDrawer();
+  });
+  document.getElementById("drawer-book").addEventListener("click", function () {
+    closeDrawer();
+    show("pick");
+    loadPick();
+  });
+
+  /* ====================================================================
+     AGENDAMIENTO (pick / calendar / confirm)  —  reglas mock como en v1
+     ==================================================================== */
+  var SLOT_MIN   = 25;
+  var TODAY      = "2026-05-21";
+  var NOW        = new Date("2026-05-21T12:00:00-04:00");
+  var LEAD_MS    = 2 * 60 * 60 * 1000;
+  var WINDOW_DAYS = 28;
+  var REP_OFFSET = "-04:00";
+  var IDEAL = { morning: 8 * 60 + 30, midday: 11 * 60 + 30, afternoon: 15 * 60 };
+
+  var AVAILABILITY = {
+    "2026-05-21": ["15:00", "15:30", "16:00"],
+    "2026-05-22": ["15:00", "16:00"],
+    "2026-05-25": ["11:30", "13:00", "16:30"],
+    "2026-05-26": ["09:00", "10:30", "15:00"],
+    "2026-05-27": ["09:00", "09:30", "12:00", "13:30", "16:00"],
+    "2026-05-28": ["11:00", "14:30"],
+    "2026-05-29": ["09:00", "10:00", "12:30", "15:00", "16:00"],
+    "2026-06-01": ["09:30", "13:00", "15:30"],
+    "2026-06-02": ["10:00", "11:00", "14:00", "16:00"],
+    "2026-06-03": ["09:00", "12:30", "15:00"],
+    "2026-06-08": ["09:30", "11:00", "14:30"],
+    "2026-06-10": ["10:00", "13:00", "15:30", "16:30"]
+  };
+
+  var REPS = [
+    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO" },
+    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB" },
+    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN" }
+  ];
+  function repForSlot(dateKey, slot) {
+    var s = dateKey + slot, h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return REPS[Math.abs(h) % REPS.length];
+  }
+
+  var TZ = (function () {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"; }
+    catch (e) { return "America/New_York"; }
+  })();
+
+  var MONTHS = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+
+  function toMin(hhmm) { var p = hhmm.split(":"); return (+p[0]) * 60 + (+p[1]); }
+  function ymd(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function keyToUTC(key) { var p = key.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function utcToKey(ms) {
+    var d = new Date(ms);
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+  }
+  function addDaysKey(key, n) { return utcToKey(keyToUTC(key) + n * 86400000); }
+  var TOMORROW       = addDaysKey(TODAY, 1);
+  var WINDOW_END_KEY = addDaysKey(TODAY, WINDOW_DAYS);
+
+  function instantOf(dateKey, hhmm) { return new Date(dateKey + "T" + hhmm + ":00" + REP_OFFSET); }
+  function bookable(dateKey, hhmm) {
+    if (dateKey < TODAY || dateKey > WINDOW_END_KEY) return false;
+    return instantOf(dateKey, hhmm).getTime() - NOW.getTime() >= LEAD_MS;
+  }
+  function bookableSlots(dateKey) {
+    return (AVAILABILITY[dateKey] || []).filter(function (s) { return bookable(dateKey, s); });
+  }
+  function fmtTime(inst) { return inst.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ }); }
+  function fmtDayLong(inst) { return inst.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ }); }
+
+  var selected = null;
+  var cameFrom = "pick";
+  var calView  = { y: 2026, m: 4 };
+
+  function show(screen) {
+    document.body.dataset.screen = screen;
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove("is-active");
+    var el = document.getElementById("screen-" + screen);
+    void el.offsetWidth;
+    el.classList.add("is-active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  var MOMENTS = [
+    { part: "Morning",   lo: 0,       hi: 11 * 60, ideal: IDEAL.morning   },
+    { part: "Midday",    lo: 11 * 60, hi: 14 * 60, ideal: IDEAL.midday    },
+    { part: "Afternoon", lo: 14 * 60, hi: 24 * 60, ideal: IDEAL.afternoon }
+  ];
+
+  function nextSlotsPerMoment() {
+    var keys = Object.keys(AVAILABILITY).sort();
+    return MOMENTS.map(function (m) {
+      for (var i = 0; i < keys.length; i++) {
+        var dateKey = keys[i];
+        if (dateKey < TOMORROW) continue;
+        var cands = bookableSlots(dateKey).filter(function (s) { var x = toMin(s); return x >= m.lo && x < m.hi; });
+        if (!cands.length) continue;
+        var slot = cands.reduce(function (best, s) {
+          return Math.abs(toMin(s) - m.ideal) < Math.abs(toMin(best) - m.ideal) ? s : best;
+        });
+        return { part: m.part, dateKey: dateKey, slot: slot };
+      }
+      return null;
+    }).filter(function (x) { return x; });
+  }
+
+  function whenLabel(dateKey) {
+    var inst = instantOf(dateKey, "12:00");
+    var wd = inst.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ });
+    var md = inst.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: TZ });
+    return (dateKey === TOMORROW) ? ("Tomorrow, " + wd + " " + md) : (wd + " " + md);
+  }
+
+  var ICON = {
+    Morning:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 4V2"/><path d="M5 9l-1.5-1.5"/><path d="M19 9l1.5-1.5"/>' +
+      '<path d="M3 17h18"/><path d="M6 21h12"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/></svg>',
+    Midday:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<circle cx="12" cy="12" r="4.4"/><path d="M12 3v2.2"/><path d="M12 18.8V21"/>' +
+      '<path d="M3 12h2.2"/><path d="M18.8 12H21"/><path d="M5.6 5.6l1.6 1.6"/>' +
+      '<path d="M16.8 16.8l1.6 1.6"/><path d="M18.4 5.6l-1.6 1.6"/><path d="M7.2 16.8l-1.6 1.6"/></svg>',
+    Afternoon:
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M3 18h18"/><path d="M6 22h12"/><path d="M8.5 14a3.5 3.5 0 0 1 7 0"/>' +
+      '<path d="M12 5.5l-2 2.5h4l-2-2.5"/></svg>'
+  };
+
+  function renderSkeleton() {
+    var wrap = document.getElementById("slot-cards");
+    wrap.innerHTML = "";
+    for (var i = 0; i < 3; i++) {
+      var c = document.createElement("div");
+      c.className = "slot-card skeleton";
+      c.innerHTML = '<div class="sk a"></div><div class="sk b"></div><div class="sk c"></div>';
+      wrap.appendChild(c);
+    }
+  }
+
+  function renderNotice(kind, title, text, action) {
+    var wrap = document.getElementById("slot-cards");
+    document.getElementById("day-label").style.display = "none";
+    wrap.style.display = "block";
+    wrap.innerHTML = "";
+    var ic = kind === "error"
+      ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v5"/><path d="M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>';
+    var box = document.createElement("div");
+    box.className = "notice " + kind;
+    box.innerHTML = '<div class="n-icon">' + ic + '</div><h3>' + title + '</h3><p>' + text + '</p>';
+    if (action) {
+      var btn = document.createElement("button");
+      btn.className = "link-btn";
+      btn.innerHTML = action.label;
+      btn.addEventListener("click", action.fn);
+      box.appendChild(btn);
+    }
+    wrap.appendChild(box);
+  }
+
+  function renderPick() {
+    var wrap = document.getElementById("slot-cards");
+    var dayLabel = document.getElementById("day-label");
+
+    if (MOCK.failAvailability) {
+      renderNotice("error", "We couldn't load availability",
+        "Something went wrong reaching the calendar. Please try again.",
+        { label: 'Try again &nbsp;&#8635;', fn: loadPick });
+      return;
+    }
+
+    var cards = nextSlotsPerMoment();
+    if (!cards.length) {
+      renderNotice("empty", "No times in the next 4 weeks",
+        "There's no open slot right now. Try the calendar to look further ahead.",
+        { label: 'Open the calendar &rarr;', fn: function () { openCalendar(); } });
+      return;
+    }
+
+    dayLabel.style.display = "flex";
+    dayLabel.innerHTML = "Next available times";
+
+    wrap.style.display = "grid";
+    wrap.innerHTML = "";
+    cards.forEach(function (c) {
+      var inst = instantOf(c.dateKey, c.slot);
+      var t = fmtTime(inst);
+      var parts = t.split(" ");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot-card";
+      btn.innerHTML =
+        '<span class="ico">' + ICON[c.part] + '</span>' +
+        '<span class="meta">' +
+          '<span class="part">' + c.part + '</span>' +
+          '<span class="time">' + parts[0] + '<small>' + (parts[1] || "") + '</small></span>' +
+          '<span class="when">' + whenLabel(c.dateKey) + '</span>' +
+        '</span>';
+      btn.addEventListener("click", function () { choose(c.dateKey, c.slot, "pick"); });
+      wrap.appendChild(btn);
+    });
+
+    var link = document.getElementById("see-calendar");
+    link.style.fontWeight = cards.length < 3 ? "700" : "600";
+    link.style.color = cards.length < 3 ? "var(--color-primary)" : "var(--color-secondary)";
+  }
+
+  function loadPick() {
+    document.getElementById("day-label").style.display = "flex";
+    document.getElementById("day-label").textContent = "Loading availability…";
+    document.getElementById("slot-cards").style.display = "grid";
+    renderSkeleton();
+    setTimeout(renderPick, 650);
+  }
+
+  function openCalendar() { renderCalendar(); show("calendar"); }
+
+  function renderCalendar() {
+    document.getElementById("cal-month").textContent = MONTHS[calView.m] + " " + calView.y;
+    var grid = document.getElementById("cal-grid");
+    grid.innerHTML = "";
+    var first = new Date(calView.y, calView.m, 1);
+    var startDow = (first.getDay() + 6) % 7;
+    var start = new Date(calView.y, calView.m, 1 - startDow);
+
+    for (var i = 0; i < 42; i++) {
+      var date = new Date(start);
+      date.setDate(start.getDate() + i);
+      var key = ymd(date);
+      var cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "cal-day";
+      cell.textContent = date.getDate();
+      var inMonth = date.getMonth() === calView.m;
+      if (!inMonth) cell.classList.add("muted");
+      if (key === TODAY) cell.classList.add("today");
+      if (inMonth && bookableSlots(key).length) {
+        cell.classList.add("available");
+        if (selected && selected.dateKey === key) cell.classList.add("selected");
+        (function (k) { cell.addEventListener("click", function () { selectCalDay(k); }); })(key);
+      } else {
+        cell.disabled = true;
+      }
+      grid.appendChild(cell);
+      if (i >= 34 && date.getMonth() !== calView.m && date.getDay() === 0) break;
+    }
+    document.getElementById("cal-prev").disabled = (calView.y === 2026 && calView.m <= 4);
+    document.getElementById("cal-next").disabled = (calView.y === 2026 && calView.m >= 5);
+  }
+
+  function selectCalDay(key) {
+    var cells = document.querySelectorAll(".cal-day.selected");
+    for (var i = 0; i < cells.length; i++) cells[i].classList.remove("selected");
+    var grid = document.getElementById("cal-grid");
+    var btns = grid.querySelectorAll(".cal-day.available");
+    btns.forEach(function (b) { if (b.textContent == (+key.split("-")[2])) b.classList.add("selected"); });
+    var label = document.getElementById("cal-slots-label");
+    var box = document.getElementById("cal-slots-grid");
+    label.textContent = instantOf(key, "12:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
+    box.innerHTML = "";
+    bookableSlots(key).forEach(function (s) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "cal-slot";
+      b.textContent = fmtTime(instantOf(key, s));
+      b.addEventListener("click", function () { choose(key, s, "calendar"); });
+      box.appendChild(b);
+    });
+  }
+
+  function choose(dateKey, slot, from) {
+    selected = { dateKey: dateKey, slot: slot };
+    cameFrom = from;
+    renderConfirm();
+    show("confirm");
+  }
+
+  function renderConfirm() {
+    var startI = instantOf(selected.dateKey, selected.slot);
+    var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
+    document.getElementById("ch-day").textContent = fmtDayLong(startI);
+    document.getElementById("ch-time").innerHTML = fmtTime(startI) + " &ndash; " + fmtTime(endI);
+    document.getElementById("ch-tz").textContent = TZ;
+    var rep = repForSlot(selected.dateKey, selected.slot);
+    selected.rep = rep;
+    document.getElementById("rep-avatar").textContent = rep.initials;
+    document.getElementById("rep-name").textContent = rep.name;
+    document.getElementById("rep-role").textContent = rep.role + " · Solvo Global";
+    resetConfirmBtn();
+    hideError();
+  }
+
+  function resetConfirmBtn() {
+    var btn = document.getElementById("confirm-btn");
+    btn.disabled = false;
+    btn.textContent = "Confirm meeting";
+  }
+  function showError(html) { var el = document.getElementById("err-msg"); el.innerHTML = html; el.classList.add("show"); }
+  function hideError() { document.getElementById("err-msg").classList.remove("show"); }
+
+  document.getElementById("confirm-btn").addEventListener("click", function () {
+    if (!selected) return;
+    var btn = document.getElementById("confirm-btn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Confirming…';
+    hideError();
+    setTimeout(function () {
+      if (MOCK.bookResult === "slot_taken") {
+        resetConfirmBtn();
+        showError('<b>That time was just taken.</b> We refreshed the calendar &mdash; please pick another slot.');
+        renderCalendar();
+        setTimeout(function () { show("calendar"); }, 1400);
+        return;
+      }
+      if (MOCK.bookResult === "error") {
+        resetConfirmBtn();
+        showError('<b>Something went wrong.</b> Your time is still selected &mdash; tap Confirm to try again.');
+        return;
+      }
+      var startI = instantOf(selected.dateKey, selected.slot);
+      var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
+      var rep = selected.rep || repForSlot(selected.dateKey, selected.slot);
+      var meeting = {
+        start: startI.toISOString(), end: endI.toISOString(), tz: TZ,
+        name: prospect.first_name, rep: rep.name, repRole: rep.role
+      };
+      try { sessionStorage.setItem("lag_meeting", JSON.stringify(meeting)); } catch (e) {}
+      var qs = "?start=" + encodeURIComponent(meeting.start) +
+               "&end=" + encodeURIComponent(meeting.end) +
+               "&tz=" + encodeURIComponent(meeting.tz) +
+               "&name=" + encodeURIComponent(meeting.name) +
+               "&rep=" + encodeURIComponent(meeting.rep) +
+               "&repRole=" + encodeURIComponent(meeting.repRole);
+      window.location.href = "confirmacion.html" + qs;
+    }, 950);
+  });
+
+  /* ====================================================================
+     NAVEGACIÓN
+     ==================================================================== */
+  document.getElementById("see-calendar").addEventListener("click", openCalendar);
+  document.getElementById("confirm-back").addEventListener("click", function () { show(cameFrom); });
+  document.querySelectorAll(".back-link[data-back]").forEach(function (b) {
+    b.addEventListener("click", function () { show(b.dataset.back); });
+  });
+  document.getElementById("cal-prev").addEventListener("click", function () {
+    if (calView.m > 0) { calView.m--; } else { calView.m = 11; calView.y--; }
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", function () {
+    if (calView.m < 11) { calView.m++; } else { calView.m = 0; calView.y++; }
+    renderCalendar();
+  });
+
+  /* CTA de la vitrina hacia el agendamiento */
+  document.getElementById("sc-book").addEventListener("click", function () { show("pick"); loadPick(); });
+  document.getElementById("sc-pickdate").addEventListener("click", function () { openCalendar(); });
+
+  /* ====================================================================
+     DEMO SWITCH  ·  alterna escenario matcheado / fallback destacado
+     ==================================================================== */
+  var dMatched = document.getElementById("demo-matched");
+  var dFeatured = document.getElementById("demo-featured");
+  dMatched.addEventListener("click", function () {
+    dMatched.classList.add("active"); dFeatured.classList.remove("active");
+    renderShowcase(DEFAULT_MATCHED); show("showcase");
+  });
+  dFeatured.addEventListener("click", function () {
+    dFeatured.classList.add("active"); dMatched.classList.remove("active");
+    renderShowcase([]); show("showcase");
+  });
+
+  /* ====================================================================
+     INIT
+     ==================================================================== */
+  document.getElementById("tz-line").textContent = "Times shown in your timezone (" + TZ + ")";
+
+  /* Escenario inicial: si el link trae ?profiles, se respeta (incl. vacío→fallback);
+     si no hay param, arranca con el escenario matcheado de demostración. */
+  var initialProfiles = hasProfilesParam ? urlProfiles : DEFAULT_MATCHED;
+  if (hasProfilesParam && urlProfiles.length === 0) {
+    dFeatured.classList.add("active"); dMatched.classList.remove("active");
+  }
+  renderShowcase(initialProfiles);
+})();
+</script>
+
+</body>
+</html>
