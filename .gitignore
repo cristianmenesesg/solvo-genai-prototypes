@@ -3,3 +3,6 @@ dist/
 .DS_Store
 *.log
 .vercel
+
+# zips de descarga: generados en build (prebuild → build-zips.mjs), no se commitean
+public/downloads/

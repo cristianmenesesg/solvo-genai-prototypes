@@ -5,10 +5,11 @@
   "type": "module",
   "description": "Showcase de prototipos de Solvo GenAI, por producto, con design system swappable y descarga por prototipo.",
   "scripts": {
-    "sync": "node scripts/prep-prototypes.mjs && node scripts/build-zips.mjs",
-    "prep": "node scripts/prep-prototypes.mjs",
+    "tokens": "node scripts/vendor-tokens.mjs",
     "zips": "node scripts/build-zips.mjs",
+    "predev": "node scripts/build-zips.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-zips.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
