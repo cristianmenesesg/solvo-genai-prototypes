@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Talent ready for your roles · Solvo Global</title>
+<title>Book a meeting · Solvo Global</title>
 <link rel="stylesheet" href="tokens.css" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,10 +18,19 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background:
-      radial-gradient(720px 420px at 92% -8%, rgba(0,138,171,0.10), transparent 72%),
-      radial-gradient(640px 460px at 4% 104%, rgba(238,118,35,0.09), transparent 70%),
-      linear-gradient(180deg, #FFFFFF 0%, #F4F6F7 100%);
+      radial-gradient(720px 420px at 92% -8%, rgba(0,190,214,0.10), transparent 72%),
+      radial-gradient(640px 460px at 4% 104%, rgba(233,155,53,0.10), transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
     background-attachment: fixed;
+  }
+
+  /* el fold (banner + header + contenido) ocupa el viewport completo;
+     el footer solo aparece al hacer scroll */
+  .page-fold {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ============================ DEMO BANNER ============================ */
@@ -49,19 +58,19 @@
     text-transform: uppercase;
     margin-right: 9px;
   }
-  .demo-switch { display: flex; gap: 8px; }
-  .demo-switch a {
+  .demo-banner a {
     color: #fff;
     text-decoration: none;
     padding: 4px 11px;
     border: 1px solid rgba(255,255,255,0.22);
     border-radius: var(--radius-sm);
     font-size: 11px;
-    cursor: pointer;
     transition: background var(--transition-fast);
   }
-  .demo-switch a:hover { background: rgba(255,255,255,0.10); }
-  .demo-switch a.active { background: var(--color-primary); border-color: var(--color-primary); }
+  .demo-banner a:hover { background: rgba(255,255,255,0.10); }
+  .demo-switch { display: flex; gap: 8px; }
+  .demo-switch a { cursor: pointer; }
+  .demo-banner a.active { background: var(--color-primary); border-color: var(--color-primary); }
 
   /* ============================ HEADER ============================ */
   .lp-header {
@@ -70,8 +79,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 2px solid transparent;
+    border-image: var(--gradient-duo) 1;
   }
-  .lp-header img { height: 26px; width: auto; display: block; }
+  .lp-header img { height: 40px; width: auto; display: block; }
   .lp-header .meta {
     font-family: var(--font-heading);
     font-size: 10.5px;
@@ -88,8 +99,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: clamp(16px, 3vh, 40px) clamp(20px, 5vw, 44px) clamp(36px, 6vh, 64px);
+    padding: clamp(14px, 2.4vh, 30px) clamp(20px, 5vw, 44px) clamp(20px, 3.2vh, 38px);
   }
+  /* en la pantalla de agendamiento el fold cede algo de alto para que el
+     showcase de talento asome bajo el pliegue e invite a seguir mirando */
+  body[data-screen="pick"] .page-fold { min-height: calc(100dvh - clamp(150px, 20vh, 220px)); }
   .screen { display: none; width: 100%; }
   .screen.is-active {
     display: flex;
@@ -135,36 +149,893 @@
     line-height: 1.08;
     letter-spacing: -0.025em;
     color: var(--text-primary);
-    max-width: 20ch;
+    max-width: 18ch;
     text-align: center;
     text-wrap: balance;
   }
-  h1.headline em { font-style: normal; color: var(--color-primary); }
+  h1.headline em, .ts-headline em {
+    font-style: normal;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
   .subline {
     font-size: clamp(14.5px, 1.15vw, 16.5px);
     color: var(--text-secondary);
     line-height: 1.6;
-    max-width: 54ch;
+    max-width: 48ch;
     text-align: center;
     text-wrap: pretty;
   }
 
-  /* ============================ SCREEN: SHOWCASE ============================ */
-  .showcase-inner {
+  /* ============================ SCREEN: PICK ============================ */
+  .pick-inner {
     width: 100%;
-    max-width: 1000px;
+    max-width: 720px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(20px, 3vh, 30px);
+    gap: clamp(11px, 1.8vh, 18px);
   }
-  .sc-head {
+
+  /* botón "See another day" — pill con borde para más visibilidad */
+  .link-btn.cal-cta {
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    padding: 9px 18px;
+    background: #fff;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow-xs);
+    transition: border-color var(--transition-fast), color var(--transition-fast),
+                box-shadow var(--transition-fast), gap var(--transition-fast);
+  }
+  .link-btn.cal-cta:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    box-shadow: 0 6px 16px -8px rgba(0,137,171,0.45);
+  }
+  .cal-cta .cal-ico { width: 16px; height: 16px; flex-shrink: 0; }
+  .day-label {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .day-label b { color: var(--text-primary); font-weight: 700; }
+
+  .slot-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    max-width: 540px;
+  }
+  .slot-card {
+    appearance: none;
+    border: 1px solid var(--border-default);
+    background: #fff;
+    border-radius: var(--radius-card);
+    padding: 15px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+  }
+  .slot-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-amber);
+    box-shadow: 0 18px 34px -20px rgba(233,155,53,0.5);
+  }
+  .slot-card:focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+  .slot-card .ico {
+    width: 26px; height: 26px;
+    color: var(--color-secondary);
+  }
+  .slot-card .ico svg { width: 100%; height: 100%; }
+  .slot-card .part {
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .slot-card .time {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.4vw, 25px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .slot-card .time small {
+    font-size: 0.62em;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-left: 2px;
+  }
+  .slot-card .meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .slot-card .when {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    color: var(--text-secondary);
+  }
+
+  /* skeleton */
+  .slot-card.skeleton {
+    cursor: default;
+    pointer-events: none;
+    gap: 12px;
+  }
+  .slot-card.skeleton .sk {
+    border-radius: var(--radius-md);
+    background: linear-gradient(100deg, var(--color-gray-100) 30%, var(--color-gray-200) 50%, var(--color-gray-100) 70%);
+    background-size: 220% 100%;
+    animation: shimmer 1.3s ease-in-out infinite;
+  }
+  .slot-card.skeleton .sk.a { width: 30px; height: 30px; border-radius: 50%; }
+  .slot-card.skeleton .sk.b { width: 56px; height: 9px; }
+  .slot-card.skeleton .sk.c { width: 84px; height: 18px; }
+  @keyframes shimmer {
+    from { background-position: 140% 0; }
+    to   { background-position: -40% 0; }
+  }
+
+  .link-btn {
+    appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 6px;
+    transition: gap var(--transition-fast), color var(--transition-fast);
+  }
+  .link-btn:hover { color: var(--color-secondary-700); gap: 11px; }
+  .link-btn .arr { transition: transform var(--transition-fast); }
+
+  .microcopy {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .microcopy .dot-sep::before {
+    content: "·";
+    margin: 0 7px;
+    color: var(--border-strong);
+  }
+  .microcopy .tz { color: var(--text-secondary); }
+
+  /* feedback states (pick) */
+  .notice {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: 24px 22px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .notice .n-icon {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .notice.error .n-icon { background: var(--color-error-light); color: var(--color-error); }
+  .notice.empty .n-icon { background: var(--color-gray-100); color: var(--text-muted); }
+  .notice h3 {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .notice p { font-size: 13.5px; color: var(--text-secondary); }
+
+  /* ============================ HERO PEOPLE (photo cards decorativas) ============================ */
+  #screen-pick, #screen-calendar { position: relative; }
+  #screen-pick .pick-inner { position: relative; z-index: 1; }
+
+  .hero-people {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-people--left  { left:  clamp(6px, 2.5vw, 56px); }
+  .hero-people--right { right: clamp(6px, 2.5vw, 56px); }
+  /* en desktop la banda no genera caja: los grupos se posicionan contra la sección.
+     (de paso, el rise de .screen.is-active > * no tiene efecto sobre ella) */
+  .hero-band { display: contents; }
+
+  .talent-card {
+    --rot: 0deg;
+    width: 186px;
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 20px 16px 16px;
+    text-align: center;
+    transform: rotate(var(--rot));
+    animation: tc-in 640ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .hero-people--left  .talent-card:nth-child(odd)  { --rot: -5deg; margin-left: -18px; }
+  .hero-people--left  .talent-card:nth-child(even) { --rot: 3deg;  margin-left: 30px; animation-delay: 140ms; }
+  .hero-people--right .talent-card:nth-child(odd)  { --rot: 5deg;  margin-right: -18px; align-self: flex-end; animation-delay: 220ms; }
+  .hero-people--right .talent-card:nth-child(even) { --rot: -3deg; margin-right: 30px; align-self: flex-end; animation-delay: 320ms; }
+  @keyframes tc-in {
+    from { opacity: 0; transform: rotate(var(--rot)) translateY(16px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .talent-card { animation: none; }
+  }
+
+  .tc-avatar {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto 11px;
+    box-shadow: inset 0 0 0 1px rgba(33,33,33,0.06);
+  }
+  .tc-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .tc-avatar .tc-badge {
+    position: absolute;
+    right: -2px; bottom: 0;
+    width: 25px; height: 25px;
+    border-radius: 50%;
+    background: var(--color-success);
+    border: 2.5px solid #fff;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+  }
+  .tc-avatar .tc-badge svg { width: 13px; height: 13px; }
+  .tc-role {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
+    line-height: 1.2;
+  }
+  .tc-loc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* retratos difuminados de fallback (mientras no exista la foto) */
+  .tc-avatar { overflow: hidden; }
+  .tc-avatar::before { content: ""; position: absolute; inset: 0; filter: blur(7px); transform: scale(1.22); }
+  .tc-avatar.ph-1::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(50,32,22,0.24), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #ECC09A 0%, #D89F73 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B07A52 0%, transparent 72%),
+    linear-gradient(180deg, #D7E6EB 0%, #BBD2DB 100%); }
+  .tc-avatar.ph-2::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(30,20,14,0.30), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #C98E63 0%, #B0744A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #8C5733 0%, transparent 72%),
+    linear-gradient(180deg, #F0E2D4 0%, #DDC7B2 100%); }
+  .tc-avatar.ph-3::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(70,55,35,0.20), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #F2D2B3 0%, #E2B68C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #C99A6E 0%, transparent 72%),
+    linear-gradient(180deg, #E7E9EE 0%, #CDD2DC 100%); }
+  .tc-avatar.ph-4::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(40,28,18,0.26), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #D8A878 0%, #BE885A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #99693E 0%, transparent 72%),
+    linear-gradient(180deg, #DCE8E0 0%, #BFD3C6 100%); }
+  .tc-avatar.ph-5::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(25,16,10,0.34), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #B07A4F 0%, #94603A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #6F4626 0%, transparent 72%),
+    linear-gradient(180deg, #DCE4F0 0%, #BCC9E0 100%); }
+  .tc-avatar.ph-6::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(60,46,30,0.22), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #EAC195 0%, #D6A36C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B5824F 0%, transparent 72%),
+    linear-gradient(180deg, #F1E7D6 0%, #E0CBA9 100%); }
+  .tc-avatar.ph-7::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(45,30,20,0.28), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #DDA97E 0%, #C48B5D 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #A06B40 0%, transparent 72%),
+    linear-gradient(180deg, #E3EDE6 0%, #C6DACB 100%); }
+  .tc-avatar.ph-8::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(55,40,26,0.22), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #EFC9A2 0%, #DCAC79 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #BE8A55 0%, transparent 72%),
+    linear-gradient(180deg, #EDE6F0 0%, #D4C9DE 100%); }
+
+  /* extras: a los costados no entran (cards grandes); aparecen en el collage vertical */
+  .tc-extra { display: none; }
+
+  /* <1200px (tablets y mobile): una sola hilera horizontal debajo del contenido,
+     centrada y con sangrado a los costados — el clip evita el scroll horizontal */
+  @media (max-width: 1199px) {
+    body { overflow-x: clip; }
+    .hero-band {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+      margin-top: 42px;
+      pointer-events: auto;
+    }
+    /* los grupos se disuelven: las 8 cards fluyen en la misma hilera */
+    .hero-people { display: contents; }
+    .hero-people .talent-card {
+      width: 172px;
+      flex-shrink: 0;
+    }
+    /* mismo nivel de especificidad que los offsets desktop, para pisarlos */
+    .hero-people--left  .talent-card:nth-child(odd),
+    .hero-people--left  .talent-card:nth-child(even),
+    .hero-people--right .talent-card:nth-child(odd),
+    .hero-people--right .talent-card:nth-child(even) {
+      margin: 0;
+      align-self: auto;
+    }
+    .hero-people--left  .talent-card:nth-child(1) { --rot: -6deg; transform: rotate(var(--rot)) translateY(-12px); }
+    .hero-people--left  .talent-card:nth-child(2) { --rot: 4deg;  transform: rotate(var(--rot)) translateY(16px); }
+    .hero-people--left  .talent-card:nth-child(3) { --rot: -3deg; transform: rotate(var(--rot)) translateY(-4px); }
+    .hero-people--left  .talent-card:nth-child(4) { --rot: 5deg;  transform: rotate(var(--rot)) translateY(20px); }
+    .hero-people--right .talent-card:nth-child(1) { --rot: -4deg; transform: rotate(var(--rot)) translateY(-14px); }
+    .hero-people--right .talent-card:nth-child(2) { --rot: 3deg;  transform: rotate(var(--rot)) translateY(14px); }
+    .hero-people--right .talent-card:nth-child(3) { --rot: -5deg; transform: rotate(var(--rot)) translateY(-6px); }
+    .hero-people--right .talent-card:nth-child(4) { --rot: 4deg;  transform: rotate(var(--rot)) translateY(18px); }
+    .tc-extra { display: block; }
+  }
+  @media (max-width: 560px) {
+    .tc-extra, .tc-mob-hide { display: none; }
+    .hero-band { gap: 12px; margin-top: 32px; }
+    .hero-people .talent-card { width: 152px; }
+  }
+
+  /* ============================ BACK LINK ============================ */
+  .back-link {
+    align-self: center;
+    appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    transition: color var(--transition-fast), gap var(--transition-fast);
+  }
+  .back-link:hover { color: var(--text-secondary); gap: 10px; }
+
+  /* ============================ SCREEN: CALENDAR ============================ */
+  .cal-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    box-shadow: 0 30px 60px -38px rgba(33,33,33,0.32), var(--shadow-sm);
+    overflow: hidden;
+  }
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px 14px;
+  }
+  .cal-month {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .cal-arrows { display: flex; gap: 6px; }
+  .cal-arrows button {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    background: #fff;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: all var(--transition-fast);
+  }
+  .cal-arrows button:hover:not(:disabled) {
+    background: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: #fff;
+  }
+  .cal-arrows button:disabled { opacity: 0.32; cursor: not-allowed; }
+
+  .cal-grid-wrap { padding: 0 16px 6px; }
+  .cal-dow, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-dow > div {
+    font-family: var(--font-heading);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 4px 0 8px;
+  }
+  .cal-day {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    aspect-ratio: 1;
+    min-height: 38px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: default;
+    position: relative;
+    padding: 0;
+    transition: all var(--transition-fast);
+  }
+  .cal-day.available {
+    color: var(--text-primary);
+    background: #fff;
+    border-color: var(--border-default);
+    cursor: pointer;
+  }
+  .cal-day.available::after {
+    content: "";
+    position: absolute;
+    left: 50%; bottom: 5px;
+    transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+  .cal-day.available:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--color-secondary-200); }
+  .cal-day.muted { opacity: 0.28; }
+  .cal-day.selected {
+    background: var(--color-secondary);
+    color: #fff;
+    border-color: var(--color-secondary);
+    font-weight: 700;
+  }
+  .cal-day.selected::after { background: #fff; }
+
+  .cal-slots {
+    border-top: 1px solid var(--border-default);
+    padding: 14px 18px 18px;
+    background: var(--color-gray-50);
+  }
+  .cal-slots-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 11px;
+  }
+  .cal-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+  }
+  .cal-slot {
+    appearance: none;
+    padding: 11px 4px;
+    border-radius: var(--radius-md);
+    background: #fff;
+    border: 1px solid var(--border-default);
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .cal-slot:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+  .cal-slots-hint {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    padding: 8px 0;
+  }
+
+  /* ============================ SCREEN: CONFIRM ============================ */
+  .confirm-inner {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .slot-hero { text-align: center; }
+  .slot-hero .sh-day {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
+    margin-bottom: 6px;
+  }
+  .slot-hero .sh-time {
+    font-family: var(--font-heading);
+    font-size: clamp(30px, 5vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    line-height: 1.05;
+  }
+  .slot-hero .sh-tz {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .rep-card {
+    width: 100%;
+    position: relative;
+    background: #fff;
+    border: 0;
+    border-radius: var(--radius-xl);
+    padding: 17px 19px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  /* borde degradado de firma (mismo patrón que las job cards de careers) */
+  .rep-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: var(--gradient-duo);
+    opacity: 0.55;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+  .rep-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .rep-who { display: flex; align-items: center; gap: 12px; }
+  .rep-avatar {
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--gradient-brand);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .rep-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .rep-meta { min-width: 0; }
+  .rep-name {
+    font-family: var(--font-heading);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .rep-role {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  .rep-foot {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 9px;
+    border-top: 1px dashed var(--color-gray-300);
+  }
+  .rep-foot svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  /* ============================ SCREEN: START (demo setup) ============================ */
+  .setup-card {
+    width: 100%;
+    max-width: 460px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    box-shadow: 0 30px 60px -38px rgba(33,33,33,0.32), var(--shadow-sm);
+    padding: clamp(24px, 3.4vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+  .setup-eyebrow {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-gray-100);
+    color: var(--text-secondary);
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: var(--radius-sm);
+  }
+  .setup-eyebrow svg { width: 13px; height: 13px; }
+  .setup-title {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.4vw, 25px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    line-height: 1.18;
+  }
+  .setup-note {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .setup-form { display: flex; flex-direction: column; gap: 11px; margin-top: 6px; }
+  .setup-row { display: flex; gap: 10px; }
+  .setup-form label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: var(--font-heading);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .setup-form input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .setup-form input:focus {
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 3px var(--color-secondary-50);
+  }
+  .setup-form input.invalid { border-color: var(--color-error); }
+  .setup-err {
+    display: none;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--color-error-dark);
+  }
+  .setup-err.show { display: block; }
+  .setup-btn {
+    margin-top: 5px;
+    appearance: none;
+    padding: 13px 18px;
+    border-radius: var(--radius-btn);
+    background: var(--color-amber);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+    border: 0;
+    cursor: pointer;
+    box-shadow: 0 14px 28px -14px rgba(233,155,53,0.65);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .setup-btn:hover { background: var(--color-amber-hover); transform: translateY(-2px); }
+
+  .confirm-btn {
+    width: 100%;
+    appearance: none;
+    padding: 15px 18px;
+    border-radius: var(--radius-btn);
+    background: var(--color-amber);
+    color: #fff;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14.5px;
+    border: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 16px 30px -14px rgba(233,155,53,0.65);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+  }
+  .confirm-btn:hover:not(:disabled) {
+    background: var(--color-amber-hover);
+    transform: translateY(-2px);
+  }
+  .confirm-btn:disabled {
+    background: var(--color-gray-300);
+    color: var(--color-gray-500);
+    box-shadow: none;
+    cursor: progress;
+  }
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 640ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .confirm-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .confirm-note::before {
+    content: "";
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--color-success);
+  }
+
+  .err-msg {
+    display: none;
+    width: 100%;
+    background: var(--color-error-light);
+    border: 1px solid #F6C9C9;
+    border-radius: var(--radius-md);
+    padding: 11px 14px;
+    font-size: 12.5px;
+    color: var(--color-error-dark);
+    line-height: 1.5;
+  }
+  .err-msg.show { display: block; animation: rise 320ms ease backwards; }
+  .err-msg b { font-family: var(--font-heading); font-weight: 700; }
+
+  /* ============================ RESPONSIVE ============================ */
+  @media (max-width: 560px) {
+    .demo-banner { padding: 7px 14px; }
+    .demo-banner span.label { display: none; }
+    .lp-header { padding: 16px 18px; }
+    .lp-header .meta { display: none; }
+    .slot-cards { grid-template-columns: 1fr; max-width: 320px; }
+    .slot-card { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 16px 18px; }
+    .slot-card .ico { width: 26px; height: 26px; }
+    .slot-card .meta { align-items: flex-start; gap: 3px; }
+  }
+
+  /* ============================ TALENT SHOWCASE (Release 2) ============================ */
+  body[data-screen="start"] .talent-section,
+  body[data-screen="confirm"] .talent-section { display: none; }
+  .talent-section {
+    max-width: 1000px;
+    margin: clamp(22px, 4vh, 48px) auto 0;
+    padding: 0 clamp(20px, 5vw, 44px);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 13px;
     text-align: center;
   }
+  .ts-headline {
+    font-family: var(--font-heading);
+    font-size: clamp(24px, 3vw, 33px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--text-primary);
+    text-wrap: balance;
+  }
+  /* luz "en vivo" — señala que el match está activo, sin robar foco al agendamiento */
+  .live-dot {
+    display: inline-block;
+    width: 12px; height: 12px;
+    margin-right: 13px;
+    border-radius: 50%;
+    background: var(--color-success);
+    box-shadow: 0 0 0 4px rgba(22,163,74,0.16);
+    position: relative;
+    vertical-align: middle;
+    top: -0.14em;
+  }
+  .live-dot::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: var(--color-success);
+    animation: live-pulse 1.7s ease-out infinite;
+  }
+  @keyframes live-pulse {
+    0%   { transform: scale(1);   opacity: 0.7; }
+    70%, 100% { transform: scale(2.5); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .live-dot::before { animation: none; } }
   .sc-anon {
     display: inline-flex;
     align-items: center;
@@ -178,57 +1049,42 @@
     border-radius: var(--radius-full);
   }
   .sc-anon svg { width: 13px; height: 13px; }
-
-  /* candidate grid */
-  .cand-grid {
+  .ts-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
     width: 100%;
+    margin-top: 12px;
   }
-
-  /* candidate card */
+  /* card comprimida: sin chips de skills ni pie de card */
   .cand-card {
+    position: relative;
     text-align: left;
-    border: 1px solid var(--border-default);
     background: #fff;
-    border-radius: var(--radius-xl);
-    padding: 20px 20px 16px;
+    border-radius: var(--radius-card);
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 13px;
-    cursor: pointer;
+    gap: 10px;
     box-shadow: var(--shadow-xs);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
   }
-  .cand-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--color-primary-300);
-    box-shadow: 0 20px 38px -22px rgba(238,118,35,0.45);
-  }
-  .cand-card:focus-visible {
-    outline: 2px solid var(--color-secondary);
-    outline-offset: 2px;
-  }
-  .cand-top { display: flex; align-items: center; gap: 13px; }
-
-  .cand-avatar {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: inset 0 0 0 1px rgba(17,24,39,0.06);
-  }
-  .cand-avatar.lg { width: 76px; height: 76px; }
-  .cand-avatar .ph {
+  .cand-card::before {
+    content: "";
     position: absolute;
     inset: 0;
-    filter: blur(7px);
-    transform: scale(1.22);
+    padding: var(--card-border-w);
+    border-radius: inherit;
+    background: var(--gradient-duo);
+    opacity: 0.55;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
   }
-  .cand-avatar.lg .ph { filter: blur(9px); }
-  .cand-avatar .lock {
+  .cand-top { display: flex; align-items: center; gap: 12px; }
+  .tc-avatar--sm { width: 54px; height: 54px; margin: 0; flex-shrink: 0; }
+  .tc-avatar--sm::before { filter: blur(6px); }
+  .tc-lock {
     position: absolute;
     right: -2px; bottom: -2px;
     width: 20px; height: 20px;
@@ -237,47 +1093,12 @@
     color: var(--text-muted);
     display: flex; align-items: center; justify-content: center;
     box-shadow: var(--shadow-sm);
+    z-index: 1;
   }
-  .cand-avatar .lock svg { width: 11px; height: 11px; }
-  .cand-avatar.lg .lock { width: 26px; height: 26px; }
-  .cand-avatar.lg .lock svg { width: 14px; height: 14px; }
-
-  /* blurred faux-portraits (no real person) */
-  .ph-1 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(50,32,22,0.24), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #ECC09A 0%, #D89F73 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #B07A52 0%, transparent 72%),
-    linear-gradient(180deg, #D7E6EB 0%, #BBD2DB 100%); }
-  .ph-2 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(30,20,14,0.30), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #C98E63 0%, #B0744A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #8C5733 0%, transparent 72%),
-    linear-gradient(180deg, #F0E2D4 0%, #DDC7B2 100%); }
-  .ph-3 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(70,55,35,0.20), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #F2D2B3 0%, #E2B68C 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #C99A6E 0%, transparent 72%),
-    linear-gradient(180deg, #E7E9EE 0%, #CDD2DC 100%); }
-  .ph-4 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(40,28,18,0.26), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #D8A878 0%, #BE885A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #99693E 0%, transparent 72%),
-    linear-gradient(180deg, #DCE8E0 0%, #BFD3C6 100%); }
-  .ph-5 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(25,16,10,0.34), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #B07A4F 0%, #94603A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #6F4626 0%, transparent 72%),
-    linear-gradient(180deg, #DCE4F0 0%, #BCC9E0 100%); }
-  .ph-6 { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(60,46,30,0.22), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #EAC195 0%, #D6A36C 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #B5824F 0%, transparent 72%),
-    linear-gradient(180deg, #F1E7D6 0%, #E0CBA9 100%); }
-
-  .cand-id { min-width: 0; }
+  .tc-lock svg { width: 11px; height: 11px; }
   .cand-title {
     font-family: var(--font-heading);
-    font-size: 15.5px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--text-primary);
@@ -291,40 +1112,152 @@
     align-items: center;
     gap: 5px;
   }
-  .cand-loc svg { width: 12px; height: 12px; flex-shrink: 0; color: var(--text-muted); }
-
+  .cand-loc svg { width: 12px; height: 12px; flex-shrink: 0; }
   .cand-summary {
-    font-size: 13.5px;
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.55;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .cand-skills { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
+  /* ---- MATCHED: una sola card, más ancha, con badges de skills ---- */
+  .ts-grid.is-single {
+    display: flex;
+    justify-content: center;
+    grid-template-columns: none;
+    margin-top: 14px;
+  }
+  .cand-card--matched {
+    width: 100%;
+    max-width: 620px;
+    padding: 20px 22px;
+    gap: 13px;
+  }
+  .cand-card--matched .cand-top { gap: 14px; }
+  .cand-card--matched .tc-avatar--sm { width: 66px; height: 66px; }
+  .cand-card--matched .cand-title { font-size: 17px; }
+  .cand-card--matched .cand-summary { -webkit-line-clamp: 3; font-size: 13.5px; }
+  .cand-id { flex: 1; min-width: 0; }
+  .cand-yrs { color: var(--text-secondary); font-weight: 600; margin-left: 4px; }
+  .match-chip {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-family: var(--font-heading);
     font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    padding: 3px 9px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #fff;
+    background: var(--gradient-brand);
+    padding: 5px 11px 5px 8px;
     border-radius: var(--radius-full);
-    border: 1px solid transparent;
+    box-shadow: var(--shadow-sm);
     white-space: nowrap;
   }
-  .chip.hard {
-    background: var(--color-secondary-50);
-    color: var(--color-secondary-700);
-    border-color: var(--color-secondary-100);
+  .match-chip svg { width: 13px; height: 13px; }
+  .cand-skills { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 1px; }
+  .cand-skills-label {
+    width: 100%;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
   }
-  .chip.soft {
-    background: var(--color-primary-50);
-    color: var(--color-primary-700);
-    border-color: var(--color-primary-100);
+  .skill-badge {
+    font-family: var(--font-heading);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--color-secondary-700);
+    background: var(--color-secondary-50);
+    border: 1px solid var(--color-secondary-100);
+    padding: 5px 11px;
+    border-radius: var(--radius-full);
   }
 
+  /* ---- FEATURED: los 12 roles del pipeline, en marquee lento (capacidad) ---- */
+  .ts-grid.is-marquee {
+    display: block;
+    grid-template-columns: none;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .pool-marquee {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding: 6px 0;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+            mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  }
+  .pool-track {
+    display: flex;
+    width: max-content;
+    animation: pool-scroll 64s linear infinite;
+  }
+  .pool-marquee:hover .pool-track { animation-play-state: paused; }
+  @keyframes pool-scroll { to { transform: translateX(-50%); } }
+  .pool-card {
+    flex: 0 0 auto;
+    width: 338px;
+    margin-right: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    padding: 15px 17px;
+    text-align: left;
+    box-shadow: var(--shadow-xs);
+  }
+  .pool-card .tc-avatar--sm { width: 48px; height: 48px; }
+  .pool-body { flex: 1; min-width: 0; }
+  .pool-role {
+    font-family: var(--font-heading);
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .pool-loc {
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pool-loc svg { width: 11px; height: 11px; flex-shrink: 0; }
+  .pool-blurb {
+    margin-top: 7px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pool-track {
+      animation: none;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: center;
+      gap: 12px;
+    }
+  }
+
+  /* ---- pie de card: disponibilidad + botón "ver detalle" (ambos formatos) ---- */
   .cand-foot {
     margin-top: auto;
     display: flex;
@@ -334,6 +1267,7 @@
     padding-top: 12px;
     border-top: 1px solid var(--color-gray-100);
   }
+  .pool-body .cand-foot { padding-top: 10px; margin-top: 10px; }
   .cand-avail {
     font-family: var(--font-heading);
     font-size: 10.5px;
@@ -351,91 +1285,32 @@
     box-shadow: 0 0 0 3px rgba(22,163,74,0.16);
   }
   .cand-open {
+    appearance: none;
+    border: 0;
+    background: none;
+    cursor: pointer;
     font-family: var(--font-heading);
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--color-secondary);
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    padding: 5px 9px;
+    border-radius: var(--radius-full);
+    transition: background var(--transition-fast), gap var(--transition-fast);
   }
-  .cand-open svg { width: 14px; height: 14px; transition: transform var(--transition-fast); }
-  .cand-card:hover .cand-open svg { transform: translateX(3px); }
+  .cand-open:hover { background: var(--color-secondary-50); gap: 8px; }
+  .cand-open svg { width: 13px; height: 13px; }
 
-  /* ============================ CAROUSEL (featured fallback) ============================ */
-  .cand-carousel {
-    width: 100%;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
-            mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
-  }
-  .cand-track {
-    display: flex;
-    gap: 16px;
-    width: max-content;
-    padding: 6px 0;
-    animation: marquee 52s linear infinite;
-  }
-  .cand-carousel:hover .cand-track,
-  .cand-carousel:focus-within .cand-track { animation-play-state: paused; }
-  .cand-carousel .cand-card { width: 300px; flex-shrink: 0; }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .cand-track { animation: none; }
-    .cand-carousel { overflow-x: auto; }
+  .skill-badge.soft {
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-100);
   }
 
-  /* ============================ SCHEDULING CTA BLOCK ============================ */
-  .sc-cta {
-    width: 100%;
-    max-width: 560px;
-    background: #fff;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-xl);
-    box-shadow: 0 30px 60px -40px rgba(17,24,39,0.30), var(--shadow-sm);
-    padding: clamp(22px, 3vw, 30px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
-  }
-  .sc-cta .t {
-    font-family: var(--font-heading);
-    font-size: clamp(19px, 2.1vw, 23px);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--text-primary);
-  }
-  .sc-cta .s {
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    max-width: 44ch;
-  }
-  .sc-book {
-    margin-top: 4px;
-    appearance: none;
-    padding: 14px 26px;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
-    color: #fff;
-    font-family: var(--font-heading);
-    font-weight: 700;
-    font-size: 14.5px;
-    border: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
-    transition: transform var(--transition-fast), background var(--transition-fast);
-  }
-  .sc-book:hover { background: var(--color-primary-600); transform: translateY(-2px); }
-
-  /* ============================ DRAWER ============================ */
+  /* ============================ DRAWER (detalle del perfil) ============================ */
+  .tc-avatar--lg { width: 62px; height: 62px; margin: 0; flex-shrink: 0; }
   .drawer-overlay {
     position: fixed;
     inset: 0;
@@ -446,7 +1321,6 @@
     z-index: var(--z-modal-bg);
   }
   .drawer-overlay.show { opacity: 1; visibility: visible; }
-
   .cand-drawer {
     position: fixed;
     top: 0; right: 0; bottom: 0;
@@ -461,7 +1335,6 @@
     flex-direction: column;
   }
   .cand-drawer.open { transform: none; }
-
   .drawer-head {
     display: flex;
     align-items: center;
@@ -504,7 +1377,6 @@
     gap: 6px;
   }
   .dh-loc svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--text-muted); }
-
   .drawer-body {
     padding: 22px 24px 26px;
     overflow-y: auto;
@@ -523,12 +1395,7 @@
   }
   .dr-prose { font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
   .dr-prose p + p { margin-top: 10px; }
-
-  .dr-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+  .dr-meta { display: flex; flex-wrap: wrap; gap: 10px; }
   .dr-kv {
     flex: 1;
     min-width: 130px;
@@ -552,7 +1419,6 @@
     color: var(--text-primary);
   }
   .dr-kv .v small { display: block; font-weight: 400; font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-
   .drawer-foot {
     margin-top: auto;
     padding: 16px 24px 20px;
@@ -570,7 +1436,7 @@
     gap: 6px;
   }
   .drawer-foot .dr-note svg { width: 12px; height: 12px; }
-  .drawer-foot .btn {
+  .drawer-foot .dr-btn {
     width: 100%;
     appearance: none;
     padding: 14px 18px;
@@ -589,325 +1455,141 @@
     box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
     transition: transform var(--transition-fast), background var(--transition-fast);
   }
-  .drawer-foot .btn:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+  .drawer-foot .dr-btn:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+  @media (max-width: 560px) { .cand-drawer { width: 100vw; } }
 
-  /* ============================ PICK ============================ */
-  .pick-inner {
-    width: 100%;
-    max-width: 720px;
+  /* ============================ FOOTER ============================ */
+  .lp-footer {
+    flex-shrink: 0;
+    margin-top: clamp(72px, 14vh, 160px);
+    background: var(--bg-muted);
+    border-top: 1px solid var(--border-default);
+  }
+  .lp-footer__main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(32px, 5vh, 56px) clamp(20px, 4vw, 44px);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(16px, 2.4vh, 24px);
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    flex-wrap: wrap;
   }
-  .day-label {
+  .lp-footer__brand img { height: 34px; display: block; margin-bottom: 12px; }
+  .lp-footer__brand p { font-size: 13px; color: var(--text-muted); }
+  .lp-footer__contact { display: flex; flex-direction: column; gap: 9px; min-width: 240px; }
+  .lp-footer__contact h4 {
     font-family: var(--font-heading);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-strong);
+    margin-bottom: 3px;
+  }
+  .lp-footer__phone {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.2vw, 24px);
+    font-weight: 700;
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+  .lp-footer__mail {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .lp-footer__mail--sales { color: var(--color-primary); }
+  .lp-footer__mail--sales:hover { color: var(--color-primary-600); }
+  .lp-footer__mail--apply { color: var(--color-secondary); }
+  .lp-footer__mail--apply:hover { color: var(--color-secondary-600); }
+  .lp-footer__addr { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+  .lp-footer__social { display: flex; gap: 16px; margin-top: 10px; }
+  .lp-footer__social a { color: var(--color-gray-700); transition: color var(--transition-fast); }
+  .lp-footer__social a:hover { color: var(--color-secondary); }
+  .lp-footer__social svg { width: 24px; height: 24px; display: block; }
+  .lp-footer__bottom {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px clamp(20px, 4vw, 44px);
+    border-top: 1px solid var(--border-default);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 9px;
-  }
-  .day-label b { color: var(--text-primary); font-weight: 700; }
-
-  .slot-cards {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    width: 100%;
-    max-width: 560px;
-  }
-  .slot-card {
-    appearance: none;
-    border: 1px solid var(--border-default);
-    background: #fff;
-    border-radius: var(--radius-xl);
-    padding: 22px 16px 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    text-align: center;
-    box-shadow: var(--shadow-xs);
-    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
-  }
-  .slot-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--color-primary-300);
-    box-shadow: 0 18px 34px -20px rgba(238,118,35,0.45);
-  }
-  .slot-card:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 2px; }
-  .slot-card .ico { width: 30px; height: 30px; color: var(--color-secondary); }
-  .slot-card .ico svg { width: 100%; height: 100%; }
-  .slot-card .part {
-    font-family: var(--font-heading);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-  .slot-card .time {
-    font-family: var(--font-heading);
-    font-size: clamp(20px, 2.4vw, 25px);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-  }
-  .slot-card .time small { font-size: 0.62em; font-weight: 600; color: var(--text-secondary); margin-left: 2px; }
-  .slot-card .meta { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .slot-card .when {
-    font-family: var(--font-heading);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    line-height: 1.25;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
     color: var(--text-secondary);
   }
-  .slot-card.skeleton { cursor: default; pointer-events: none; gap: 12px; }
-  .slot-card.skeleton .sk {
-    border-radius: var(--radius-md);
-    background: linear-gradient(100deg, var(--color-gray-100) 30%, var(--color-gray-200) 50%, var(--color-gray-100) 70%);
-    background-size: 220% 100%;
-    animation: shimmer 1.3s ease-in-out infinite;
+  .lp-footer__bottom a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    margin-left: 22px;
   }
-  .slot-card.skeleton .sk.a { width: 30px; height: 30px; border-radius: 50%; }
-  .slot-card.skeleton .sk.b { width: 56px; height: 9px; }
-  .slot-card.skeleton .sk.c { width: 84px; height: 18px; }
-  @keyframes shimmer { from { background-position: 140% 0; } to { background-position: -40% 0; } }
-
-  .link-btn {
-    appearance: none; background: none; border: 0; cursor: pointer;
-    font-family: var(--font-heading);
-    font-size: 13.5px; font-weight: 600;
-    color: var(--color-secondary);
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 8px 6px;
-    transition: gap var(--transition-fast), color var(--transition-fast);
-  }
-  .link-btn:hover { color: var(--color-secondary-700); gap: 11px; }
-  .link-btn .arr { transition: transform var(--transition-fast); }
-
-  .microcopy { text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
-  .microcopy .dot-sep::before { content: "·"; margin: 0 7px; color: var(--border-strong); }
-  .microcopy .tz { color: var(--text-secondary); }
-
-  .notice {
-    width: 100%; max-width: 460px; background: #fff;
-    border: 1px solid var(--border-default); border-radius: var(--radius-lg);
-    padding: 24px 22px; text-align: center; box-shadow: var(--shadow-sm);
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-  }
-  .notice .n-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-  .notice.error .n-icon { background: var(--color-error-light); color: var(--color-error); }
-  .notice.empty .n-icon { background: var(--color-gray-100); color: var(--text-muted); }
-  .notice h3 { font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: var(--text-primary); }
-  .notice p { font-size: 13.5px; color: var(--text-secondary); }
-
-  /* ============================ BACK LINK ============================ */
-  .back-link {
-    align-self: center; appearance: none; background: none; border: 0; cursor: pointer;
-    font-family: var(--font-heading); font-size: 12.5px; font-weight: 600;
-    color: var(--text-muted);
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 6px 8px;
-    transition: color var(--transition-fast), gap var(--transition-fast);
-  }
-  .back-link:hover { color: var(--text-secondary); gap: 10px; }
-
-  /* ============================ CALENDAR ============================ */
-  .cal-card {
-    width: 100%; max-width: 420px; background: #fff;
-    border: 1px solid var(--border-default); border-radius: var(--radius-xl);
-    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
-    overflow: hidden;
-  }
-  .cal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px 14px; }
-  .cal-month { font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--text-primary); }
-  .cal-arrows { display: flex; gap: 6px; }
-  .cal-arrows button {
-    width: 30px; height: 30px; border-radius: var(--radius-md);
-    border: 1px solid var(--border-default); background: #fff; color: var(--text-secondary);
-    font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    transition: all var(--transition-fast);
-  }
-  .cal-arrows button:hover:not(:disabled) { background: var(--color-secondary); border-color: var(--color-secondary); color: #fff; }
-  .cal-arrows button:disabled { opacity: 0.32; cursor: not-allowed; }
-  .cal-grid-wrap { padding: 0 16px 6px; }
-  .cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-  .cal-dow > div {
-    font-family: var(--font-heading); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
-    text-align: center; color: var(--text-muted); padding: 4px 0 8px;
-  }
-  .cal-day {
-    appearance: none; border: 1px solid transparent; background: transparent;
-    aspect-ratio: 1; min-height: 38px; border-radius: var(--radius-md);
-    font-family: var(--font-heading); font-size: 13px; font-weight: 500;
-    color: var(--text-muted); cursor: default; position: relative; padding: 0;
-    transition: all var(--transition-fast);
-  }
-  .cal-day.available { color: var(--text-primary); background: #fff; border-color: var(--border-default); cursor: pointer; }
-  .cal-day.available::after {
-    content: ""; position: absolute; left: 50%; bottom: 5px; transform: translateX(-50%);
-    width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary);
-  }
-  .cal-day.available:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
-  .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--color-secondary-200); }
-  .cal-day.muted { opacity: 0.28; }
-  .cal-day.selected { background: var(--text-primary); color: #fff; border-color: var(--text-primary); font-weight: 700; }
-  .cal-day.selected::after { background: #fff; }
-  .cal-slots { border-top: 1px solid var(--border-default); padding: 14px 18px 18px; background: var(--color-gray-50); }
-  .cal-slots-label {
-    font-family: var(--font-heading); font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
-    text-transform: uppercase; color: var(--text-muted); margin-bottom: 11px;
-  }
-  .cal-slots-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
-  .cal-slot {
-    appearance: none; padding: 11px 4px; border-radius: var(--radius-md); background: #fff;
-    border: 1px solid var(--border-default); font-family: var(--font-heading);
-    font-size: 12.5px; font-weight: 600; color: var(--text-primary); cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  .cal-slot:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-1px); }
-  .cal-slots-hint { grid-column: 1 / -1; text-align: center; font-size: 12.5px; color: var(--text-muted); padding: 8px 0; }
-
-  /* ============================ CONFIRM ============================ */
-  .confirm-inner { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-  .slot-hero { text-align: center; }
-  .slot-hero .sh-day {
-    font-family: var(--font-heading); font-size: 14px; font-weight: 700; letter-spacing: 0.06em;
-    text-transform: uppercase; color: var(--color-secondary); margin-bottom: 6px;
-  }
-  .slot-hero .sh-time {
-    font-family: var(--font-heading); font-size: clamp(30px, 5vw, 40px); font-weight: 700;
-    letter-spacing: -0.025em; color: var(--text-primary); line-height: 1.05;
-  }
-  .slot-hero .sh-tz { font-size: 12.5px; color: var(--text-muted); margin-top: 8px; }
-  .rep-card {
-    width: 100%; background: #fff; border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg); padding: 15px 17px; box-shadow: var(--shadow-xs);
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .rep-label {
-    font-family: var(--font-heading); font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; color: var(--text-muted);
-  }
-  .rep-who { display: flex; align-items: center; gap: 12px; }
-  .rep-avatar {
-    width: 44px; height: 44px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
-    color: #fff; font-family: var(--font-heading); font-weight: 700; font-size: 14px; letter-spacing: 0.02em;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .rep-meta { min-width: 0; }
-  .rep-name { font-family: var(--font-heading); font-size: 14.5px; font-weight: 700; color: var(--text-primary); }
-  .rep-role { font-size: 12.5px; color: var(--text-secondary); }
-  .rep-foot {
-    font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;
-    padding-top: 9px; border-top: 1px solid var(--color-gray-100);
-  }
-  .rep-foot svg { width: 13px; height: 13px; flex-shrink: 0; }
-  .confirm-btn {
-    width: 100%; appearance: none; padding: 15px 18px; border-radius: var(--radius-lg);
-    background: var(--color-primary); color: #fff; font-family: var(--font-heading);
-    font-weight: 700; font-size: 14.5px; border: 0; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 9px;
-    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
-    transition: transform var(--transition-fast), background var(--transition-fast);
-  }
-  .confirm-btn:hover:not(:disabled) { background: var(--color-primary-600); transform: translateY(-2px); }
-  .confirm-btn:disabled { background: var(--color-gray-300); color: var(--color-gray-500); box-shadow: none; cursor: progress; }
-  .spinner {
-    width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
-    border-radius: 50%; animation: spin 640ms linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .confirm-note { font-size: 12px; color: var(--text-muted); text-align: center; display: flex; align-items: center; gap: 7px; }
-  .confirm-note::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--color-success); }
-  .err-msg {
-    display: none; width: 100%; background: var(--color-error-light); border: 1px solid #F6C9C9;
-    border-radius: var(--radius-md); padding: 11px 14px; font-size: 12.5px; color: var(--color-error-dark); line-height: 1.5;
-  }
-  .err-msg.show { display: block; animation: rise 320ms ease backwards; }
-  .err-msg b { font-family: var(--font-heading); font-weight: 700; }
-
-  /* ============================ RESPONSIVE ============================ */
-  @media (max-width: 860px) {
-    .cand-grid { grid-template-columns: 1fr; max-width: 440px; }
-  }
-  @media (max-width: 560px) {
-    .demo-banner { padding: 7px 14px; flex-wrap: wrap; }
-    .demo-banner span.label { display: none; }
-    .lp-header { padding: 16px 18px; }
-    .lp-header .meta { display: none; }
-    .slot-cards { grid-template-columns: 1fr; max-width: 320px; }
-    .slot-card { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 16px 18px; }
-    .slot-card .ico { width: 26px; height: 26px; }
-    .slot-card .meta { align-items: flex-start; gap: 3px; }
-    .cand-drawer { width: 100vw; }
-  }
+  .lp-footer__bottom a:hover { color: var(--text-primary); }
+  .lp-footer__strip { height: 10px; background: var(--color-secondary); }
 </style>
 </head>
-<body data-screen="showcase">
+<body data-screen="start">
+
+<div class="page-fold">
 
 <div class="demo-banner">
-  <span class="label"><span class="tag">Demo</span> Landing v2 &mdash; Showcase de Talento (Release 2)</span>
+  <span class="label"><span class="tag">Demo</span> Landing v2 &mdash; Agendamiento + Showcase (Release 2)</span>
   <span class="demo-switch">
-    <a id="demo-matched" class="active">Matched (3)</a>
+    <a id="demo-matched" class="active">Matched (1)</a>
     <a id="demo-featured">Featured fallback</a>
   </span>
 </div>
 
 <header class="lp-header">
   <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
-  <span class="meta">Talent Partner</span>
+  <span class="meta">Outsourcing for Global Growth</span>
 </header>
 
 <main class="stage">
 
-  <!-- ====================== SCREEN: SHOWCASE ====================== -->
-  <section class="screen is-active" id="screen-showcase">
-    <div class="showcase-inner">
-      <div class="sc-head">
-        <span class="eyebrow" id="sc-eyebrow">Available now</span>
-        <h1 class="headline" id="sc-headline">Talent ready for your open roles</h1>
-        <p class="subline" id="sc-subline"></p>
-        <span class="sc-anon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>
-          </svg>
-          Identities protected &mdash; full names shared after you book
-        </span>
-      </div>
-
-      <div id="sc-vitrina" style="width:100%;"><!-- grid or carousel rendered by JS --></div>
-
-      <div class="sc-cta">
-        <div class="t">Ready to meet them?</div>
-        <div class="s">Book a 25-minute intro call with a Solvo advisor and we'll walk you through the profiles that fit your roles.</div>
-        <button type="button" class="sc-book" id="sc-book">Book my intro call &rarr;</button>
-        <button type="button" class="link-btn" id="sc-pickdate">or pick a specific date <span class="arr">&rarr;</span></button>
+  <!-- ====================== SCREEN: START (demo setup) ====================== -->
+  <section class="screen is-active" id="screen-start">
+    <div class="setup-card">
+      <span class="setup-eyebrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.4" fill="#fff"/>
+          <line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.4" fill="#fff"/>
+        </svg>
+        Demo setup
+      </span>
+      <h2 class="setup-title">Set the prospect for this run</h2>
+      <p class="setup-note">
+        In production the prospect's identity arrives from the email link &mdash; the
+        landing has no form. For this demo, enter it here: the booking invite is sent
+        to this address.
+      </p>
+      <div class="setup-form">
+        <div class="setup-row">
+          <label>First name
+            <input type="text" id="su-first" autocomplete="off" spellcheck="false" />
+          </label>
+          <label>Last name
+            <input type="text" id="su-last" autocomplete="off" spellcheck="false" />
+          </label>
+        </div>
+        <label>Work email
+          <input type="email" id="su-email" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="setup-err" id="su-err">Enter a first name and a valid work email.</div>
+        <button type="button" class="setup-btn" id="start-btn">Start demo &rarr;</button>
       </div>
     </div>
   </section>
 
   <!-- ====================== SCREEN: PICK ====================== -->
   <section class="screen" id="screen-pick">
-    <button type="button" class="back-link" data-back="showcase">&larr; Back to candidates</button>
-    <div class="pick-inner" style="margin-top:14px;">
-      <span class="eyebrow">Book your intro call</span>
-      <h1 class="headline">Stop losing months to roles you can't fill.</h1>
-      <p class="subline">
-        Book 25 minutes with a Solvo advisor &mdash; leave with a concrete plan,
-        your estimated savings, and a real onboarding timeline.
-      </p>
+    <div class="pick-inner">
+      <h1 class="headline"><em>Stop losing months</em> to roles you can't fill.</h1>
       <div class="day-label" id="day-label">Loading availability&hellip;</div>
       <div class="slot-cards" id="slot-cards"><!-- rendered by JS --></div>
-      <button type="button" class="link-btn" id="see-calendar">
+      <button type="button" class="link-btn cal-cta" id="see-calendar">
+        <svg class="cal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 3v3M16 3v3"/></svg>
         See another day <span class="arr">&rarr;</span>
       </button>
       <div class="microcopy">
@@ -915,6 +1597,54 @@
         <span class="tz" id="tz-line">Times shown in your timezone</span>
       </div>
     </div>
+
+    <!-- photo cards decorativas (talento Solvo) -->
+    <div class="hero-band" aria-hidden="true">
+    <div class="hero-people hero-people--left">
+      <div class="talent-card">
+        <div class="tc-avatar ph-1"><img src="assets/people/person-01.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Finance Mngr</div>
+        <div class="tc-loc">Colombia</div>
+      </div>
+      <div class="talent-card">
+        <div class="tc-avatar ph-2"><img src="assets/people/person-02.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Head Admin</div>
+        <div class="tc-loc">Per&uacute;</div>
+      </div>
+      <div class="talent-card tc-mob-hide">
+        <div class="tc-avatar ph-3"><img src="assets/people/person-03.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Finance Mngr</div>
+        <div class="tc-loc">Guatemala</div>
+      </div>
+      <div class="talent-card tc-extra">
+        <div class="tc-avatar ph-4"><img src="assets/people/person-04.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Paralegal</div>
+        <div class="tc-loc">Colombia</div>
+      </div>
+    </div>
+    <div class="hero-people hero-people--right">
+      <div class="talent-card">
+        <div class="tc-avatar ph-5"><img src="assets/people/person-05.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Global Service</div>
+        <div class="tc-loc">Argentina</div>
+      </div>
+      <div class="talent-card">
+        <div class="tc-avatar ph-6"><img src="assets/people/person-06.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Sales Rep</div>
+        <div class="tc-loc">Argentina</div>
+      </div>
+      <div class="talent-card tc-mob-hide">
+        <div class="tc-avatar ph-7"><img src="assets/people/person-07.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">CX Expert</div>
+        <div class="tc-loc">Honduras</div>
+      </div>
+      <div class="talent-card tc-extra">
+        <div class="tc-avatar ph-8"><img src="assets/people/person-08.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Global Service</div>
+        <div class="tc-loc">M&eacute;xico</div>
+      </div>
+    </div>
+    </div><!-- /hero-band -->
   </section>
 
   <!-- ====================== SCREEN: CALENDAR ====================== -->
@@ -980,14 +1710,22 @@
 
 </main>
 
-<!-- ====================== DRAWER: candidate detail ====================== -->
+</div><!-- /page-fold -->
+
+<!-- ====================== TALENT SHOWCASE (Release 2) ====================== -->
+<section class="talent-section" aria-label="Available candidates">
+  <span class="eyebrow" id="ts-eyebrow">Matched to your open roles</span>
+  <h2 class="ts-headline" id="ts-headline">Talent ready for your roles.</h2>
+  <p class="subline" id="ts-subline"></p>
+  <span class="sc-anon" id="ts-anon"></span>
+  <div class="ts-grid" id="ts-grid"><!-- rendered by JS --></div>
+</section>
+
+<!-- ====================== DRAWER: detalle del perfil ====================== -->
 <div class="drawer-overlay" id="drawer-overlay"></div>
 <aside class="cand-drawer" id="cand-drawer" role="dialog" aria-modal="true" aria-labelledby="dh-title">
   <div class="drawer-head">
-    <div class="cand-avatar lg"><div class="ph" id="dh-avatar"></div><span class="lock">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-    </span></div>
+    <div class="tc-avatar tc-avatar--lg" id="dh-avatar"><span class="tc-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span></div>
     <div class="dh-id">
       <div class="dh-title" id="dh-title">Senior Sales Representative</div>
       <div class="dh-loc" id="dh-loc"></div>
@@ -998,14 +1736,14 @@
   </div>
   <div class="drawer-body">
     <div class="dr-section">
-      <div class="dr-section-label">Professional summary</div>
+      <div class="dr-section-label">Role summary</div>
       <div class="dr-prose" id="dr-prose"></div>
     </div>
     <div class="dr-section">
-      <div class="dr-section-label">Hard skills</div>
+      <div class="dr-section-label">Key skills</div>
       <div class="cand-skills" id="dr-hard"></div>
     </div>
-    <div class="dr-section">
+    <div class="dr-section" id="dr-soft-section">
       <div class="dr-section-label">Soft skills</div>
       <div class="cand-skills" id="dr-soft"></div>
     </div>
@@ -1019,43 +1757,73 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
       Names, photo and contact shared once you book a call.
     </div>
-    <button type="button" class="btn" id="drawer-book">Book a call to meet talent like this &rarr;</button>
+    <button type="button" class="dr-btn" id="drawer-book">Book a call to meet talent like this &rarr;</button>
   </div>
 </aside>
+
+
+<footer class="lp-footer">
+  <div class="lp-footer__main">
+    <div class="lp-footer__brand">
+      <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
+      <p>Outsourcing for Global Growth</p>
+    </div>
+    <div class="lp-footer__contact">
+      <h4>Contact Us</h4>
+      <a class="lp-footer__phone" href="tel:+18334131546">+1 (833) 413-1546</a>
+      <a class="lp-footer__mail lp-footer__mail--sales" href="mailto:sales@solvoglobal.com">sales@solvoglobal.com</a>
+      <a class="lp-footer__mail lp-footer__mail--apply" href="mailto:apply@solvoglobal.com">apply@solvoglobal.com</a>
+      <p class="lp-footer__addr">1475 S. Price Rd.,<br />Chandler, AZ 85286</p>
+      <div class="lp-footer__social">
+        <a href="https://www.instagram.com/solvo_global/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="0.6" fill="currentColor" stroke="none"/></svg></a>
+        <a href="https://www.linkedin.com/company/solvoglobal/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+        <a href="https://www.facebook.com/hiresolvohr" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.1 24 12.07z"/></svg></a>
+        <a href="https://x.com/globalsolvo?lang=es" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 3h2.9l-6.36 7.27L21.75 21h-5.87l-4.6-6.01L6.02 21H3.1l6.8-7.78L2.25 3h6.02l4.15 5.5L17.7 3zm-1.03 16.2h1.62L7.4 4.7H5.66l11.01 14.5z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="lp-footer__bottom">
+    <span>&copy;2026 Solvo, All rights reserved.</span>
+    <span><a href="https://solvoglobal.com/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a><a href="https://solvoglobal.com/terms-and-conditions/" target="_blank" rel="noopener">Terms and Conditions</a></span>
+  </div>
+  <div class="lp-footer__strip"></div>
+</footer>
+
 
 <script>
 (function () {
   "use strict";
 
   /* ====================================================================
-     CONFIG  ·  prototipo v2 — todo corre con datos mock dentro de este JS
+     CONFIG  ·  para el POC todo corre con datos mock dentro de este JS
      ==================================================================== */
 
-  /* Identidad del prospecto: en producción llega del link del cold email.
-     Para el prototipo se lee de la URL (?first_name=&last_name=&email=) o
-     se usa el default. */
-  var params = new URLSearchParams(location.search);
+  /* Prospecto hardcodeado (HU-LAG-1.1-FE) — editable en pantalla Confirm */
   var prospect = {
-    first_name: params.get("first_name") || "Sarah",
-    last_name:  params.get("last_name")  || "Chen",
-    email:      params.get("email")      || "sarah.chen@acmecorp.com",
-    company_name: params.get("company")  || "Acme Corp"
+    first_name: "Sarah",
+    last_name:  "Chen",
+    email:      "sarah.chen@acmecorp.com",
+    company_name: "Acme Corp"
   };
 
-  /* Perfiles matcheados que vienen del flujo ECO por el CTA (?profiles=csv).
-     Si no viene el param, el demo arranca con un escenario matcheado. */
-  var DEFAULT_MATCHED = ["sales-rep", "customer-service-rep", "executive-assistant"];
+  /* Interruptores de simulacion para el equipo de desarrollo.
+     failAvailability: simula caida del servicio /availability
+     bookResult: "ok" | "slot_taken" | "error" — respuesta simulada de /book */
+  var MOCK = {
+    failAvailability: false,
+    bookResult: "ok"
+  };
+
+
+  /* ====================================================================
+     TALENT SHOWCASE (Release 2) · candidatos disponibles bajo el agendamiento
+     ==================================================================== */
+  var params = new URLSearchParams(location.search);
+  var DEFAULT_MATCHED = ["sales-rep"];
   var urlProfiles = (params.get("profiles") || "")
     .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   var hasProfilesParam = params.has("profiles");
 
-  /* Interruptores de simulación del agendamiento (espejo de v1). */
-  var MOCK = { failAvailability: false, bookResult: "ok" };
-
-  /* ====================================================================
-     CATÁLOGO DE CANDIDATOS DUMMY (anónimos por construcción)
-     Simula talent_showcase: cada candidato asociado a un profile_id.
-     ==================================================================== */
   var CATALOG = {
     "sales-rep": {
       id: "ts-001", profile_id: "sales-rep", face: "ph-1",
@@ -1131,119 +1899,194 @@
     }
   };
 
-  /* Set destacado para el carrusel de fallback (talent_showcase.featured) */
-  var FEATURED = ["sales-rep", "executive-assistant", "customer-service-rep",
-                  "paralegal", "sales-development-rep", "administrative-assistant"];
+  /* Los 12 perfiles de b\u00fasqueda que el pipeline de sourcing atiende hoy
+     (espejo de la configuraci\u00f3n de la Solvo Recruiter Platform). En el
+     fallback sin match se muestran en un marquee lento como prueba de capacidad. */
+  var POOL_PROFILES = [
+    { title: "Customer Service Representative", country: "Mexico", face: "ph-1",
+      blurb: "Resolves customer issues across chat, email and phone.",
+      summary: "Front-line support professional who handles US customers across phone, email and live chat — resolving issues fast while keeping CSAT high.",
+      skills: ["Zendesk", "Live chat & voice", "SLA management", "De-escalation"] },
+    { title: "Sales Representative", country: "Colombia", face: "ph-2",
+      blurb: "Owns the full B2B sales cycle and closes deals.",
+      summary: "Commercial closer who runs discovery, demos and negotiation to win B2B deals for US companies.",
+      skills: ["B2B sales", "HubSpot CRM", "Negotiation", "Forecasting"] },
+    { title: "Sales Development Representative", country: "Guatemala", face: "ph-3",
+      blurb: "Books qualified meetings through outbound prospecting.",
+      summary: "Pipeline generator who books qualified meetings for US sales teams via cold calls, email sequences and LinkedIn outreach.",
+      skills: ["Outbound prospecting", "Cold calling", "Email sequencing", "Salesforce"] },
+    { title: "Sales Specialist", country: "Argentina", face: "ph-4",
+      blurb: "Drives product-specific sales, upsells and expansion.",
+      summary: "Specialist seller who owns product-specific pitches, upsells and account expansion for US clients.",
+      skills: ["Consultative selling", "Upselling", "Product demos", "Pipeline management"] },
+    { title: "Legal Assistant", country: "Peru", face: "ph-5",
+      blurb: "Supports attorneys with drafting and case admin.",
+      summary: "Legal support professional who drafts documents, manages calendars and keeps US legal matters organized.",
+      skills: ["Document drafting", "Legal research", "Case management", "E-filing"] },
+    { title: "Paralegal", country: "Colombia", face: "ph-6",
+      blurb: "Runs research, drafting and discovery for legal teams.",
+      summary: "Paralegal who handles research, pleadings, discovery and case management end to end for US law firms.",
+      skills: ["Legal research", "Discovery support", "Pleadings", "Case management"] },
+    { title: "Intake Specialist", country: "Mexico", face: "ph-7",
+      blurb: "Screens and onboards new client cases with care.",
+      summary: "First point of contact who screens inbound leads, captures case details and books consultations with warmth and accuracy.",
+      skills: ["Client intake", "Case screening", "CRM data entry", "Appointment setting"] },
+    { title: "Executive Assistant", country: "Argentina", face: "ph-8",
+      blurb: "Manages calendars, travel and inbox for executives.",
+      summary: "Right hand to US executives — owns complex calendars, travel, expenses and board prep with total discretion.",
+      skills: ["Calendar & travel", "Inbox triage", "Expense reporting", "Board prep"] },
+    { title: "Administrative Assistant", country: "Honduras", face: "ph-1",
+      blurb: "Keeps day-to-day operations running smoothly.",
+      summary: "Operations backbone who handles scheduling, documents, data entry and vendor coordination for US teams.",
+      skills: ["Scheduling", "Data entry", "Document management", "Microsoft 365"] },
+    { title: "Collections Specialist", country: "Colombia", face: "ph-2",
+      blurb: "Recovers overdue receivables, keeps relationships intact.",
+      summary: "AR specialist who recovers overdue balances through tactful negotiation while preserving customer relationships.",
+      skills: ["AR collections", "Payment negotiation", "Aging reports", "QuickBooks"] },
+    { title: "Scheduler", country: "Philippines", face: "ph-3",
+      blurb: "Coordinates appointments and keeps calendars full.",
+      summary: "Scheduling pro who books and confirms appointments, manages calendars and keeps US operations on time.",
+      skills: ["Appointment setting", "Calendar management", "Confirmation calls", "CRM"] },
+    { title: "CAD Designer", country: "Peru", face: "ph-4",
+      blurb: "Produces technical drawings and 2D/3D models.",
+      summary: "Technical designer who produces precise CAD drawings and 2D/3D models for US engineering and construction teams.",
+      skills: ["AutoCAD", "2D/3D modeling", "Technical drawings", "Revit"] }
+  ];
 
-  /* ====================================================================
-     ICONOS
-     ==================================================================== */
   var IC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-  var IC_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>';
   var IC_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  var IC_MATCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.6"/><circle cx="15.5" cy="12" r="5.6"/><path d="M10 12l1.7 1.7L14 11"/></svg>';
+  var IC_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H7.4A3.4 3.4 0 0 0 4 18.4V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.6a3.4 3.4 0 0 0-2.6-3.3M15.5 5a3.2 3.2 0 0 1 0 6.1"/></svg>';
+  var IC_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
 
-  /* ====================================================================
-     SHOWCASE  ·  vitrina de candidatos / carrusel destacado
-     ==================================================================== */
+  /* arranca en featured solo si vino ?profiles= vacio/invalido */
+  var talentMode = (hasProfilesParam && !urlProfiles.length) ? "featured" : "matched";
 
-  /* Simula GET /showcase-talent?profiles=... */
-  function fetchShowcase(profileIds) {
-    if (profileIds && profileIds.length) {
-      var out = [];
-      profileIds.forEach(function (pid) { if (CATALOG[pid]) out.push(CATALOG[pid]); });
-      if (out.length) return { mode: "matched", candidates: out };
+  /* el match: primer perfil v\u00e1lido (solo se muestra uno) */
+  function pickMatch(profileIds) {
+    for (var i = 0; i < profileIds.length; i++) {
+      if (CATALOG[profileIds[i]]) return CATALOG[profileIds[i]];
     }
-    return { mode: "featured", candidates: FEATURED.map(function (pid) { return CATALOG[pid]; }) };
+    return CATALOG["sales-rep"];
   }
 
-  function avatarHtml(c, big) {
-    return '<div class="cand-avatar' + (big ? ' lg' : '') + '">' +
-      '<div class="ph ' + c.face + '"></div>' +
-      '<span class="lock">' + IC_LOCK + '</span></div>';
+  /* mapa de detalle para el drawer (se reconstruye en cada render) */
+  var detailMap = {};
+  function normMatched(c) {
+    return { face: c.face, title: c.display_title, country: c.country,
+      years: c.years_experience, languages: c.languages,
+      prose: c.long_summary, hard: c.hard_skills, soft: c.soft_skills };
+  }
+  function normPool(p) {
+    return { face: p.face, title: p.title, country: p.country,
+      years: null, languages: null,
+      prose: "<p>" + p.summary + "</p>", hard: p.skills, soft: [] };
   }
 
-  function cardEl(c) {
-    var div = document.createElement("div");
-    div.className = "cand-card";
-    div.setAttribute("role", "button");
-    div.tabIndex = 0;
-    var skills =
-      c.hard_skills.slice(0, 3).map(function (s) { return '<span class="chip hard">' + s + '</span>'; }).join("") +
-      c.soft_skills.slice(0, 1).map(function (s) { return '<span class="chip soft">' + s + '</span>'; }).join("");
-    div.innerHTML =
-      '<div class="cand-top">' + avatarHtml(c, false) +
-        '<div class="cand-id">' +
-          '<div class="cand-title">' + c.display_title + '</div>' +
-          '<div class="cand-loc">' + IC_PIN + c.country + '</div>' +
-        '</div>' +
+  function candFootHtml(id) {
+    return '<div class="cand-foot">' +
+      '<span class="cand-avail"><i></i>Available now</span>' +
+      '<button type="button" class="cand-open" data-open="' + id + '">View profile ' + IC_ARR + '</button>' +
+    '</div>';
+  }
+
+  function matchedCardHtml(c, id) {
+    var skills = c.hard_skills.slice(0, 5).map(function (s) {
+      return '<span class="skill-badge">' + s + '</span>';
+    }).join("");
+    return '<div class="cand-card cand-card--matched">' +
+      '<div class="cand-top">' +
+        '<div class="tc-avatar tc-avatar--sm ' + c.face + '"><span class="tc-lock">' + IC_LOCK + '</span></div>' +
+        '<div class="cand-id"><div class="cand-title">' + c.display_title + '</div>' +
+        '<div class="cand-loc">' + IC_PIN + c.country +
+        '<span class="cand-yrs">&middot; ' + c.years_experience + '+ yrs</span></div></div>' +
+        '<span class="match-chip">' + IC_MATCH + 'Strong match</span>' +
       '</div>' +
       '<p class="cand-summary">' + c.short_summary + '</p>' +
-      '<div class="cand-skills">' + skills + '</div>' +
-      '<div class="cand-foot">' +
-        '<span class="cand-avail"><i></i>Available now</span>' +
-        '<span class="cand-open">View profile ' + IC_ARR + '</span>' +
-      '</div>';
-    div.addEventListener("click", function () { openDrawer(c); });
-    div.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrawer(c); }
-    });
-    return div;
+      '<div class="cand-skills"><span class="cand-skills-label">Core skills</span>' + skills + '</div>' +
+      candFootHtml(id) +
+    '</div>';
   }
 
-  function renderShowcase(profileIds) {
-    var data = fetchShowcase(profileIds);
-    var eyebrow = document.getElementById("sc-eyebrow");
-    var headline = document.getElementById("sc-headline");
-    var subline = document.getElementById("sc-subline");
-    var vitrina = document.getElementById("sc-vitrina");
-    vitrina.innerHTML = "";
+  function poolCardHtml(p, id) {
+    return '<div class="pool-card">' +
+      '<div class="tc-avatar tc-avatar--sm ' + p.face + '"></div>' +
+      '<div class="pool-body">' +
+        '<div class="pool-role">' + p.title + '</div>' +
+        '<div class="pool-loc">' + IC_PIN + p.country + '</div>' +
+        '<p class="pool-blurb">' + p.blurb + '</p>' +
+        candFootHtml(id) +
+      '</div>' +
+    '</div>';
+  }
 
-    if (data.mode === "matched") {
-      eyebrow.textContent = "Matched to your open roles";
-      headline.innerHTML = "Talent ready for your roles, <em>" + prospect.first_name + "</em>.";
-      subline.textContent = "These anonymized profiles match the roles we saw you're hiring for — a preview of professionals Solvo can place. Open one to see the full profile.";
-      var grid = document.createElement("div");
-      grid.className = "cand-grid";
-      data.candidates.forEach(function (c) { grid.appendChild(cardEl(c)); });
-      vitrina.appendChild(grid);
+  function renderTalent() {
+    var grid = document.getElementById("ts-grid");
+    var eyebrow = document.getElementById("ts-eyebrow");
+    var headline = document.getElementById("ts-headline");
+    var subline = document.getElementById("ts-subline");
+    var anon = document.getElementById("ts-anon");
+    detailMap = {};
+    /* ambos formatos comparten estructura: solo el t\u00edtulo y la nota, luego el contenido */
+    eyebrow.style.display = "none";
+    subline.style.display = "none";
+
+    if (talentMode === "matched") {
+      var match = pickMatch(urlProfiles.length ? urlProfiles : DEFAULT_MATCHED);
+      detailMap[match.profile_id] = normMatched(match);
+      headline.innerHTML = '<span class="live-dot" aria-hidden="true"></span>Talent ready for your role, <em>' + prospect.first_name + "</em>.";
+      anon.innerHTML = IC_LOCK + " Identity protected \u2014 full name shared after you book";
+      grid.className = "ts-grid is-single";
+      grid.innerHTML = matchedCardHtml(match, match.profile_id);
     } else {
-      eyebrow.textContent = "Solvo talent pool";
       headline.innerHTML = "A glimpse of the talent <em>Solvo</em> places.";
-      subline.textContent = "Professionals our US clients hire every week. Book a quick call and we'll surface the ones that fit your open roles.";
-      var carousel = document.createElement("div");
-      carousel.className = "cand-carousel";
-      var track = document.createElement("div");
-      track.className = "cand-track";
-      /* se duplica el contenido para un loop continuo sin saltos */
-      data.candidates.concat(data.candidates).forEach(function (c) { track.appendChild(cardEl(c)); });
-      carousel.appendChild(track);
-      vitrina.appendChild(carousel);
+      anon.innerHTML = IC_USERS + " Talent available now \u2014 new candidates every week";
+      grid.className = "ts-grid is-marquee";
+      var cards = POOL_PROFILES.map(function (p, i) {
+        var id = "pool-" + i;
+        detailMap[id] = normPool(p);
+        return poolCardHtml(p, id);
+      }).join("");
+      grid.innerHTML = '<div class="pool-marquee"><div class="pool-track">' + cards + cards + '</div></div>';
     }
   }
 
   /* ====================================================================
-     DRAWER  ·  detalle del candidato
+     DRAWER \u00b7 detalle del perfil (matched y featured)
      ==================================================================== */
   var overlay = document.getElementById("drawer-overlay");
   var drawer = document.getElementById("cand-drawer");
   var lastFocus = null;
 
-  function openDrawer(c) {
+  function kvHtml(k, v) {
+    return '<div class="dr-kv"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>';
+  }
+
+  function openDrawer(d) {
+    if (!d) return;
     lastFocus = document.activeElement;
-    document.getElementById("dh-avatar").className = "ph " + c.face;
-    document.getElementById("dh-title").textContent = c.display_title;
-    document.getElementById("dh-loc").innerHTML = IC_PIN + c.country;
-    document.getElementById("dr-prose").innerHTML = c.long_summary;
+    document.getElementById("dh-avatar").className = "tc-avatar tc-avatar--lg " + d.face;
+    document.getElementById("dh-title").textContent = d.title;
+    document.getElementById("dh-loc").innerHTML = IC_PIN + d.country;
+    document.getElementById("dr-prose").innerHTML = d.prose;
     document.getElementById("dr-hard").innerHTML =
-      c.hard_skills.map(function (s) { return '<span class="chip hard">' + s + '</span>'; }).join("");
-    document.getElementById("dr-soft").innerHTML =
-      c.soft_skills.map(function (s) { return '<span class="chip soft">' + s + '</span>'; }).join("");
-    document.getElementById("dr-meta").innerHTML =
-      '<div class="dr-kv"><div class="k">Experience</div><div class="v">' + c.years_experience + ' years</div></div>' +
-      '<div class="dr-kv"><div class="k">Based in</div><div class="v">' + c.country + '</div></div>' +
-      '<div class="dr-kv"><div class="k">Languages</div><div class="v">' +
-        c.languages[0] + (c.languages[1] ? '<small>' + c.languages[1] + '</small>' : '') + '</div></div>' +
-      '<div class="dr-kv"><div class="k">Status</div><div class="v">Available now</div></div>';
+      (d.hard || []).map(function (s) { return '<span class="skill-badge">' + s + '</span>'; }).join("");
+    var softSection = document.getElementById("dr-soft-section");
+    if (d.soft && d.soft.length) {
+      softSection.style.display = "";
+      document.getElementById("dr-soft").innerHTML =
+        d.soft.map(function (s) { return '<span class="skill-badge soft">' + s + '</span>'; }).join("");
+    } else {
+      softSection.style.display = "none";
+    }
+    var meta = "";
+    if (d.years) meta += kvHtml("Experience", d.years + " years");
+    meta += kvHtml("Based in", d.country);
+    if (d.languages && d.languages.length) {
+      meta += kvHtml("Languages", d.languages[0] + (d.languages[1] ? "<small>" + d.languages[1] + "</small>" : ""));
+    }
+    meta += kvHtml("Status", "Available now");
+    document.getElementById("dr-meta").innerHTML = meta;
     overlay.classList.add("show");
     drawer.classList.add("open");
     document.body.style.overflow = "hidden";
@@ -1257,6 +2100,10 @@
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
 
+  document.getElementById("ts-grid").addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest(".cand-open") : null;
+    if (btn) openDrawer(detailMap[btn.getAttribute("data-open")]);
+  });
   document.getElementById("drawer-close").addEventListener("click", closeDrawer);
   overlay.addEventListener("click", closeDrawer);
   document.addEventListener("keydown", function (e) {
@@ -1268,17 +2115,31 @@
     loadPick();
   });
 
-  /* ====================================================================
-     AGENDAMIENTO (pick / calendar / confirm)  —  reglas mock como en v1
-     ==================================================================== */
+  document.getElementById("demo-matched").addEventListener("click", function () {
+    talentMode = "matched";
+    this.classList.add("active");
+    document.getElementById("demo-featured").classList.remove("active");
+    renderTalent();
+  });
+  document.getElementById("demo-featured").addEventListener("click", function () {
+    talentMode = "featured";
+    this.classList.add("active");
+    document.getElementById("demo-matched").classList.remove("active");
+    renderTalent();
+  });
+
+  /* Reglas del agendamiento (espejo de HU-LAG-1.1-BE) */
   var SLOT_MIN   = 25;
-  var TODAY      = "2026-05-21";
-  var NOW        = new Date("2026-05-21T12:00:00-04:00");
-  var LEAD_MS    = 2 * 60 * 60 * 1000;
-  var WINDOW_DAYS = 28;
-  var REP_OFFSET = "-04:00";
+  var TODAY      = "2026-05-21";                       // "hoy" del demo
+  var NOW        = new Date("2026-05-21T12:00:00-04:00"); // "ahora" del demo
+  var LEAD_MS    = 2 * 60 * 60 * 1000;                 // 2h de anticipacion minima
+  var WINDOW_DAYS = 28;                                // ventana de 4 semanas
+  var REP_OFFSET = "-04:00";                           // America/New_York en mayo/junio 2026 (EDT)
   var IDEAL = { morning: 8 * 60 + 30, midday: 11 * 60 + 30, afternoon: 15 * 60 };
 
+  /* Disponibilidad mock del sales rep — horarios en su zona (America/New_York).
+     Escenario demo: manana (vie 22) solo tiene tarde; el mediodia mas proximo
+     cae el lun 25 y la manana el mar 26 — cada franja en un dia distinto. */
   var AVAILABILITY = {
     "2026-05-21": ["15:00", "15:30", "16:00"],
     "2026-05-22": ["15:00", "16:00"],
@@ -1294,10 +2155,13 @@
     "2026-06-10": ["10:00", "13:00", "15:30", "16:30"]
   };
 
+  /* Pool de sales reps (mock). En el POC real el sistema asigna, al confirmar
+     el horario, un rep disponible para ese slot — aqui se deriva por slot de
+     forma estable para simular ese comportamiento en el demo. */
   var REPS = [
-    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO" },
-    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB" },
-    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN" }
+    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO", photo: "assets/people/person-01.jpg" },
+    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB", photo: "assets/people/person-05.jpg" },
+    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN", photo: "assets/people/person-06.jpg" }
   ];
   function repForSlot(dateKey, slot) {
     var s = dateKey + slot, h = 0;
@@ -1313,57 +2177,101 @@
   var MONTHS = ["January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"];
 
-  function toMin(hhmm) { var p = hhmm.split(":"); return (+p[0]) * 60 + (+p[1]); }
-  function ymd(d) {
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  /* ====================================================================
+     HELPERS
+     ==================================================================== */
+
+  function toMin(hhmm) {
+    var p = hhmm.split(":");
+    return (+p[0]) * 60 + (+p[1]);
   }
-  function keyToUTC(key) { var p = key.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]); }
+  function ymd(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+  /* Aritmetica de fechas-clave en UTC puro — estable ante cualquier
+     timezone del runtime (no se mezcla con lecturas de fecha local) */
+  function keyToUTC(key) {
+    var p = key.split("-");
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]);
+  }
   function utcToKey(ms) {
     var d = new Date(ms);
-    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+    return d.getUTCFullYear() + "-" +
+      String(d.getUTCMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getUTCDate()).padStart(2, "0");
   }
-  function addDaysKey(key, n) { return utcToKey(keyToUTC(key) + n * 86400000); }
+  function addDaysKey(key, n) {
+    return utcToKey(keyToUTC(key) + n * 86400000);
+  }
   var TOMORROW       = addDaysKey(TODAY, 1);
   var WINDOW_END_KEY = addDaysKey(TODAY, WINDOW_DAYS);
 
-  function instantOf(dateKey, hhmm) { return new Date(dateKey + "T" + hhmm + ":00" + REP_OFFSET); }
+  /* Instante real (UTC) a partir de un dia + hora pared en zona del rep */
+  function instantOf(dateKey, hhmm) {
+    return new Date(dateKey + "T" + hhmm + ":00" + REP_OFFSET);
+  }
+  /* Un slot es reservable si respeta el lead time y cae dentro de la ventana */
   function bookable(dateKey, hhmm) {
     if (dateKey < TODAY || dateKey > WINDOW_END_KEY) return false;
-    return instantOf(dateKey, hhmm).getTime() - NOW.getTime() >= LEAD_MS;
+    var inst = instantOf(dateKey, hhmm);
+    return inst.getTime() - NOW.getTime() >= LEAD_MS;
   }
   function bookableSlots(dateKey) {
     return (AVAILABILITY[dateKey] || []).filter(function (s) { return bookable(dateKey, s); });
   }
-  function fmtTime(inst) { return inst.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ }); }
-  function fmtDayLong(inst) { return inst.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ }); }
+  function fmtTime(inst) {
+    return inst.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ });
+  }
+  function fmtDayLong(inst) {
+    return inst.toLocaleDateString("en-US",
+      { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
+  }
 
-  var selected = null;
-  var cameFrom = "pick";
-  var calView  = { y: 2026, m: 4 };
+  /* ====================================================================
+     STATE
+     ==================================================================== */
+  var selected = null;           // { dateKey, slot }  — el slot elegido
+  var cameFrom = "pick";         // pantalla previa a Confirm
+  var calView  = { y: 2026, m: 4 }; // mes visible en el calendario (0-index)
 
   function show(screen) {
     document.body.dataset.screen = screen;
     var screens = document.querySelectorAll(".screen");
     for (var i = 0; i < screens.length; i++) screens[i].classList.remove("is-active");
     var el = document.getElementById("screen-" + screen);
-    void el.offsetWidth;
+    void el.offsetWidth;            // reinicia las animaciones de entrada
     el.classList.add("is-active");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /* ====================================================================
+     SCREEN 1 · PICK — proximo espacio disponible por cada momento del dia
+     ==================================================================== */
+
+  /* Franjas del dia (minutos desde medianoche) y su hora ideal. Cada franja
+     se resuelve de forma independiente, por lo que las tarjetas pueden caer
+     en dias distintos. */
   var MOMENTS = [
     { part: "Morning",   lo: 0,       hi: 11 * 60, ideal: IDEAL.morning   },
     { part: "Midday",    lo: 11 * 60, hi: 14 * 60, ideal: IDEAL.midday    },
     { part: "Afternoon", lo: 14 * 60, hi: 24 * 60, ideal: IDEAL.afternoon }
   ];
 
+  /* Para cada franja, el proximo dia (>= manana) con un slot reservable en su
+     rango; la tarjeta toma el slot de ese dia mas cercano a la hora ideal.
+     Devuelve hasta 3 entradas { part, dateKey, slot }, una por franja con
+     disponibilidad en la ventana. */
   function nextSlotsPerMoment() {
     var keys = Object.keys(AVAILABILITY).sort();
     return MOMENTS.map(function (m) {
       for (var i = 0; i < keys.length; i++) {
         var dateKey = keys[i];
         if (dateKey < TOMORROW) continue;
-        var cands = bookableSlots(dateKey).filter(function (s) { var x = toMin(s); return x >= m.lo && x < m.hi; });
+        var cands = bookableSlots(dateKey).filter(function (s) {
+          var x = toMin(s); return x >= m.lo && x < m.hi;
+        });
         if (!cands.length) continue;
         var slot = cands.reduce(function (best, s) {
           return Math.abs(toMin(s) - m.ideal) < Math.abs(toMin(best) - m.ideal) ? s : best;
@@ -1374,6 +2282,8 @@
     }).filter(function (x) { return x; });
   }
 
+  /* Etiqueta de fecha por tarjeta: "Tomorrow, Fri May 22" para el proximo dia
+     habil; el dia abreviado para los mas lejanos. */
   function whenLabel(dateKey) {
     var inst = instantOf(dateKey, "12:00");
     var wd = inst.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ });
@@ -1418,7 +2328,10 @@
       : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/></svg>';
     var box = document.createElement("div");
     box.className = "notice " + kind;
-    box.innerHTML = '<div class="n-icon">' + ic + '</div><h3>' + title + '</h3><p>' + text + '</p>';
+    box.innerHTML =
+      '<div class="n-icon">' + ic + '</div>' +
+      '<h3>' + title + '</h3>' +
+      '<p>' + text + '</p>';
     if (action) {
       var btn = document.createElement("button");
       btn.className = "link-btn";
@@ -1448,6 +2361,7 @@
       return;
     }
 
+    /* Encabezado generico: cada tarjeta trae su propia fecha */
     dayLabel.style.display = "flex";
     dayLabel.innerHTML = "Next available times";
 
@@ -1456,7 +2370,7 @@
     cards.forEach(function (c) {
       var inst = instantOf(c.dateKey, c.slot);
       var t = fmtTime(inst);
-      var parts = t.split(" ");
+      var parts = t.split(" ");        // "4:00" "PM"
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "slot-card";
@@ -1471,27 +2385,37 @@
       wrap.appendChild(btn);
     });
 
+    /* Si alguna franja no tiene disponibilidad, el calendario gana protagonismo */
     var link = document.getElementById("see-calendar");
     link.style.fontWeight = cards.length < 3 ? "700" : "600";
     link.style.color = cards.length < 3 ? "var(--color-primary)" : "var(--color-secondary)";
   }
 
+  /* Carga de la pantalla Pick con su estado de skeleton */
   function loadPick() {
     document.getElementById("day-label").style.display = "flex";
     document.getElementById("day-label").textContent = "Loading availability…";
     document.getElementById("slot-cards").style.display = "grid";
     renderSkeleton();
-    setTimeout(renderPick, 650);
+    setTimeout(renderPick, 650);     // simula la latencia del servicio /availability
   }
 
-  function openCalendar() { renderCalendar(); show("calendar"); }
+  /* ====================================================================
+     SCREEN 2 · CALENDAR
+     ==================================================================== */
+
+  function openCalendar() {
+    renderCalendar();
+    show("calendar");
+  }
 
   function renderCalendar() {
     document.getElementById("cal-month").textContent = MONTHS[calView.m] + " " + calView.y;
     var grid = document.getElementById("cal-grid");
     grid.innerHTML = "";
+
     var first = new Date(calView.y, calView.m, 1);
-    var startDow = (first.getDay() + 6) % 7;
+    var startDow = (first.getDay() + 6) % 7;          // semana inicia lunes
     var start = new Date(calView.y, calView.m, 1 - startDow);
 
     for (var i = 0; i < 42; i++) {
@@ -1502,19 +2426,24 @@
       cell.type = "button";
       cell.className = "cal-day";
       cell.textContent = date.getDate();
+
       var inMonth = date.getMonth() === calView.m;
       if (!inMonth) cell.classList.add("muted");
       if (key === TODAY) cell.classList.add("today");
+
       if (inMonth && bookableSlots(key).length) {
         cell.classList.add("available");
         if (selected && selected.dateKey === key) cell.classList.add("selected");
-        (function (k) { cell.addEventListener("click", function () { selectCalDay(k); }); })(key);
+        (function (k) {
+          cell.addEventListener("click", function () { selectCalDay(k); });
+        })(key);
       } else {
         cell.disabled = true;
       }
       grid.appendChild(cell);
       if (i >= 34 && date.getMonth() !== calView.m && date.getDay() === 0) break;
     }
+
     document.getElementById("cal-prev").disabled = (calView.y === 2026 && calView.m <= 4);
     document.getElementById("cal-next").disabled = (calView.y === 2026 && calView.m >= 5);
   }
@@ -1525,9 +2454,11 @@
     var grid = document.getElementById("cal-grid");
     var btns = grid.querySelectorAll(".cal-day.available");
     btns.forEach(function (b) { if (b.textContent == (+key.split("-")[2])) b.classList.add("selected"); });
+
     var label = document.getElementById("cal-slots-label");
     var box = document.getElementById("cal-slots-grid");
-    label.textContent = instantOf(key, "12:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
+    label.textContent = instantOf(key, "12:00")
+      .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: TZ });
     box.innerHTML = "";
     bookableSlots(key).forEach(function (s) {
       var b = document.createElement("button");
@@ -1538,6 +2469,10 @@
       box.appendChild(b);
     });
   }
+
+  /* ====================================================================
+     SCREEN 3 · CONFIRM
+     ==================================================================== */
 
   function choose(dateKey, slot, from) {
     selected = { dateKey: dateKey, slot: slot };
@@ -1550,13 +2485,19 @@
     var startI = instantOf(selected.dateKey, selected.slot);
     var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
     document.getElementById("ch-day").textContent = fmtDayLong(startI);
-    document.getElementById("ch-time").innerHTML = fmtTime(startI) + " &ndash; " + fmtTime(endI);
+    document.getElementById("ch-time").innerHTML =
+      fmtTime(startI) + " &ndash; " + fmtTime(endI);
     document.getElementById("ch-tz").textContent = TZ;
+
+    /* El rep queda fijado por el horario elegido */
     var rep = repForSlot(selected.dateKey, selected.slot);
     selected.rep = rep;
-    document.getElementById("rep-avatar").textContent = rep.initials;
+    /* iniciales de base + foto encima; si la foto falta, quedan las iniciales */
+    document.getElementById("rep-avatar").innerHTML = rep.initials +
+      '<img src="' + rep.photo + '" alt="" onerror="this.remove()">';
     document.getElementById("rep-name").textContent = rep.name;
     document.getElementById("rep-role").textContent = rep.role + " · Solvo Global";
+
     resetConfirmBtn();
     hideError();
   }
@@ -1566,15 +2507,23 @@
     btn.disabled = false;
     btn.textContent = "Confirm meeting";
   }
-  function showError(html) { var el = document.getElementById("err-msg"); el.innerHTML = html; el.classList.add("show"); }
-  function hideError() { document.getElementById("err-msg").classList.remove("show"); }
+  function showError(html) {
+    var el = document.getElementById("err-msg");
+    el.innerHTML = html;
+    el.classList.add("show");
+  }
+  function hideError() {
+    document.getElementById("err-msg").classList.remove("show");
+  }
 
+  /* Confirmacion del booking — llamada simulada a POST /book */
   document.getElementById("confirm-btn").addEventListener("click", function () {
     if (!selected) return;
     var btn = document.getElementById("confirm-btn");
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Confirming…';
     hideError();
+
     setTimeout(function () {
       if (MOCK.bookResult === "slot_taken") {
         resetConfirmBtn();
@@ -1588,12 +2537,18 @@
         showError('<b>Something went wrong.</b> Your time is still selected &mdash; tap Confirm to try again.');
         return;
       }
+      /* exito — se transmiten los detalles del meeting a la pagina de confirmacion */
       var startI = instantOf(selected.dateKey, selected.slot);
       var endI = new Date(startI.getTime() + SLOT_MIN * 60000);
       var rep = selected.rep || repForSlot(selected.dateKey, selected.slot);
       var meeting = {
-        start: startI.toISOString(), end: endI.toISOString(), tz: TZ,
-        name: prospect.first_name, rep: rep.name, repRole: rep.role
+        start: startI.toISOString(),
+        end: endI.toISOString(),
+        tz: TZ,
+        name: prospect.first_name,
+        rep: rep.name,
+        repRole: rep.role,
+        repPhoto: rep.photo
       };
       try { sessionStorage.setItem("lag_meeting", JSON.stringify(meeting)); } catch (e) {}
       var qs = "?start=" + encodeURIComponent(meeting.start) +
@@ -1601,16 +2556,19 @@
                "&tz=" + encodeURIComponent(meeting.tz) +
                "&name=" + encodeURIComponent(meeting.name) +
                "&rep=" + encodeURIComponent(meeting.rep) +
-               "&repRole=" + encodeURIComponent(meeting.repRole);
+               "&repRole=" + encodeURIComponent(meeting.repRole) +
+               "&repPhoto=" + encodeURIComponent(meeting.repPhoto || "");
       window.location.href = "confirmacion.html" + qs;
     }, 950);
   });
 
   /* ====================================================================
-     NAVEGACIÓN
+     NAVEGACION
      ==================================================================== */
   document.getElementById("see-calendar").addEventListener("click", openCalendar);
-  document.getElementById("confirm-back").addEventListener("click", function () { show(cameFrom); });
+  document.getElementById("confirm-back").addEventListener("click", function () {
+    show(cameFrom);
+  });
   document.querySelectorAll(".back-link[data-back]").forEach(function (b) {
     b.addEventListener("click", function () { show(b.dataset.back); });
   });
@@ -1623,22 +2581,31 @@
     renderCalendar();
   });
 
-  /* CTA de la vitrina hacia el agendamiento */
-  document.getElementById("sc-book").addEventListener("click", function () { show("pick"); loadPick(); });
-  document.getElementById("sc-pickdate").addEventListener("click", function () { openCalendar(); });
-
   /* ====================================================================
-     DEMO SWITCH  ·  alterna escenario matcheado / fallback destacado
+     SCREEN 0 · START (demo setup) — captura del prospecto para el demo
      ==================================================================== */
-  var dMatched = document.getElementById("demo-matched");
-  var dFeatured = document.getElementById("demo-featured");
-  dMatched.addEventListener("click", function () {
-    dMatched.classList.add("active"); dFeatured.classList.remove("active");
-    renderShowcase(DEFAULT_MATCHED); show("showcase");
-  });
-  dFeatured.addEventListener("click", function () {
-    dFeatured.classList.add("active"); dMatched.classList.remove("active");
-    renderShowcase([]); show("showcase");
+  document.getElementById("su-first").value = prospect.first_name;
+  document.getElementById("su-last").value = prospect.last_name;
+  document.getElementById("su-email").value = prospect.email;
+
+  document.getElementById("start-btn").addEventListener("click", function () {
+    var fEl = document.getElementById("su-first");
+    var eEl = document.getElementById("su-email");
+    var f = fEl.value.trim();
+    var l = document.getElementById("su-last").value.trim();
+    var e = eEl.value.trim();
+    var okF = !!f;
+    var okE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+    fEl.classList.toggle("invalid", !okF);
+    eEl.classList.toggle("invalid", !okE);
+    document.getElementById("su-err").classList.toggle("show", !(okF && okE));
+    if (!okF || !okE) return;
+    prospect.first_name = f;
+    prospect.last_name = l;
+    prospect.email = e;
+    renderTalent();
+    show("pick");
+    loadPick();
   });
 
   /* ====================================================================
@@ -1646,13 +2613,13 @@
      ==================================================================== */
   document.getElementById("tz-line").textContent = "Times shown in your timezone (" + TZ + ")";
 
-  /* Escenario inicial: si el link trae ?profiles, se respeta (incl. vacío→fallback);
-     si no hay param, arranca con el escenario matcheado de demostración. */
-  var initialProfiles = hasProfilesParam ? urlProfiles : DEFAULT_MATCHED;
-  if (hasProfilesParam && urlProfiles.length === 0) {
-    dFeatured.classList.add("active"); dMatched.classList.remove("active");
-  }
-  renderShowcase(initialProfiles);
+  renderTalent();
+
+  /* photo cards decorativas: mismas en los dos modos de agendamiento */
+  var calScreen = document.getElementById("screen-calendar");
+  document.querySelectorAll("#screen-pick .hero-band").forEach(function (g) {
+    calScreen.appendChild(g.cloneNode(true));
+  });
 })();
 </script>
 
