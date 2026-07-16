@@ -1,6 +1,7 @@
 /* ============================================================
-   Tema de la app: tokens de estado, anillo de foco y dark mode.
-   Se carga DESPUÉS de tokens.css (tokens de marca) y ANTES de
+   Tema de la app: tokens de estado + botón de tema.
+   Se carga DESPUÉS de tokens.css (core + platform del DS, que ya
+   trae dark mode completo vía [data-theme='dark']) y ANTES de
    styles.css. El toggle setea [data-theme] en <html>.
    ============================================================ */
 :root {
@@ -17,48 +18,21 @@
   --status-error-fg: var(--color-error-dark);
   --status-accent-bg: var(--color-secondary-100);
   --status-accent-fg: var(--color-secondary-700);
-
-  /* Anillo de foco (teal de marca) */
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-secondary) 22%, transparent);
 }
 
-/* ===== Dark mode (conserva los hues de marca --color-primary/secondary) ===== */
+/* ===== Dark mode ====================================================
+   Superficies, texto, bordes, semánticos y sombras los define el DS
+   platform. Aquí solo los tints suplementarios que el DS no trae
+   (escalas de marca usadas por las familias de badges). */
 [data-theme='dark'] {
-  --bg-body: #0f1623;
-  --bg-surface: #1f2937;
-  --bg-surface-raised: #273244;
-  --bg-muted: #374151;
-  --bg-inverse: #f9fafb;
-
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
-  --text-inverse: #111827;
-  --text-link: color-mix(in srgb, var(--color-secondary) 55%, white);
-  --text-link-hover: color-mix(in srgb, var(--color-secondary) 35%, white);
-
-  --border-default: #374151;
-  --border-strong: #4b5563;
-  --border-focus: color-mix(in srgb, var(--color-secondary) 60%, white);
-
-  /* Semánticos: tint oscuro translúcido + texto claro */
-  --color-success-light: rgba(22, 163, 74, 0.20);  --color-success-dark: #86efac;
-  --color-warning-light: rgba(245, 158, 11, 0.20); --color-warning-dark: #fcd34d;
-  --color-error-light:   rgba(220, 38, 38, 0.20);  --color-error-dark:   #fca5a5;
-  --color-info-light:    color-mix(in srgb, var(--color-info) 25%, transparent);
-  --color-info-dark:     color-mix(in srgb, var(--color-info) 45%, white);
-
-  /* Neutrales + tints de marca (badges/pills), derivados del brand activo */
-  --color-gray-100: #374151; --color-gray-600: #d1d5db;
+  --color-gray-100: #2C3234;
+  --color-gray-600: #AEB4B6;
   --color-primary-50:  color-mix(in srgb, var(--color-primary) 14%, transparent);
   --color-primary-100: color-mix(in srgb, var(--color-primary) 25%, transparent);
-  --color-primary-700: color-mix(in srgb, var(--color-primary) 45%, white);
+  --color-primary-700: color-mix(in srgb, var(--color-primary) 55%, white);
+  --color-secondary-50:  color-mix(in srgb, var(--color-secondary) 14%, transparent);
   --color-secondary-100: color-mix(in srgb, var(--color-secondary) 25%, transparent);
-  --color-secondary-700: color-mix(in srgb, var(--color-secondary) 45%, white);
-
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.55);
+  --color-secondary-700: color-mix(in srgb, var(--color-secondary) 55%, white);
 }
 
 /* ===== Botón flotante de tema (lo monta theme.js) ===== */

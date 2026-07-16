@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usuarios - Solvo Platform</title>
+  <title>Users - Solvo Platform</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css">
@@ -41,19 +41,12 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 class="header-title">Usuarios</h1>
+        <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
       <!-- Page Content -->
       <div class="page-content">
         <!-- Breadcrumb -->
-        <div class="breadcrumb">
-          <a href="dashboard.html" class="breadcrumb-item">Dashboard</a>
-          <span class="breadcrumb-separator">&rsaquo;</span>
-          <span class="breadcrumb-item">Administraci&oacute;n</span>
-          <span class="breadcrumb-separator">&rsaquo;</span>
-          <span class="breadcrumb-current">Usuarios</span>
-        </div>
 
         <!-- Page Header -->
         <div class="page-header">
@@ -66,19 +59,19 @@
         <!-- Filters -->
         <div class="filters-bar">
           <div class="filter-group">
-            <label class="filter-label">Rol</label>
+            <label class="filter-label">Role</label>
             <select class="form-select" id="filterRole" onchange="filterUsers()">
-              <option value="">Todos los roles</option>
-              <option value="comercial">Comercial</option>
+              <option value="">All roles</option>
+              <option value="comercial">Sales Rep</option>
               <option value="sdr">SDR</option>
-              <option value="coordinador">Coordinador</option>
+              <option value="coordinador">Coordinator</option>
               <option value="supervisor">Supervisor</option>
-              <option value="administrador">Administrador</option>
+              <option value="administrador">Administrator</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Buscar</label>
-            <input type="text" class="form-input" id="filterSearch" placeholder="Nombre o email..." oninput="filterUsers()">
+            <label class="filter-label">Search</label>
+            <input type="text" class="form-input" id="filterSearch" placeholder="Name or email..." oninput="filterUsers()">
           </div>
         </div>
 
@@ -89,16 +82,25 @@
               <tr>
                 <th>Nombre</th>
                 <th>Email</th>
-                <th>Rol</th>
-                <th>&Uacute;ltimo login</th>
-                <th class="col-assignment-header">Empresas<small>Comercial</small></th>
-                <th class="col-assignment-header">Empresas<small>SDR</small></th>
-                <th class="col-assignment-header">Vacantes<small>Comercial</small></th>
-                <th class="col-assignment-header">Vacantes<small>SDR</small></th>
+                <th>Role</th>
+                <th>Last login</th>
+                <th class="col-assignment-header">Companies<small>Sales Rep</small></th>
+                <th class="col-assignment-header">Companies<small>SDR</small></th>
+                <th class="col-assignment-header">Vacancies<small>Sales Rep</small></th>
+                <th class="col-assignment-header">Vacancies<small>SDR</small></th>
               </tr>
             </thead>
             <tbody id="usersTableBody"></tbody>
           </table>
+
+          <div class="table-pagination">
+            <div class="pagination-info" id="usersPaginationInfo">Showing 0 of 0</div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>Previous</button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn" disabled>Next</button>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -145,6 +147,8 @@
         return;
       }
 
+      document.getElementById('usersPaginationInfo').textContent =
+        `Showing ${members.length ? '1-' + members.length : '0'} of ${members.length}`;
       tbody.innerHTML = members.map(member => {
         const roleData = ROLES[member.roleKey];
         const roleName = roleData ? roleData.name : member.roleKey;

@@ -16,110 +16,139 @@
 }
 
 /* ========================================================================
-   SOLVO GLOBAL — Design Tokens
-   Brand: Solvo Global (Bringing You a World of Talent)
-   Primary: #EE7623 (Orange)  |  Secondary: #008AAB (Teal)
-   Typography: Poppins (headings) + Open Sans (body)
+   SOLVO GLOBAL — Core Tokens (compartidos)
+   Fundación común de los dos sistemas: marketing/ y platform/.
+   Referencia de marca: careers.solvoglobal.com (kit Elementor, 2026).
+
+   Primary:   #ED7422 (Orange)     |  Accent hover: #D05D15
+   Amber:     #E99B35 (soporte)    |  Secondary: #0089AB (Teal)
+   Cyan:      #00BED6 (soporte)    |  Texto: #53585A (gris cálido)
+   Tipografía: Poppins (headings) + Wix Madefor Text (body/UI)
    ======================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Wix+Madefor+Text:wght@400;500;600;700&display=swap');
 
 :root {
 
   /* -------------------------------------------------------------------
-     COLOR — Primary (Orange)
+     COLOR — Primary (Orange)  ★ #ED7422 · hover/accent #D05D15
      ------------------------------------------------------------------- */
-  --color-primary-50:  #FFF3EB;
-  --color-primary-100: #FFE0C7;
-  --color-primary-200: #FFCBA0;
-  --color-primary-300: #FFB078;
-  --color-primary-400: #F99345;
-  --color-primary:     #EE7623;
-  --color-primary-600: #D4651A;
-  --color-primary-700: #B35215;
-  --color-primary-800: #8E4011;
-  --color-primary-900: #6B300D;
+  --color-primary-50:  #FEF4EC;
+  --color-primary-100: #FBE3CE;
+  --color-primary-200: #F8CCA5;
+  --color-primary-300: #F5B47C;
+  --color-primary-400: #F19453;
+  --color-primary:     #ED7422;
+  --color-primary-600: #D05D15;
+  --color-primary-700: #A84A0F;
+  --color-primary-800: #7F3809;
+  --color-primary-900: #5C2906;
 
   /* -------------------------------------------------------------------
-     COLOR — Secondary (Teal)
+     COLOR — Amber (soporte cálido: CTAs marketing, gradientes)
+     hover par: amber → amber-hover
      ------------------------------------------------------------------- */
-  --color-secondary-50:  #E6F5F9;
-  --color-secondary-100: #B3E2EE;
-  --color-secondary-200: #80CFE3;
-  --color-secondary-300: #4DBCD8;
-  --color-secondary-400: #1AA9CD;
-  --color-secondary:     #008AAB;
-  --color-secondary-600: #007A97;
-  --color-secondary-700: #006880;
-  --color-secondary-800: #005468;
-  --color-secondary-900: #003F4F;
+  --color-amber-light: #FBEBD5;
+  --color-amber:       #E99B35;
+  --color-amber-hover: #D15E14;
 
   /* -------------------------------------------------------------------
-     COLOR — Neutrals
+     COLOR — Secondary (Teal)  ★ #0089AB · deep #00748D
+     ------------------------------------------------------------------- */
+  --color-secondary-50:  #E6F4F8;
+  --color-secondary-100: #B3DEE9;
+  --color-secondary-200: #80C8DA;
+  --color-secondary-300: #4DB2CB;
+  --color-secondary-400: #26A0BE;
+  --color-secondary:     #0089AB;
+  --color-secondary-600: #00748D;
+  --color-secondary-700: #005F74;
+  --color-secondary-800: #00495A;
+  --color-secondary-900: #003440;
+
+  /* -------------------------------------------------------------------
+     COLOR — Cyan (soporte frío: gradientes, highlights)
+     ------------------------------------------------------------------- */
+  --color-cyan-light:  #E0F8FB;
+  --color-cyan:        #00BED6;
+  --color-cyan-dark:   #0096A9;
+
+  /* -------------------------------------------------------------------
+     COLOR — Neutrals (grises cálidos de marca)
      ------------------------------------------------------------------- */
   --color-white:       #FFFFFF;
-  --color-gray-50:     #F9FAFB;
-  --color-gray-100:    #F3F4F6;
-  --color-gray-200:    #E5E7EB;
-  --color-gray-300:    #D1D5DB;
-  --color-gray-400:    #9CA3AF;
-  --color-gray-500:    #6B7280;
-  --color-gray-600:    #4B5563;
-  --color-gray-700:    #374151;
-  --color-gray-800:    #1F2937;
-  --color-gray-900:    #111827;
+  --color-gray-50:     #F9F9F9;
+  --color-gray-100:    #F5F5F5;
+  --color-gray-200:    #E3E3E3;
+  --color-gray-300:    #D9D9D9;
+  --color-gray-400:    #A7A7A7;
+  --color-gray-500:    #899094;
+  --color-gray-600:    #656971;
+  --color-gray-700:    #53585A;
+  --color-gray-800:    #3A3E40;
+  --color-gray-900:    #212121;
   --color-black:       #000000;
 
   /* -------------------------------------------------------------------
      COLOR — Semantic
      ------------------------------------------------------------------- */
-  --color-success:     #16A34A;
+  --color-success:       #16A34A;
   --color-success-light: #DCFCE7;
   --color-success-dark:  #166534;
 
-  --color-warning:     #F59E0B;
+  --color-warning:       #F59E0B;
   --color-warning-light: #FEF3C7;
   --color-warning-dark:  #92400E;
 
-  --color-error:       #DC2626;
-  --color-error-light: #FEE2E2;
-  --color-error-dark:  #991B1B;
+  --color-error:         #DC2626;
+  --color-error-light:   #FEE2E2;
+  --color-error-dark:    #991B1B;
 
-  --color-info:        #008AAB;
-  --color-info-light:  #E6F5F9;
-  --color-info-dark:   #006880;
+  --color-info:          #0089AB;
+  --color-info-light:    #E6F4F8;
+  --color-info-dark:     #005F74;
 
   /* -------------------------------------------------------------------
-     COLOR — Surfaces & Backgrounds
+     GRADIENTES — firma de marca
+     brand: texto degradado en headings y barras de acento
+     duo:   bordes degradados de cards (con mask)
      ------------------------------------------------------------------- */
-  --bg-body:           #F9FAFB;
+  --gradient-brand:   linear-gradient(90deg, #E99B35 0%, #D15E14 49%, #0089AB 100%);
+  --gradient-brand-v: linear-gradient(180deg, #E99B35 0%, #D15E14 49%, #0089AB 100%);
+  --gradient-duo:     linear-gradient(90deg, #E99B35, #00BED6);
+
+  /* -------------------------------------------------------------------
+     COLOR — Surfaces & Backgrounds (defaults light)
+     ------------------------------------------------------------------- */
+  --bg-body:           #F9F9F9;
   --bg-surface:        #FFFFFF;
   --bg-surface-raised: #FFFFFF;
-  --bg-muted:          #F3F4F6;
-  --bg-inverse:        #111827;
+  --bg-muted:          #F5F5F5;
+  --bg-inverse:        #212121;
 
   /* -------------------------------------------------------------------
      COLOR — Text
      ------------------------------------------------------------------- */
-  --text-primary:      #111827;
-  --text-secondary:    #4B5563;
-  --text-muted:        #9CA3AF;
+  --text-primary:      #53585A;
+  --text-strong:       #3A3E40;
+  --text-secondary:    #656971;
+  --text-muted:        #899094;
   --text-inverse:      #FFFFFF;
-  --text-link:         #008AAB;
-  --text-link-hover:   #006880;
+  --text-link:         #0089AB;
+  --text-link-hover:   #005F74;
 
   /* -------------------------------------------------------------------
      COLOR — Borders
      ------------------------------------------------------------------- */
-  --border-default:    #E5E7EB;
-  --border-strong:     #D1D5DB;
-  --border-focus:      #008AAB;
+  --border-default:    #E3E3E3;
+  --border-strong:     #D9D9D9;
+  --border-focus:      #0089AB;
 
   /* -------------------------------------------------------------------
      TYPOGRAPHY — Font Families
      ------------------------------------------------------------------- */
   --font-heading:      'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-body:         'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:         'Wix Madefor Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:         'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 
   /* -------------------------------------------------------------------
@@ -134,11 +163,11 @@
   --text-3xl:          1.875rem;
   --text-4xl:          2.25rem;
   --text-5xl:          3rem;
+  --text-6xl:          3.7rem;   /* hero marketing (59px landing) */
 
   /* -------------------------------------------------------------------
      TYPOGRAPHY — Font Weights
      ------------------------------------------------------------------- */
-  --font-light:        300;
   --font-regular:      400;
   --font-medium:       500;
   --font-semibold:     600;
@@ -146,16 +175,13 @@
   --font-extrabold:    800;
 
   /* -------------------------------------------------------------------
-     TYPOGRAPHY — Line Heights
+     TYPOGRAPHY — Line Heights & Letter Spacing
      ------------------------------------------------------------------- */
   --leading-tight:     1.25;
   --leading-snug:      1.375;
   --leading-normal:    1.5;
   --leading-relaxed:   1.625;
 
-  /* -------------------------------------------------------------------
-     TYPOGRAPHY — Letter Spacing
-     ------------------------------------------------------------------- */
   --tracking-tight:    -0.025em;
   --tracking-normal:   0;
   --tracking-wide:     0.025em;
@@ -180,25 +206,27 @@
   --space-24:  6rem;
 
   /* -------------------------------------------------------------------
-     BORDER RADIUS
+     BORDER RADIUS (escala base; cada sistema fija sus semánticos
+     --radius-card / --radius-btn / --radius-input)
      ------------------------------------------------------------------- */
   --radius-none: 0;
   --radius-sm:   4px;
   --radius-md:   8px;
   --radius-lg:   12px;
   --radius-xl:   16px;
-  --radius-2xl:  24px;
+  --radius-2xl:  22px;
+  --radius-3xl:  28px;
   --radius-full: 9999px;
 
   /* -------------------------------------------------------------------
      SHADOWS
      ------------------------------------------------------------------- */
-  --shadow-xs:   0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm:   0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-md:   0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
-  --shadow-lg:   0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl:   0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-2xl:  0 25px 50px rgba(0, 0, 0, 0.15);
+  --shadow-xs:   0 1px 2px rgba(33, 33, 33, 0.05);
+  --shadow-sm:   0 1px 3px rgba(33, 33, 33, 0.1), 0 1px 2px rgba(33, 33, 33, 0.06);
+  --shadow-md:   0 4px 6px rgba(33, 33, 33, 0.07), 0 2px 4px rgba(33, 33, 33, 0.06);
+  --shadow-lg:   0 10px 15px rgba(33, 33, 33, 0.1), 0 4px 6px rgba(33, 33, 33, 0.05);
+  --shadow-xl:   0 20px 25px rgba(33, 33, 33, 0.1), 0 10px 10px rgba(33, 33, 33, 0.04);
+  --shadow-2xl:  0 25px 50px rgba(33, 33, 33, 0.15);
 
   /* -------------------------------------------------------------------
      TRANSITIONS
@@ -227,3 +255,69 @@
   --container-xl:   1280px;
   --container-2xl:  1440px;
 }
+
+/* ========================================================================
+   SOLVO GLOBAL — Marketing Tokens
+   Sistema comercial: landing pages, emails, decks, piezas de campaña.
+   Importa core/tokens.css y define la capa expresiva: pills, radios
+   generosos, gradientes de firma, jerarquía tipográfica grande.
+   ======================================================================== */
+
+:root {
+
+  /* -------------------------------------------------------------------
+     RADIUS semánticos — lenguaje redondeado de la landing
+     ------------------------------------------------------------------- */
+  --radius-btn:        var(--radius-full);  /* botones siempre pill */
+  --radius-card:       22px;                /* job cards, content cards */
+  --radius-card-lg:    28px;                /* paneles, secciones destacadas */
+  --radius-chip:       var(--radius-full);
+  --radius-media:      20px;                /* imágenes, video embeds */
+
+  /* -------------------------------------------------------------------
+     BOTONES — dimensiones marketing (generosas)
+     ------------------------------------------------------------------- */
+  --btn-padding:       14px 30px;
+  --btn-padding-lg:    17px 36px;
+  --btn-padding-sm:    8px 22px;
+
+  /* -------------------------------------------------------------------
+     TIPOGRAFÍA — jerarquía display
+     Hero real de la landing: Poppins 700 · 59px
+     ------------------------------------------------------------------- */
+  --text-hero:         clamp(2.5rem, 5vw, var(--text-6xl));
+  --text-display:      clamp(2rem, 4vw, var(--text-5xl));
+  --leading-hero:      1.15;
+
+  /* -------------------------------------------------------------------
+     SECCIONES — respiración de landing
+     ------------------------------------------------------------------- */
+  --section-py:        var(--space-20);
+  --section-py-sm:     var(--space-12);
+  --section-max:       1140px;              /* ancho de contenido de la landing */
+
+  /* -------------------------------------------------------------------
+     PATRONES DE FIRMA
+     - Texto degradado: background var(--gradient-brand) + background-clip: text
+     - Barra de acento: border-image con var(--gradient-brand-v) (títulos de value cards)
+     - Borde degradado de card: pseudo-elemento con var(--gradient-duo) + mask
+     - Separador punteado: 1px dashed var(--color-gray-400)
+     ------------------------------------------------------------------- */
+  --accent-bar-w:      4px;
+  --card-border-w:     2px;
+
+  /* -------------------------------------------------------------------
+     TOPBAR / NAV
+     ------------------------------------------------------------------- */
+  --topbar-bg:         var(--color-secondary);
+  --nav-link-active:   var(--color-primary);
+}
+
+/* -------------------------------------------------------------------
+   EMAIL — stacks seguros (Poppins/Wix Madefor no renderizan en la
+   mayoría de clientes; usar estos fallbacks en HTML de email)
+   headings: 'Poppins', 'Segoe UI', Arial, sans-serif
+   body:     'Wix Madefor Text', 'Segoe UI', Arial, sans-serif
+   Nada de gradient text en email: usar color sólido primary o secondary.
+   Ancho máximo del layout: 600px, estilos inline, tablas.
+   ------------------------------------------------------------------- */

@@ -1,13 +1,13 @@
 // ============================================
 // RBAC Engine - Solvo Platform Prototype v14.0
-// 5 Roles, Dual Assignment (Comercial + SDR)
+// 5 Roles, Dual Assignment (Sales Rep + SDR)
 // ============================================
 
 // === ROLE DEFINITIONS ===
 const ROLES = {
   comercial: {
-    name: 'Comercial',
-    description: 'Ejecutivo de ventas. Ve y gestiona exclusivamente las entidades donde es el Comercial asignado.',
+    name: 'Sales Rep',
+    description: 'Sales executive. Sees and manages only the entities where they are the assigned Sales Rep.',
     priority: 2
   },
   sdr: {
@@ -16,25 +16,25 @@ const ROLES = {
     priority: 1
   },
   coordinador: {
-    name: 'Coordinador',
-    description: 'Coordinador de operaciones. Ve todos los registros, asigna Comerciales y SDRs.',
+    name: 'Coordinator',
+    description: 'Operations coordinator. Sees all records, assigns Sales Reps and SDRs.',
     priority: 3
   },
   supervisor: {
     name: 'Supervisor',
-    description: 'Supervisor de operaciones. Mismos permisos que Coordinador.',
+    description: 'Operations supervisor. Same permissions as Coordinator.',
     priority: 4
   },
   administrador: {
-    name: 'Administrador',
-    description: 'Director/gerente. Acceso completo de lectura/edición + visualización de usuarios.',
+    name: 'Administrator',
+    description: 'Full access to administration, users and configuration.',
     priority: 5
   }
 };
 
 // === MOCK TEAM DATA ===
 const TEAM_MEMBERS = [
-  // Comerciales
+  // Sales Reps
   { id: 'uuid-staff-001', name: 'Carlos Mendoza', shortName: 'Carlos M.', email: 'carlos.mendoza@solvo.global', roleKey: 'comercial', title: 'Senior Account Executive', isActive: true, companiesAsComercial: 47, companiesAsSDR: 0, vacanciesAsComercial: 1234, vacanciesAsSDR: 0 },
   { id: 'uuid-staff-002', name: 'María García', shortName: 'María G.', email: 'maria.garcia@solvo.global', roleKey: 'comercial', title: 'Account Executive', isActive: true, companiesAsComercial: 38, companiesAsSDR: 0, vacanciesAsComercial: 987, vacanciesAsSDR: 0 },
   { id: 'uuid-staff-003', name: 'Juan Pérez', shortName: 'Juan P.', email: 'juan.perez@solvo.global', roleKey: 'comercial', title: 'Account Executive', isActive: true, companiesAsComercial: 42, companiesAsSDR: 0, vacanciesAsComercial: 1102, vacanciesAsSDR: 0 },
@@ -43,12 +43,12 @@ const TEAM_MEMBERS = [
   { id: 'uuid-staff-006', name: 'Daniela López', shortName: 'Daniela L.', email: 'daniela.lopez@solvo.global', roleKey: 'sdr', title: 'Senior SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 52, vacanciesAsComercial: 0, vacanciesAsSDR: 1430 },
   { id: 'uuid-staff-007', name: 'Andrés Ríos', shortName: 'Andrés R.', email: 'andres.rios@solvo.global', roleKey: 'sdr', title: 'SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 35, vacanciesAsComercial: 0, vacanciesAsSDR: 876 },
   { id: 'uuid-staff-011', name: 'Valentina Cruz', shortName: 'Valentina C.', email: 'valentina.cruz@solvo.global', roleKey: 'sdr', title: 'SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 28, vacanciesAsComercial: 0, vacanciesAsSDR: 720 },
-  // Coordinadores
+  // Coordinators
   { id: 'uuid-staff-004', name: 'Ana Rodríguez', shortName: 'Ana R.', email: 'ana.rodriguez@solvo.global', roleKey: 'coordinador', title: 'Operations Coordinator', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
   { id: 'uuid-staff-008', name: 'Roberto Vargas', shortName: 'Roberto V.', email: 'roberto.vargas@solvo.global', roleKey: 'coordinador', title: 'Operations Coordinator', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
-  // Supervisores
+  // Supervisors
   { id: 'uuid-staff-009', name: 'Patricia Morales', shortName: 'Patricia M.', email: 'patricia.morales@solvo.global', roleKey: 'supervisor', title: 'Operations Supervisor', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
-  // Administradores
+  // Administrators
   { id: 'uuid-staff-005', name: 'Pedro Sánchez', shortName: 'Pedro S.', email: 'pedro.sanchez@solvo.global', roleKey: 'administrador', title: 'Sales Director', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 }
 ];
 
@@ -61,7 +61,7 @@ const DEMO_USERS = {
   administrador: TEAM_MEMBERS[10]  // Pedro Sánchez
 };
 
-// === MOCK ASSIGNMENT DATA (Dual: Comercial + SDR) ===
+// === MOCK ASSIGNMENT DATA (Dual: Sales Rep + SDR) ===
 const MOCK_COMPANIES = [
   { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', location: 'Miami, FL', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', pipelineStage: 'onboarding_started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 4 },
   { id: 'comp-002', name: 'GlobalHealth Inc', industry: 'Healthcare', location: 'New York, NY', website: 'https://globalhealth.com', linkedinId: 'globalhealth-inc', pipelineStage: 'prospecting', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
@@ -197,7 +197,12 @@ function canViewAll() {
 // Can assign — only coordinador and supervisor
 function canAssign() {
   const role = getCurrentRole();
-  return role === 'coordinador' || role === 'supervisor';
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+function canDelete() {
+  const role = getCurrentRole();
+  return role === 'administrador' || role === 'coordinador';
 }
 
 // Can access admin section — only admin
@@ -269,6 +274,71 @@ function logout() {
 
 // === SIDEBAR RENDERING ===
 
+/* === Header: titulo de producto + controles (idioma / tema) === */
+const LANGS = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Espa\u00f1ol' }
+];
+
+function getLang() {
+  try { return localStorage.getItem('lang') || 'es'; } catch (e) { return 'es'; }
+}
+
+function setLang(code) {
+  try { localStorage.setItem('lang', code); } catch (e) {}
+  renderLangDropdown();
+}
+
+function renderLangDropdown() {
+  const dd = document.getElementById('lang-dropdown');
+  if (!dd) return;
+  const current = getLang();
+  dd.innerHTML = LANGS.map(l =>
+    `<button type="button" class="lang-option${l.code === current ? ' active' : ''}" onclick="setLang('${l.code}')">${l.label}</button>`
+  ).join('');
+}
+
+function renderHeaderControls() {
+  const header = document.querySelector('.header');
+  if (!header || document.getElementById('header-controls')) return;
+
+  /* boton para ocultar/mostrar el sidebar (desktop) */
+  const hb = document.createElement('button');
+  hb.type = 'button';
+  hb.className = 'header-icon-btn sidebar-collapse-btn';
+  hb.title = 'Hide/show menu';
+  hb.setAttribute('aria-label', 'Hide/show menu');
+  hb.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>';
+  hb.addEventListener('click', function () {
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+  });
+  header.insertBefore(hb, header.firstChild);
+  try {
+    if (localStorage.getItem('sidebarCollapsed') === '1') document.body.classList.add('sidebar-collapsed');
+  } catch (e) {}
+  const wrap = document.createElement('div');
+  wrap.id = 'header-controls';
+  wrap.className = 'header-controls';
+  wrap.innerHTML = `
+    <div class="lang-switch">
+      <button type="button" class="header-icon-btn" id="lang-toggle" title="Idioma" aria-label="Cambiar idioma">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown"></div>
+    </div>`;
+  header.appendChild(wrap);
+  renderLangDropdown();
+  document.getElementById('lang-toggle').addEventListener('click', function (e) {
+    e.stopPropagation();
+    document.getElementById('lang-dropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', function () {
+    const dd = document.getElementById('lang-dropdown');
+    if (dd) dd.classList.remove('open');
+  });
+}
+
 function renderSidebar(activePage) {
   const user = getCurrentUser();
   if (!user) return;
@@ -283,8 +353,8 @@ function renderSidebar(activePage) {
     { id: 'companies', label: 'Companies', href: 'companies.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' }
   ];
   const adminItems = [
-    { id: 'admin-users', label: 'Usuarios', href: 'admin-users.html', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' },
-    { id: 'settings', label: 'Configuración', href: 'settings.html', icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle>' }
+    { id: 'admin-users', label: 'Users', href: 'admin-users.html', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' },
+    { id: 'settings', label: 'Settings', href: 'settings.html', icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle>' }
   ];
 
   function renderNavItem(item) {
@@ -297,13 +367,13 @@ function renderSidebar(activePage) {
 
   let adminSection = '';
   if (showAdmin) {
-    adminSection = `<div class="nav-section"><span class="nav-section-title">Administración</span>${adminItems.map(renderNavItem).join('')}</div>`;
+    adminSection = `<div class="nav-section"><span class="nav-section-title">Administration</span>${adminItems.map(renderNavItem).join('')}</div>`;
   }
 
   const sidebarHTML = `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo"><div class="logo-icon">S</div><span class="logo-text">Solvo Platform</span></div>
+        <div class="sidebar-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo" class="sidebar-logo-img" /></div>
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">${navItems.map(renderNavItem).join('')}</div>
@@ -327,6 +397,8 @@ function renderSidebar(activePage) {
 
   const container = document.getElementById('sidebar-container');
   if (container) container.innerHTML = sidebarHTML;
+
+  renderHeaderControls();
 }
 
 // === SIDEBAR MOBILE TOGGLE ===
@@ -367,7 +439,7 @@ function showToast(message, type = 'success') {
 
 // === ACCESS GUARD ===
 function requireAdmin() {
-  if (!canAccessAdmin()) { alert('No tienes acceso a esta sección.'); window.location.href = 'dashboard.html'; return false; }
+  if (!canAccessAdmin()) { alert('You do not have access to this section.'); window.location.href = 'dashboard.html'; return false; }
   return true;
 }
 
@@ -381,7 +453,7 @@ function handleAccessDenied(message) {
 
 function openAssignmentPopup(options) {
   const {
-    title = 'Asignación',
+    title = 'Assignment',
     currentComercialId = null,
     currentSdrId = null,
     currentCoordinatorId = null,
@@ -410,8 +482,8 @@ function openAssignmentPopup(options) {
   overlay.className = 'assign-popup-overlay';
   overlay.onclick = (e) => { if (e.target === overlay) closePopup(); };
 
-  const comercialTypeLabel = comercialType === 'inherited' ? '<span class="assign-popup-type">heredada</span>' : comercialType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">directa</span></span>' : '';
-  const sdrTypeLabel = sdrType === 'inherited' ? '<span class="assign-popup-type">heredada</span>' : sdrType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">directa</span></span>' : '';
+  const comercialTypeLabel = comercialType === 'inherited' ? '<span class="assign-popup-type">inherited</span>' : comercialType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">direct</span></span>' : '';
+  const sdrTypeLabel = sdrType === 'inherited' ? '<span class="assign-popup-type">inherited</span>' : sdrType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">direct</span></span>' : '';
 
   const canRestoreComercial = showInheritance && comercialType === 'direct' && inheritedComercialId;
   const canRestoreSdr = showInheritance && sdrType === 'direct' && inheritedSdrId;
@@ -419,15 +491,15 @@ function openAssignmentPopup(options) {
   overlay.innerHTML = `
     <div class="assign-popup">
       <div class="assign-popup-header">
-        <h3>Asignación — ${title}</h3>
+        <h3>Assignment — ${title}</h3>
         <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()" style="padding:4px;">&times;</button>
       </div>
       <div class="assign-popup-body">
         <div class="assign-popup-row">
-          <div class="assign-popup-label">Comercial ${comercialTypeLabel}</div>
+          <div class="assign-popup-label">Sales Rep ${comercialTypeLabel}</div>
           <div class="assign-popup-field">
             <div id="popup-comercial-search" style="flex:1; position:relative;"></div>
-            <button class="btn-clear" id="popup-comercial-clear" title="Quitar asignación" ${!currentComercialId ? 'style="display:none"' : ''}>&times;</button>
+            <button class="btn-clear" id="popup-comercial-clear" title="Remove assignment" ${!currentComercialId ? 'style="display:none"' : ''}>&times;</button>
             ${canRestoreComercial ? '<button class="btn-restore" id="popup-comercial-restore">Restaurar herencia</button>' : ''}
           </div>
           <div class="assign-popup-note" id="popup-comercial-note" style="display:none;"></div>
@@ -436,18 +508,18 @@ function openAssignmentPopup(options) {
           <div class="assign-popup-label">SDR ${sdrTypeLabel}</div>
           <div class="assign-popup-field">
             <div id="popup-sdr-search" style="flex:1; position:relative;"></div>
-            <button class="btn-clear" id="popup-sdr-clear" title="Quitar asignación" ${!currentSdrId ? 'style="display:none"' : ''}>&times;</button>
+            <button class="btn-clear" id="popup-sdr-clear" title="Remove assignment" ${!currentSdrId ? 'style="display:none"' : ''}>&times;</button>
             ${canRestoreSdr ? '<button class="btn-restore" id="popup-sdr-restore">Restaurar herencia</button>' : ''}
           </div>
           <div class="assign-popup-note" id="popup-sdr-note" style="display:none;"></div>
         </div>
         ${coordinator ? `<div class="assign-popup-row" style="opacity:0.6">
-          <div class="assign-popup-label">Coordinador/Supervisor</div>
+          <div class="assign-popup-label">Coordinator/Supervisor</div>
           <div style="font-size:14px; color:var(--text-primary); padding:6px 0;">${coordinator.name} <span style="font-size:12px; color:var(--text-muted);">(auto-asignado)</span></div>
         </div>` : ''}
       </div>
       <div class="assign-popup-footer">
-        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancelar</button>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancel</button>
         <button class="btn btn-primary btn-sm" id="popup-save-btn" disabled>Guardar</button>
       </div>
     </div>`;
@@ -461,7 +533,7 @@ function openAssignmentPopup(options) {
     const current = currentId ? items.find(i => i.id === currentId) : null;
     container.innerHTML = `
       <input type="text" class="form-input" id="${containerId}-input" placeholder="Buscar..." value="${current ? current.name : ''}" autocomplete="off" style="font-size:14px;" />
-      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:200px; overflow-y:auto; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:6px; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>`;
+      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:200px; overflow-y:auto; background:var(--bg-surface-raised); border:1px solid var(--border-color); border-radius:var(--radius-input); margin-top:4px; box-shadow:var(--shadow-lg);"></div>`;
     const input = document.getElementById(`${containerId}-input`);
     const results = document.getElementById(`${containerId}-results`);
     let isOpen = false;
@@ -505,11 +577,11 @@ function openAssignmentPopup(options) {
 
   renderSearchbox('popup-comercial-search', comerciales, currentComercialId, (id) => {
     selectedComercialId = id;
-    const prev = currentComercial ? currentComercial.name : 'nadie';
+    const prev = currentComercial ? currentComercial.name : 'nobody';
     const next = getMemberById(id);
     const note = document.getElementById('popup-comercial-note');
     if (currentComercialId && id !== currentComercialId) {
-      note.textContent = `Se reasignará de ${prev} a ${next ? next.name : ''}`;
+      note.textContent = `Will reassign from ${prev} to ${next ? next.name : ''}`;
       note.style.display = 'block';
     } else { note.style.display = 'none'; }
     document.getElementById('popup-comercial-clear').style.display = '';
@@ -518,11 +590,11 @@ function openAssignmentPopup(options) {
 
   renderSearchbox('popup-sdr-search', sdrs, currentSdrId, (id) => {
     selectedSdrId = id;
-    const prev = currentSdr ? currentSdr.name : 'nadie';
+    const prev = currentSdr ? currentSdr.name : 'nobody';
     const next = getMemberById(id);
     const note = document.getElementById('popup-sdr-note');
     if (currentSdrId && id !== currentSdrId) {
-      note.textContent = `Se reasignará de ${prev} a ${next ? next.name : ''}`;
+      note.textContent = `Will reassign from ${prev} to ${next ? next.name : ''}`;
       note.style.display = 'block';
     } else { note.style.display = 'none'; }
     document.getElementById('popup-sdr-clear').style.display = '';
@@ -534,7 +606,7 @@ function openAssignmentPopup(options) {
     selectedComercialId = null;
     document.getElementById('popup-comercial-search-input').value = '';
     const note = document.getElementById('popup-comercial-note');
-    if (currentComercial) { note.textContent = `Se quitará la asignación de ${currentComercial.name}`; note.style.display = 'block'; }
+    if (currentComercial) { note.textContent = `Assignment of ${currentComercial.name} will be removed`; note.style.display = 'block'; }
     document.getElementById('popup-comercial-clear').style.display = 'none';
     checkChanges();
   };
@@ -542,7 +614,7 @@ function openAssignmentPopup(options) {
     selectedSdrId = null;
     document.getElementById('popup-sdr-search-input').value = '';
     const note = document.getElementById('popup-sdr-note');
-    if (currentSdr) { note.textContent = `Se quitará la asignación de ${currentSdr.name}`; note.style.display = 'block'; }
+    if (currentSdr) { note.textContent = `Assignment of ${currentSdr.name} will be removed`; note.style.display = 'block'; }
     document.getElementById('popup-sdr-clear').style.display = 'none';
     checkChanges();
   };
@@ -555,7 +627,7 @@ function openAssignmentPopup(options) {
       const inherited = getMemberById(inheritedComercialId);
       document.getElementById('popup-comercial-search-input').value = inherited ? inherited.name : '';
       const note = document.getElementById('popup-comercial-note');
-      note.textContent = `Se restaurará herencia → ${inherited ? inherited.name : ''}`;
+      note.textContent = `Inheritance will be restored → ${inherited ? inherited.name : ''}`;
       note.style.display = 'block';
       document.getElementById('popup-comercial-clear').style.display = '';
       checkChanges();
@@ -568,7 +640,7 @@ function openAssignmentPopup(options) {
       const inherited = getMemberById(inheritedSdrId);
       document.getElementById('popup-sdr-search-input').value = inherited ? inherited.name : '';
       const note = document.getElementById('popup-sdr-note');
-      note.textContent = `Se restaurará herencia → ${inherited ? inherited.name : ''}`;
+      note.textContent = `Inheritance will be restored → ${inherited ? inherited.name : ''}`;
       note.style.display = 'block';
       document.getElementById('popup-sdr-clear').style.display = '';
       checkChanges();
@@ -580,11 +652,11 @@ function openAssignmentPopup(options) {
     const changes = [];
     if (selectedComercialId !== currentComercialId) {
       const name = selectedComercialId ? getMemberById(selectedComercialId)?.name : null;
-      changes.push(name ? `Comercial: ${name}` : 'Comercial: desasignado');
+      changes.push(name ? `Sales Rep: ${name}` : 'Sales Rep: unassigned');
     }
     if (selectedSdrId !== currentSdrId) {
       const name = selectedSdrId ? getMemberById(selectedSdrId)?.name : null;
-      changes.push(name ? `SDR: ${name}` : 'SDR: desasignado');
+      changes.push(name ? `SDR: ${name}` : 'SDR: unassigned');
     }
     onSave(selectedComercialId, selectedSdrId);
     overlay.remove();
@@ -603,6 +675,7 @@ function renderAssignmentSection(containerId, options) {
     comercialType, sdrType,
     companyName, // for vacancy inheritance display
     showInheritance = false,
+    updatedAt = null, // fecha de última modificación de asignación
     onManage = null
   } = options;
 
@@ -616,34 +689,79 @@ function renderAssignmentSection(containerId, options) {
   function slotHTML(label, member, type, companyName) {
     let valueHTML = member
       ? `<div class="assign-slot-value">${member.name}</div>`
-      : '<div class="assign-slot-value unassigned">Sin asignar</div>';
+      : '<div class="assign-slot-value unassigned">Unassigned</div>';
     let typeHTML = '';
     if (showInheritance && member) {
-      if (type === 'inherited') typeHTML = `<div class="assign-slot-type">heredada de ${companyName || 'empresa'}</div>`;
-      else if (type === 'direct') typeHTML = '<div class="assign-slot-type"><span class="badge-direct">directa</span></div>';
+      if (type === 'inherited') typeHTML = `<div class="assign-slot-type">inherited from ${companyName || 'company'}</div>`;
+      else if (type === 'direct') typeHTML = '<div class="assign-slot-type"><span class="badge-direct">direct</span></div>';
     }
     return `<div><div class="assign-slot-label">${label}</div>${valueHTML}${typeHTML}</div>`;
   }
 
   const manageBtn = canAssign() && onManage
-    ? `<button class="btn btn-secondary btn-sm" onclick="(${onManage.toString()})()">Gestionar asignación</button>`
+    ? `<button class="btn btn-secondary btn-sm" onclick="(${onManage.toString()})()">Manage assignment</button>`
     : '';
 
   container.innerHTML = `
     <div class="assign-section">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-        <div class="assign-section-title">Asignación</div>
+        <div class="assign-section-title">Assignment</div>
         ${manageBtn}
       </div>
       <div class="assign-section-grid">
-        ${slotHTML('Comercial', comercial, comercialType, companyName)}
+        ${slotHTML('Sales Rep', comercial, comercialType, companyName)}
         ${slotHTML('SDR', sdr, sdrType, companyName)}
         <div>
-          <div class="assign-slot-label">Coordinador/Supervisor</div>
-          ${coordinator ? `<div class="assign-slot-value">${coordinator.name}</div>` : '<div class="assign-slot-value unassigned">Sin asignar</div>'}
+          <div class="assign-slot-label">Coordinator/Supervisor</div>
+          ${coordinator ? `<div class="assign-slot-value">${coordinator.name}</div>` : '<div class="assign-slot-value unassigned">Unassigned</div>'}
         </div>
       </div>
+      ${updatedAt ? `<div class="assign-section-updated">Last modified: ${updatedAt}</div>` : ''}
     </div>`;
+}
+
+// === CONFIRM POPUP (borrados y acciones destructivas) ===
+const CONFIRM_ICONS = {
+  trash: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+  search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>'
+};
+
+function openConfirmPopup(options) {
+  const {
+    title = 'Confirm',
+    message = '',
+    highlight = '',            // texto destacado bajo el mensaje (ej. nombre del registro)
+    icon = 'trash',            // 'trash' | 'search' | html custom
+    confirmLabel = 'Confirm',
+    onConfirm = () => {}
+  } = options;
+
+  const iconHTML = CONFIRM_ICONS[icon] || icon;
+  const overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.innerHTML = `
+    <div class="assign-popup" style="width:420px;">
+      <div class="assign-popup-header">
+        <h3>${title}</h3>
+        <button class="modal-close" aria-label="Cerrar">&times;</button>
+      </div>
+      <div class="assign-popup-body" style="text-align:center;">
+        <div class="confirm-icon">${iconHTML}</div>
+        <p style="font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0;">${message}</p>
+        ${highlight ? `<p style="font-size:14px; font-weight:700; color:var(--text-strong); margin:14px 0 0;">${highlight}</p>` : ''}
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="btn btn-secondary" data-action="cancel">Cancelar</button>
+        <button class="btn btn-primary" data-action="confirm">${confirmLabel}</button>
+      </div>
+    </div>`;
+
+  function close() { overlay.remove(); }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('.modal-close').addEventListener('click', close);
+  overlay.querySelector('[data-action="cancel"]').addEventListener('click', close);
+  overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => { close(); onConfirm(); });
+  document.body.appendChild(overlay);
 }
 
 // === EXPORT POPUP ===
@@ -651,15 +769,15 @@ function renderAssignmentSection(containerId, options) {
 
 function openExportPopup(options) {
   const {
-    entityLabel = 'registros',      // "empresas" or "vacantes"
+    entityLabel = 'records',      // "companies" or "vacancies"
     entityCount = 0,
     contactsCount = 0,              // total contacts across entities (0 = hide checkbox)
-    showContactsOption = false,     // show "Incluir contactos" checkbox
+    showContactsOption = false,     // show "Include contacts" checkbox
     onExport = (includeContacts) => {}
   } = options;
 
   if (entityCount === 0) {
-    showToast(`No hay ${entityLabel} para exportar con los filtros actuales`, 'info');
+    showToast(`No ${entityLabel} to export with the current filters`, 'info');
     return;
   }
 
@@ -672,37 +790,37 @@ function openExportPopup(options) {
   const contactsSection = showContactsOption ? `
     <div style="margin-top:16px; padding:12px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
       <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; color:var(--text-primary);">
-        <input type="checkbox" id="export-include-contacts" style="width:16px; height:16px; accent-color:#60a5fa; cursor:pointer;" />
-        Incluir contactos asociados
+        <input type="checkbox" id="export-include-contacts" style="width:16px; height:16px; accent-color:var(--color-secondary); cursor:pointer;" />
+        Include associated contacts
       </label>
       <div id="export-contacts-count" style="margin-top:6px; font-size:13px; color:var(--text-muted); padding-left:26px; display:none;">
-        <span style="font-weight:600; color:var(--text-secondary);">${contactsCount}</span> contactos de las ${entityCount} empresas
+        <span style="font-weight:600; color:var(--text-secondary);">${contactsCount}</span> contacts from ${entityCount} companies
       </div>
     </div>` : '';
 
   overlay.innerHTML = `
     <div class="assign-popup" style="width:420px;">
       <div class="assign-popup-header">
-        <h3>Exportar CSV</h3>
+        <h3>Export CSV</h3>
         <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()" style="padding:4px;">&times;</button>
       </div>
       <div class="assign-popup-body">
         <div style="text-align:center; margin-bottom:8px;">
           <div style="font-size:36px; font-weight:700; color:var(--text-primary);">${entityCount}</div>
-          <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} a exportar</div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Según los filtros activos</div>
+          <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} to export</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Based on the active filters</div>
         </div>
         ${contactsSection}
       </div>
       <div class="assign-popup-footer">
-        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancelar</button>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancel</button>
         <button class="btn btn-primary btn-sm" id="export-confirm-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" x2="12" y1="15" y2="3"></line>
           </svg>
-          Exportar
+          Export
         </button>
       </div>
     </div>`;
@@ -735,7 +853,7 @@ function openExportPopup(options) {
 function openScrapePopup(options) {
   options = options || {};
   var cfg = getOdConfig();
-  var windowLabel = cfg.windowDays === 1 ? 'último día' : 'últimos ' + cfg.windowDays + ' días';
+  var windowLabel = cfg.windowDays === 1 ? 'last day' : 'last ' + cfg.windowDays + ' days';
   var onConfirm = options.onConfirm || function () {};
 
   var preselected = options.company || null;   // disparo desde el detalle de empresa
@@ -750,7 +868,7 @@ function openScrapePopup(options) {
   overlay.innerHTML =
     '<div class="assign-popup" style="width:480px; max-width:92vw;">' +
       '<div class="assign-popup-header">' +
-        '<h3 id="scrape-title">Scrapear vacantes on-demand</h3>' +
+        '<h3 id="scrape-title">Scrape on-demand vacancies</h3>' +
         '<button class="btn btn-ghost btn-sm" onclick="this.closest(\'.assign-popup-overlay\').remove()" style="padding:4px;">&times;</button>' +
       '</div>' +
       '<div class="assign-popup-body" id="scrape-body"></div>' +
@@ -761,7 +879,7 @@ function openScrapePopup(options) {
   var footer = overlay.querySelector('#scrape-footer');
 
   function cancelBtn() {
-    return '<button class="btn btn-ghost btn-sm" onclick="this.closest(\'.assign-popup-overlay\').remove()">Cancelar</button>';
+    return '<button class="btn btn-ghost btn-sm" onclick="this.closest(\'.assign-popup-overlay\').remove()">Cancel</button>';
   }
 
   // Badge de un portal (LinkedIn/Indeed) con el estilo del design system.
@@ -779,23 +897,23 @@ function openScrapePopup(options) {
     if (c.indeedId) pills.push(portalPill('indeed'));
     return pills.length
       ? pills.join('<span style="width:6px; display:inline-block;"></span>')
-      : '<span class="text-muted text-sm">Sin páginas de portal guardadas — se descubrirán al buscar</span>';
+      : '<span class="text-muted text-sm">No saved portal pages — they will be discovered on search</span>';
   }
 
   // === Fase A: búsqueda ===
   function renderSearch() {
-    document.getElementById('scrape-title').textContent = 'Scrapear vacantes on-demand';
+    document.getElementById('scrape-title').textContent = 'Scrape on-demand vacancies';
     var nameField = locked
       ? '<div style="font-size:16px; font-weight:700; color:var(--text-primary); margin-top:6px;">' + typedName + '</div>' +
         '<div id="scrape-badges" style="margin-top:8px;">' + portalBadgesInner(selected) + '</div>'
-      : '<input type="text" class="form-input" id="scrape-name" placeholder="Escribí el nombre de la empresa…" value="' + typedName + '" autocomplete="off" style="margin-top:6px;">' +
+      : '<input type="text" class="form-input" id="scrape-name" placeholder="Type the company name…" value="' + typedName + '" autocomplete="off" style="margin-top:6px;">' +
         '<div id="scrape-suggest"></div>' +
         '<div id="scrape-badges" style="margin-top:8px;"></div>';
     body.innerHTML =
-      '<div style="font-size:13px; color:var(--text-secondary);">Se buscarán las vacantes publicadas en el ' + windowLabel + ' (máx. 10). No se guarda nada hasta confirmar.</div>' +
+      '<div style="font-size:13px; color:var(--text-secondary);">Vacancies published in the ' + windowLabel + ' will be searched (max 10). Nothing is saved until you confirm.</div>' +
       '<div style="margin-top:12px;"><label class="form-label">Empresa</label>' + nameField + '</div>' +
       '<div id="scrape-result" style="margin-top:14px;"></div>';
-    footer.innerHTML = cancelBtn() + '<button class="btn btn-primary btn-sm" id="scrape-search-btn">Buscar vacantes</button>';
+    footer.innerHTML = cancelBtn() + '<button class="btn btn-primary btn-sm" id="scrape-search-btn">Search vacancies</button>';
     overlay.querySelector('#scrape-search-btn').onclick = onSearchClick;
 
     if (locked) {
@@ -820,7 +938,7 @@ function openScrapePopup(options) {
     if (!q || q.length < 2) { box.innerHTML = ''; return; }
     var matches = MOCK_COMPANIES.filter(function (c) { return c.name.toLowerCase().indexOf(q.toLowerCase()) !== -1; }).slice(0, 6);
     if (!matches.length) {
-      box.innerHTML = '<div class="text-muted text-sm" style="padding:6px 2px;">Sin coincidencias en el catálogo — se buscará "<strong>' + q + '</strong>" en LinkedIn e Indeed y se creará la empresa al confirmar.</div>';
+      box.innerHTML = '<div class="text-muted text-sm" style="padding:6px 2px;">No catalog matches — "<strong>' + q + '</strong>" will be searched on LinkedIn and Indeed and the company created on confirm.</div>';
       return;
     }
     box.innerHTML = '<div style="border:1px solid var(--border-color); border-radius:var(--radius-md); margin-top:4px; overflow:hidden;">' +
@@ -855,31 +973,31 @@ function openScrapePopup(options) {
     if (!selected) { resultEl.innerHTML = ''; searchBtn.disabled = false; searchBtn.style.opacity = ''; searchBtn.style.cursor = ''; return; }
     var info = getCooldownInfo(selected);
     if (info.blocked) {
-      resultEl.innerHTML = '<div style="font-size:13px; color:#f59e0b;">En cool-down: scrapeada hace ' + info.daysSince + ' día(s). Disponible nuevamente en ' + info.eligibleInDays + ' día(s).</div>';
+      resultEl.innerHTML = '<div style="font-size:13px; color:var(--color-warning-dark);">In cool-down: scraped ' + info.daysSince + ' day(s) ago. Available again in ' + info.eligibleInDays + ' day(s).</div>';
       searchBtn.disabled = true; searchBtn.style.opacity = '.5'; searchBtn.style.cursor = 'not-allowed';
     } else {
-      resultEl.innerHTML = info.lastScrapedAt ? '<div class="text-muted text-sm">Última corrida on-demand hace ' + info.daysSince + ' día(s).</div>' : '';
+      resultEl.innerHTML = info.lastScrapedAt ? '<div class="text-muted text-sm">Last on-demand run ' + info.daysSince + ' day(s) ago.</div>' : '';
       searchBtn.disabled = false; searchBtn.style.opacity = ''; searchBtn.style.cursor = '';
     }
   }
 
   function onSearchClick() {
     var name = locked ? typedName : (overlay.querySelector('#scrape-name').value || '').trim();
-    if (!name) { showToast('Escribí el nombre de la empresa', 'info'); return; }
+    if (!name) { showToast('Type the company name', 'info'); return; }
     typedName = name;
     if (selected && getCooldownInfo(selected).blocked) return;   // bloqueado por cool-down
     var resultEl = overlay.querySelector('#scrape-result');
     var btn = overlay.querySelector('#scrape-search-btn');
     btn.disabled = true; btn.textContent = 'Buscando…';
     var suggest = overlay.querySelector('#scrape-suggest'); if (suggest) suggest.innerHTML = '';
-    resultEl.innerHTML = '<div style="font-size:13px; color:var(--text-muted);">Buscando la empresa y sus vacantes en LinkedIn e Indeed…</div>';
+    resultEl.innerHTML = '<div style="font-size:13px; color:var(--text-muted);">Searching for the company and its vacancies on LinkedIn and Indeed…</div>';
     setTimeout(function () { renderPreview(name); }, 900);
   }
 
   function renderPreview(name) {
     var found = name.toLowerCase().indexOf('zzz') === -1; // mock: nombres con 'zzz' = no encontrada
     if (!found) {
-      body.innerHTML = '<div style="font-size:13px; color:#f59e0b;">No se encontró la empresa "' + name + '" en LinkedIn ni Indeed. Probá con otro nombre.</div>';
+      body.innerHTML = '<div style="font-size:13px; color:var(--color-warning-dark);">Company "' + name + '" not found on LinkedIn or Indeed. Try another name.</div>';
       footer.innerHTML = cancelBtn() + '<button class="btn btn-secondary btn-sm" id="scrape-retry-btn">Volver a buscar</button>';
       overlay.querySelector('#scrape-retry-btn').onclick = renderSearch;
       return;
@@ -890,20 +1008,20 @@ function openScrapePopup(options) {
       { title: 'Collections Specialist', date: 'hoy', portal: 'indeed' },
       { title: 'Virtual Assistant', date: 'ayer', portal: 'linkedin' },
       { title: 'Data Entry Specialist', date: 'ayer', portal: 'indeed' },
-      { title: 'Technical Support Tier 1', date: 'hace 2 días', portal: 'linkedin' },
-      { title: 'AP / AR Analyst', date: 'hace 2 días', portal: 'indeed' }
+      { title: 'Technical Support Tier 1', date: '2 days ago', portal: 'linkedin' },
+      { title: 'AP / AR Analyst', date: '2 days ago', portal: 'indeed' }
     ].slice(0, 10);
     var rows = preliminary.map(function (v) {
       return '<div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid var(--border-color); align-items:center;">' +
         '<span style="font-weight:500;">' + v.title + '</span>' +
         '<span style="display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px;">' + v.date + ' ' + portalPill(v.portal) + '</span></div>';
     }).join('');
-    var newTag = selected ? '' : ' <span class="text-muted text-sm">(nueva — se creará al confirmar)</span>';
+    var newTag = selected ? '' : ' <span class="text-muted text-sm">(new — will be created on confirm)</span>';
     body.innerHTML =
-      '<div style="font-size:13px; color:#22c55e;">Empresa encontrada: <strong>' + name + '</strong>' + newTag + '</div>' +
-      '<div style="margin-top:6px; font-size:13px; color:var(--text-secondary);">' + preliminary.length + ' vacante(s) preliminar(es) en el ' + windowLabel + ', sin guardar (máx. 10 por corrida):</div>' +
+      '<div style="font-size:13px; color:var(--color-success-dark);">Empresa encontrada: <strong>' + name + '</strong>' + newTag + '</div>' +
+      '<div style="margin-top:6px; font-size:13px; color:var(--text-secondary);">' + preliminary.length + ' preliminary vacancy(ies) in the ' + windowLabel + ', unsaved (max 10 per run):</div>' +
       '<div style="margin-top:8px; max-height:240px; overflow:auto;">' + rows + '</div>';
-    footer.innerHTML = cancelBtn() + '<button class="btn btn-primary btn-sm" id="scrape-confirm-btn">Confirmar y guardar</button>';
+    footer.innerHTML = cancelBtn() + '<button class="btn btn-primary btn-sm" id="scrape-confirm-btn">Confirm and save</button>';
     overlay.querySelector('#scrape-confirm-btn').onclick = function () {
       onConfirm(name, preliminary);
       renderProcessing(name);
@@ -912,13 +1030,13 @@ function openScrapePopup(options) {
 
   // === Fase B: segundo popup de procesamiento ===
   function renderProcessing(name) {
-    document.getElementById('scrape-title').textContent = 'Procesando';
+    document.getElementById('scrape-title').textContent = 'Processing';
     body.innerHTML =
       '<div style="display:flex; align-items:center; gap:10px;">' +
         '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted); animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>' +
-        '<span style="font-weight:600; color:var(--text-primary);">Trayendo los detalles de las vacantes</span>' +
+        '<span style="font-weight:600; color:var(--text-primary);">Fetching vacancy details</span>' +
       '</div>' +
-      '<div style="margin-top:10px; font-size:13px; color:var(--text-secondary);">Se están scrapeando los detalles de las vacantes de <strong>' + name + '</strong> y analizando su viabilidad remota. En unos minutos estarán disponibles en el tab <strong>Vacantes</strong> de la empresa.</div>';
+      '<div style="margin-top:10px; font-size:13px; color:var(--text-secondary);">Vacancy details for <strong>' + name + '</strong> are being scraped and analyzed for remote viability. They will be available in the company&#39;s <strong>Vacancies</strong> tab in a few minutes.</div>';
     footer.innerHTML = '<button class="btn btn-primary btn-sm" id="scrape-accept-btn">Aceptar</button>';
     overlay.querySelector('#scrape-accept-btn').onclick = function () {
       overlay.remove();
@@ -956,7 +1074,7 @@ function renderFilterSearchbox(containerId, items, options = {}) {
   container.innerHTML = `
     <div style="position:relative;">
       <input type="text" class="form-input sm" id="${containerId}-input" placeholder="${placeholder}" value="Todos" autocomplete="off" />
-      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:220px; overflow-y:auto; background:var(--bg-primary); border:1px solid var(--border-color); border-radius:6px; margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,0.3);"></div>
+      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:220px; overflow-y:auto; background:var(--bg-surface-raised); border:1px solid var(--border-color); border-radius:var(--radius-input); margin-top:4px; box-shadow:var(--shadow-lg);"></div>
     </div>`;
 
   const input = document.getElementById(`${containerId}-input`);
@@ -965,7 +1083,7 @@ function renderFilterSearchbox(containerId, items, options = {}) {
 
   function render(filter) {
     const q = (filter || '').toLowerCase();
-    const isDefault = filter === 'Todos' || filter === 'Sin asignar';
+    const isDefault = filter === 'All' || filter === 'Unassigned';
     const filtered = (q && !isDefault) ? items.filter(i => i[labelField].toLowerCase().includes(q) || (i.email && i.email.toLowerCase().includes(q))) : items;
     let html = `<div class="searchbox-item" data-id="all" style="padding:8px 12px; cursor:pointer; font-weight:500; border-bottom:1px solid var(--border-color);">Todos</div>`;
     html += `<div class="searchbox-item" data-id="unassigned" style="padding:8px 12px; cursor:pointer; color:var(--text-muted); font-style:italic; border-bottom:1px solid var(--border-color);">Sin asignar</div>`;

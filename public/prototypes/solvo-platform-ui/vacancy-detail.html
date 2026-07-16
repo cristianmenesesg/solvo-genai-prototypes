@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     .vacancy-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
-    .vacancy-meta a { color: var(--color-primary, #775AE5); text-decoration: none; font-size: 14px; }
+    .vacancy-meta a { color: var(--text-link); text-decoration: none; font-size: 14px; }
     .vacancy-meta a:hover { text-decoration: underline; }
   </style>
   <script src="theme.js"></script>
@@ -39,7 +39,7 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 class="header-title">Vacancy Detail</h1>
+        <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
       <!-- Page Content -->
@@ -365,6 +365,7 @@
         sdrType: vacData.sdrType,
         companyName: company ? company.name : null,
         showInheritance: true,
+        updatedAt: vacData.assignmentUpdatedAt || 'Jul 2, 2026',
         onManage: function() {
           openAssignmentPopup({
             title: vacancy.title,

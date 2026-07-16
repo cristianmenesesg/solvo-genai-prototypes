@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parámetros · Solvo Recruiter Platform</title>
+  <title>Parameters · Solvo Recruiter Platform</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css">
@@ -12,8 +12,8 @@
 </head>
 <body>
   <header class="mobile-header">
-    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menú"><span></span><span></span><span></span></button>
-    <div class="mobile-logo"><div class="logo-icon">SRP</div><span class="logo-text">Solvo Recruiter Platform</span></div>
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="mobile-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo" class="sidebar-logo-img" /></div>
   </header>
   <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
@@ -21,22 +21,23 @@
     <div id="sidebar-container"></div>
 
     <main class="main-content">
-      <header class="header"><h1 class="header-title">Parámetros</h1></header>
+      <header class="header"><h1 class="header-title">Solvo Recruiter Platform</h1></header>
 
       <div class="page-content">
+        <h2 class="page-title">Parameters</h2>
         <!-- Cadencia y vigencia -->
         <div class="detail-card">
-          <div class="detail-card-title">Cadencia y vigencia</div>
+          <div class="detail-card-title">Cadence and validity</div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Frecuencia de corrida — <code>frequency_days</code></label>
+              <label class="form-label">Run frequency — <code>frequency_days</code></label>
               <input class="form-input param-input" type="number" value="7" min="1">
-              <p class="filter-hint">Cada cuántos días corre el pipeline programado. Default: 7 días.</p>
+              <p class="filter-hint">How many days between scheduled pipeline runs. Default: 7 days.</p>
             </div>
             <div class="form-group">
-              <label class="form-label">Vigencia del candidato — <code>validity_days</code></label>
+              <label class="form-label">Candidate validity — <code>validity_days</code></label>
               <input class="form-input param-input" type="number" value="2" min="1">
-              <p class="filter-hint">Días que un candidato sigue vigente según su último análisis OTW. Si la consulta del recruiter supera este valor, se re-valida on-demand.</p>
+              <p class="filter-hint">Days a candidate stays current based on its last OTW analysis. If the recruiter's query exceeds this value, it's re-validated on demand.</p>
             </div>
           </div>
         </div>
@@ -45,21 +46,21 @@
         <div class="detail-card" style="margin-top:16px;">
           <div class="geo-head">
             <div>
-              <div class="detail-card-title" style="margin:0;">Cobertura geográfica</div>
+              <div class="detail-card-title" style="margin:0;">Geographic coverage</div>
               <div class="geo-summary" id="geoSummary"></div>
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Agregar ciudad</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Add city</button>
           </div>
 
           <div class="geo-toolbar">
             <div class="geo-search">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-              <input id="geoSearch" class="geo-search-input" type="text" placeholder="Buscar país o ciudad…" autocomplete="off">
+              <input id="geoSearch" class="geo-search-input" type="text" placeholder="Search country or city…" autocomplete="off">
             </div>
             <div class="geo-filter" id="statusFilter">
-              <button class="btn btn-sm btn-outline active" type="button" data-status="all">Todas</button>
-              <button class="btn btn-sm btn-outline" type="button" data-status="active">Activas</button>
-              <button class="btn btn-sm btn-outline" type="button" data-status="inactive">Inactivas</button>
+              <button class="btn btn-sm btn-outline active" type="button" data-status="all">All</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="active">Active</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="inactive">Inactive</button>
             </div>
           </div>
 
@@ -67,9 +68,9 @@
             <table class="loc-table">
               <thead>
                 <tr>
-                  <th>Ciudad</th>
-                  <th style="width:30%;">País</th>
-                  <th class="loc-toggle">Activa</th>
+                  <th>City</th>
+                  <th style="width:30%;">Country</th>
+                  <th class="loc-toggle">Active</th>
                   <th class="loc-action"></th>
                 </tr>
               </thead>
@@ -78,9 +79,9 @@
             <div class="table-pagination" id="locPager" style="display:none;">
               <span class="pagination-info" id="pagerInfo"></span>
               <div class="pagination-controls">
-                <button class="pagination-btn" id="pagerPrev" type="button">‹ Anterior</button>
+                <button class="pagination-btn" id="pagerPrev" type="button">‹ Previous</button>
                 <span class="pagination-info" id="pagerPages"></span>
-                <button class="pagination-btn" id="pagerNext" type="button">Siguiente ›</button>
+                <button class="pagination-btn" id="pagerNext" type="button">Next ›</button>
               </div>
             </div>
           </div>
@@ -88,7 +89,7 @@
 
         <p class="autosave-note">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
-          Los cambios se guardan automáticamente.
+          Changes are saved automatically.
         </p>
       </div>
     </main>
@@ -98,28 +99,28 @@
   <div class="modal-overlay" id="modalAddLoc">
     <div class="modal" style="max-width:440px;">
       <div class="modal-header">
-        <h2 class="modal-title">Agregar ciudad</h2>
-        <button class="modal-close" onclick="closeModal('modalAddLoc')" aria-label="Cerrar">
+        <h2 class="modal-title">Add city</h2>
+        <button class="modal-close" onclick="closeModal('modalAddLoc')" aria-label="Close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group" style="margin-bottom:16px;">
-          <label class="form-label">País</label>
+          <label class="form-label">Country</label>
           <div class="combo" id="countryCombo">
-            <input id="locCountryInput" class="form-input" type="text" placeholder="Buscar o elegir país…" autocomplete="off">
+            <input id="locCountryInput" class="form-input" type="text" placeholder="Search or choose a country…" autocomplete="off">
             <div class="combo-list" id="countryComboList"></div>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Ciudad</label>
-          <input id="locNameInput" class="form-input" type="text" placeholder="Ej: Medellín Area Metropolitana" autocomplete="off">
-          <p class="filter-hint">Tal como se busca en LinkedIn (ej: Medellín Area Metropolitana).</p>
+          <label class="form-label">City</label>
+          <input id="locNameInput" class="form-input" type="text" placeholder="e.g. Medellín Area Metropolitana" autocomplete="off">
+          <p class="filter-hint">As searched on LinkedIn (e.g. Medellín Area Metropolitana).</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalAddLoc')">Cancelar</button>
-        <button class="btn btn-primary" id="addLocOk">Agregar</button>
+        <button class="btn btn-secondary" onclick="closeModal('modalAddLoc')">Cancel</button>
+        <button class="btn btn-primary" id="addLocOk">Add</button>
       </div>
     </div>
   </div>
@@ -154,8 +155,8 @@
     /* ---------------- Utilidades ---------------- */
     function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function paisWord(n){ return n === 1 ? 'país' : 'países'; }
-    function ubicWord(n){ return n === 1 ? 'ciudad' : 'ciudades'; }
+    function countryWord(n){ return n === 1 ? 'country' : 'countries'; }
+    function cityWord(n){ return n === 1 ? 'city' : 'cities'; }
     function allCountries(){
       const set = new Set(COUNTRY_CATALOG);
       LOCATIONS.forEach(c => set.add(c.country));
@@ -165,7 +166,7 @@
     function updateSummary(){
       const active = LOCATIONS.reduce((s,c)=> s + c.locs.filter(l=>l.a).length, 0);
       document.getElementById('geoSummary').textContent =
-        `${active} ${ubicWord(active)} activas · ${LOCATIONS.length} ${paisWord(LOCATIONS.length)}`;
+        `${active} active ${cityWord(active)} · ${LOCATIONS.length} ${countryWord(LOCATIONS.length)}`;
     }
 
     function filteredRows(){
@@ -185,7 +186,7 @@
     const geoSearch = document.getElementById('geoSearch');
 
     function emptyRow(text, withBtn){
-      return `<tr><td colspan="4"><div class="geo-empty"><p>${text}</p>${withBtn ? `<button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Agregar ciudad</button>` : ''}</div></td></tr>`;
+      return `<tr><td colspan="4"><div class="geo-empty"><p>${text}</p>${withBtn ? `<button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Add city</button>` : ''}</div></td></tr>`;
     }
 
     function renderGeo(){
@@ -194,7 +195,7 @@
       const total = LOCATIONS.reduce((s,c)=> s + c.locs.length, 0);
 
       if (total === 0){
-        locBody.innerHTML = emptyRow('Sin ciudades en cobertura.', true);
+        locBody.innerHTML = emptyRow('No cities in coverage.', true);
         pager.style.display = 'none';
         return;
       }
@@ -202,8 +203,8 @@
       const rows = filteredRows();
       if (!rows.length){
         const label = geoFilter.trim()
-          ? `Sin resultados para “${esc(geoFilter.trim())}”.`
-          : (statusFilter === 'active' ? 'No hay ciudades activas.' : 'No hay ciudades inactivas.');
+          ? `No results for “${esc(geoFilter.trim())}”.`
+          : (statusFilter === 'active' ? 'No active cities.' : 'No inactive cities.');
         locBody.innerHTML = emptyRow(label, false);
         pager.style.display = 'none';
         return;
@@ -226,13 +227,13 @@
             </label>
           </td>
           <td class="loc-action">
-            <button class="geo-remove-loc" data-act="del-loc" title="Quitar ciudad" aria-label="Quitar ciudad">✕</button>
+            <button class="geo-remove-loc" data-act="del-loc" title="Remove city" aria-label="Remove city"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
           </td>
         </tr>`).join('');
 
       pager.style.display = '';
-      document.getElementById('pagerInfo').textContent = `${start + 1}–${start + slice.length} de ${rows.length}`;
-      document.getElementById('pagerPages').textContent = `Página ${page + 1} de ${pages}`;
+      document.getElementById('pagerInfo').textContent = `${start + 1}–${start + slice.length} of ${rows.length}`;
+      document.getElementById('pagerPages').textContent = `Page ${page + 1} of ${pages}`;
       document.getElementById('pagerPrev').disabled = page === 0;
       document.getElementById('pagerNext').disabled = page >= pages - 1;
     }
@@ -245,12 +246,12 @@
       LOCATIONS[+tr.dataset.ci].locs[+tr.dataset.li].a = cb.checked;
       updateSummary();
       if (statusFilter !== 'all') renderGeo();   // la fila puede salir del filtro actual
-      showToast('Guardado','success');
+      showToast('Saved','success');
     });
 
     /* ---------------- Auto-guardado de cadencia y vigencia ---------------- */
     document.querySelectorAll('.param-input').forEach(inp => {
-      inp.addEventListener('change', () => showToast('Parámetros guardados','success'));
+      inp.addEventListener('change', () => showToast('Parameters saved','success'));
     });
 
     locBody.addEventListener('click', (e) => {
@@ -261,7 +262,7 @@
       LOCATIONS[ci].locs.splice(li, 1);
       if (!LOCATIONS[ci].locs.length) LOCATIONS.splice(ci, 1);
       renderGeo();
-      showToast('Ciudad quitada','info');
+      showToast('City removed','info');
     });
 
     /* ---------------- Buscador + filtro de estado + paginador ---------------- */
@@ -294,7 +295,7 @@
       const el = document.getElementById('countryComboList');
       el.innerHTML = list.length
         ? list.map(c => `<button type="button" class="combo-option" data-country="${esc(c)}">${esc(c)}</button>`).join('')
-        : `<p class="geo-city-empty" style="padding:9px 12px;">${q ? `Sin coincidencias — se creará “${esc(q)}”.` : 'Escribí un país.'}</p>`;
+        : `<p class="geo-city-empty" style="padding:9px 12px;">${q ? `No matches — “${esc(q)}” will be created.` : 'Type a country.'}</p>`;
     }
 
     function openAddLoc(){
@@ -327,11 +328,11 @@
     document.getElementById('addLocOk').addEventListener('click', () => {
       const country = countryInput.value.trim();
       const name = nameInput.value.trim();
-      if (!country){ showToast('Elegí o escribí un país','info'); countryInput.focus(); return; }
-      if (!name){ showToast('Escribí la ciudad','info'); nameInput.focus(); return; }
+      if (!country){ showToast('Choose or type a country','info'); countryInput.focus(); return; }
+      if (!name){ showToast('Type the city','info'); nameInput.focus(); return; }
       let entry = LOCATIONS.find(c => norm(c.country) === norm(country));
       if (entry && entry.locs.some(l => norm(l.n) === norm(name))){
-        showToast('Esa ciudad ya existe','info'); return;
+        showToast('That city already exists','info'); return;
       }
       if (!entry){
         entry = { country, locs: [] };
@@ -346,7 +347,7 @@
       const idx = filteredRows().findIndex(r => norm(r.c.country) === norm(country) && norm(r.l.n) === norm(name));
       page = idx >= 0 ? Math.floor(idx / PAGE_SIZE) : 0;
       renderGeo();
-      showToast('Ciudad agregada','success');
+      showToast('City added','success');
     });
 
     document.getElementById('modalAddLoc').addEventListener('click', function(e){ if (e.target === this) closeModal('modalAddLoc'); });

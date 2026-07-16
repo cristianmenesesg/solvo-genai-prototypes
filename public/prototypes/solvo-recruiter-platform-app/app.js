@@ -1,6 +1,6 @@
 /* ========================================================================
    Solvo Recruiter Platform — Prototipo
-   Diseño reusado de shared/prototipos/solvo-platform (tema oscuro, Inter).
+   Alineado al design system platform de Solvo Global (tokens + dark mode).
    RBAC lean (recruiter / admin) + demo de búsqueda. Todo simulado (mock).
    ======================================================================== */
 
@@ -29,13 +29,13 @@ function renderSidebar(activePage) {
   const initials = user.name.split(' ').map(n => n[0]).join('');
 
   const navItems = [
-    { id: 'candidatos', label: 'Búsqueda de candidatos', href: 'candidatos.html',
+    { id: 'candidatos', label: 'Candidate search', href: 'candidatos.html',
       icon: '<circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>' },
   ];
   const adminItems = [
-    { id: 'perfiles', label: 'Perfiles de búsqueda', href: 'perfiles.html',
+    { id: 'perfiles', label: 'Search profiles', href: 'perfiles.html',
       icon: '<path d="M3 3h7v7H3z"></path><path d="M14 3h7v7h-7z"></path><path d="M14 14h7v7h-7z"></path><path d="M3 14h7v7H3z"></path>' },
-    { id: 'parametros', label: 'Parámetros', href: 'parametros.html',
+    { id: 'parametros', label: 'Parameters', href: 'parametros.html',
       icon: '<circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>' },
   ];
   const item = (it) => `<a href="${it.href}" class="nav-item${activePage === it.id ? ' active' : ''}">
@@ -43,15 +43,15 @@ function renderSidebar(activePage) {
       <span>${it.label}</span></a>`;
 
   const adminSection = canAccessAdmin()
-    ? `<div class="nav-section"><span class="nav-section-title">Administración</span>${adminItems.map(item).join('')}</div>` : '';
+    ? `<div class="nav-section"><span class="nav-section-title">Administration</span>${adminItems.map(item).join('')}</div>` : '';
 
   const html = `
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo"><div class="logo-icon">SRP</div><span class="logo-text">Solvo Recruiter Platform</span></div>
+        <div class="sidebar-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo" class="sidebar-logo-img" /></div>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-section"><span class="nav-section-title">Reclutamiento</span>${navItems.map(item).join('')}</div>
+        <div class="nav-section"><span class="nav-section-title">Recruitment</span>${navItems.map(item).join('')}</div>
         ${adminSection}
       </nav>
       <div class="sidebar-footer">
@@ -62,7 +62,7 @@ function renderSidebar(activePage) {
             <span class="badge badge-role badge-role-${user.role}">${roleName}</span>
           </div>
         </div>
-        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
+        <button class="btn-logout" onclick="logout()" title="Sign out">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line>
           </svg>
@@ -71,6 +71,64 @@ function renderSidebar(activePage) {
     </aside>`;
   const c = document.getElementById('sidebar-container');
   if (c) c.innerHTML = html;
+
+  renderHeaderControls();
+}
+
+/* ----------------- Idioma (preferencia persistida) ----------------- */
+const LANGS = [
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' }
+];
+function getLang() { try { return localStorage.getItem('lang') || 'en'; } catch (e) { return 'en'; } }
+function setLang(code) { try { localStorage.setItem('lang', code); } catch (e) {} renderLangDropdown(); }
+function renderLangDropdown() {
+  const dd = document.getElementById('lang-dropdown'); if (!dd) return;
+  const current = getLang();
+  dd.innerHTML = LANGS.map(l =>
+    `<button type="button" class="lang-option${l.code === current ? ' active' : ''}" onclick="setLang('${l.code}')">${l.label}</button>`
+  ).join('');
+}
+
+/* ----------------- Header controls: colapsar sidebar + idioma ----------------- */
+function renderHeaderControls() {
+  const header = document.querySelector('.header');
+  if (!header || document.getElementById('header-controls')) return;
+
+  /* botón para ocultar/mostrar el sidebar (desktop) */
+  const hb = document.createElement('button');
+  hb.type = 'button';
+  hb.className = 'header-icon-btn sidebar-collapse-btn';
+  hb.title = 'Hide/show menu';
+  hb.setAttribute('aria-label', 'Hide/show menu');
+  hb.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>';
+  hb.addEventListener('click', function () {
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+  });
+  header.insertBefore(hb, header.firstChild);
+  try { if (localStorage.getItem('sidebarCollapsed') === '1') document.body.classList.add('sidebar-collapsed'); } catch (e) {}
+
+  const wrap = document.createElement('div');
+  wrap.id = 'header-controls';
+  wrap.className = 'header-controls';
+  wrap.innerHTML = `
+    <div class="lang-switch">
+      <button type="button" class="header-icon-btn" id="lang-toggle" title="Language" aria-label="Change language">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+      </button>
+      <div class="lang-dropdown" id="lang-dropdown"></div>
+    </div>`;
+  header.appendChild(wrap);
+  renderLangDropdown();
+  document.getElementById('lang-toggle').addEventListener('click', function (e) {
+    e.stopPropagation();
+    document.getElementById('lang-dropdown').classList.toggle('open');
+  });
+  document.addEventListener('click', function () {
+    const dd = document.getElementById('lang-dropdown');
+    if (dd) dd.classList.remove('open');
+  });
 }
 
 /* ----------------- Mobile sidebar ----------------- */
@@ -110,6 +168,50 @@ function showToast(message, type = 'success') {
   c.appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+/* ----------------- Confirm popup (borrados y acciones destructivas) ----------------- */
+const CONFIRM_ICONS = {
+  trash: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+  search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>'
+};
+
+function openConfirmPopup(options) {
+  const {
+    title = 'Confirm',
+    message = '',
+    highlight = '',            // texto destacado bajo el mensaje (ej. nombre del registro)
+    icon = 'trash',            // 'trash' | 'search' | html custom
+    confirmLabel = 'Confirm',
+    onConfirm = () => {}
+  } = options;
+
+  const iconHTML = CONFIRM_ICONS[icon] || icon;
+  const overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.innerHTML = `
+    <div class="assign-popup" style="width:420px;">
+      <div class="assign-popup-header">
+        <h3>${title}</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="assign-popup-body" style="text-align:center;">
+        <div class="confirm-icon">${iconHTML}</div>
+        <p style="font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0;">${message}</p>
+        ${highlight ? `<p style="font-size:14px; font-weight:700; color:var(--text-strong); margin:14px 0 0;">${highlight}</p>` : ''}
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button class="btn btn-primary" data-action="confirm">${confirmLabel}</button>
+      </div>
+    </div>`;
+
+  function close() { overlay.remove(); }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('.modal-close').addEventListener('click', close);
+  overlay.querySelector('[data-action="cancel"]').addEventListener('click', close);
+  overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => { close(); onConfirm(); });
+  document.body.appendChild(overlay);
 }
 
 /* ----------------- Mock data ----------------- */
@@ -173,7 +275,7 @@ function initTags() {
       el.innerHTML = `${t} <span class="tag-chip-remove" data-i="${i}">&times;</span>`;
       box.insertBefore(el, input);
     });
-    input.placeholder = tags.length >= MAX ? 'Máx 3 keywords' : 'keyword + Enter';
+    input.placeholder = tags.length >= MAX ? 'Max 3 keywords' : 'keyword + Enter';
     input.disabled = tags.length >= MAX;
   }
   input.addEventListener('keydown', e => {
@@ -198,14 +300,14 @@ function runSearch() {
   const note = document.getElementById('loadNote');
   const ind = document.getElementById('searchIndicator');
 
-  if (!profile) { showToast('Elegí un perfil de búsqueda', 'info'); return; }
+  if (!profile) { showToast('Choose a search profile', 'info'); return; }
 
   // estado sin resultados
   if (profile === NO_RESULT_PROFILE) {
     card.style.display = 'none'; note.style.display = 'none'; if (ind) ind.style.display = 'none';
     empty.style.display = 'flex';
-    document.getElementById('emptyTitle').textContent = 'Sin candidatos para esta búsqueda';
-    document.getElementById('emptyMsg').textContent = 'No hay candidatos open-to-work para “' + profile + '” con esas keywords. Probá otro perfil o quitá keywords.';
+    document.getElementById('emptyTitle').textContent = 'No candidates for this search';
+    document.getElementById('emptyMsg').textContent = 'No open-to-work candidates for “' + profile + '” with those keywords. Try another profile or remove keywords.';
     return;
   }
 
@@ -213,7 +315,7 @@ function runSearch() {
   card.style.display = 'block';
   if (ind) ind.style.display = 'flex';
   note.style.display = 'flex';
-  document.querySelector('[data-note]').textContent = 'Mostrando vigentes y re-validando open-to-work de los vencidos en segundo plano…';
+  document.querySelector('[data-note]').textContent = 'Showing current results and re-validating open-to-work for expired ones in the background…';
   tbody.innerHTML = '';
   clearFilters();          // arranca sin filtros aplicados
   populateFilterOptions(); // idioma y localización según el conjunto de resultados
@@ -236,8 +338,8 @@ function runSearch() {
         <td>${c.headline}</td>
         <td>${chips(c.skills)}</td>
         <td>${chips(c.languages)}</td>
-        <td>${c.verified ? '<span class="badge badge-success">Verificado</span>' : '<span class="badge badge-neutral">—</span>'}</td>
-        <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">sin email</span>`}</td>
+        <td>${c.verified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-neutral">—</span>'}</td>
+        <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
         <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
       tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
       tbody.appendChild(tr);
@@ -262,11 +364,11 @@ function populateFilterOptions() {
   const locSel = document.getElementById('fltLoc');
   if (langSel) {
     const langs = [...new Set(CANDIDATES.flatMap(c => c.languages))].sort();
-    langSel.innerHTML = '<option value="">Todos los idiomas</option>' + langs.map(l => `<option>${l}</option>`).join('');
+    langSel.innerHTML = '<option value="">All languages</option>' + langs.map(l => `<option>${l}</option>`).join('');
   }
   if (locSel) {
     const locs = [...new Set(CANDIDATES.map(candCountry))].sort();
-    locSel.innerHTML = '<option value="">Todas las localizaciones</option>' + locs.map(l => `<option>${l}</option>`).join('');
+    locSel.innerHTML = '<option value="">All locations</option>' + locs.map(l => `<option>${l}</option>`).join('');
   }
 }
 function applyFilters() {
@@ -313,7 +415,7 @@ function initProfileCombo() {
     const items = PROFILES.filter(p => p.toLowerCase().includes(q));
     list.innerHTML = items.length
       ? items.map(p => `<button type="button" class="combo-option" data-p="${p}">${p}</button>`).join('')
-      : `<div class="combo-option" style="color:var(--text-muted); cursor:default;">Sin perfiles</div>`;
+      : `<div class="combo-option" style="color:var(--text-muted); cursor:default;">No profiles</div>`;
   }
   input.addEventListener('focus', () => { render(); combo.classList.add('open'); });
   input.addEventListener('input', () => { render(); combo.classList.add('open'); });
@@ -327,7 +429,7 @@ function initProfileCombo() {
 }
 function updateCount(n) {
   const el = document.getElementById('resultCount');
-  if (el) el.textContent = n + ' candidato' + (n === 1 ? '' : 's');
+  if (el) el.textContent = n + ' candidate' + (n === 1 ? '' : 's');
 }
 function updateBulk() {
   const bar = document.getElementById('bulkBar'); if (!bar) return;
@@ -344,8 +446,8 @@ function fillDrawer(c) {
   d.querySelector('[data-d-about]').textContent = c.about;
   d.querySelector('[data-d-loc]').textContent = c.loc;
   const langEl = d.querySelector('[data-d-langs]'); if (langEl) langEl.textContent = c.languages.join(', ');
-  d.querySelector('[data-d-verified]').textContent = c.verified ? 'Sí' : 'No';
-  d.querySelector('[data-d-email]').textContent = EMAIL_RESOLUTION[c.id] ? c.email : 'sin email';
+  d.querySelector('[data-d-verified]').textContent = c.verified ? 'Yes' : 'No';
+  d.querySelector('[data-d-email]').textContent = EMAIL_RESOLUTION[c.id] ? c.email : 'no email';
   d.querySelector('[data-d-skills]').innerHTML = chips(c.skills);
 }
 
@@ -359,5 +461,5 @@ function confirmOutreach() {
   closeModal('modalOutreach');
   let withEmail = 0; SELECTED.forEach(id => { if (EMAIL_RESOLUTION[id]) withEmail++; });
   const skipped = SELECTED.size - withEmail;
-  showToast(`Outreach enviado: ${withEmail} enviados${skipped ? `, ${skipped} omitidos sin email` : ''}`, skipped ? 'info' : 'success');
+  showToast(`Outreach sent: ${withEmail} sent${skipped ? `, ${skipped} skipped (no email)` : ''}`, skipped ? 'info' : 'success');
 }

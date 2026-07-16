@@ -8,8 +8,8 @@
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css">
   <style>
-    .btn-danger { background: #dc3545; color: white; border: none; }
-    .btn-danger:hover { background: #c82333; }
+    .btn-danger { background: var(--color-error); color: #fff; border: none; }
+    .btn-danger:hover { background: var(--color-error-dark); }
   </style>
   <script src="theme.js"></script>
 </head>
@@ -38,7 +38,7 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 class="header-title">Company Detail</h1>
+        <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
       <!-- Page Content -->
@@ -55,27 +55,29 @@
           <div class="page-header-left">
             <h2 class="page-header-title" id="companyName">TechCorp Solutions</h2>
             <span class="badge-pipeline badge-pipeline-onboarding_started" id="pipelineBadge" onclick="openStateChangeModal()">Onboarding Started</span>
-            <span class="assigned-info" id="assignedInfo" style="display: none;">
-              <span class="text-muted">Comercial:</span>
-              <span id="assignedComercialName"></span>
-              <span class="text-muted" style="margin-left: 8px;">SDR:</span>
-              <span id="assignedSdrName"></span>
-            </span>
           </div>
           <div class="page-header-actions">
+            <button class="btn btn-secondary" onclick="openResearchRequestModal()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+              </svg>
+              Research Company
+            </button>
             <button class="btn btn-secondary" onclick="openEditModal()">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
               </svg>
               Edit
             </button>
+            <button class="btn btn-danger" id="deleteCompanyBtn" onclick="confirmDeleteCompany()" style="display:none;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Delete
+            </button>
           </div>
         </div>
 
         <!-- Assignment Section (rendered by rbac.js renderAssignmentSection) -->
-        <div class="assignment-card" id="assignmentSection">
-          <!-- renderAssignmentSection() fills this -->
-        </div>
+        <div id="assignmentSection"><!-- renderAssignmentSection() fills this --></div>
 
         <!-- Tabs -->
         <div class="detail-tabs">
@@ -309,7 +311,7 @@
                 <tr>
                   <th>Title</th>
                   <th>Status</th>
-                  <th>Comercial</th>
+                  <th>Sales Rep</th>
                   <th>SDR</th>
                   <th>Type</th>
                   <th></th>
@@ -699,6 +701,9 @@
     const companyIdParam = params.get('id') || 'comp-001';
     const company = MOCK_COMPANIES.find(c => c.id === companyIdParam) || MOCK_COMPANIES[0];
 
+    // Delete: administrador y coordinador
+    if (canDelete()) document.getElementById('deleteCompanyBtn').style.display = '';
+
     // Extended local data for display (fields not in MOCK_COMPANIES)
     const COMPANY_EXTENDED = {
       'comp-001': {
@@ -800,6 +805,7 @@
         comercialId: company.comercialId,
         sdrId: company.sdrId,
         coordinatorId: company.coordinatorId,
+        updatedAt: company.assignmentUpdatedAt || 'Jun 28, 2026',
         onManage: function() {
           openAssignmentPopup({
             title: company.name,
@@ -835,17 +841,6 @@
       currentStateBadge.className = 'badge-pipeline badge-pipeline-' + company.pipelineStage;
 
       // Assignment info in header
-      const assignedInfo = document.getElementById('assignedInfo');
-      const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
-      const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
-
-      if (comercial || sdr) {
-        assignedInfo.style.display = 'inline-flex';
-        document.getElementById('assignedComercialName').textContent = comercial ? comercial.shortName : 'Sin asignar';
-        document.getElementById('assignedSdrName').textContent = sdr ? sdr.shortName : 'Sin asignar';
-      } else {
-        assignedInfo.style.display = 'none';
-      }
     }
 
     // === Tab switching ===
@@ -937,17 +932,21 @@
         } else {
           return '\
             <div class="contact-card contact-card-editable">\
-              <button class="contact-edit-btn" onclick="editContact(' + contact.id + ')" title="Edit contact">\
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>\
-                </svg>\
-              </button>\
+              <div class="contact-actions">\
+                <button onclick="editContact(' + contact.id + ')" title="Edit contact">\
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>\
+                  </svg>\
+                </button>\
+                <button class="contact-delete-btn" onclick="confirmDeleteContact(' + contact.id + ')" title="Delete contact">\
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>\
+                </button>\
+              </div>\
               <div class="contact-header">\
                 <div>\
-                  <div class="contact-name">' + contact.full_name + '</div>\
+                  <div class="contact-name">' + contact.full_name + (contact.is_primary ? ' <span class="badge badge-success">Primary</span>' : '') + '</div>\
                   <div class="contact-title">' + contact.job_title + (contact.department || contact.seniority_level ? ' &middot; ' + [getDepartmentLabel(contact.department), contact.seniority_level].filter(Boolean).join(' &middot; ') : '') + '</div>\
                 </div>\
-                ' + (contact.is_primary ? '<span class="badge badge-success">Primary</span>' : '') + '\
               </div>\
               <div class="contact-info">\
                 ' + (contact.email ? '<span>&#128231; ' + contact.email + '</span>' : '') + '\
@@ -1002,8 +1001,8 @@
       tbody.innerHTML = companyVacancies.map(function(v) {
         var comercial = v.comercialId ? getMemberById(v.comercialId) : null;
         var sdr = v.sdrId ? getMemberById(v.sdrId) : null;
-        var comercialName = comercial ? comercial.shortName : '<span class="text-muted">Sin asignar</span>';
-        var sdrName = sdr ? sdr.shortName : '<span class="text-muted">Sin asignar</span>';
+        var comercialName = comercial ? comercial.shortName : '<span class="text-muted">Unassigned</span>';
+        var sdrName = sdr ? sdr.shortName : '<span class="text-muted">Unassigned</span>';
 
         // Type badge: show comercialType (inherited/direct)
         var typeLabel = '';
@@ -1128,6 +1127,53 @@
     }
 
     // === Modals ===
+    // === Research Company (popup de confirmación, sin inputs) ===
+    function openResearchRequestModal() {
+      openConfirmPopup({
+        title: 'Investigate Company',
+        icon: 'search',
+        message: 'The Prospecting Engine will investigate the company and automatically generate research information.',
+        highlight: company.name,
+        confirmLabel: 'Confirmar',
+        onConfirm: function () {
+          showToast('Research requested. You will receive the results soon.', 'success');
+        }
+      });
+    }
+
+    // === Delete contact (con confirmación) ===
+    function confirmDeleteContact(contactId) {
+      const contact = companyData.contacts.find(c => c.id === contactId);
+      if (!contact) return;
+      openConfirmPopup({
+        title: 'Delete',
+        icon: 'trash',
+        message: 'Are you sure you want to delete <strong>' + contact.full_name + '</strong>?',
+        confirmLabel: 'Confirmar',
+        onConfirm: function () {
+          const idx = companyData.contacts.findIndex(c => c.id === contactId);
+          if (idx >= 0) companyData.contacts.splice(idx, 1);
+          renderContacts();
+          showToast('Contact "' + contact.full_name + '" deleted', 'success');
+        }
+      });
+    }
+
+    // === Delete (con confirmación) ===
+    function confirmDeleteCompany() {
+      openConfirmPopup({
+        title: 'Eliminar empresa',
+        message: `Vas a eliminar <strong>${company.name}</strong> y sus vacantes asociadas dejarán de estar vinculadas. Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        onConfirm: function () {
+          const idx = MOCK_COMPANIES.findIndex(c => c.id === company.id);
+          if (idx >= 0) MOCK_COMPANIES.splice(idx, 1);
+          showToast(`Company "${company.name}" deleted`, 'success');
+          setTimeout(() => { window.location.href = 'companies.html'; }, 600);
+        }
+      });
+    }
+
     function openEditModal() {
       document.getElementById('editModal').classList.add('active');
     }

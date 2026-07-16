@@ -29,7 +29,10 @@
     b.setAttribute('aria-label', 'Cambiar tema claro/oscuro');
     b.textContent = icon();
     b.addEventListener('click', window.toggleTheme);
-    document.body.appendChild(b);
+    /* en las páginas de app va dentro del header (lo monta renderSidebar);
+       en el login queda flotante */
+    var slot = document.getElementById('header-controls');
+    (slot || document.body).appendChild(b);
   }
 
   if (document.readyState === 'loading') {

@@ -18,10 +18,19 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background:
-      radial-gradient(720px 420px at 92% -8%, rgba(0,138,171,0.10), transparent 72%),
-      radial-gradient(640px 460px at 4% 104%, rgba(238,118,35,0.09), transparent 70%),
-      linear-gradient(180deg, #FFFFFF 0%, #F4F6F7 100%);
+      radial-gradient(720px 420px at 92% -8%, rgba(0,190,214,0.10), transparent 72%),
+      radial-gradient(640px 460px at 4% 104%, rgba(233,155,53,0.10), transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #F5F5F5 100%);
     background-attachment: fixed;
+  }
+
+  /* el fold (banner + header + contenido) ocupa el viewport completo;
+     el footer solo aparece al hacer scroll */
+  .page-fold {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ============================ DEMO BANNER ============================ */
@@ -67,8 +76,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    border-bottom: 2px solid transparent;
+    border-image: var(--gradient-duo) 1;
   }
-  .lp-header img { height: 26px; width: auto; display: block; }
+  .lp-header img { height: 40px; width: auto; display: block; }
   .lp-header .meta {
     font-family: var(--font-heading);
     font-size: 10.5px;
@@ -136,6 +147,14 @@
     text-align: center;
     text-wrap: balance;
   }
+  h1.headline em {
+    font-style: normal;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
   .subline {
     font-size: clamp(14.5px, 1.15vw, 16.5px);
     color: var(--text-secondary);
@@ -178,7 +197,7 @@
     appearance: none;
     border: 1px solid var(--border-default);
     background: #fff;
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-card);
     padding: 22px 16px 20px;
     display: flex;
     flex-direction: column;
@@ -191,8 +210,8 @@
   }
   .slot-card:hover {
     transform: translateY(-4px);
-    border-color: var(--color-primary-300);
-    box-shadow: 0 18px 34px -20px rgba(238,118,35,0.45);
+    border-color: var(--color-amber);
+    box-shadow: 0 18px 34px -20px rgba(233,155,53,0.5);
   }
   .slot-card:focus-visible {
     outline: 2px solid var(--color-secondary);
@@ -320,6 +339,178 @@
   }
   .notice p { font-size: 13.5px; color: var(--text-secondary); }
 
+  /* ============================ HERO PEOPLE (photo cards decorativas) ============================ */
+  #screen-pick, #screen-calendar { position: relative; }
+  #screen-pick .pick-inner { position: relative; z-index: 1; }
+
+  .hero-people {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-people--left  { left:  clamp(6px, 2.5vw, 56px); }
+  .hero-people--right { right: clamp(6px, 2.5vw, 56px); }
+  /* en desktop la banda no genera caja: los grupos se posicionan contra la sección.
+     (de paso, el rise de .screen.is-active > * no tiene efecto sobre ella) */
+  .hero-band { display: contents; }
+
+  .talent-card {
+    --rot: 0deg;
+    width: 186px;
+    background: #fff;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: 20px 16px 16px;
+    text-align: center;
+    transform: rotate(var(--rot));
+    animation: tc-in 640ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .hero-people--left  .talent-card:nth-child(odd)  { --rot: -5deg; margin-left: -18px; }
+  .hero-people--left  .talent-card:nth-child(even) { --rot: 3deg;  margin-left: 30px; animation-delay: 140ms; }
+  .hero-people--right .talent-card:nth-child(odd)  { --rot: 5deg;  margin-right: -18px; align-self: flex-end; animation-delay: 220ms; }
+  .hero-people--right .talent-card:nth-child(even) { --rot: -3deg; margin-right: 30px; align-self: flex-end; animation-delay: 320ms; }
+  @keyframes tc-in {
+    from { opacity: 0; transform: rotate(var(--rot)) translateY(16px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .talent-card { animation: none; }
+  }
+
+  .tc-avatar {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto 11px;
+    box-shadow: inset 0 0 0 1px rgba(33,33,33,0.06);
+  }
+  .tc-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .tc-avatar .tc-badge {
+    position: absolute;
+    right: -2px; bottom: 0;
+    width: 25px; height: 25px;
+    border-radius: 50%;
+    background: var(--color-success);
+    border: 2.5px solid #fff;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1;
+  }
+  .tc-avatar .tc-badge svg { width: 13px; height: 13px; }
+  .tc-role {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-strong);
+    line-height: 1.2;
+  }
+  .tc-loc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* retratos difuminados de fallback (mientras no exista la foto) */
+  .tc-avatar { overflow: hidden; }
+  .tc-avatar::before { content: ""; position: absolute; inset: 0; filter: blur(7px); transform: scale(1.22); }
+  .tc-avatar.ph-1::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(50,32,22,0.24), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #ECC09A 0%, #D89F73 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B07A52 0%, transparent 72%),
+    linear-gradient(180deg, #D7E6EB 0%, #BBD2DB 100%); }
+  .tc-avatar.ph-2::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(30,20,14,0.30), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #C98E63 0%, #B0744A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #8C5733 0%, transparent 72%),
+    linear-gradient(180deg, #F0E2D4 0%, #DDC7B2 100%); }
+  .tc-avatar.ph-3::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(70,55,35,0.20), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #F2D2B3 0%, #E2B68C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #C99A6E 0%, transparent 72%),
+    linear-gradient(180deg, #E7E9EE 0%, #CDD2DC 100%); }
+  .tc-avatar.ph-4::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(40,28,18,0.26), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #D8A878 0%, #BE885A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #99693E 0%, transparent 72%),
+    linear-gradient(180deg, #DCE8E0 0%, #BFD3C6 100%); }
+  .tc-avatar.ph-5::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(25,16,10,0.34), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #B07A4F 0%, #94603A 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #6F4626 0%, transparent 72%),
+    linear-gradient(180deg, #DCE4F0 0%, #BCC9E0 100%); }
+  .tc-avatar.ph-6::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(60,46,30,0.22), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #EAC195 0%, #D6A36C 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #B5824F 0%, transparent 72%),
+    linear-gradient(180deg, #F1E7D6 0%, #E0CBA9 100%); }
+  .tc-avatar.ph-7::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(45,30,20,0.28), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #DDA97E 0%, #C48B5D 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #A06B40 0%, transparent 72%),
+    linear-gradient(180deg, #E3EDE6 0%, #C6DACB 100%); }
+  .tc-avatar.ph-8::before { background:
+    radial-gradient(33% 25% at 50% 30%, rgba(55,40,26,0.22), transparent 70%),
+    radial-gradient(30% 30% at 50% 44%, #EFC9A2 0%, #DCAC79 62%, transparent 75%),
+    radial-gradient(66% 44% at 50% 106%, #BE8A55 0%, transparent 72%),
+    linear-gradient(180deg, #EDE6F0 0%, #D4C9DE 100%); }
+
+  /* extras: a los costados no entran (cards grandes); aparecen en el collage vertical */
+  .tc-extra { display: none; }
+
+  /* <1200px (tablets y mobile): una sola hilera horizontal debajo del contenido,
+     centrada y con sangrado a los costados — el clip evita el scroll horizontal */
+  @media (max-width: 1199px) {
+    body { overflow-x: clip; }
+    .hero-band {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+      margin-top: 42px;
+      pointer-events: auto;
+    }
+    /* los grupos se disuelven: las 8 cards fluyen en la misma hilera */
+    .hero-people { display: contents; }
+    .hero-people .talent-card {
+      width: 172px;
+      flex-shrink: 0;
+    }
+    /* mismo nivel de especificidad que los offsets desktop, para pisarlos */
+    .hero-people--left  .talent-card:nth-child(odd),
+    .hero-people--left  .talent-card:nth-child(even),
+    .hero-people--right .talent-card:nth-child(odd),
+    .hero-people--right .talent-card:nth-child(even) {
+      margin: 0;
+      align-self: auto;
+    }
+    .hero-people--left  .talent-card:nth-child(1) { --rot: -6deg; transform: rotate(var(--rot)) translateY(-12px); }
+    .hero-people--left  .talent-card:nth-child(2) { --rot: 4deg;  transform: rotate(var(--rot)) translateY(16px); }
+    .hero-people--left  .talent-card:nth-child(3) { --rot: -3deg; transform: rotate(var(--rot)) translateY(-4px); }
+    .hero-people--left  .talent-card:nth-child(4) { --rot: 5deg;  transform: rotate(var(--rot)) translateY(20px); }
+    .hero-people--right .talent-card:nth-child(1) { --rot: -4deg; transform: rotate(var(--rot)) translateY(-14px); }
+    .hero-people--right .talent-card:nth-child(2) { --rot: 3deg;  transform: rotate(var(--rot)) translateY(14px); }
+    .hero-people--right .talent-card:nth-child(3) { --rot: -5deg; transform: rotate(var(--rot)) translateY(-6px); }
+    .hero-people--right .talent-card:nth-child(4) { --rot: 4deg;  transform: rotate(var(--rot)) translateY(18px); }
+    .tc-extra { display: block; }
+  }
+  @media (max-width: 560px) {
+    .tc-extra, .tc-mob-hide { display: none; }
+    .hero-band { gap: 12px; margin-top: 32px; }
+    .hero-people .talent-card { width: 152px; }
+  }
+
   /* ============================ BACK LINK ============================ */
   .back-link {
     align-self: center;
@@ -345,8 +536,8 @@
     max-width: 420px;
     background: #fff;
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-xl);
-    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    border-radius: var(--radius-card);
+    box-shadow: 0 30px 60px -38px rgba(33,33,33,0.32), var(--shadow-sm);
     overflow: hidden;
   }
   .cal-head {
@@ -433,9 +624,9 @@
   .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--color-secondary-200); }
   .cal-day.muted { opacity: 0.28; }
   .cal-day.selected {
-    background: var(--text-primary);
+    background: var(--color-secondary);
     color: #fff;
-    border-color: var(--text-primary);
+    border-color: var(--color-secondary);
     font-weight: 700;
   }
   .cal-day.selected::after { background: #fff; }
@@ -520,14 +711,29 @@
 
   .rep-card {
     width: 100%;
+    position: relative;
     background: #fff;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: 15px 17px;
-    box-shadow: var(--shadow-xs);
+    border: 0;
+    border-radius: var(--radius-xl);
+    padding: 17px 19px;
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     gap: 10px;
+  }
+  /* borde degradado de firma (mismo patrón que las job cards de careers) */
+  .rep-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    border-radius: inherit;
+    background: var(--gradient-duo);
+    opacity: 0.55;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
   }
   .rep-label {
     font-family: var(--font-heading);
@@ -539,18 +745,26 @@
   }
   .rep-who { display: flex; align-items: center; gap: 12px; }
   .rep-avatar {
-    width: 44px; height: 44px;
+    width: 54px; height: 54px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
+    background: var(--gradient-brand);
     color: #fff;
     font-family: var(--font-heading);
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     letter-spacing: 0.02em;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .rep-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
   }
   .rep-meta { min-width: 0; }
   .rep-name {
@@ -570,7 +784,7 @@
     align-items: center;
     gap: 6px;
     padding-top: 9px;
-    border-top: 1px solid var(--color-gray-100);
+    border-top: 1px dashed var(--color-gray-300);
   }
   .rep-foot svg { width: 13px; height: 13px; flex-shrink: 0; }
 
@@ -580,8 +794,8 @@
     max-width: 460px;
     background: #fff;
     border: 1px solid var(--border-default);
-    border-radius: var(--radius-xl);
-    box-shadow: 0 30px 60px -38px rgba(17,24,39,0.32), var(--shadow-sm);
+    border-radius: var(--radius-card);
+    box-shadow: 0 30px 60px -38px rgba(33,33,33,0.32), var(--shadow-sm);
     padding: clamp(24px, 3.4vw, 36px);
     display: flex;
     flex-direction: column;
@@ -660,25 +874,25 @@
     margin-top: 5px;
     appearance: none;
     padding: 13px 18px;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
+    border-radius: var(--radius-btn);
+    background: var(--color-amber);
     color: #fff;
     font-family: var(--font-heading);
     font-weight: 700;
     font-size: 14px;
     border: 0;
     cursor: pointer;
-    box-shadow: 0 14px 28px -14px rgba(238,118,35,0.6);
+    box-shadow: 0 14px 28px -14px rgba(233,155,53,0.65);
     transition: transform var(--transition-fast), background var(--transition-fast);
   }
-  .setup-btn:hover { background: var(--color-primary-600); transform: translateY(-2px); }
+  .setup-btn:hover { background: var(--color-amber-hover); transform: translateY(-2px); }
 
   .confirm-btn {
     width: 100%;
     appearance: none;
     padding: 15px 18px;
-    border-radius: var(--radius-lg);
-    background: var(--color-primary);
+    border-radius: var(--radius-btn);
+    background: var(--color-amber);
     color: #fff;
     font-family: var(--font-heading);
     font-weight: 700;
@@ -689,11 +903,11 @@
     align-items: center;
     justify-content: center;
     gap: 9px;
-    box-shadow: 0 16px 30px -14px rgba(238,118,35,0.6);
+    box-shadow: 0 16px 30px -14px rgba(233,155,53,0.65);
     transition: transform var(--transition-fast), background var(--transition-fast);
   }
   .confirm-btn:hover:not(:disabled) {
-    background: var(--color-primary-600);
+    background: var(--color-amber-hover);
     transform: translateY(-2px);
   }
   .confirm-btn:disabled {
@@ -751,9 +965,81 @@
     .slot-card .ico { width: 26px; height: 26px; }
     .slot-card .meta { align-items: flex-start; gap: 3px; }
   }
+
+  /* ============================ FOOTER ============================ */
+  .lp-footer {
+    flex-shrink: 0;
+    margin-top: clamp(72px, 14vh, 160px);
+    background: var(--bg-muted);
+    border-top: 1px solid var(--border-default);
+  }
+  .lp-footer__main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: clamp(32px, 5vh, 56px) clamp(20px, 4vw, 44px);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .lp-footer__brand img { height: 34px; display: block; margin-bottom: 12px; }
+  .lp-footer__brand p { font-size: 13px; color: var(--text-muted); }
+  .lp-footer__contact { display: flex; flex-direction: column; gap: 9px; min-width: 240px; }
+  .lp-footer__contact h4 {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-strong);
+    margin-bottom: 3px;
+  }
+  .lp-footer__phone {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 2.2vw, 24px);
+    font-weight: 700;
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+  .lp-footer__mail {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .lp-footer__mail--sales { color: var(--color-primary); }
+  .lp-footer__mail--sales:hover { color: var(--color-primary-600); }
+  .lp-footer__mail--apply { color: var(--color-secondary); }
+  .lp-footer__mail--apply:hover { color: var(--color-secondary-600); }
+  .lp-footer__addr { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+  .lp-footer__social { display: flex; gap: 16px; margin-top: 10px; }
+  .lp-footer__social a { color: var(--color-gray-700); transition: color var(--transition-fast); }
+  .lp-footer__social a:hover { color: var(--color-secondary); }
+  .lp-footer__social svg { width: 24px; height: 24px; display: block; }
+  .lp-footer__bottom {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px clamp(20px, 4vw, 44px);
+    border-top: 1px solid var(--border-default);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .lp-footer__bottom a {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    margin-left: 22px;
+  }
+  .lp-footer__bottom a:hover { color: var(--text-primary); }
+  .lp-footer__strip { height: 10px; background: var(--color-secondary); }
 </style>
 </head>
 <body data-screen="start">
+
+<div class="page-fold">
 
 <div class="demo-banner">
   <span class="label"><span class="tag">Demo</span> Landing de Agendamiento &mdash; Email Cold Outreach POC</span>
@@ -761,7 +1047,7 @@
 
 <header class="lp-header">
   <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
-  <span class="meta">Talent Partner</span>
+  <span class="meta">Outsourcing for Global Growth</span>
 </header>
 
 <main class="stage">
@@ -804,7 +1090,7 @@
   <section class="screen" id="screen-pick">
     <div class="pick-inner">
       <span class="eyebrow">Book your intro call</span>
-      <h1 class="headline">Stop losing months to roles you can't fill.</h1>
+      <h1 class="headline"><em>Stop losing months</em> to roles you can't fill.</h1>
       <p class="subline">
         Book 25 minutes with a Solvo advisor &mdash; leave with a concrete plan,
         your estimated savings, and a real onboarding timeline.
@@ -819,6 +1105,54 @@
         <span class="tz" id="tz-line">Times shown in your timezone</span>
       </div>
     </div>
+
+    <!-- photo cards decorativas (talento Solvo) -->
+    <div class="hero-band" aria-hidden="true">
+    <div class="hero-people hero-people--left">
+      <div class="talent-card">
+        <div class="tc-avatar ph-1"><img src="assets/people/person-01.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Finance Mngr</div>
+        <div class="tc-loc">Colombia</div>
+      </div>
+      <div class="talent-card">
+        <div class="tc-avatar ph-2"><img src="assets/people/person-02.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Head Admin</div>
+        <div class="tc-loc">Per&uacute;</div>
+      </div>
+      <div class="talent-card tc-mob-hide">
+        <div class="tc-avatar ph-3"><img src="assets/people/person-03.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Finance Mngr</div>
+        <div class="tc-loc">Guatemala</div>
+      </div>
+      <div class="talent-card tc-extra">
+        <div class="tc-avatar ph-4"><img src="assets/people/person-04.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Paralegal</div>
+        <div class="tc-loc">Colombia</div>
+      </div>
+    </div>
+    <div class="hero-people hero-people--right">
+      <div class="talent-card">
+        <div class="tc-avatar ph-5"><img src="assets/people/person-05.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Global Service</div>
+        <div class="tc-loc">Argentina</div>
+      </div>
+      <div class="talent-card">
+        <div class="tc-avatar ph-6"><img src="assets/people/person-06.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Sales Rep</div>
+        <div class="tc-loc">Argentina</div>
+      </div>
+      <div class="talent-card tc-mob-hide">
+        <div class="tc-avatar ph-7"><img src="assets/people/person-07.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">CX Expert</div>
+        <div class="tc-loc">Honduras</div>
+      </div>
+      <div class="talent-card tc-extra">
+        <div class="tc-avatar ph-8"><img src="assets/people/person-08.jpg" alt="" onerror="this.style.display='none'"><span class="tc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 L10 17.5 L19 6.5"/></svg></span></div>
+        <div class="tc-role">Global Service</div>
+        <div class="tc-loc">M&eacute;xico</div>
+      </div>
+    </div>
+    </div><!-- /hero-band -->
   </section>
 
   <!-- ====================== SCREEN: CALENDAR ====================== -->
@@ -884,6 +1218,36 @@
 
 </main>
 
+</div><!-- /page-fold -->
+
+<footer class="lp-footer">
+  <div class="lp-footer__main">
+    <div class="lp-footer__brand">
+      <img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global" />
+      <p>Outsourcing for Global Growth</p>
+    </div>
+    <div class="lp-footer__contact">
+      <h4>Contact Us</h4>
+      <a class="lp-footer__phone" href="tel:+18334131546">+1 (833) 413-1546</a>
+      <a class="lp-footer__mail lp-footer__mail--sales" href="mailto:sales@solvoglobal.com">sales@solvoglobal.com</a>
+      <a class="lp-footer__mail lp-footer__mail--apply" href="mailto:apply@solvoglobal.com">apply@solvoglobal.com</a>
+      <p class="lp-footer__addr">1475 S. Price Rd.,<br />Chandler, AZ 85286</p>
+      <div class="lp-footer__social">
+        <a href="https://www.instagram.com/solvo_global/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="0.6" fill="currentColor" stroke="none"/></svg></a>
+        <a href="https://www.linkedin.com/company/solvoglobal/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg></a>
+        <a href="https://www.facebook.com/hiresolvohr" target="_blank" rel="noopener" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.26h3.32l-.53 3.49h-2.79V24C19.61 23.09 24 18.1 24 12.07z"/></svg></a>
+        <a href="https://x.com/globalsolvo?lang=es" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.7 3h2.9l-6.36 7.27L21.75 21h-5.87l-4.6-6.01L6.02 21H3.1l6.8-7.78L2.25 3h6.02l4.15 5.5L17.7 3zm-1.03 16.2h1.62L7.4 4.7H5.66l11.01 14.5z"/></svg></a>
+      </div>
+    </div>
+  </div>
+  <div class="lp-footer__bottom">
+    <span>&copy;2026 Solvo, All rights reserved.</span>
+    <span><a href="https://solvoglobal.com/privacy-policy/" target="_blank" rel="noopener">Privacy Policy</a><a href="https://solvoglobal.com/terms-and-conditions/" target="_blank" rel="noopener">Terms and Conditions</a></span>
+  </div>
+  <div class="lp-footer__strip"></div>
+</footer>
+
+
 <script>
 (function () {
   "use strict";
@@ -939,9 +1303,9 @@
      el horario, un rep disponible para ese slot — aqui se deriva por slot de
      forma estable para simular ese comportamiento en el demo. */
   var REPS = [
-    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO" },
-    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB" },
-    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN" }
+    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO", photo: "assets/people/person-01.jpg" },
+    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB", photo: "assets/people/person-05.jpg" },
+    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN", photo: "assets/people/person-06.jpg" }
   ];
   function repForSlot(dateKey, slot) {
     var s = dateKey + slot, h = 0;
@@ -1272,7 +1636,9 @@
     /* El rep queda fijado por el horario elegido */
     var rep = repForSlot(selected.dateKey, selected.slot);
     selected.rep = rep;
-    document.getElementById("rep-avatar").textContent = rep.initials;
+    /* iniciales de base + foto encima; si la foto falta, quedan las iniciales */
+    document.getElementById("rep-avatar").innerHTML = rep.initials +
+      '<img src="' + rep.photo + '" alt="" onerror="this.remove()">';
     document.getElementById("rep-name").textContent = rep.name;
     document.getElementById("rep-role").textContent = rep.role + " · Solvo Global";
 
@@ -1325,7 +1691,8 @@
         tz: TZ,
         name: prospect.first_name,
         rep: rep.name,
-        repRole: rep.role
+        repRole: rep.role,
+        repPhoto: rep.photo
       };
       try { sessionStorage.setItem("lag_meeting", JSON.stringify(meeting)); } catch (e) {}
       var qs = "?start=" + encodeURIComponent(meeting.start) +
@@ -1333,7 +1700,8 @@
                "&tz=" + encodeURIComponent(meeting.tz) +
                "&name=" + encodeURIComponent(meeting.name) +
                "&rep=" + encodeURIComponent(meeting.rep) +
-               "&repRole=" + encodeURIComponent(meeting.repRole);
+               "&repRole=" + encodeURIComponent(meeting.repRole) +
+               "&repPhoto=" + encodeURIComponent(meeting.repPhoto || "");
       window.location.href = "confirmacion.html" + qs;
     }, 950);
   });
@@ -1387,6 +1755,12 @@
      INIT
      ==================================================================== */
   document.getElementById("tz-line").textContent = "Times shown in your timezone (" + TZ + ")";
+
+  /* photo cards decorativas: mismas en los dos modos de agendamiento */
+  var calScreen = document.getElementById("screen-calendar");
+  document.querySelectorAll("#screen-pick .hero-band").forEach(function (g) {
+    calScreen.appendChild(g.cloneNode(true));
+  });
 })();
 </script>
 

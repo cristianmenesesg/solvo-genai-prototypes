@@ -34,11 +34,12 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 class="header-title">Vacancies</h1>
+        <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
       <!-- Page Content -->
       <div class="page-content">
+        <h2 class="page-title">Vacancies</h2>
         <!-- Filters -->
         <div class="filters-bar">
           <!-- Remote Viable toggle (active by default) -->
@@ -113,9 +114,9 @@
             </select>
           </div>
 
-          <!-- Comercial filter (coord/supervisor/admin only) -->
+          <!-- Sales Rep filter (coord/supervisor/admin only) -->
           <div class="filter-group" id="comercialFilterGroup" style="display: none;">
-            <label class="filter-label">Comercial asignado</label>
+            <label class="filter-label">Sales Rep assigned</label>
             <div id="comercialFilterSearchbox" style="min-width: 180px;"></div>
           </div>
 
@@ -162,7 +163,7 @@
                   <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
                   <path d="M3 21v-5h5"></path>
                 </svg>
-                Scrapear vacantes
+                Scrape vacancies
               </button>
               <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -337,67 +338,6 @@
   </div>
 
   <style>
-    /* Toggle pill for remote viable filter */
-    .toggle-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      user-select: none;
-      height: 32px;
-    }
-    .toggle-pill input { display: none; }
-    .toggle-pill-track {
-      width: 40px;
-      height: 22px;
-      background: var(--border-primary, #444);
-      border-radius: 11px;
-      position: relative;
-      transition: background 0.25s ease;
-      flex-shrink: 0;
-    }
-    .toggle-pill-knob {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      background: #fff;
-      border-radius: 50%;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.25s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    .toggle-pill input:checked + .toggle-pill-track {
-      background: #22c55e;
-    }
-    .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob {
-      transform: translateX(18px);
-    }
-    .toggle-pill-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary, #aaa);
-      min-width: 20px;
-      transition: color 0.2s;
-    }
-    .toggle-pill input:checked ~ .toggle-pill-text {
-      color: #22c55e;
-    }
-
-    /* Remote badge */
-    .badge-remote {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: rgba(34, 197, 94, 0.15);
-      color: #22c55e;
-    }
-    .badge-remote.no {
-      background: rgba(107, 114, 128, 0.15);
-      color: #9ca3af;
-    }
 
     /* Direct assignment badge */
     .badge-assign-direct {
@@ -405,17 +345,11 @@
       font-size: 10px;
       font-weight: 600;
       padding: 1px 6px;
-      border-radius: 8px;
-      background: rgba(139, 92, 246, 0.15);
-      color: #a78bfa;
+      border-radius: var(--radius-full);
+      background: var(--status-accent-bg);
+      color: var(--status-accent-fg);
       margin-left: 4px;
       vertical-align: middle;
-    }
-
-    /* Salary column */
-    .salary-text {
-      font-size: 13px;
-      white-space: nowrap;
     }
   </style>
 
@@ -501,22 +435,24 @@
 
       html += '<th>Title <span class="sort-icon">↕</span></th>';
       html += '<th>Company <span class="sort-icon">↕</span></th>';
+      html += '<th>Location</th>';
       html += '<th>Status <span class="sort-icon">↕</span></th>';
 
       if (isAdmin) {
-        // coord/supervisor/admin: show both Comercial and SDR
-        html += '<th>Comercial <span class="sort-icon">↕</span></th>';
+        // coord/supervisor/admin: show both Sales Rep and SDR
+        html += '<th>Sales Rep <span class="sort-icon">↕</span></th>';
         html += '<th>SDR <span class="sort-icon">↕</span></th>';
       } else if (isComercial) {
         // comercial view: read-only SDR
         html += '<th>SDR</th>';
       } else if (isSDR) {
-        // sdr view: read-only Comercial
-        html += '<th>Comercial</th>';
+        // sdr view: read-only Sales Rep
+        html += '<th>Sales Rep</th>';
       }
 
-      html += '<th>Salary <span class="sort-icon">↕</span></th>';
-      html += '<th>Remote</th>';
+      html += '<th>Source</th>';
+      html += '<th>Published <span class="sort-icon">↕</span></th>';
+      html += '<th>Actions</th>';
 
       thead.innerHTML = html;
     }
@@ -524,20 +460,22 @@
     // === SKELETON LOADING ===
     function renderSkeletonTable() {
       const tbody = document.getElementById('vacanciesTable');
-      const colCount = isAdmin ? 7 : 6;
+      const colCount = isAdmin ? 9 : 8;
       const skeletonRows = Array(8).fill(0).map(() => {
         let cells = '';
         cells += '<td><div class="table-skeleton" style="width: 180px;"></div></td>';  // title
         cells += '<td><div class="table-skeleton" style="width: 140px;"></div></td>';  // company
+        cells += '<td><div class="table-skeleton" style="width: 60px;"></div></td>';  // location
         cells += '<td><div class="table-skeleton" style="width: 80px; height: 24px; border-radius: 12px;"></div></td>'; // status
         if (isAdmin) {
-          cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // comercial
+          cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // sales rep
           cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // sdr
         } else {
           cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // single assignment col
         }
-        cells += '<td><div class="table-skeleton" style="width: 90px;"></div></td>';  // salary
-        cells += '<td><div class="table-skeleton" style="width: 50px;"></div></td>';  // remote
+        cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // source
+        cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // published
+        cells += '<td><div class="table-skeleton" style="width: 50px;"></div></td>';  // actions
         return `<tr>${cells}</tr>`;
       }).join('');
       tbody.innerHTML = skeletonRows;
@@ -572,6 +510,9 @@
         const companyName = getCompanyName(v.companyId);
         row += `<td><a href="company-detail.html?id=${v.companyId}" class="text-secondary" onclick="event.stopPropagation();">${companyName}</a></td>`;
 
+        // Location
+        row += `<td>${v.stateCode || '—'}</td>`;
+
         // Status
         row += `<td><span class="badge-pipeline badge-pipeline-${v.status}">${getStatusLabel(v.status)}</span></td>`;
 
@@ -585,11 +526,20 @@
           row += `<td>${getMemberDisplay(v.comercialId, null)}</td>`;
         }
 
-        // Salary
-        row += `<td><span class="salary-text">${v.salary || '—'}</span></td>`;
+        // Source
+        row += `<td>${getSourceLabel(v.source)}</td>`;
 
-        // Remote
-        row += `<td><span class="badge-remote ${v.remoteViable ? '' : 'no'}">${v.remoteViable ? 'Yes' : 'No'}</span></td>`;
+        // Published
+        const published = v.detectedAt
+          ? new Date(v.detectedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          : '—';
+        row += `<td>${published}</td>`;
+
+        // Actions
+        const deleteBtn = canDelete()
+          ? `<button class="table-action-delete" title="Eliminar vacante" onclick="event.stopPropagation(); confirmDeleteVacancy('${v.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`
+          : '';
+        row += `<td><a class="table-action-view" href="vacancy-detail.html?id=${v.id}" onclick="event.stopPropagation();" title="Ver detalle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg></a>${deleteBtn}</td>`;
 
         return `<tr onclick="goToDetail('${v.id}')" style="cursor: pointer;">${row}</tr>`;
       }).join('');
@@ -600,6 +550,23 @@
       document.getElementById('paginationInfo').textContent = count > 50
         ? `Showing 1-50 of ${count.toLocaleString()}`
         : `Showing ${count > 0 ? '1-' + count : '0'} of ${count.toLocaleString()}`;
+    }
+
+    // Delete (con confirmación)
+    function confirmDeleteVacancy(vacancyId) {
+      const vac = MOCK_VACANCIES.find(v => v.id === vacancyId);
+      if (!vac) return;
+      openConfirmPopup({
+        title: 'Eliminar vacante',
+        message: `Vas a eliminar la vacante <strong>${vac.title}</strong>. Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        onConfirm: function () {
+          const idx = MOCK_VACANCIES.findIndex(v => v.id === vacancyId);
+          if (idx >= 0) MOCK_VACANCIES.splice(idx, 1);
+          showToast(`Vacancy "${vac.title}" deleted`, 'success');
+          applyFilters();
+        }
+      });
     }
 
     // === NAVIGATION ===

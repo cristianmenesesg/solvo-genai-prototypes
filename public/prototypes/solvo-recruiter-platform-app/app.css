@@ -1,6 +1,6 @@
 /* ========================================================================
-   Solvo Recruiter Platform — añadidos al design system de solvo-platform (tema oscuro).
-   Solo clases nuevas; reusa las variables de styles.css.
+   Solvo Recruiter Platform — añadidos al design system platform de Solvo Global.
+   Solo clases propias; reusa el bridge + tokens de styles.css (claro/oscuro por tokens).
    ======================================================================== */
 
 /* ---------- Badges de rol (faltan en styles.css) ---------- */
@@ -14,7 +14,7 @@
   background: var(--bg-tertiary); border: 1px solid var(--border-color);
   border-radius: var(--radius-md); padding: 5px 8px;
 }
-.tagbox:focus-within { border-color: var(--text-secondary); box-shadow: var(--focus-ring); }
+.tagbox:focus-within { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
 .tagbox input { background: none; border: none; outline: none; color: var(--text-primary);
   font-family: var(--font-family); font-size: var(--font-size-sm); flex: 1; min-width: 80px; padding: 2px; }
 .tagbox input::placeholder { color: var(--text-muted); }
@@ -44,13 +44,13 @@
 
 /* ---------- Celdas de candidato en la tabla ---------- */
 .cand-row { animation: tp-rowin .3s ease both; }
-.cand-row.is-selected { background: var(--bg-hover); }
+.cand-row.is-selected { background: var(--bg-selected); }
 @keyframes tp-rowin { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-.cand-check input { width: 16px; height: 16px; accent-color: var(--color-info-dark); cursor: pointer; }
+.cand-check input { width: 16px; height: 16px; accent-color: var(--color-secondary); cursor: pointer; }
 .cand-name { display: flex; align-items: center; gap: 10px; }
 .cand-avatar {
   width: 32px; height: 32px; border-radius: var(--radius-full); flex-shrink: 0;
-  background: var(--bg-tertiary); color: var(--text-primary);
+  background: var(--color-secondary-100); color: var(--color-secondary-700);
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 600;
 }
@@ -63,7 +63,7 @@
 }
 .email-cell { font-size: var(--font-size-sm); color: var(--text-primary); }
 .email-cell.email-none { color: var(--text-muted); font-style: italic; }
-.cand-li { color: var(--color-info-dark); font-size: var(--font-size-xs); font-weight: 500; }
+.cand-li { color: var(--text-link); font-size: var(--font-size-xs); font-weight: 500; }
 
 .results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); }
 .results-head .table-title { color: var(--text-secondary); font-size: var(--font-size-sm); }
@@ -109,9 +109,17 @@
 }
 .drawer-close:hover { background: var(--bg-hover); color: var(--text-primary); }
 .drawer-body { padding: var(--spacing-lg); overflow-y: auto; }
-.drawer-section { margin-bottom: var(--spacing-lg); }
+/* Secciones del detalle como cards sutiles (borde + superficie muted) */
+.drawer-section {
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
 .drawer-section .detail-label { display: block; margin-bottom: 6px; }
 .drawer-section p { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; }
+.drawer-action { margin-top: var(--spacing-md); }
 .drawer-kv { display: flex; gap: 10px; font-size: var(--font-size-sm); margin-bottom: 6px; }
 .drawer-kv b { min-width: 90px; color: var(--text-muted); font-weight: 500; }
 .drawer-kv span { color: var(--text-primary); }
@@ -140,7 +148,7 @@
   border-radius: var(--radius-md); padding: 8px 12px; margin-bottom: var(--spacing-md);
   color: var(--text-muted); transition: border-color .2s, box-shadow .2s;
 }
-.geo-search:focus-within { border-color: var(--text-secondary); box-shadow: var(--focus-ring); }
+.geo-search:focus-within { border-color: var(--border-focus); box-shadow: var(--focus-ring); }
 .geo-search svg { flex-shrink: 0; }
 .geo-search-input {
   flex: 1; min-width: 0; background: none; border: none; outline: none;
@@ -164,7 +172,7 @@
   color: var(--text-muted); font-size: 13px; line-height: 1; opacity: 0;
   transition: opacity .15s ease, color .15s ease, background-color .15s ease;
 }
-.geo-remove-loc:hover { opacity: 1; color: var(--text-primary); background: var(--bg-hover); }
+.geo-remove-loc:hover { opacity: 1; color: var(--status-error-fg); background: var(--status-error-bg); }
 .geo-city-empty { font-size: var(--font-size-sm); color: var(--text-muted); }
 
 /* Empty state de la cobertura (dentro de la tabla) */
@@ -177,8 +185,20 @@
 /* Tabla de perfiles de búsqueda */
 .perf-table th { cursor: default; }
 .perf-table th:hover { color: var(--text-muted); }
-.perf-table th.perf-action, .perf-table td.perf-action { text-align: right; width: 150px; white-space: nowrap; }
+.perf-table th.perf-action, .perf-table td.perf-action { text-align: right; width: 96px; white-space: nowrap; }
 .perf-table .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.perf-table tr:hover .table-action-edit, .perf-table tr:hover .table-action-delete { opacity: 1; }
+
+/* Acción edit en tablas (botón; espeja table-action-view/-delete del DS) */
+.table-action-edit {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: transparent; border: none; border-radius: var(--radius-sm);
+  color: var(--text-link); cursor: pointer; vertical-align: middle;
+  transition: all 0.15s ease;
+}
+.table-action-edit:hover { color: var(--text-link-hover); background: var(--bg-selected); }
+.row-actions .table-action-delete { margin-left: 0; }
 
 /* Combobox de país (modal agregar ciudad) */
 .combo { position: relative; }
@@ -198,10 +218,5 @@
 /* small empty-state tweaks reuse .empty-state from styles.css */
 .empty-state.show { display: flex; }
 
-/* ---------- Toggle pill (de solvo-platform, inline allí) ---------- */
-.toggle-pill { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; height: 32px; color: var(--text-secondary); font-size: 13px; }
-.toggle-pill input { display: none; }
-.toggle-pill-track { width: 40px; height: 22px; background: var(--border-light); border-radius: 11px; position: relative; transition: background .25s ease; flex-shrink: 0; }
-.toggle-pill-knob { position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 2px; left: 2px; transition: transform .25s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-.toggle-pill input:checked + .toggle-pill-track { background: var(--color-success); }
-.toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob { transform: translateX(18px); }
+/* .toggle-pill (base) lo provee styles.css (promovido del DS platform, activo en teal);
+   acá solo el override específico de la tabla de ubicaciones (.loc-table .toggle-pill). */

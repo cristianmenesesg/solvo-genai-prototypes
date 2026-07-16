@@ -34,11 +34,12 @@
     <main class="main-content">
       <!-- Header -->
       <header class="header">
-        <h1 class="header-title">Companies</h1>
+        <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
       <!-- Page Content -->
       <div class="page-content">
+        <h2 class="page-title">Companies</h2>
         <!-- Filters -->
         <div class="filters-bar">
           <!-- Remote Viable toggle (active by default) -->
@@ -113,9 +114,9 @@
             </select>
           </div>
 
-          <!-- Comercial filter (coord/supervisor/admin only) -->
+          <!-- Sales Rep filter (coord/supervisor/admin only) -->
           <div class="filter-group" id="comercialFilterGroup" style="display: none;">
-            <label class="filter-label">Comercial asignado</label>
+            <label class="filter-label">Sales Rep assigned</label>
             <div id="comercialFilterSearchbox" style="min-width: 200px;"></div>
           </div>
 
@@ -152,7 +153,7 @@
                   <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
                   <path d="M3 21v-5h5"></path>
                 </svg>
-                Scrapear vacantes
+                Scrape vacancies
               </button>
               <button class="btn btn-primary btn-sm" onclick="openCreateModal()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -177,18 +178,23 @@
 
           <!-- Empty State -->
           <div class="empty-state" id="emptyState" style="display: none;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #666;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);">
               <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
               <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
               <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
             </svg>
-            <p id="emptyStateMessage" style="color: #888; margin-top: 12px;">No companies found with those filters</p>
+            <p id="emptyStateMessage" style="color: var(--text-muted); margin-top: 12px;">No companies found with those filters</p>
             <button class="btn btn-secondary btn-sm" id="emptyStateClearBtn" onclick="clearFilters()" style="margin-top: 8px;">Clear filters</button>
           </div>
 
-          <div class="table-pagination">
+          <div class="table-pagination" id="paginationContainer">
             <div class="pagination-info" id="paginationInfo">
               Showing 0 of 0
+            </div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>Previous</button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn">Next</button>
             </div>
           </div>
         </div>
@@ -346,54 +352,6 @@
     </div>
   </div>
 
-  <style>
-    /* Toggle pill for remote viable filter */
-    .toggle-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      user-select: none;
-      height: 32px;
-    }
-    .toggle-pill input { display: none; }
-    .toggle-pill-track {
-      width: 40px;
-      height: 22px;
-      background: var(--border-primary, #444);
-      border-radius: 11px;
-      position: relative;
-      transition: background 0.25s ease;
-      flex-shrink: 0;
-    }
-    .toggle-pill-knob {
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      background: #fff;
-      border-radius: 50%;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.25s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    .toggle-pill input:checked + .toggle-pill-track {
-      background: #22c55e;
-    }
-    .toggle-pill input:checked + .toggle-pill-track .toggle-pill-knob {
-      transform: translateX(18px);
-    }
-    .toggle-pill-text {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary, #aaa);
-      min-width: 20px;
-      transition: color 0.2s;
-    }
-    .toggle-pill input:checked ~ .toggle-pill-text {
-      color: #22c55e;
-    }
-  </style>
 
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
@@ -423,21 +381,23 @@
       headerHTML += '<th>Company <span class="sort-icon">&#8597;</span></th>';
       headerHTML += '<th>Industry <span class="sort-icon">&#8597;</span></th>';
       headerHTML += '<th>Location <span class="sort-icon">&#8597;</span></th>';
+      headerHTML += '<th>Type</th>';
       headerHTML += '<th>Pipeline <span class="sort-icon">&#8597;</span></th>';
 
       if (showDualColumns) {
         // Coord/Supervisor/Admin: see both assignment columns
-        headerHTML += '<th>Comercial <span class="sort-icon">&#8597;</span></th>';
+        headerHTML += '<th>Sales Rep <span class="sort-icon">&#8597;</span></th>';
         headerHTML += '<th>SDR <span class="sort-icon">&#8597;</span></th>';
       } else if (isComercial) {
         // Comercial sees SDR column (the other role)
         headerHTML += '<th>SDR <span class="sort-icon">&#8597;</span></th>';
       } else if (isSDR) {
-        // SDR sees Comercial column (the other role)
-        headerHTML += '<th>Comercial <span class="sort-icon">&#8597;</span></th>';
+        // SDR sees Sales Rep column (the other role)
+        headerHTML += '<th>Sales Rep <span class="sort-icon">&#8597;</span></th>';
       }
 
-      headerHTML += '<th>Remote</th>';
+      headerHTML += '<th>Vacancies</th>';
+      headerHTML += '<th>Actions</th>';
 
       headerRow.innerHTML = headerHTML;
     }
@@ -486,8 +446,8 @@
     }
 
     function getColumnCount() {
-      if (showDualColumns) return 7; // Company, Industry, Location, Pipeline, Comercial, SDR, Remote
-      return 6; // Company, Industry, Location, Pipeline, [other role], Remote
+      if (showDualColumns) return 9; // Company, Industry, Location, Type, Pipeline, Sales Rep, SDR, Vacancies, Actions
+      return 8; // Company, Industry, Location, Type, Pipeline, [other role], Vacancies, Actions
     }
 
     // Render table with data
@@ -523,30 +483,37 @@
         cells += `<td>${company.industry}</td>`;
         // Location
         cells += `<td>${company.location}</td>`;
+        // Type
+        cells += `<td><span class="badge-type badge-type-${company.type}">${company.type === 'client' ? 'Client' : 'Prospect'}</span></td>`;
         // Pipeline
         cells += `<td><span class="badge-pipeline badge-pipeline-${company.pipelineStage}" onclick="event.stopPropagation();">${getPipelineLabel(company.pipelineStage)}</span></td>`;
 
         if (showDualColumns) {
           // Comercial column
           const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
-          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Unassigned</span>'}</td>`;
           // SDR column
           const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
-          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Unassigned</span>'}</td>`;
         } else if (isComercial) {
           // Comercial sees SDR column (read-only)
           const sdr = company.sdrId ? getMemberById(company.sdrId) : null;
-          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+          cells += `<td>${sdr ? `<span class="text-secondary">${sdr.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Unassigned</span>'}</td>`;
         } else if (isSDR) {
           // SDR sees Comercial column (read-only)
           const comercial = company.comercialId ? getMemberById(company.comercialId) : null;
-          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Sin asignar</span>'}</td>`;
+          cells += `<td>${comercial ? `<span class="text-secondary">${comercial.shortName}</span>` : '<span class="text-muted" style="font-style:italic;">Unassigned</span>'}</td>`;
         }
 
-        // Remote Viable
-        cells += `<td>${company.remoteViable
-          ? '<span style="color: #22c55e; font-size: 13px;" title="Remote Viable">&#10003;</span>'
-          : '<span style="color: var(--text-muted); font-size: 13px;" title="Not Remote Viable">&mdash;</span>'}</td>`;
+        // Vacancies (conteo)
+        const vacCount = MOCK_VACANCIES.filter(v => v.companyId === company.id).length;
+        cells += `<td><span class="vacancy-count-badge${vacCount ? '' : ' zero'}">${vacCount}</span></td>`;
+
+        // Actions
+        const deleteBtn = canDelete()
+          ? `<button class="table-action-delete" title="Eliminar empresa" onclick="event.stopPropagation(); confirmDeleteCompany('${company.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`
+          : '';
+        cells += `<td><a class="table-action-view" href="company-detail.html?id=${company.id}" onclick="event.stopPropagation();" title="Ver detalle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg></a>${deleteBtn}</td>`;
 
         return `<tr onclick="goToDetail('${company.id}')" style="cursor: pointer;">${cells}</tr>`;
       }).join('');
@@ -565,6 +532,23 @@
         lost: 'Lost'
       };
       return labels[stage] || stage;
+    }
+
+    // Delete (con confirmación)
+    function confirmDeleteCompany(companyId) {
+      const company = MOCK_COMPANIES.find(c => c.id === companyId);
+      if (!company) return;
+      openConfirmPopup({
+        title: 'Eliminar empresa',
+        message: `Vas a eliminar <strong>${company.name}</strong> y sus vacantes asociadas dejarán de estar vinculadas. Esta acción no se puede deshacer.`,
+        confirmLabel: 'Eliminar',
+        onConfirm: function () {
+          const idx = MOCK_COMPANIES.findIndex(c => c.id === companyId);
+          if (idx >= 0) MOCK_COMPANIES.splice(idx, 1);
+          showToast(`Company "${company.name}" deleted`, 'success');
+          applyFilters();
+        }
+      });
     }
 
     // Navigation
