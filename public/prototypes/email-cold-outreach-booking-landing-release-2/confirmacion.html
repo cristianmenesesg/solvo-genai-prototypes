@@ -488,14 +488,16 @@
   function readMeeting() {
     var q = new URLSearchParams(window.location.search);
     var start = q.get("start"), end = q.get("end"), tz = q.get("tz"),
-        name = q.get("name"), rep = q.get("rep"), repRole = q.get("repRole"),
+        name = q.get("name"), company = q.get("company"),
+        rep = q.get("rep"), repRole = q.get("repRole"),
         repPhoto = q.get("repPhoto");
     if (!start || !end) {
       try {
         var s = JSON.parse(sessionStorage.getItem("lag_meeting") || "null");
         if (s) {
           start = s.start; end = s.end; tz = tz || s.tz;
-          name = name || s.name; rep = rep || s.rep; repRole = repRole || s.repRole;
+          name = name || s.name; company = company || s.company;
+          rep = rep || s.rep; repRole = repRole || s.repRole;
           repPhoto = repPhoto || s.repPhoto;
         }
       } catch (e) {}
@@ -505,7 +507,8 @@
     if (isNaN(sd) || isNaN(ed)) return null;
     return {
       start: sd, end: ed, tz: tz || "America/New_York",
-      name: (name || "").trim(), rep: (rep || "").trim(), repRole: (repRole || "").trim(),
+      name: (name || "").trim(), company: (company || "").trim(),
+      rep: (rep || "").trim(), repRole: (repRole || "").trim(),
       repPhoto: (repPhoto || "").trim()
     };
   }
@@ -583,6 +586,14 @@
   var greet = meeting.name
     ? "You're all set, <em>" + meeting.name + "</em>."
     : "You're <em>all set</em>.";
+
+  /* nombrar la empresa da familiaridad; sin dato, copy neutro */
+  var lead = meeting.company
+    ? "Your 25-minute call is confirmed. We'll come ready to talk about <strong>" +
+      meeting.company + "</strong> and the roles you're hiring for — the calendar " +
+      "invite with the meeting link is on its way to your inbox."
+    : "Your 25-minute call is confirmed. The calendar invite with the meeting link " +
+      "is on its way to your inbox.";
   var abbr = tzAbbr(meeting.start, meeting.tz);
 
   /* icono de persona de base + foto del advisor encima si viene del agendamiento */
@@ -605,8 +616,7 @@
     '<div class="col-main">' +
       '<div class="check">' + ICON.check + '</div>' +
       '<h1>' + greet + '</h1>' +
-      '<p class="lead">Your 25-minute call is confirmed. The calendar invite ' +
-      'with the meeting link is on its way to your inbox.</p>' +
+      '<p class="lead">' + lead + '</p>' +
       '<div class="card">' +
         '<div class="row">' +
           '<div class="row-icon">' + ICON.date + '</div>' +

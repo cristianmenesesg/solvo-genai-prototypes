@@ -133,11 +133,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: clamp(14px, 2.4vh, 30px) clamp(20px, 5vw, 44px) clamp(20px, 3.2vh, 38px);
+    padding: clamp(30px, 5vh, 64px) clamp(20px, 5vw, 44px) clamp(12px, 2vh, 24px);
   }
   /* en la pantalla de agendamiento el fold cede algo de alto para que el
      showcase de talento asome bajo el pliegue e invite a seguir mirando */
-  body[data-screen="pick"] .page-fold { min-height: calc(100dvh - clamp(260px, 34vh, 420px)); }
+  body[data-screen="pick"] .page-fold { min-height: calc(100dvh - clamp(330px, 42vh, 520px)); }
   .screen { display: none; width: 100%; }
   .screen.is-active {
     display: flex;
@@ -211,7 +211,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(11px, 1.8vh, 18px);
+    gap: clamp(9px, 1.4vh, 15px);
   }
 
   /* botón "See another day" — pill con borde para más visibilidad */
@@ -256,7 +256,7 @@
     border: 1px solid var(--border-default);
     background: #fff;
     border-radius: var(--radius-card);
-    padding: 15px 14px 14px;
+    padding: 13px 13px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -450,7 +450,9 @@
     radial-gradient(66% 44% at 50% 106%, #BE8A55 0%, transparent 72%),
     linear-gradient(180deg, #EDE6F0 0%, #D4C9DE 100%); }
 
-  @media (max-width: 1199px) { body { overflow-x: clip; } }
+  /* el carrusel full-bleed usa 100vw (incluye la scrollbar): se clipea el eje X
+     en todos los anchos para que nunca aparezca scroll horizontal */
+  body { overflow-x: clip; }
 
   /* ============================ BACK LINK ============================ */
   .back-link {
@@ -902,7 +904,7 @@
     .lp-header { padding: 16px 18px; }
     .lp-header .meta { display: none; }
     .slot-cards { grid-template-columns: 1fr; max-width: 320px; }
-    .slot-card { flex-direction: row; justify-content: flex-start; gap: 14px; padding: 16px 18px; }
+    .slot-card { flex-direction: row; justify-content: flex-start; gap: 12px; padding: 12px 16px; }
     .slot-card .ico { width: 26px; height: 26px; }
     .slot-card .meta { align-items: flex-start; gap: 3px; }
   }
@@ -912,7 +914,7 @@
   body[data-screen="confirm"] .talent-section { display: none; }
   .talent-section {
     max-width: 1000px;
-    margin: clamp(22px, 4vh, 48px) auto 0;
+    margin: clamp(14px, 2.4vh, 32px) auto 0;
     padding: 0 clamp(20px, 5vw, 44px);
     display: flex;
     flex-direction: column;
@@ -1053,11 +1055,13 @@
     padding: 20px 22px;
     gap: 13px;
   }
-  .cand-card--matched .cand-top { gap: 14px; }
+  /* el chip "Strong match" es nowrap: sin wrap, en pantallas angostas
+     desbordaba la card. Envuelve a su propia línea cuando no cabe. */
+  .cand-card--matched .cand-top { gap: 14px; flex-wrap: wrap; }
   .cand-card--matched .tc-avatar--sm { width: 66px; height: 66px; }
   .cand-card--matched .cand-title { font-size: 17px; }
   .cand-card--matched .cand-summary { -webkit-line-clamp: 3; font-size: 13.5px; }
-  .cand-id { flex: 1; min-width: 0; }
+  .cand-id { flex: 1 1 170px; min-width: 0; }
   .cand-yrs { color: var(--text-secondary); font-weight: 600; margin-left: 4px; }
   .match-chip {
     flex-shrink: 0;
@@ -1108,21 +1112,77 @@
     width: calc(100vw - 2 * clamp(18px, 2.5vw, 56px));
     margin-top: 16px;
   }
+  /* carrusel: scroll nativo (touch en mobile) + auto-loop lento manejado en JS */
   .pool-marquee {
     position: relative;
     width: 100%;
-    overflow: hidden;
     padding: 6px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
     -webkit-mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
             mask: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
   }
-  .pool-track {
-    display: flex;
-    width: max-content;
-    animation: pool-scroll 64s linear infinite;
+  .pool-marquee::-webkit-scrollbar { display: none; }
+  .pool-track { display: flex; width: max-content; }
+  .pool-set { display: contents; }
+
+  /* wrapper para sobreponer los controles a los costados del carrusel */
+  .pool-carousel { position: relative; }
+
+  /* botones de paginación (desktop): sobrepuestos sobre el fundido lateral */
+  .pool-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-default);
+    background: rgba(255,255,255,0.92);
+    -webkit-backdrop-filter: blur(6px);
+            backdrop-filter: blur(6px);
+    color: var(--text-secondary);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
   }
-  .pool-marquee:hover .pool-track { animation-play-state: paused; }
-  @keyframes pool-scroll { to { transform: translateX(-50%); } }
+  .pool-nav:hover {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary-200);
+    transform: translateY(-50%) scale(1.06);
+  }
+  .pool-nav svg { width: 18px; height: 18px; }
+  .pool-nav--prev { left: 2px; }
+  .pool-nav--next { right: 2px; }
+  @media (min-width: 901px) { .pool-nav { display: inline-flex; } }
+
+  /* paginación por puntos: indica la posición y permite volver a una vacante vista */
+  .pool-dots {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .pool-dots button {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    width: 7px; height: 7px;
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+    transition: background var(--transition-fast), transform var(--transition-fast);
+  }
+  .pool-dots button:hover { background: var(--color-secondary-300); }
+  .pool-dots button.is-active { background: var(--color-secondary); transform: scale(1.4); }
+
   .pool-card {
     flex: 0 0 auto;
     width: 338px;
@@ -1166,14 +1226,10 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .pool-track {
-      animation: none;
-      flex-wrap: wrap;
-      width: 100%;
-      justify-content: center;
-      gap: 12px;
-    }
+  /* con prefers-reduced-motion el auto-loop se apaga en JS; el carrusel sigue
+     navegable con touch/scroll y con la paginación */
+  @media (max-width: 560px) {
+    .pool-card { width: 80vw; max-width: 320px; margin-right: 12px; }
   }
 
   /* ---- pie de card: disponibilidad + botón "ver detalle" (ambos formatos) ---- */
@@ -1832,6 +1888,8 @@
   var IC_MATCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.6"/><circle cx="15.5" cy="12" r="5.6"/><path d="M10 12l1.7 1.7L14 11"/></svg>';
   var IC_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H7.4A3.4 3.4 0 0 0 4 18.4V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.6a3.4 3.4 0 0 0-2.6-3.3M15.5 5a3.2 3.2 0 0 1 0 6.1"/></svg>';
   var IC_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
+  var IC_CHEV_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>';
+  var IC_CHEV_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>';
 
   /* arranca en featured solo si vino ?profiles= vacio/invalido */
   var talentMode = (hasProfilesParam && !urlProfiles.length) ? "featured" : "matched";
@@ -1905,6 +1963,8 @@
     eyebrow.style.display = "none";
     subline.style.display = "none";
 
+    stopPoolCarousel();
+
     if (talentMode === "matched") {
       var match = pickMatch(urlProfiles.length ? urlProfiles : DEFAULT_MATCHED);
       detailMap[match.profile_id] = normMatched(match);
@@ -1914,7 +1974,8 @@
       grid.className = "ts-grid is-single";
       grid.innerHTML = matchedCardHtml(match, match.profile_id);
     } else {
-      headline.innerHTML = "A glimpse of the talent <em>Solvo</em> places.";
+      headline.innerHTML = '<span class="live-dot" aria-hidden="true"></span>' +
+        "A glimpse of the talent <em>Solvo</em> places.";
       anon.innerHTML = IC_USERS + " Talent available now \u2014 new candidates every week";
       grid.className = "ts-grid is-marquee";
       var cards = POOL_PROFILES.map(function (p, i) {
@@ -1922,8 +1983,141 @@
         detailMap[id] = normPool(p);
         return poolCardHtml(p, id);
       }).join("");
-      grid.innerHTML = '<div class="pool-marquee"><div class="pool-track">' + cards + cards + '</div></div>';
+      /* set duplicado (aria-hidden) para que el loop no tenga salto */
+      grid.innerHTML =
+        '<div class="pool-carousel">' +
+          '<div class="pool-marquee">' +
+            '<div class="pool-track">' +
+              '<div class="pool-set">' + cards + '</div>' +
+              '<div class="pool-set" aria-hidden="true">' + cards + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="pool-nav pool-nav--prev" aria-label="Previous role">' + IC_CHEV_L + '</button>' +
+          '<button type="button" class="pool-nav pool-nav--next" aria-label="Next role">' + IC_CHEV_R + '</button>' +
+        '</div>' +
+        '<div class="pool-dots"></div>';
+      initPoolCarousel(POOL_PROFILES.length);
     }
+  }
+
+  /* ====================================================================
+     CARRUSEL DEL POOL \u00b7 auto-loop lento + scroll t\u00e1ctil + paginaci\u00f3n
+     El auto-avance se pausa mientras el usuario interact\u00faa (hover, touch,
+     rueda o click en un punto) y retoma tras unos segundos, para que se
+     pueda volver a una vacante ya vista sin pelear con el movimiento.
+     ==================================================================== */
+  var poolRaf = null;
+  var poolOnResize = null;
+
+  function stopPoolCarousel() {
+    if (poolRaf) { cancelAnimationFrame(poolRaf); poolRaf = null; }
+    if (poolOnResize) { window.removeEventListener("resize", poolOnResize); poolOnResize = null; }
+  }
+
+  function initPoolCarousel(count) {
+    var vp = document.querySelector(".pool-marquee");
+    var track = vp && vp.querySelector(".pool-track");
+    var dotsWrap = document.querySelector(".pool-dots");
+    if (!vp || !track) return;
+
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var SPEED = reduce ? 0 : 26;          // px/s \u2014 lento, pensado para alcanzar a leer
+    var setW = 0, step = 0;
+
+    poolOnResize = function () { setW = track.scrollWidth / 2; step = setW / count; };
+    poolOnResize();
+    window.addEventListener("resize", poolOnResize);
+
+    var paused = false, resumeAt = 0, last = 0, carry = 0, activeDot = -1;
+    function now() { return window.performance ? performance.now() : Date.now(); }
+    function hold() { paused = true; }
+    function release(delay) { paused = false; resumeAt = now() + (delay || 2200); }
+
+    /* mientras corre un scroll suave no se normaliza: tocar scrollLeft
+       en pleno vuelo cancelaría la animación */
+    var navigating = false;
+    function goTo(left) {
+      navigating = true;
+      vp.scrollTo({ left: left, behavior: "smooth" });
+      setTimeout(function () { navigating = false; normalize(); syncDots(); }, 700);
+    }
+    /* avanza/retrocede un rol; el set duplicado permite salir por cualquier extremo */
+    function nudge(dir) {
+      hold();
+      normalize();
+      if (dir < 0 && vp.scrollLeft < step) vp.scrollLeft += setW;
+      goTo(vp.scrollLeft + dir * step);
+      release(2600);
+    }
+
+    var prevBtn = document.querySelector(".pool-nav--prev");
+    var nextBtn = document.querySelector(".pool-nav--next");
+    if (prevBtn) prevBtn.addEventListener("click", function () { nudge(-1); });
+    if (nextBtn) nextBtn.addEventListener("click", function () { nudge(1); });
+
+    var dots = [];
+    if (dotsWrap) {
+      var html = "";
+      for (var i = 0; i < count; i++) {
+        html += '<button type="button" aria-label="Role ' + (i + 1) + '"></button>';
+      }
+      dotsWrap.innerHTML = html;
+      dots = Array.prototype.slice.call(dotsWrap.children);
+      dots.forEach(function (d, idx) {
+        d.addEventListener("click", function () {
+          hold();
+          normalize();
+          goTo(idx * step);
+          release(2600);
+        });
+      });
+    }
+
+    vp.addEventListener("mouseenter", hold);
+    vp.addEventListener("mouseleave", function () { release(600); });
+    vp.addEventListener("touchstart", hold, { passive: true });
+    vp.addEventListener("touchend", function () { release(2800); }, { passive: true });
+    vp.addEventListener("wheel", function () { hold(); release(2200); }, { passive: true });
+    /* el scroll manual (touch) actualiza la paginación al instante y cierra el loop */
+    vp.addEventListener("scroll", function () { normalize(); syncDots(); }, { passive: true });
+
+    function normalize() {
+      if (setW <= 0 || navigating) return;
+      if (vp.scrollLeft >= setW) vp.scrollLeft -= setW;
+      else if (vp.scrollLeft < 0) vp.scrollLeft += setW;
+    }
+
+    function syncDots() {
+      if (!dots.length || step <= 0) return;
+      var i = Math.round(vp.scrollLeft / step) % count;
+      if (i < 0) i += count;
+      if (i !== activeDot) {
+        if (dots[activeDot]) dots[activeDot].classList.remove("is-active");
+        dots[i].classList.add("is-active");
+        activeDot = i;
+      }
+    }
+
+    /* estado inicial sin depender del primer frame; se re-mide por si la
+       tipografía termina de cargar y cambia el ancho de las cards */
+    syncDots();
+    setTimeout(function () { poolOnResize(); syncDots(); }, 300);
+
+    function frame(ts) {
+      if (!last) last = ts;
+      var dt = Math.min((ts - last) / 1000, 0.05);
+      last = ts;
+      if (!paused && ts >= resumeAt && SPEED > 0) {
+        /* se acumula el sobrante: scrollLeft puede redondear a entero */
+        carry += SPEED * dt;
+        var whole = Math.floor(carry);
+        if (whole >= 1) { vp.scrollLeft += whole; carry -= whole; }
+      }
+      normalize();
+      syncDots();
+      poolRaf = requestAnimationFrame(frame);
+    }
+    poolRaf = requestAnimationFrame(frame);
   }
 
   /* ====================================================================
@@ -1988,6 +2182,9 @@
     closeDrawer();
     show("pick");
     loadPick();
+    /* el drawer se abre desde el showcase (bajo el pliegue): hay que subir a
+       las franjas horarias, si no el CTA parece no hacer nada */
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   document.getElementById("demo-matched").addEventListener("click", function () {
@@ -2421,6 +2618,7 @@
         end: endI.toISOString(),
         tz: TZ,
         name: prospect.first_name,
+        company: prospect.company_name,
         rep: rep.name,
         repRole: rep.role,
         repPhoto: rep.photo
@@ -2430,6 +2628,7 @@
                "&end=" + encodeURIComponent(meeting.end) +
                "&tz=" + encodeURIComponent(meeting.tz) +
                "&name=" + encodeURIComponent(meeting.name) +
+               "&company=" + encodeURIComponent(meeting.company || "") +
                "&rep=" + encodeURIComponent(meeting.rep) +
                "&repRole=" + encodeURIComponent(meeting.repRole) +
                "&repPhoto=" + encodeURIComponent(meeting.repPhoto || "");
