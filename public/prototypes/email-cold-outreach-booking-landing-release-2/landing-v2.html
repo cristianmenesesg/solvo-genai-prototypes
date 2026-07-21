@@ -1186,7 +1186,9 @@
   .ts-grid.is-marquee {
     display: block;
     grid-template-columns: none;
-    width: 100%;
+    /* full-bleed: se sale del contenedor de la sección y deja el mismo
+       margen lateral que las cards flotantes del hero */
+    width: calc(100vw - 2 * clamp(18px, 2.5vw, 56px));
     margin-top: 16px;
   }
   .pool-marquee {

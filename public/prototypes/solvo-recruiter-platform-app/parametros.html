@@ -27,17 +27,17 @@
         <h2 class="page-title">Parameters</h2>
         <!-- Cadencia y vigencia -->
         <div class="detail-card">
-          <div class="detail-card-title">Cadence and validity</div>
+          <div class="detail-card-title">Schedule and freshness</div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Run frequency — <code>frequency_days</code></label>
+              <label class="form-label">How often we search</label>
               <input class="form-input param-input" type="number" value="7" min="1">
-              <p class="filter-hint">How many days between scheduled pipeline runs. Default: 7 days.</p>
+              <p class="filter-hint">Days between each automatic search for new candidates. Default: 7 days.</p>
             </div>
             <div class="form-group">
-              <label class="form-label">Candidate validity — <code>validity_days</code></label>
+              <label class="form-label">How long results stay fresh</label>
               <input class="form-input param-input" type="number" value="2" min="1">
-              <p class="filter-hint">Days a candidate stays current based on its last OTW analysis. If the recruiter's query exceeds this value, it's re-validated on demand.</p>
+              <p class="filter-hint">Days a candidate's "open to work" status is trusted. After that, we check it again when a recruiter searches.</p>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@
         <div class="form-group">
           <label class="form-label">City</label>
           <input id="locNameInput" class="form-input" type="text" placeholder="e.g. Medellín Area Metropolitana" autocomplete="off">
-          <p class="filter-hint">As searched on LinkedIn (e.g. Medellín Area Metropolitana).</p>
+          <p class="filter-hint">Write the city the way LinkedIn names it, including the metro area if it has one.</p>
         </div>
       </div>
       <div class="modal-footer">
@@ -195,7 +195,7 @@
       const total = LOCATIONS.reduce((s,c)=> s + c.locs.length, 0);
 
       if (total === 0){
-        locBody.innerHTML = emptyRow('No cities in coverage.', true);
+        locBody.innerHTML = emptyRow('No cities yet. Add one to tell us where to look for candidates.', true);
         pager.style.display = 'none';
         return;
       }
@@ -251,7 +251,7 @@
 
     /* ---------------- Auto-guardado de cadencia y vigencia ---------------- */
     document.querySelectorAll('.param-input').forEach(inp => {
-      inp.addEventListener('change', () => showToast('Parameters saved','success'));
+      inp.addEventListener('change', () => showToast('Changes saved','success'));
     });
 
     locBody.addEventListener('click', (e) => {
@@ -329,7 +329,7 @@
       const country = countryInput.value.trim();
       const name = nameInput.value.trim();
       if (!country){ showToast('Choose or type a country','info'); countryInput.focus(); return; }
-      if (!name){ showToast('Type the city','info'); nameInput.focus(); return; }
+      if (!name){ showToast('Enter the city name','info'); nameInput.focus(); return; }
       let entry = LOCATIONS.find(c => norm(c.country) === norm(country));
       if (entry && entry.locs.some(l => norm(l.n) === norm(name))){
         showToast('That city already exists','info'); return;

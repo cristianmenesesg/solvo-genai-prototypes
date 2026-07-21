@@ -25,12 +25,11 @@
 
       <div class="page-content">
         <h2 class="page-title">Search profiles</h2>
-        <p class="filter-hint" style="margin-bottom:16px;">Each profile defines what the pipeline searches for. <b>Title</b> is Solvo's internal name; <b>ES/EN query</b> are the terms the scraping uses on LinkedIn. The initial list was loaded in the prework from Solvo's CSV.</p>
 
         <div class="geo-toolbar">
           <div class="geo-search">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-            <input id="perfSearch" class="geo-search-input" type="text" placeholder="Search by title, ES or EN query…" autocomplete="off">
+            <input id="perfSearch" class="geo-search-input" type="text" placeholder="Search by role or search terms…" autocomplete="off">
           </div>
           <button class="btn btn-primary btn-sm" onclick="openNew()">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
@@ -41,9 +40,9 @@
         <div class="table-container">
           <table class="perf-table">
             <thead><tr>
-              <th>Title (internal)</th>
-              <th>ES query</th>
-              <th>EN query</th>
+              <th>Role title</th>
+              <th>Spanish terms</th>
+              <th>English terms</th>
               <th class="perf-action"></th>
             </tr></thead>
             <tbody id="perfilesBody"></tbody>
@@ -69,15 +68,15 @@
         <button class="modal-close" onclick="closeModal('modalPerfil')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Title (Solvo internal name)</label>
+        <div class="form-group"><label class="form-label">Role title</label>
           <input class="form-input" id="fTitle" placeholder="e.g. CUSTOMER SERVICE REPRESENTATIVE"></div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Spanish query</label>
+          <div class="form-group"><label class="form-label">Spanish search terms</label>
             <input class="form-input" id="fEs" placeholder="e.g. Asesor de Servicio al Cliente"></div>
-          <div class="form-group"><label class="form-label">English query</label>
+          <div class="form-group"><label class="form-label">English search terms</label>
             <input class="form-input" id="fEn" placeholder="e.g. Customer Service Representative"></div>
         </div>
-        <p class="filter-hint">The scraping runs both terms (ES/EN) with <code>OR</code> in the boolean query.</p>
+        <p class="filter-hint">We look for candidates matching either the Spanish or the English terms, so it's worth filling in both.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('modalPerfil')">Cancel</button>
@@ -154,7 +153,7 @@
     function renderPerfiles(){
       const pager = document.getElementById('perfPager');
 
-      if (!PERFILES.length){ body.innerHTML = emptyRow('No search profiles.', true); pager.style.display = 'none'; return; }
+      if (!PERFILES.length){ body.innerHTML = emptyRow('No search profiles yet. Create one to tell us which roles to look for.', true); pager.style.display = 'none'; return; }
 
       const rows = filteredProfiles();
       if (!rows.length){
@@ -221,8 +220,8 @@
     }
     function savePerfil(){
       const title = fTitle.value.trim(), es = fEs.value.trim(), en = fEn.value.trim();
-      if (!title){ showToast('Title is required','info'); fTitle.focus(); return; }
-      if (!es && !en){ showToast('Enter at least one query (ES or EN)','info'); fEs.focus(); return; }
+      if (!title){ showToast('Add a role title to continue','info'); fTitle.focus(); return; }
+      if (!es && !en){ showToast('Add search terms in Spanish or English','info'); fEs.focus(); return; }
       if (editIndex === -1){ PERFILES.push({ title, es, en }); showToast('Profile created','success'); }
       else { PERFILES[editIndex] = { title, es, en }; showToast('Profile updated','success'); }
       closeModal('modalPerfil');
@@ -231,7 +230,7 @@
     function openDelete(i){
       openConfirmPopup({
         title: 'Delete profile',
-        message: 'The pipeline will stop searching candidates for this profile.',
+        message: "We'll stop looking for new candidates for this role. Candidates already found stay in your pool.",
         highlight: PERFILES[i].title,
         icon: 'trash',
         confirmLabel: 'Delete',

@@ -3,6 +3,17 @@
    Solo clases propias; reusa el bridge + tokens de styles.css (claro/oscuro por tokens).
    ======================================================================== */
 
+/* ---------- Shell compacto (overrides del shell compartido de styles.css) ----------
+   Se sobreescribe acá y no en styles.css para que ese archivo siga siendo espejo del
+   de solvo-platform-ui; si se adopta como estándar, se promueve al DS. */
+
+/* Header: botón de menú y título pegados a la izquierda, menos aire horizontal. */
+.header { padding: 0 var(--spacing-md); gap: var(--spacing-sm); }
+
+/* Página más densa: menos separación entre título, barras de filtros y tabla. */
+.page-title { margin-bottom: var(--spacing-md); }
+.filters-bar { margin-bottom: var(--spacing-md); }
+
 /* ---------- Badges de rol (faltan en styles.css) ---------- */
 .badge-role-recruiter { background: var(--status-info-bg); color: var(--status-info-fg); }
 .badge-role-admin     { background: color-mix(in srgb, var(--color-primary) 15%, transparent); color: var(--color-primary-700); }
@@ -64,9 +75,6 @@
 .email-cell { font-size: var(--font-size-sm); color: var(--text-primary); }
 .email-cell.email-none { color: var(--text-muted); font-style: italic; }
 .cand-li { color: var(--text-link); font-size: var(--font-size-xs); font-weight: 500; }
-
-.results-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); }
-.results-head .table-title { color: var(--text-secondary); font-size: var(--font-size-sm); }
 
 /* ---------- Bulk action bar ---------- */
 .bulk-bar {

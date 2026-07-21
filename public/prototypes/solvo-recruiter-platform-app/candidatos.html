@@ -51,13 +51,12 @@
             </span>
           </div>
         </div>
-        <p class="filter-hint">Pulls the profile's candidates and applies fuzzy matching over <code>headline</code>/<code>about</code>/<code>skills</code>. Current ones show instantly; expired ones are re-validated open-to-work in the background (n8n webhook) and appear as they come in.</p>
 
         <!-- Estado inicial / vacío -->
         <div class="empty-state" id="emptyState" style="display:flex; flex-direction:column; align-items:center; padding:64px 24px; text-align:center;">
           <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-          <h3 id="emptyTitle" style="margin-top:14px; color:var(--text-primary); font-size:var(--font-size-lg);">Search open-to-work candidates</h3>
-          <p id="emptyMsg" style="color:var(--text-muted); margin-top:6px; max-width:46ch;">Choose a profile and, optionally, up to 3 keywords. Hit Search: the system pulls current candidates, re-validates expired ones in the background, and shows the email already captured by the pipeline.</p>
+          <h3 id="emptyTitle" style="margin-top:14px; color:var(--text-primary); font-size:var(--font-size-lg);">Find candidates open to work</h3>
+          <p id="emptyMsg" style="color:var(--text-muted); margin-top:6px; max-width:46ch;">Pick a search profile and, if you want, add up to 3 keywords to narrow it down. You'll see matching candidates right away, with their contact email when we have it.</p>
         </div>
 
         <!-- Resultados -->
@@ -67,8 +66,8 @@
           <!-- Barra de filtros del listado (client-side, HUTPS-4.6-FE) -->
           <div class="filters-bar" id="resultsFilters" style="align-items:flex-end;">
             <div class="filter-group">
-              <label class="filter-label">Filter (headline, about, skills)</label>
-              <input type="text" class="form-input sm" id="fltText" placeholder="Text…" style="min-width:190px;">
+              <label class="filter-label">Filter results</label>
+              <input type="text" class="form-input sm" id="fltText" placeholder="Headline, summary or skill…" style="min-width:190px;">
             </div>
             <div class="filter-group">
               <label class="filter-label">Language</label>
@@ -88,9 +87,6 @@
             </div>
           </div>
 
-          <div class="results-head">
-            <span class="table-title"><span id="resultCount">0 candidates</span></span>
-          </div>
           <div class="table-container">
             <table>
               <thead><tr>
@@ -99,12 +95,19 @@
                 <th>Headline</th>
                 <th>Skills</th>
                 <th>Languages</th>
-                <th>Verified</th>
                 <th>Email</th>
                 <th>LinkedIn</th>
               </tr></thead>
               <tbody id="candRows"></tbody>
             </table>
+            <div class="table-pagination" id="candPager" style="display:none;">
+              <span class="pagination-info" id="candPagerInfo"></span>
+              <div class="pagination-controls">
+                <button class="pagination-btn" id="candPrev" type="button">‹ Previous</button>
+                <span class="pagination-info" id="candPagerPages"></span>
+                <button class="pagination-btn" id="candNext" type="button">Next ›</button>
+              </div>
+            </div>
           </div>
 
           <div class="bulk-bar" id="bulkBar">
@@ -139,7 +142,6 @@
         <span class="detail-label">Details</span>
         <div class="drawer-kv"><b>Location</b><span data-d-loc>—</span></div>
         <div class="drawer-kv"><b>Languages</b><span data-d-langs>—</span></div>
-        <div class="drawer-kv"><b>Verified</b><span data-d-verified>—</span></div>
         <div class="drawer-kv"><b>Email</b><span data-d-email>—</span></div>
       </div>
       <div class="drawer-section">
@@ -156,26 +158,6 @@
     </div>
   </aside>
 
-  <!-- Modal outreach -->
-  <div class="modal-overlay" id="modalOutreach">
-    <div class="modal" style="max-width:460px;">
-      <div class="modal-header">
-        <h2 class="modal-title">Send invitation email</h2>
-        <button class="modal-close" onclick="closeModal('modalOutreach')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p style="color:var(--text-secondary); font-size:var(--font-size-sm);">The invitation email (preconfigured Brevo template) will be sent to <b style="color:var(--text-primary);" data-out-count>0</b> selected candidate(s).</p>
-        <p class="text-muted" style="font-size:var(--font-size-xs); margin-top:8px;">Candidates without a valid email are skipped and reported at the end.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('modalOutreach')">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmOutreach()">Confirm send</button>
-      </div>
-    </div>
-  </div>
-
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="app.js"></script>
@@ -185,7 +167,6 @@
     initTags();
     initProfileCombo();
     initFilters();
-    document.getElementById('modalOutreach').addEventListener('click', function(e){ if(e.target===this) closeModal('modalOutreach'); });
   </script>
 </body>
 </html>

@@ -173,7 +173,8 @@ function showToast(message, type = 'success') {
 /* ----------------- Confirm popup (borrados y acciones destructivas) ----------------- */
 const CONFIRM_ICONS = {
   trash: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
-  search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>'
+  search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>',
+  mail: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>'
 };
 
 function openConfirmPopup(options) {
@@ -300,14 +301,14 @@ function runSearch() {
   const note = document.getElementById('loadNote');
   const ind = document.getElementById('searchIndicator');
 
-  if (!profile) { showToast('Choose a search profile', 'info'); return; }
+  if (!profile) { showToast('Pick a search profile to start', 'info'); return; }
 
   // estado sin resultados
   if (profile === NO_RESULT_PROFILE) {
     card.style.display = 'none'; note.style.display = 'none'; if (ind) ind.style.display = 'none';
     empty.style.display = 'flex';
-    document.getElementById('emptyTitle').textContent = 'No candidates for this search';
-    document.getElementById('emptyMsg').textContent = 'No open-to-work candidates for “' + profile + '” with those keywords. Try another profile or remove keywords.';
+    document.getElementById('emptyTitle').textContent = 'No candidates found';
+    document.getElementById('emptyMsg').textContent = 'No one open to work matches “' + profile + '” with those keywords. Try another profile or remove a keyword.';
     return;
   }
 
@@ -315,11 +316,10 @@ function runSearch() {
   card.style.display = 'block';
   if (ind) ind.style.display = 'flex';
   note.style.display = 'flex';
-  document.querySelector('[data-note]').textContent = 'Showing current results and re-validating open-to-work for expired ones in the background…';
+  document.querySelector('[data-note]').textContent = 'Checking which candidates are still open to work — more may appear as we go…';
   tbody.innerHTML = '';
-  clearFilters();          // arranca sin filtros aplicados
+  clearFilters();          // arranca sin filtros aplicados y en la página 1
   populateFilterOptions(); // idioma y localización según el conjunto de resultados
-  updateCount(0);
 
   CANDIDATES.forEach((c, idx) => {
     setTimeout(() => {
@@ -338,7 +338,6 @@ function runSearch() {
         <td>${c.headline}</td>
         <td>${chips(c.skills)}</td>
         <td>${chips(c.languages)}</td>
-        <td>${c.verified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-neutral">—</span>'}</td>
         <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
         <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
       tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
@@ -371,37 +370,63 @@ function populateFilterOptions() {
     locSel.innerHTML = '<option value="">All locations</option>' + locs.map(l => `<option>${l}</option>`).join('');
   }
 }
+/* Paginación del listado: se aplica sobre el resultado ya filtrado, en el cliente.
+   El contador total vive en el pager (no hay línea de conteo aparte). */
+const CAND_PAGE_SIZE = 5;
+let candPage = 0;
+
 function applyFilters() {
-  const rows = document.querySelectorAll('#candRows tr');
-  if (!rows.length) { updateCount(0); return; }
+  const rows = [...document.querySelectorAll('#candRows tr')];
   const q = (document.getElementById('fltText')?.value || '').trim().toLowerCase();
   const lang = document.getElementById('fltLang')?.value || '';
   const loc = document.getElementById('fltLoc')?.value || '';
   const onlyEmail = document.getElementById('fltEmail')?.checked;
-  let visible = 0;
-  rows.forEach(tr => {
-    let show = true;
-    if (q && !tr.dataset.text.includes(q)) show = false;
-    if (lang && !tr.dataset.langs.split('|').includes(lang)) show = false;
-    if (loc && tr.dataset.country !== loc) show = false;
-    if (onlyEmail && tr.dataset.email !== '1') show = false;
-    tr.style.display = show ? '' : 'none';
-    if (show) visible++;
+
+  const matches = rows.filter(tr => {
+    if (q && !tr.dataset.text.includes(q)) return false;
+    if (lang && !tr.dataset.langs.split('|').includes(lang)) return false;
+    if (loc && tr.dataset.country !== loc) return false;
+    if (onlyEmail && tr.dataset.email !== '1') return false;
+    return true;
   });
-  updateCount(visible);
+
+  const pages = Math.max(1, Math.ceil(matches.length / CAND_PAGE_SIZE));
+  candPage = Math.min(Math.max(candPage, 0), pages - 1);
+  const start = candPage * CAND_PAGE_SIZE;
+  const slice = matches.slice(start, start + CAND_PAGE_SIZE);
+
+  rows.forEach(tr => { tr.style.display = 'none'; });
+  slice.forEach(tr => { tr.style.display = ''; });
+
+  renderCandPager(matches.length, pages, start, slice.length);
+}
+function renderCandPager(total, pages, start, shown) {
+  const pager = document.getElementById('candPager');
+  if (!pager) return;
+  if (!total) { pager.style.display = 'none'; return; }
+  pager.style.display = '';
+  document.getElementById('candPagerInfo').textContent =
+    `${start + 1}–${start + shown} of ${total} candidate${total === 1 ? '' : 's'}`;
+  document.getElementById('candPagerPages').textContent = `Page ${candPage + 1} of ${pages}`;
+  document.getElementById('candPrev').disabled = candPage === 0;
+  document.getElementById('candNext').disabled = candPage >= pages - 1;
 }
 function clearFilters() {
   const t = document.getElementById('fltText'); if (t) t.value = '';
   const l = document.getElementById('fltLang'); if (l) l.value = '';
   const o = document.getElementById('fltLoc'); if (o) o.value = '';
   const e = document.getElementById('fltEmail'); if (e) e.checked = false;
+  candPage = 0;
   applyFilters();
 }
 function initFilters() {
-  document.getElementById('fltText')?.addEventListener('input', applyFilters);
-  document.getElementById('fltLang')?.addEventListener('change', applyFilters);
-  document.getElementById('fltLoc')?.addEventListener('change', applyFilters);
-  document.getElementById('fltEmail')?.addEventListener('change', applyFilters);
+  const refilter = () => { candPage = 0; applyFilters(); };  // filtrar vuelve a la página 1
+  document.getElementById('fltText')?.addEventListener('input', refilter);
+  document.getElementById('fltLang')?.addEventListener('change', refilter);
+  document.getElementById('fltLoc')?.addEventListener('change', refilter);
+  document.getElementById('fltEmail')?.addEventListener('change', refilter);
+  document.getElementById('candPrev')?.addEventListener('click', () => { if (candPage > 0) { candPage--; applyFilters(); } });
+  document.getElementById('candNext')?.addEventListener('click', () => { candPage++; applyFilters(); });
 }
 
 /* ----------------- Searchbox de perfiles (autocomplete, HUTPS-4.3-BE) ----------------- */
@@ -427,10 +452,6 @@ function initProfileCombo() {
   document.addEventListener('click', e => { if (!e.target.closest('#profileCombo')) combo.classList.remove('open'); });
   input.value = PROFILES[0]; // preselección para la demo
 }
-function updateCount(n) {
-  const el = document.getElementById('resultCount');
-  if (el) el.textContent = n + ' candidate' + (n === 1 ? '' : 's');
-}
 function updateBulk() {
   const bar = document.getElementById('bulkBar'); if (!bar) return;
   if (SELECTED.size) { bar.classList.add('show'); bar.querySelector('[data-count]').textContent = SELECTED.size; }
@@ -446,7 +467,6 @@ function fillDrawer(c) {
   d.querySelector('[data-d-about]').textContent = c.about;
   d.querySelector('[data-d-loc]').textContent = c.loc;
   const langEl = d.querySelector('[data-d-langs]'); if (langEl) langEl.textContent = c.languages.join(', ');
-  d.querySelector('[data-d-verified]').textContent = c.verified ? 'Yes' : 'No';
   d.querySelector('[data-d-email]').textContent = EMAIL_RESOLUTION[c.id] ? c.email : 'no email';
   d.querySelector('[data-d-skills]').innerHTML = chips(c.skills);
 }
@@ -454,12 +474,24 @@ function fillDrawer(c) {
 /* ----------------- Outreach ----------------- */
 function openOutreach() {
   if (!SELECTED.size) return;
-  document.querySelector('#modalOutreach [data-out-count]').textContent = SELECTED.size;
-  openModal('modalOutreach');
+  const n = SELECTED.size;
+  const noEmail = [...SELECTED].filter(id => !EMAIL_RESOLUTION[id]).length;
+  openConfirmPopup({
+    title: 'Send invitation email',
+    message: noEmail
+      ? `We'll invite the candidates you selected to apply. ${noEmail} of them ${noEmail === 1 ? 'has' : 'have'} no email address, so ${noEmail === 1 ? 'they' : 'they'} won't be contacted.`
+      : "We'll invite the candidates you selected to apply.",
+    highlight: `${n} candidate${n === 1 ? '' : 's'} selected`,
+    icon: 'mail',
+    confirmLabel: 'Send invitations',
+    onConfirm: confirmOutreach
+  });
 }
 function confirmOutreach() {
-  closeModal('modalOutreach');
   let withEmail = 0; SELECTED.forEach(id => { if (EMAIL_RESOLUTION[id]) withEmail++; });
   const skipped = SELECTED.size - withEmail;
-  showToast(`Outreach sent: ${withEmail} sent${skipped ? `, ${skipped} skipped (no email)` : ''}`, skipped ? 'info' : 'success');
+  showToast(
+    `${withEmail} invitation${withEmail === 1 ? '' : 's'} sent${skipped ? ` · ${skipped} skipped, no email address` : ''}`,
+    skipped ? 'info' : 'success'
+  );
 }
