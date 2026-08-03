@@ -406,49 +406,23 @@
     box-shadow: inset 0 0 0 1px rgba(33,33,33,0.06);
   }
 
-  /* retratos difuminados de fallback (mientras no exista la foto) */
-  .tc-avatar { overflow: hidden; }
-  .tc-avatar::before { content: ""; position: absolute; inset: 0; filter: blur(7px); transform: scale(1.22); }
-  .tc-avatar.ph-1::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(50,32,22,0.24), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #ECC09A 0%, #D89F73 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #B07A52 0%, transparent 72%),
-    linear-gradient(180deg, #D7E6EB 0%, #BBD2DB 100%); }
-  .tc-avatar.ph-2::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(30,20,14,0.30), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #C98E63 0%, #B0744A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #8C5733 0%, transparent 72%),
-    linear-gradient(180deg, #F0E2D4 0%, #DDC7B2 100%); }
-  .tc-avatar.ph-3::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(70,55,35,0.20), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #F2D2B3 0%, #E2B68C 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #C99A6E 0%, transparent 72%),
-    linear-gradient(180deg, #E7E9EE 0%, #CDD2DC 100%); }
-  .tc-avatar.ph-4::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(40,28,18,0.26), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #D8A878 0%, #BE885A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #99693E 0%, transparent 72%),
-    linear-gradient(180deg, #DCE8E0 0%, #BFD3C6 100%); }
-  .tc-avatar.ph-5::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(25,16,10,0.34), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #B07A4F 0%, #94603A 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #6F4626 0%, transparent 72%),
-    linear-gradient(180deg, #DCE4F0 0%, #BCC9E0 100%); }
-  .tc-avatar.ph-6::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(60,46,30,0.22), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #EAC195 0%, #D6A36C 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #B5824F 0%, transparent 72%),
-    linear-gradient(180deg, #F1E7D6 0%, #E0CBA9 100%); }
-  .tc-avatar.ph-7::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(45,30,20,0.28), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #DDA97E 0%, #C48B5D 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #A06B40 0%, transparent 72%),
-    linear-gradient(180deg, #E3EDE6 0%, #C6DACB 100%); }
-  .tc-avatar.ph-8::before { background:
-    radial-gradient(33% 25% at 50% 30%, rgba(55,40,26,0.22), transparent 70%),
-    radial-gradient(30% 30% at 50% 44%, #EFC9A2 0%, #DCAC79 62%, transparent 75%),
-    radial-gradient(66% 44% at 50% 106%, #BE8A55 0%, transparent 72%),
-    linear-gradient(180deg, #EDE6F0 0%, #D4C9DE 100%); }
+  /* retratos de las fichas de talento */
+  .tc-avatar { overflow: hidden; background: var(--color-gray-100); }
+  .tc-avatar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+  }
+  .tc-avatar.ph-1::before { background-image: url("assets/people/person-01.jpg"); }
+  .tc-avatar.ph-2::before { background-image: url("assets/people/person-02.jpg"); }
+  .tc-avatar.ph-3::before { background-image: url("assets/people/person-03.jpg"); }
+  .tc-avatar.ph-4::before { background-image: url("assets/people/person-04.jpg"); }
+  .tc-avatar.ph-5::before { background-image: url("assets/people/person-05.jpg"); }
+  .tc-avatar.ph-6::before { background-image: url("assets/people/person-06.jpg"); }
+  .tc-avatar.ph-7::before { background-image: url("assets/people/person-07.jpg"); }
+  .tc-avatar.ph-8::before { background-image: url("assets/people/person-08.jpg"); }
 
   /* el carrusel full-bleed usa 100vw (incluye la scrollbar): se clipea el eje X
      en todos los anchos para que nunca aparezca scroll horizontal */
@@ -813,6 +787,45 @@
     color: var(--color-error-dark);
   }
   .setup-err.show { display: block; }
+
+  /* Tarjeta de identificacion en Confirm — visitante sin identidad en el enlace */
+  .id-card {
+    width: 100%;
+    background: #fff;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-xl);
+    padding: 16px 18px 18px;
+    box-shadow: var(--shadow-xs);
+    text-align: left;
+  }
+  .id-card .id-title {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  .id-card .id-note {
+    margin-top: 3px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .id-card .setup-form { margin-top: 12px; }
+
+  .setup-alt {
+    margin-top: 12px;
+    appearance: none;
+    width: 100%;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .setup-alt:hover { color: var(--text-primary); }
   .setup-btn {
     margin-top: 5px;
     appearance: none;
@@ -1002,19 +1015,6 @@
   }
   .cand-top { display: flex; align-items: center; gap: 12px; }
   .tc-avatar--sm { width: 54px; height: 54px; margin: 0; flex-shrink: 0; }
-  .tc-avatar--sm::before { filter: blur(6px); }
-  .tc-lock {
-    position: absolute;
-    right: -2px; bottom: -2px;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: #fff;
-    color: var(--text-muted);
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--shadow-sm);
-    z-index: 1;
-  }
-  .tc-lock svg { width: 11px; height: 11px; }
   .cand-title {
     font-family: var(--font-heading);
     font-size: 15px;
@@ -1400,17 +1400,6 @@
     border-top: 1px solid var(--border-default);
     background: #fff;
   }
-  .drawer-foot .dr-note {
-    font-size: 11.5px;
-    color: var(--text-muted);
-    text-align: center;
-    margin-bottom: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .drawer-foot .dr-note svg { width: 12px; height: 12px; }
   .drawer-foot .dr-btn {
     width: 100%;
     appearance: none;
@@ -1556,6 +1545,7 @@
         </label>
         <div class="setup-err" id="su-err">Enter a first name and a valid work email.</div>
         <button type="button" class="setup-btn" id="start-btn">Start demo &rarr;</button>
+        <button type="button" class="setup-alt" id="start-anon">Start as a visitor with no email link</button>
       </div>
     </div>
   </section>
@@ -1631,6 +1621,28 @@
         </div>
       </div>
 
+      <div class="id-card" id="id-card" style="display:none;">
+        <div class="id-title">Where should we send the invite?</div>
+        <p class="id-note">You'll get the calendar invite and the meeting link at this address.</p>
+        <div class="setup-form">
+          <div class="setup-row">
+            <label>First name
+              <input type="text" id="id-first" autocomplete="given-name" spellcheck="false" />
+            </label>
+            <label>Last name
+              <input type="text" id="id-last" autocomplete="family-name" spellcheck="false" />
+            </label>
+          </div>
+          <label>Company
+            <input type="text" id="id-company" autocomplete="organization" spellcheck="false" />
+          </label>
+          <label>Work email
+            <input type="email" id="id-email" autocomplete="email" spellcheck="false" />
+          </label>
+          <div class="setup-err" id="id-err">Complete your name, company and a valid work email.</div>
+        </div>
+      </div>
+
       <div class="err-msg" id="err-msg"></div>
 
       <button type="button" class="confirm-btn" id="confirm-btn">Confirm meeting</button>
@@ -1655,7 +1667,7 @@
 <div class="drawer-overlay" id="drawer-overlay"></div>
 <aside class="cand-drawer" id="cand-drawer" role="dialog" aria-modal="true" aria-labelledby="dh-title">
   <div class="drawer-head">
-    <div class="tc-avatar tc-avatar--lg" id="dh-avatar"><span class="tc-lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span></div>
+    <div class="tc-avatar tc-avatar--lg" id="dh-avatar"></div>
     <div class="dh-id">
       <div class="dh-title" id="dh-title">Senior Sales Representative</div>
       <div class="dh-loc" id="dh-loc"></div>
@@ -1683,10 +1695,6 @@
     </div>
   </div>
   <div class="drawer-foot">
-    <div class="dr-note">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-      Names, photo and contact shared once you book a call.
-    </div>
     <button type="button" class="dr-btn" id="drawer-book">Book a call to meet talent like this &rarr;</button>
   </div>
 </aside>
@@ -1735,6 +1743,10 @@
     email:      "sarah.chen@acmecorp.com",
     company_name: "Acme Corp"
   };
+
+  /* El enlace del cold email trae identidad; quien llega por otro medio, no.
+     Sin identidad no hay perfil que mostrar y los datos se piden al confirmar. */
+  var identified = true;
 
   /* Interruptores de simulacion para el equipo de desarrollo.
      failAvailability: simula caida del servicio /availability
@@ -1884,7 +1896,6 @@
   ];
 
   var IC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
-  var IC_LOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   var IC_MATCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.6"/><circle cx="15.5" cy="12" r="5.6"/><path d="M10 12l1.7 1.7L14 11"/></svg>';
   var IC_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H7.4A3.4 3.4 0 0 0 4 18.4V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.6a3.4 3.4 0 0 0-2.6-3.3M15.5 5a3.2 3.2 0 0 1 0 6.1"/></svg>';
   var IC_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg>';
@@ -1893,6 +1904,10 @@
 
   /* arranca en featured solo si vino ?profiles= vacio/invalido */
   var talentMode = (hasProfilesParam && !urlProfiles.length) ? "featured" : "matched";
+  function resolveTalentMode() {
+    talentMode = (!identified || (hasProfilesParam && !urlProfiles.length)) ? "featured" : "matched";
+  }
+  resolveTalentMode();
 
   /* el match: primer perfil v\u00e1lido (solo se muestra uno) */
   function pickMatch(profileIds) {
@@ -1928,7 +1943,7 @@
     }).join("");
     return '<div class="cand-card cand-card--matched">' +
       '<div class="cand-top">' +
-        '<div class="tc-avatar tc-avatar--sm ' + c.face + '"><span class="tc-lock">' + IC_LOCK + '</span></div>' +
+        '<div class="tc-avatar tc-avatar--sm ' + c.face + '"></div>' +
         '<div class="cand-id"><div class="cand-title">' + c.display_title + '</div>' +
         '<div class="cand-loc">' + IC_PIN + c.country +
         '<span class="cand-yrs">&middot; ' + c.years_experience + '+ yrs</span></div></div>' +
@@ -1970,12 +1985,13 @@
       detailMap[match.profile_id] = normMatched(match);
       headline.innerHTML = '<span class="live-dot" aria-hidden="true"></span>' + prospect.first_name +
         ', we already have a <em>match</em> for your role.';
-      anon.innerHTML = IC_LOCK + " Identity protected \u2014 full name shared after you book";
+      anon.style.display = "none";
       grid.className = "ts-grid is-single";
       grid.innerHTML = matchedCardHtml(match, match.profile_id);
     } else {
       headline.innerHTML = '<span class="live-dot" aria-hidden="true"></span>' +
         "A glimpse of the talent <em>Solvo</em> places.";
+      anon.style.display = "";
       anon.innerHTML = IC_USERS + " Talent available now \u2014 new candidates every week";
       grid.className = "ts-grid is-marquee";
       var cards = POOL_PROFILES.map(function (p, i) {
@@ -2570,8 +2586,36 @@
     document.getElementById("rep-name").textContent = rep.name;
     document.getElementById("rep-role").textContent = rep.role + " · Solvo Global";
 
+    /* Quien llega desde el cold email no ve el formulario: su identidad viaja en el enlace */
+    document.getElementById("id-card").style.display = identified ? "none" : "";
+
     resetConfirmBtn();
     hideError();
+  }
+
+  /* Visitante sin identidad: los cuatro datos son obligatorios y el correo se valida en
+     su forma. Un dato invalido se senala sin descartar el horario ya elegido. */
+  function captureIdentity() {
+    var f = document.getElementById("id-first"),
+        l = document.getElementById("id-last"),
+        c = document.getElementById("id-company"),
+        e = document.getElementById("id-email");
+    var okF = !!f.value.trim(),
+        okL = !!l.value.trim(),
+        okC = !!c.value.trim(),
+        okE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.value.trim());
+    f.classList.toggle("invalid", !okF);
+    l.classList.toggle("invalid", !okL);
+    c.classList.toggle("invalid", !okC);
+    e.classList.toggle("invalid", !okE);
+    var ok = okF && okL && okC && okE;
+    document.getElementById("id-err").classList.toggle("show", !ok);
+    if (!ok) return false;
+    prospect.first_name = f.value.trim();
+    prospect.last_name = l.value.trim();
+    prospect.company_name = c.value.trim();
+    prospect.email = e.value.trim();
+    return true;
   }
 
   function resetConfirmBtn() {
@@ -2591,6 +2635,7 @@
   /* Confirmacion del booking — llamada simulada a POST /book */
   document.getElementById("confirm-btn").addEventListener("click", function () {
     if (!selected) return;
+    if (!identified && !captureIdentity()) return;
     var btn = document.getElementById("confirm-btn");
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Confirming…';
@@ -2677,6 +2722,21 @@
     prospect.first_name = f;
     prospect.last_name = l;
     prospect.email = e;
+    identified = true;
+    resolveTalentMode();
+    renderTalent();
+    show("pick");
+    loadPick();
+  });
+
+  /* Recorrido del visitante que no llega desde el correo: sin identidad ni perfil */
+  document.getElementById("start-anon").addEventListener("click", function () {
+    identified = false;
+    prospect.first_name = "";
+    prospect.last_name = "";
+    prospect.email = "";
+    prospect.company_name = "";
+    resolveTalentMode();
     renderTalent();
     show("pick");
     loadPick();

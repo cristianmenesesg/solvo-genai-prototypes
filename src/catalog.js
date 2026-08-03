@@ -80,6 +80,17 @@ export const products = [
         ],
       },
       {
+        id: 'status-report',
+        nombre: 'Reporte semanal de estatus del sistema (email)',
+        categoria: 'Email',
+        bundle: 'solvo-sales-platform-status-report',
+        notas: 'Reporte interno transversal: vacantes por origen, cadena de empresas, contactos y salud de los pipelines. El detalle por indicador viaja adjunto en CSV.',
+        versions: [
+          { label: 'Preview', file: 'brevo-status-report-preview.html' },
+          { label: 'Email (Brevo)', file: 'brevo-status-report.html' },
+        ],
+      },
+      {
         id: 'platform-ui',
         nombre: 'Platform UI (backoffice)',
         categoria: 'App',
@@ -114,6 +125,17 @@ export const products = [
         multipage: true,
         notas: 'Arranca en el login; usá el selector de usuario demo para entrar.',
         versions: [{ label: 'App', file: 'index.html' }],
+      },
+      {
+        id: 'outreach-invitation',
+        nombre: 'Invitación a aplicar (email)',
+        categoria: 'Email',
+        bundle: 'solvo-recruiter-platform-outreach',
+        notas: 'Outreach al candidato: título, párrafo y CTA. El destino del CTA está pendiente de definir.',
+        versions: [
+          { label: 'Preview', file: 'brevo-outreach-invitation-preview.html' },
+          { label: 'Email (Brevo)', file: 'brevo-outreach-invitation.html' },
+        ],
       },
     ],
   },

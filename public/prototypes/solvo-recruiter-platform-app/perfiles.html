@@ -31,6 +31,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
             <input id="perfSearch" class="geo-search-input" type="text" placeholder="Search by role or search terms…" autocomplete="off">
           </div>
+          <span class="showcase-count" id="showcaseCount"></span>
+          <div class="geo-filter">
+            <button class="btn btn-sm btn-outline" type="button" id="btnShowcaseOnly" aria-pressed="false">Showcase</button>
+          </div>
           <button class="btn btn-primary btn-sm" onclick="openNew()">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
             New profile
@@ -43,6 +47,8 @@
               <th>Role title</th>
               <th>Spanish terms</th>
               <th>English terms</th>
+              <th class="perf-active">Scraping</th>
+              <th class="perf-showcase">Showcase</th>
               <th class="perf-action"></th>
             </tr></thead>
             <tbody id="perfilesBody"></tbody>
@@ -62,21 +68,63 @@
 
   <!-- Modal crear/editar -->
   <div class="modal-overlay" id="modalPerfil">
-    <div class="modal" style="max-width:520px;">
+    <div class="modal" style="max-width:640px;">
       <div class="modal-header">
         <h2 class="modal-title" id="perfilTitle">New profile</h2>
         <button class="modal-close" onclick="closeModal('modalPerfil')"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
       </div>
       <div class="modal-body">
-        <div class="form-group"><label class="form-label">Role title</label>
-          <input class="form-input" id="fTitle" placeholder="e.g. CUSTOMER SERVICE REPRESENTATIVE"></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Spanish search terms</label>
-            <input class="form-input" id="fEs" placeholder="e.g. Asesor de Servicio al Cliente"></div>
-          <div class="form-group"><label class="form-label">English search terms</label>
-            <input class="form-input" id="fEn" placeholder="e.g. Customer Service Representative"></div>
+        <div class="form-section">
+          <div class="form-section-title">Role</div>
+          <div class="form-group"><label class="form-label">Role title</label>
+            <input class="form-input" id="fTitle" placeholder="e.g. CUSTOMER SERVICE REPRESENTATIVE"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Spanish search terms</label>
+              <input class="form-input" id="fEs" placeholder="e.g. Asesor de Servicio al Cliente"></div>
+            <div class="form-group"><label class="form-label">English search terms</label>
+              <input class="form-input" id="fEn" placeholder="e.g. Customer Service Representative"></div>
+          </div>
+          <p class="filter-hint">We look for candidates matching either the Spanish or the English terms, so it's worth filling in both.</p>
         </div>
-        <p class="filter-hint">We look for candidates matching either the Spanish or the English terms, so it's worth filling in both.</p>
+
+        <div class="form-section">
+          <div class="form-section-title">Curriculum detail</div>
+          <p class="form-section-hint">What a prospect sees on the booking landing when this role matches one of their openings. No names, no contact details.</p>
+
+          <div class="card-photo">
+            <div class="card-photo-face" id="fPhotoPreview">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"></path></svg>
+            </div>
+            <div class="card-photo-actions">
+              <button class="btn btn-secondary btn-sm" type="button" onclick="document.getElementById('fPhotoInput').click()">Upload photo</button>
+              <button class="btn btn-secondary btn-sm" type="button" id="fPhotoClear" onclick="clearPhoto()">Remove</button>
+              <input type="file" id="fPhotoInput" accept="image/*">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Job title shown</label>
+              <input class="form-input" id="fRole" placeholder="e.g. Sales Development Representative"></div>
+            <div class="form-group"><label class="form-label">Country</label>
+              <input class="form-input" id="fCountry" placeholder="e.g. Guatemala"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Years of experience</label>
+              <input class="form-input" id="fYears" type="number" min="0" max="40" placeholder="e.g. 4"></div>
+            <div class="form-group"><label class="form-label">Languages</label>
+              <input class="form-input" id="fLanguages" placeholder="e.g. Spanish (native), English (C1)"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Hard skills</label>
+            <input class="form-input" id="fHard" placeholder="Separate with commas">
+            <p class="filter-hint">Shown as chips on the card. The first five appear before the prospect opens the detail.</p></div>
+          <div class="form-group"><label class="form-label">Soft skills</label>
+            <input class="form-input" id="fSoft" placeholder="Separate with commas"></div>
+          <div class="form-group"><label class="form-label">Short profile</label>
+            <textarea class="form-textarea" id="fShort" rows="2" style="min-height:64px;" placeholder="One or two lines that make a prospect want to open the profile."></textarea>
+            <p class="filter-hint">Does double duty: it opens the card on the landing, and it is the text we read to tell this role apart from similar ones when matching a prospect's openings. Keep what the role actually does in it.</p></div>
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label">Full profile</label>
+            <textarea class="form-textarea" id="fLong" rows="6" style="min-height:150px;" placeholder="The detail the prospect reads in the side panel. Leave a blank line between paragraphs."></textarea></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal('modalPerfil')">Cancel</button>
@@ -93,30 +141,138 @@
     if (!canAccessAdmin()) window.location.href = 'candidatos.html';
     renderSidebar('perfiles');
 
+    /* Cuántos perfiles puede sostener el showcase de la landing a la vez.
+       Acota el contexto que recibe el análisis de coincidencias del cold outreach. */
+    const SHOWCASE_CAP = 12;
+
     /* ---------------- Datos ---------------- */
     const PERFILES = [
-      { title:'CUSTOMER SERVICE REPRESENTATIVE',    es:'Asesor de Servicio al Cliente, Agente de Atención al Cliente', en:'Customer Service Representative, Customer Service' },
-      { title:'SALES REPRESENTATIVE',               es:'Asesor Comercial, Ejecutivo de Ventas',                        en:'Sales Representative, Sales Executive' },
-      { title:'SALES DEVELOPMENT REPRESENTATIVE',   es:'Ejecutivo de Desarrollo de Negocios, Asesor de Prospección',   en:'Sales Development Representative, SDR' },
-      { title:'SALES SPECIALIST',                   es:'Especialista Comercial, Especialista de Ventas',               en:'Sales Specialist, Sales Executive' },
-      { title:'LEGAL ASSISTANT',                    es:'Asistente Legal, Asistente Jurídico',                          en:'Legal Assistant, Law Clerk' },
-      { title:'PARALEGAL',                          es:'Paralegal, Asistente de Litigios',                             en:'Paralegal, Legal Support Officer' },
-      { title:'INTAKE SPECIALIST',                  es:'Coordinador de Admisiones, Asistente de Admisiones',           en:'Intake Specialist, Intake Coordinator' },
-      { title:'EXECUTIVE ASSISTANT',                es:'Asistente Ejecutiva, Asistente Ejecutivo',                     en:'Executive Assistant, Executive Secretary' },
-      { title:'ADMINISTRATIVE ASSISTANT',           es:'Asistente Administrativa, Asistente Administrativo',           en:'Administrative Assistant, Office Assistant' },
-      { title:'COLLECTIONS SPECIALIST',             es:'Analista de Cobranzas, Gestor de Cobranzas',                   en:'Collections Specialist, Debt Collector' },
-      { title:'SCHEDULER',                          es:'Coordinador de Agendas, Programador de Citas',                 en:'Scheduler, Appointment Setter' },
-      { title:'CAD DESIGNER',                       es:'Diseñador CAD, Dibujante Técnico',                             en:'CAD Designer, AutoCAD Technician' },
+      { title:'CUSTOMER SERVICE REPRESENTATIVE', es:'Asesor de Servicio al Cliente, Agente de Atención al Cliente', en:'Customer Service Representative, Customer Service',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-01.jpg', role:'Customer Service Representative', country:'Mexico', years:5,
+          languages:'Spanish (native), English (C1)',
+          hard:'Zendesk, Live chat & voice, CRM ticketing, SLA management, Order management',
+          soft:'Empathy, Patience, Clear communication',
+          short:'5 years in US customer support — 96% CSAT across chat, email and phone for a high-volume e-commerce brand.',
+          long:'Customer support specialist with five years handling US consumers across phone, email and live chat for a high-volume e-commerce brand. Sustained a 96% CSAT and a sub-two-minute first response time on chat.\n\nExperienced with Zendesk, order and returns management, and de-escalation of sensitive cases. Neutral accent and fully fluent written English; comfortable with peak-season volumes and rotating US-timezone shifts.' } },
+
+      { title:'SALES REPRESENTATIVE', es:'Asesor Comercial, Ejecutivo de Ventas', en:'Sales Representative, Sales Executive',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-02.jpg', role:'Sales Representative', country:'Colombia', years:7,
+          languages:'Spanish (native), English (C1)',
+          hard:'B2B sales, HubSpot CRM, Discovery calls, Negotiation, Forecasting',
+          soft:'Resilience, Listening, Commercial judgment',
+          short:'7 years closing B2B deals for US companies — runs discovery, demos and negotiation end to end.',
+          long:'Commercial closer with seven years selling for US B2B companies, most recently in software and business services. Runs the cycle from discovery through demo, proposal and negotiation, with a consistent record against quota.\n\nDisciplined with CRM hygiene and forecasting, and comfortable selling to operations and finance buyers. Confident, unhurried English on calls.' } },
+
+      { title:'SALES DEVELOPMENT REPRESENTATIVE', es:'Ejecutivo de Desarrollo de Negocios, Asesor de Prospección', en:'Sales Development Representative, SDR',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-03.jpg', role:'Sales Development Representative', country:'Guatemala', years:4,
+          languages:'Spanish (native), English (C1)',
+          hard:'Outbound prospecting, Cold calling, Email sequencing, Salesforce, Lead qualification',
+          soft:'Persistence, Coachability, Curiosity',
+          short:'Books 30+ qualified meetings a month for US reps — high-volume calls, email and LinkedIn outreach.',
+          long:'SDR with four years generating pipeline for US software companies. Consistently books 30+ qualified meetings per month through high-volume cold calling, email sequences and LinkedIn outreach.\n\nDisciplined with Salesforce hygiene and qualification frameworks. Energetic on the phone with clear, confident English and a track record of feeding clean pipeline to closing reps.' } },
+
+      { title:'SALES SPECIALIST', es:'Especialista Comercial, Especialista de Ventas', en:'Sales Specialist, Sales Executive',
+        active:false, showcase:true,
+        card:{ photo:'assets/people/person-04.jpg', role:'Sales Specialist', country:'Argentina', years:6,
+          languages:'Spanish (native), English (C2)',
+          hard:'Consultative selling, Upselling, Product demos, Pipeline management, Account planning',
+          soft:'Product depth, Patience, Storytelling',
+          short:'6 years growing existing US accounts — owns product-specific pitches, upsells and expansion.',
+          long:'Specialist seller with six years focused on product-specific sales for US clients. Owns tailored pitches, demos and expansion plans for existing accounts rather than net-new logos.\n\nKnown for learning a product deeply enough to sell it without a script, and for expanding accounts through renewals and upsells. Fluent, polished English in writing and on video.' } },
+
+      { title:'LEGAL ASSISTANT', es:'Asistente Legal, Asistente Jurídico', en:'Legal Assistant, Law Clerk',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-05.jpg', role:'Legal Assistant', country:'Peru', years:5,
+          languages:'Spanish (native), English (C1)',
+          hard:'Document drafting, Legal research, Case management, E-filing, Calendar management',
+          soft:'Organization, Discretion, Follow-through',
+          short:'5 years keeping US legal matters organized — drafting, filings and attorney calendars.',
+          long:'Legal support professional with five years assisting US attorneys. Drafts correspondence and routine documents, manages court and client calendars, and keeps matters organized from intake through resolution.\n\nFamiliar with US e-filing portals and case-management platforms. Careful with deadlines and confidential material, with clear written English.' } },
+
+      { title:'PARALEGAL', es:'Paralegal, Asistente de Litigios', en:'Paralegal, Legal Support Officer',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-06.jpg', role:'Paralegal', country:'Colombia', years:6,
+          languages:'Spanish (native), English (C1)',
+          hard:'Legal research, Document drafting, Case management, E-filing, Discovery support',
+          soft:'Attention to detail, Confidentiality, Time management',
+          short:'6 years supporting US litigation teams — drafting, discovery and case management for a personal-injury firm.',
+          long:'Paralegal with six years supporting US law firms, most recently a personal-injury practice. Handles legal research, drafting of pleadings and correspondence, discovery support and case management end to end.\n\nFamiliar with US court e-filing and case-management platforms, and comfortable interfacing with clients and courts in written English. Detail-obsessed and used to strict deadlines and confidentiality requirements.' } },
+
+      { title:'INTAKE SPECIALIST', es:'Coordinador de Admisiones, Asistente de Admisiones', en:'Intake Specialist, Intake Coordinator',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-07.jpg', role:'Intake Specialist', country:'Mexico', years:4,
+          languages:'Spanish (native), English (C1)',
+          hard:'Client intake, Case screening, CRM data entry, Appointment setting, HIPAA awareness',
+          soft:'Empathy, Active listening, Composure',
+          short:'The first voice clients hear — screens and onboards new cases for a US law firm with warmth and accuracy.',
+          long:'Intake specialist with four years as the first point of contact for new clients at a US law firm. Screens inbound leads, captures case details accurately and books consultations, balancing empathy with efficiency.\n\nComfortable with sensitive conversations, CRM data entry and HIPAA-aware handling of personal information. Warm, reassuring phone presence in fluent English.' } },
+
+      { title:'EXECUTIVE ASSISTANT', es:'Asistente Ejecutiva, Asistente Ejecutivo', en:'Executive Assistant, Executive Secretary',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-08.jpg', role:'Executive Assistant', country:'Argentina', years:9,
+          languages:'Spanish (native), English (C2)',
+          hard:'Calendar & travel, Inbox triage, Expense reporting, Board prep, Google Workspace',
+          soft:'Discretion, Anticipation, Organization',
+          short:'Right hand to two US founders for 9 years — owns calendars, travel and board prep with total discretion.',
+          long:'Seasoned executive assistant with nine years supporting C-level executives at US startups, most recently as the right hand to two co-founders. Owns complex calendars across time zones, international travel, expense reporting and board-meeting preparation.\n\nTrusted with highly confidential information and known for anticipating needs before they are voiced. Polished English in writing and on calls; fluent in Google Workspace, Notion and common scheduling tools.' } },
+
+      { title:'ADMINISTRATIVE ASSISTANT', es:'Asistente Administrativa, Asistente Administrativo', en:'Administrative Assistant, Office Assistant',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-01.jpg', role:'Administrative Assistant', country:'Honduras', years:6,
+          languages:'Spanish (native), English (B2)',
+          hard:'Scheduling, Data entry, Document management, Microsoft 365, Vendor coordination',
+          soft:'Reliability, Multitasking, Proactivity',
+          short:'Keeps US teams running — scheduling, documents and data entry handled before anyone has to ask.',
+          long:'Administrative assistant with six years supporting US teams remotely. Handles scheduling, document management, data entry and vendor coordination, keeping day-to-day operations running smoothly.\n\nHighly reliable and proactive, with strong Microsoft 365 skills and a knack for spotting and fixing small problems early. Clear written English and steady follow-through.' } },
+
+      { title:'COLLECTIONS SPECIALIST', es:'Analista de Cobranzas, Gestor de Cobranzas', en:'Collections Specialist, Debt Collector',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-02.jpg', role:'Collections Specialist', country:'Colombia', years:5,
+          languages:'Spanish (native), English (B2)',
+          hard:'AR collections, Payment negotiation, Aging reports, QuickBooks, Dispute resolution',
+          soft:'Tact, Persistence, Numeracy',
+          short:'Recovers overdue receivables for US clients while keeping customer relationships intact.',
+          long:'Collections specialist with five years managing accounts receivable for US businesses. Reduced average days-sales-outstanding and recovered significant overdue balances while preserving customer relationships.\n\nSkilled at payment-plan negotiation, aging analysis and dispute resolution, with hands-on QuickBooks experience. Firm but tactful on collection calls in professional English.' } },
+
+      { title:'SCHEDULER', es:'Coordinador de Agendas, Programador de Citas', en:'Scheduler, Appointment Setter',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-03.jpg', role:'Scheduler', country:'Philippines', years:4,
+          languages:'English (C1), Filipino (native)',
+          hard:'Appointment setting, Calendar management, Confirmation calls, CRM, Route planning',
+          soft:'Punctuality, Diplomacy, Clarity',
+          short:'Keeps US service calendars full — books, confirms and reshuffles appointments without gaps.',
+          long:'Scheduling professional with four years coordinating appointments for US service operations. Books and confirms visits, handles reschedules and keeps technicians and clients aligned across time zones.\n\nUsed to high call volumes and last-minute changes, with a calm phone manner and precise notes in the CRM.' } },
+
+      { title:'CAD DESIGNER', es:'Diseñador CAD, Dibujante Técnico', en:'CAD Designer, AutoCAD Technician',
+        active:true, showcase:true,
+        card:{ photo:'assets/people/person-04.jpg', role:'CAD Designer', country:'Peru', years:7,
+          languages:'Spanish (native), English (B2)',
+          hard:'AutoCAD, Revit, 2D/3D modeling, Technical drawings, Shop drawings',
+          soft:'Precision, Spatial reasoning, Coordination',
+          short:'7 years drafting for US engineering and construction teams — precise drawings, no rework.',
+          long:'Technical designer with seven years producing CAD drawings and 2D/3D models for US engineering and construction firms. Turns markups and field notes into clean, buildable documentation.\n\nWorks daily in AutoCAD and Revit, coordinates with engineers across time zones, and reads and writes technical English comfortably.' } },
     ];
 
     const PAGE_SIZE = 10;
     let perfFilter = '';
+    let onlyShowcase = false;
     let perfPage = 0;
     let editIndex = -1;   // -1 = nuevo
+    let draftPhoto = '';  // foto en edición (ruta o data URL)
 
     /* ---------------- Utilidades ---------------- */
     function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+    function showcaseCount(){ return PERFILES.filter(p => p.showcase).length; }
+
+    /* Una ficha sirve para la landing cuando tiene con qué armar la tarjeta y el detalle */
+    function cardIsReady(c){
+      return !!(c && c.photo && c.role && c.country && c.short && c.long);
+    }
 
     /* Fuzzy: subsecuencia tolerante (estilo fzf), ignora espacios; -1 si no matchea */
     function fuzzyScore(qn, text){
@@ -139,6 +295,7 @@
         p, i,
         score: qn ? Math.max(fuzzyScore(qn, p.title), fuzzyScore(qn, p.es), fuzzyScore(qn, p.en)) : 0
       }));
+      if (onlyShowcase) list = list.filter(x => x.p.showcase);
       if (qn) list = list.filter(x => x.score >= 0).sort((a, b) => b.score - a.score);
       return list;
     }
@@ -146,18 +303,37 @@
     /* ---------------- Render ---------------- */
     const body = document.getElementById('perfilesBody');
 
+    const IC_PERSON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"></circle><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"></path></svg>';
+
     function emptyRow(text, withBtn){
-      return `<tr><td colspan="4"><div class="geo-empty"><p>${text}</p>${withBtn ? `<button class="btn btn-primary btn-sm" onclick="openNew()">+ New profile</button>` : ''}</div></td></tr>`;
+      return `<tr><td colspan="6"><div class="geo-empty"><p>${text}</p>${withBtn ? `<button class="btn btn-primary btn-sm" onclick="openNew()">+ New profile</button>` : ''}</div></td></tr>`;
+    }
+
+    function faceCell(p){
+      return p.card && p.card.photo
+        ? `<span class="perf-face" style="background-image:url('${esc(p.card.photo)}')"></span>`
+        : `<span class="perf-face perf-face--empty" title="No talent card yet">${IC_PERSON}</span>`;
+    }
+
+    function renderCount(){
+      const el = document.getElementById('showcaseCount');
+      const n = showcaseCount();
+      el.className = 'showcase-count' + (n >= SHOWCASE_CAP ? ' is-full' : '');
+      el.innerHTML = `<strong>${n} of ${SHOWCASE_CAP}</strong> in the showcase`;
     }
 
     function renderPerfiles(){
       const pager = document.getElementById('perfPager');
+      renderCount();
 
       if (!PERFILES.length){ body.innerHTML = emptyRow('No search profiles yet. Create one to tell us which roles to look for.', true); pager.style.display = 'none'; return; }
 
       const rows = filteredProfiles();
       if (!rows.length){
-        body.innerHTML = emptyRow(`No results for “${esc(perfFilter.trim())}”.`, false);
+        const msg = perfFilter.trim()
+          ? `No results for “${esc(perfFilter.trim())}”.`
+          : 'No profiles are in the showcase yet.';
+        body.innerHTML = emptyRow(msg, false);
         pager.style.display = 'none';
         return;
       }
@@ -170,9 +346,28 @@
 
       body.innerHTML = slice.map(({p, i}) => `
         <tr data-i="${i}">
-          <td><span class="font-medium">${esc(p.title)}</span></td>
+          <td>
+            <div class="perf-role">
+              ${faceCell(p)}
+              <div>
+                <span class="font-medium">${esc(p.title)}</span>
+              </div>
+            </div>
+          </td>
           <td class="text-secondary">${esc(p.es)}</td>
           <td class="text-secondary">${esc(p.en)}</td>
+          <td class="perf-active">
+            <label class="toggle-pill">
+              <input type="checkbox" data-act="toggle-active" ${p.active ? 'checked' : ''} aria-label="Include in scraping runs">
+              <span class="toggle-pill-track"><span class="toggle-pill-knob"></span></span>
+            </label>
+          </td>
+          <td class="perf-showcase">
+            <label class="toggle-pill">
+              <input type="checkbox" data-act="toggle-showcase" ${p.showcase ? 'checked' : ''} aria-label="Show in the showcase">
+              <span class="toggle-pill-track"><span class="toggle-pill-knob"></span></span>
+            </label>
+          </td>
           <td class="perf-action">
             <div class="row-actions">
               <button class="table-action-edit" data-act="edit" title="Edit profile" aria-label="Edit profile"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
@@ -194,43 +389,159 @@
       if (!btn) return;
       const i = +btn.closest('tr').dataset.i;
       if (btn.dataset.act === 'edit') openEdit(i);
-      else openDelete(i);
+      else if (btn.dataset.act === 'del') openDelete(i);
     });
+
+    body.addEventListener('change', (e) => {
+      const input = e.target.closest('[data-act]');
+      if (!input) return;
+      const i = +input.closest('tr').dataset.i;
+      if (input.dataset.act === 'toggle-active') toggleActive(i);
+      else if (input.dataset.act === 'toggle-showcase') toggleShowcase(i);
+    });
+
+    function toggleActive(i){
+      const p = PERFILES[i];
+      p.active = !p.active;
+      showToast(p.active
+        ? 'Back in the scraping runs'
+        : "Paused. We'll stop looking for new candidates for this role.", p.active ? 'success' : 'info');
+      renderPerfiles();
+    }
+
+    function toggleShowcase(i){
+      const p = PERFILES[i];
+
+      if (p.showcase){
+        p.showcase = false;
+        showToast('Removed from the showcase', 'info');
+        renderPerfiles();
+        return;
+      }
+      if (!cardIsReady(p.card)){
+        showToast('Add a talent card before putting this role in the showcase', 'info');
+        renderPerfiles();
+        openEdit(i);
+        return;
+      }
+      if (showcaseCount() >= SHOWCASE_CAP){
+        showToast(`The showcase holds ${SHOWCASE_CAP} roles at a time. Turn one off to make room.`, 'info');
+        renderPerfiles();
+        return;
+      }
+      p.showcase = true;
+      showToast('Added to the showcase', 'success');
+      renderPerfiles();
+    }
 
     document.getElementById('perfSearch').addEventListener('input', (e) => { perfFilter = e.target.value; perfPage = 0; renderPerfiles(); });
     document.getElementById('perfPrev').addEventListener('click', () => { if (perfPage > 0){ perfPage--; renderPerfiles(); } });
     document.getElementById('perfNext').addEventListener('click', () => { perfPage++; renderPerfiles(); });
 
+    document.getElementById('btnShowcaseOnly').addEventListener('click', (e) => {
+      onlyShowcase = !onlyShowcase;
+      perfPage = 0;
+      e.currentTarget.classList.toggle('active', onlyShowcase);
+      e.currentTarget.setAttribute('aria-pressed', String(onlyShowcase));
+      renderPerfiles();
+    });
+
     /* ---------------- CRUD (modales) ---------------- */
-    const fTitle = document.getElementById('fTitle'), fEs = document.getElementById('fEs'), fEn = document.getElementById('fEn');
+    const F = id => document.getElementById(id);
+    const fTitle = F('fTitle'), fEs = F('fEs'), fEn = F('fEn'),
+          fRole = F('fRole'), fCountry = F('fCountry'), fYears = F('fYears'), fLanguages = F('fLanguages'),
+          fHard = F('fHard'), fSoft = F('fSoft'), fShort = F('fShort'), fLong = F('fLong');
+
+    function paintPhoto(){
+      const box = F('fPhotoPreview');
+      box.style.backgroundImage = draftPhoto ? `url('${draftPhoto}')` : '';
+      box.classList.toggle('has-photo', !!draftPhoto);
+      F('fPhotoClear').style.display = draftPhoto ? '' : 'none';
+    }
+    function clearPhoto(){ draftPhoto = ''; F('fPhotoInput').value = ''; paintPhoto(); }
+
+    F('fPhotoInput').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => { draftPhoto = reader.result; paintPhoto(); };
+      reader.readAsDataURL(file);
+    });
+
+    function fillCard(c){
+      draftPhoto = c && c.photo ? c.photo : '';
+      fRole.value = c ? c.role : '';
+      fCountry.value = c ? c.country : '';
+      fYears.value = c && c.years ? c.years : '';
+      fLanguages.value = c ? c.languages : '';
+      fHard.value = c ? c.hard : '';
+      fSoft.value = c ? c.soft : '';
+      fShort.value = c ? c.short : '';
+      fLong.value = c ? c.long : '';
+      paintPhoto();
+    }
+
+    function readCard(){
+      const c = {
+        photo: draftPhoto,
+        role: fRole.value.trim(),
+        country: fCountry.value.trim(),
+        years: fYears.value ? +fYears.value : null,
+        languages: fLanguages.value.trim(),
+        hard: fHard.value.trim(),
+        soft: fSoft.value.trim(),
+        short: fShort.value.trim(),
+        long: fLong.value.trim()
+      };
+      const empty = !c.photo && !c.role && !c.country && !c.languages && !c.hard && !c.soft && !c.short && !c.long && !c.years;
+      return empty ? null : c;
+    }
 
     function openNew(){
       editIndex = -1;
-      document.getElementById('perfilTitle').textContent = 'New profile';
+      F('perfilTitle').textContent = 'New profile';
       fTitle.value = ''; fEs.value = ''; fEn.value = '';
+      fillCard(null);
       openModal('modalPerfil');
       setTimeout(() => fTitle.focus(), 210);
     }
     function openEdit(i){
       editIndex = i;
       const p = PERFILES[i];
-      document.getElementById('perfilTitle').textContent = 'Edit profile';
+      F('perfilTitle').textContent = 'Edit profile';
       fTitle.value = p.title; fEs.value = p.es; fEn.value = p.en;
+     
+      fillCard(p.card);
       openModal('modalPerfil');
     }
     function savePerfil(){
       const title = fTitle.value.trim(), es = fEs.value.trim(), en = fEn.value.trim();
       if (!title){ showToast('Add a role title to continue','info'); fTitle.focus(); return; }
       if (!es && !en){ showToast('Add search terms in Spanish or English','info'); fEs.focus(); return; }
-      if (editIndex === -1){ PERFILES.push({ title, es, en }); showToast('Profile created','success'); }
-      else { PERFILES[editIndex] = { title, es, en }; showToast('Profile updated','success'); }
+
+      const card = readCard();
+      const data = { title, es, en, card };
+
+      if (editIndex === -1){
+        PERFILES.push({ ...data, active: true, showcase: false });
+        showToast('Profile created','success');
+      } else {
+        const prev = PERFILES[editIndex];
+        const wasShown = prev.showcase;
+        // un perfil sale del showcase si su ficha quedó incompleta
+        const stillShown = wasShown && cardIsReady(card);
+        PERFILES[editIndex] = { ...data, active: prev.active, showcase: stillShown };
+        showToast(wasShown && !stillShown
+          ? 'Profile updated. It left the showcase until its card is complete.'
+          : 'Profile updated', wasShown && !stillShown ? 'info' : 'success');
+      }
       closeModal('modalPerfil');
       renderPerfiles();
     }
     function openDelete(i){
       openConfirmPopup({
         title: 'Delete profile',
-        message: "We'll stop looking for new candidates for this role. Candidates already found stay in your pool.",
+        message: "The role goes away with its talent card, so it leaves both the scraping runs and the showcase. Candidates already found stay in your pool.",
         highlight: PERFILES[i].title,
         icon: 'trash',
         confirmLabel: 'Delete',

@@ -19,10 +19,14 @@
     img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
     a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
     @media only screen and (max-width: 640px) {
-      .container { width: 100% !important; }
-      .px-32 { padding-left: 20px !important; padding-right: 20px !important; }
-      .kpi-cell { display: block !important; width: 100% !important; box-sizing: border-box !important; }
-      .stack { display: block !important; width: 100% !important; }
+      .container { width: 100% !important; border-radius: 0 !important; }
+      .outer-pad { padding: 12px 0 !important; }
+      .px-32 { padding-left: 16px !important; padding-right: 16px !important; }
+      /* KPIs: 4 en fila → 2×2 (inline-block; font-size:0 en la grilla colapsa el espacio entre celdas) */
+      .kpi-grid { font-size: 0 !important; }
+      .kpi-cell { width: 50% !important; display: inline-block !important; box-sizing: border-box !important; vertical-align: top !important; padding: 0 4px 8px 4px !important; }
+      /* Preferencias: 2 columnas → 1 */
+      .stack { width: 100% !important; display: block !important; box-sizing: border-box !important; padding: 0 0 10px 0 !important; }
     }
   </style>
 </head>
@@ -35,7 +39,7 @@
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F5F5;">
     <tr>
-      <td align="center" style="padding:24px 0;">
+      <td class="outer-pad" align="center" style="padding:24px 0;">
 
         <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#FFFFFF;border-radius:16px;overflow:hidden;">
 
@@ -43,7 +47,7 @@
           <tr>
             <td class="px-32" align="left" style="padding:28px 32px 20px 32px;border-bottom:3px solid #0089AB;">
               <a href="https://solvoglobal.com" target="_blank" style="text-decoration:none;border:0;outline:none;">
-                <img src="https://mlnq5qmsdxfa.i.optimole.com/cb:iuiG.61889/w:574/h:175/q:75/f:best/ig:avif/https://solvoglobal.com/wp-content/uploads/2025/06/SolvoLogo-2025.svg" alt="Solvo Global" width="140" height="43" border="0" style="display:block;width:140px;height:auto;border:0;outline:none;text-decoration:none;line-height:100%;" />
+                <img src="https://img.mailinblue.com/10372911/images/content_library/original/69f8ecdf629a9c11258ebc1a.png" alt="Solvo Global" width="140" height="43" border="0" style="display:block;width:140px;height:auto;border:0;outline:none;text-decoration:none;line-height:100%;" />
               </a>
             </td>
           </tr>
@@ -67,7 +71,7 @@
           <!-- ============ KPIs ============ -->
           <tr>
             <td class="px-32" style="padding:22px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <table role="presentation" class="kpi-grid" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="kpi-cell" width="25%" valign="top" style="padding:0 6px 0 0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
