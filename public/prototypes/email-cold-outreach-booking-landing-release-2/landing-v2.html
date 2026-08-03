@@ -187,6 +187,12 @@
     text-align: center;
     text-wrap: balance;
   }
+  /* titulo de pantalla interior: encabeza sin competir con el hero del fold */
+  h1.headline--sm {
+    font-size: clamp(23px, 2.9vw, 32px);
+    line-height: 1.12;
+    max-width: 24ch;
+  }
   h1.headline em, .ts-headline em {
     font-style: normal;
     background: var(--gradient-brand);
@@ -923,7 +929,10 @@
   }
 
   /* ============================ TALENT SHOWCASE (Release 2) ============================ */
+  /* el showcase acompaña solo la pantalla de horarios sugeridos: una vez que el
+     prospecto pasa a elegir dia o a confirmar, deja de competir con la reserva */
   body[data-screen="start"] .talent-section,
+  body[data-screen="calendar"] .talent-section,
   body[data-screen="confirm"] .talent-section { display: none; }
   .talent-section {
     max-width: 1000px;
@@ -1570,8 +1579,9 @@
   <!-- ====================== SCREEN: CALENDAR ====================== -->
   <section class="screen" id="screen-calendar">
     <button type="button" class="back-link" data-back="pick">&larr; Back to suggested times</button>
-    <span class="eyebrow" style="margin-top:14px;">Pick another day</span>
-    <div class="cal-card" style="margin-top:16px;">
+    <h1 class="headline headline--sm" style="margin-top:12px;">Pick the day that <em>works for you</em>.</h1>
+    <p class="subline" style="margin-top:10px;">A 25-minute call with a Solvo talent advisor. Choose a day and we'll show the times still open.</p>
+    <div class="cal-card" style="margin-top:22px;">
       <div class="cal-head">
         <span class="cal-month" id="cal-month">May 2026</span>
         <div class="cal-arrows">
@@ -2196,11 +2206,9 @@
   });
   document.getElementById("drawer-book").addEventListener("click", function () {
     closeDrawer();
-    show("pick");
-    loadPick();
-    /* el drawer se abre desde el showcase (bajo el pliegue): hay que subir a
-       las franjas horarias, si no el CTA parece no hacer nada */
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    /* el CTA del detalle lleva a elegir dia: el prospecto ya vio las franjas
+       sugeridas antes de bajar al showcase, asi que se le abre el calendario */
+    openCalendar();
   });
 
   document.getElementById("demo-matched").addEventListener("click", function () {
