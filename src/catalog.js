@@ -73,7 +73,7 @@ export const products = [
         nombre: 'Reporte semanal del funnel (email)',
         categoria: 'Email',
         bundle: 'email-cold-outreach-funnel-report',
-        notas: 'Reporte interno: KPIs, embudo, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
+        notas: 'Reporte interno: KPIs, embudo, showcase de talento, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
         versions: [
           { label: 'Preview', file: 'brevo-funnel-report-preview.html' },
           { label: 'Email (Brevo)', file: 'brevo-funnel-report.html' },
