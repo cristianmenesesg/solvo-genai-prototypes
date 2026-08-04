@@ -1581,7 +1581,7 @@
   <section class="screen" id="screen-calendar">
     <button type="button" class="back-link" data-back="pick">&larr; Back to suggested times</button>
     <h1 class="headline headline--sm" style="margin-top:12px;">Pick the day that <em>works for you</em>.</h1>
-    <p class="subline" style="margin-top:10px;">A 25-minute call with a Solvo talent advisor. Choose a day and we'll show the times still open.</p>
+    <p class="subline" style="margin-top:10px;">A 25-minute call with a Solvo business consultant. Choose a day and we'll show the times still open.</p>
     <div class="cal-card" style="margin-top:22px;">
       <div class="cal-head">
         <span class="cal-month" id="cal-month">May 2026</span>
@@ -1618,17 +1618,17 @@
       <div class="rep-card">
         <div class="rep-label">Meeting with</div>
         <div class="rep-who">
-          <div class="rep-avatar" id="rep-avatar">DO</div>
+          <div class="rep-avatar" id="rep-avatar">ST</div>
           <div class="rep-meta">
-            <div class="rep-name" id="rep-name">Daniela Ortiz</div>
-            <div class="rep-role" id="rep-role">Talent Advisor &middot; Solvo Global</div>
+            <div class="rep-name" id="rep-name">Solvo Sales Team</div>
+            <div class="rep-role" id="rep-role">Business Consultants &middot; Solvo Global</div>
           </div>
         </div>
         <div class="rep-foot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2.5"/>
           </svg>
-          Assigned from the advisors free at this time.
+          Assigned from the consultants free at this time.
         </div>
       </div>
 
@@ -2252,19 +2252,15 @@
     "2026-06-10": ["10:00", "13:00", "15:30", "16:30"]
   };
 
-  /* Pool de sales reps (mock). En el POC real el sistema asigna, al confirmar
-     el horario, un rep disponible para ese slot — aqui se deriva por slot de
-     forma estable para simular ese comportamiento en el demo. */
-  var REPS = [
-    { name: "Daniela Ortiz",  role: "Talent Advisor",        initials: "DO", photo: "assets/people/person-01.jpg" },
-    { name: "Marcus Bennett", role: "Senior Talent Advisor", initials: "MB", photo: "assets/people/person-05.jpg" },
-    { name: "Priya Nair",     role: "Talent Advisor",        initials: "PN", photo: "assets/people/person-06.jpg" }
-  ];
-  function repForSlot(dateKey, slot) {
-    var s = dateKey + slot, h = 0;
-    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-    return REPS[Math.abs(h) % REPS.length];
-  }
+  /* La landing no se compromete con una persona: la reunion se presenta a nombre
+     del equipo comercial y el consultor concreto se asigna al confirmar. */
+  var REP = {
+    name: "Solvo Sales Team",
+    role: "Business Consultants",
+    initials: "ST",
+    photo: "assets/people/solvo-sales-team.jpg"
+  };
+  function repForSlot() { return REP; }
 
   var TZ = (function () {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York"; }

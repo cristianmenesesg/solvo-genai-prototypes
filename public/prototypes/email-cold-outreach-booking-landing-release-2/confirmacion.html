@@ -549,7 +549,7 @@
       "DTSTART:" + icsStamp(m.start),
       "DTEND:" + icsStamp(m.end),
       "SUMMARY:Solvo Global — Intro call" + (m.rep ? " with " + m.rep : ""),
-      "DESCRIPTION:Your 25-minute meeting with a Solvo Global advisor. " +
+      "DESCRIPTION:Your 25-minute meeting with a Solvo Global business consultant. " +
         "The video call link is in your calendar invite.",
       "STATUS:CONFIRMED",
       "END:VEVENT",
@@ -597,21 +597,6 @@
       "is on its way to your inbox.";
   var abbr = tzAbbr(meeting.start, meeting.tz);
 
-  /* icono de persona de base + foto del advisor encima si viene del agendamiento */
-  var repIcon = meeting.repPhoto
-    ? '<div class="row-icon photo">' + ICON.rep +
-      '<img src="' + meeting.repPhoto + '" alt="" onerror="this.remove()"></div>'
-    : '<div class="row-icon">' + ICON.rep + '</div>';
-  var repRow = meeting.rep
-    ? '<div class="row">' +
-        repIcon +
-        '<div><div class="row-label">With</div>' +
-        '<div class="row-value">' + meeting.rep +
-          (meeting.repRole ? '<span class="sub">' + meeting.repRole + ' &middot; Solvo Global</span>' : '') +
-        '</div></div>' +
-      '</div>'
-    : '';
-
   shell.classList.add("two-col");
   shell.innerHTML =
     '<div class="col-main">' +
@@ -631,7 +616,6 @@
             fmtTime(meeting.end, meeting.tz) +
             ' <span class="tz">' + abbr + '</span></div></div>' +
         '</div>' +
-        repRow +
         '<div class="row">' +
           '<div class="row-icon">' + ICON.video + '</div>' +
           '<div><div class="row-label">Format</div>' +
