@@ -53,8 +53,8 @@ export const products = [
         categoria: 'Email',
         bundle: 'email-cold-outreach-cold-email',
         versions: [
-          { label: 'Preview', file: 'brevo-cold-email-landing-cta-preview.html' },
-          { label: 'Email (Brevo)', file: 'brevo-cold-email-landing-cta.html' },
+          { label: 'Preview', file: 'sales-cold-email-preview.html' },
+          { label: 'Email (Brevo)', file: 'sales-cold-email.html' },
         ],
       },
       {
@@ -63,9 +63,9 @@ export const products = [
         categoria: 'Email',
         bundle: 'email-cold-outreach-booking-confirmation',
         versions: [
-          { label: 'Preview', file: 'brevo-booking-confirmation-preview.html' },
-          { label: 'Prospecto', file: 'brevo-booking-confirmation-prospect.html' },
-          { label: 'Cuenta (interno)', file: 'brevo-booking-confirmation-account.html' },
+          { label: 'Preview', file: 'sales-booking-confirmation-preview.html' },
+          { label: 'Prospecto', file: 'sales-booking-confirmation-prospect.html' },
+          { label: 'Cuenta (interno)', file: 'sales-booking-confirmation-account.html' },
         ],
       },
       {
@@ -75,8 +75,8 @@ export const products = [
         bundle: 'email-cold-outreach-funnel-report',
         notas: 'Reporte interno: KPIs, embudo, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
         versions: [
-          { label: 'Preview', file: 'brevo-funnel-report-preview.html' },
-          { label: 'Email (Brevo)', file: 'brevo-funnel-report.html' },
+          { label: 'Preview', file: 'sales-funnel-report-preview.html' },
+          { label: 'Email (Brevo)', file: 'sales-funnel-report.html' },
         ],
       },
       {
@@ -86,8 +86,8 @@ export const products = [
         bundle: 'email-cold-outreach-funnel-report-release-2',
         notas: 'El mismo reporte con la sección de showcase de talento entre el embudo y la salud del recorrido: aperturas de currículo, paso al agendamiento y conversión contra la línea base previa al showcase.',
         versions: [
-          { label: 'Preview', file: 'brevo-funnel-report-preview.html' },
-          { label: 'Email (Brevo)', file: 'brevo-funnel-report.html' },
+          { label: 'Preview', file: 'sales-funnel-report-preview.html' },
+          { label: 'Email (Brevo)', file: 'sales-funnel-report.html' },
         ],
       },
       {
@@ -97,8 +97,8 @@ export const products = [
         bundle: 'solvo-sales-platform-status-report',
         notas: 'Reporte interno transversal: vacantes por origen, cadena de empresas, contactos y salud de los pipelines. El detalle por indicador viaja adjunto en CSV.',
         versions: [
-          { label: 'Preview', file: 'brevo-status-report-preview.html' },
-          { label: 'Email (Brevo)', file: 'brevo-status-report.html' },
+          { label: 'Preview', file: 'sales-status-report-preview.html' },
+          { label: 'Email (Brevo)', file: 'sales-status-report.html' },
         ],
       },
       {
@@ -144,8 +144,8 @@ export const products = [
         bundle: 'solvo-recruiter-platform-outreach',
         notas: 'Outreach al candidato: título, párrafo y CTA. El destino del CTA está pendiente de definir.',
         versions: [
-          { label: 'Preview', file: 'brevo-outreach-invitation-preview.html' },
-          { label: 'Email (Brevo)', file: 'brevo-outreach-invitation.html' },
+          { label: 'Preview', file: 'recruiter-outreach-invitation-preview.html' },
+          { label: 'Email (Brevo)', file: 'recruiter-outreach-invitation.html' },
         ],
       },
     ],
