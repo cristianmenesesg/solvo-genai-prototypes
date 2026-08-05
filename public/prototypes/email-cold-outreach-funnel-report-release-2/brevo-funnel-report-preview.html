@@ -1,12 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="es">
+<!--
+  PREVIEW (NO Brevo) — el mismo template renderizado con datos de muestra,
+  para revisión visual. El template real, con los params de Brevo, vive en
+  brevo-funnel-report.html: este archivo se genera a partir de aquel
+  sustituyendo cada param por su valor de ejemplo, así que no se edita a mano.
+-->
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light" />
-  <title>Funnel de cold outreach</title>
+  <title>Preview · Reporte semanal del funnel — Release 2</title>
   <!--[if mso]>
   <style type="text/css">
     table, td, a { font-family: Arial, sans-serif !important; }
@@ -34,7 +40,7 @@
 
   <!-- preheader -->
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;color:#F5F5F5;">
-    {{ params.kpi_bookings }} reuniones agendadas · conversión {{ params.rate_e2e }} · {{ params.period_label }}
+    18 reuniones agendadas · conversión 1,5% · 14 – 20 de julio, 2026
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F5F5;">
@@ -47,7 +53,7 @@
           <tr>
             <td class="px-32" align="left" style="padding:28px 32px 20px 32px;border-bottom:3px solid #0089AB;">
               <a href="https://solvoglobal.com" target="_blank" style="text-decoration:none;border:0;outline:none;">
-                <img src="https://img.mailinblue.com/10372911/images/content_library/original/69f8ecdf629a9c11258ebc1a.png" alt="Solvo Global" width="140" height="43" border="0" style="display:block;width:140px;height:auto;border:0;outline:none;text-decoration:none;line-height:100%;" />
+                <img src="logo.png" alt="Solvo Global" width="140" height="43" border="0" style="display:block;width:140px;height:auto;border:0;outline:none;text-decoration:none;line-height:100%;" />
               </a>
             </td>
           </tr>
@@ -62,8 +68,8 @@
                 Funnel de cold outreach
               </h1>
               <p style="margin:6px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#656971;">
-                {{ params.period_label }} · variación contra la semana anterior
-                <span style="font-weight:600;color:#92400E;">{{ params.period_note }}</span>
+                14 – 20 de julio, 2026 · variación contra la semana anterior
+                <span style="font-weight:600;color:#92400E;"></span>
               </p>
             </td>
           </tr>
@@ -77,8 +83,8 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
                       <tr><td style="padding:14px 12px 12px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Entregados</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_delivered }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_delivered_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">1.240</p>
+                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">▲ 6% vs. semana anterior</p>
                       </td></tr>
                     </table>
                   </td>
@@ -86,8 +92,8 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
                       <tr><td style="padding:14px 12px 12px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Visitas</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_visits }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_visits_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">148</p>
+                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">▼ 3% vs. semana anterior</p>
                       </td></tr>
                     </table>
                   </td>
@@ -95,8 +101,8 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
                       <tr><td style="padding:14px 12px 12px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Selecciones</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_selections }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_selections_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">41</p>
+                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">▲ 12% vs. semana anterior</p>
                       </td></tr>
                     </table>
                   </td>
@@ -104,8 +110,8 @@
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E0F8FB;border:1px solid #00BED6;border-radius:12px;">
                       <tr><td style="padding:14px 12px 12px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#005F74;">Reservas</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#0089AB;">{{ params.kpi_bookings }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#005F74;">{{ params.kpi_bookings_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#0089AB;">18</p>
+                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#005F74;">▲ 20% vs. semana anterior</p>
                       </td></tr>
                     </table>
                   </td>
@@ -121,8 +127,8 @@
                 <tr>
                   <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#53585A;">
                     Conversión end-to-end
-                    <span style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;">&nbsp;{{ params.rate_e2e }}</span>
-                    <span style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">&nbsp;·&nbsp;{{ params.rate_e2e_delta }}</span>
+                    <span style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;">&nbsp;1,5%</span>
+                    <span style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">&nbsp;·&nbsp;▲ 0,2 pp vs. semana anterior</span>
                   </td>
                 </tr>
               </table>
@@ -147,13 +153,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Correo entregado</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f1_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f1_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f1_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">1.240</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">—</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">100%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f1_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="100%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -165,13 +171,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Abierto</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f2_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f2_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f2_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">412</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">33%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">33%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f2_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="33%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -183,13 +189,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Click en el CTA</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f3_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f3_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f3_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">167</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">41%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">13%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f3_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="14%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -201,13 +207,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Visita a la landing</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f4_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f4_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f4_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">148</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">89%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">12%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f4_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="12%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -219,13 +225,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Vio horarios</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f5_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f5_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f5_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">141</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">95%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">11%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f5_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="11%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -237,13 +243,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Eligió horario</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f6_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f6_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f6_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">41</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">29%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">3,3%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f6_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="5%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -255,13 +261,13 @@
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
                       <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:600;color:#0089AB;">Reserva confirmada</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#0089AB;">{{ params.f7_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f7_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f7_pct_total }}</td>
+                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#0089AB;">18</td>
+                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">44%</td>
+                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">1,5%</td>
                     </tr>
                     <tr><td colspan="4" style="padding-top:5px;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f7_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
+                        <td width="4%" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
                         <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
                       </tr></table>
                     </td></tr>
@@ -279,7 +285,82 @@
                 <tr>
                   <td style="padding:12px 14px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#92400E;">
                     <strong style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:700;">Mayor caída ·</strong>
-                    {{ params.biggest_drop_label }} — pasa {{ params.biggest_drop_pct }} de los contactos del paso anterior.
+                    Vio horarios → Eligió horario — pasa solo el 29% de los contactos del paso anterior.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ============ SHOWCASE DE TALENTO ============ -->
+          <tr>
+            <td class="px-32" style="padding:30px 32px 0 32px;">
+              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Showcase de talento</p>
+              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
+                Sobre el total de visitas del período · el showcase va debajo del bloque de reserva
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E3E3E3;border-radius:12px;">
+                <tr>
+                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
+                    Abrieron un currículo
+                    <span style="font-size:12px;color:#899094;">· coincidencia 41 · muestra de roles 22</span>
+                  </td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">63</td>
+                </tr>
+                <tr>
+                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Qué parte de las visitas lo hizo</td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">42,6%</td>
+                </tr>
+                <tr>
+                  <td style="padding:13px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
+                    Pasaron al agendamiento desde el detalle
+                    <span style="font-size:12px;color:#899094;">· sobre quienes abrieron</span>
+                  </td>
+                  <td align="right" style="padding:13px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">38,1%</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-32" style="padding:12px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="stack" width="50%" valign="top" style="padding:0 6px 0 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E0F8FB;border:1px solid #00BED6;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#005F74;">Conversión a reunión</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#005F74;">
+                          Abrió un currículo <strong style="color:#0089AB;">17,5%</strong><br />
+                          No lo abrió <strong style="color:#0089AB;">8,2%</strong><br />
+                          Diferencia <strong style="color:#0089AB;">▲ 9,3 pp</strong>
+                        </p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td class="stack" width="50%" valign="top" style="padding:0 0 0 6px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Según cómo se presentó</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
+                          Coincidencia <strong style="color:#3A3E40;">19,5%</strong><br />
+                          Muestra de roles <strong style="color:#3A3E40;">13,6%</strong><br />
+                          <span style="font-size:12px;color:#899094;">conversión de quienes abrieron</span>
+                        </p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-32" style="padding:12px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E3E3E3;border-radius:12px;">
+                <tr>
+                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#53585A;">
+                    Conversión previa al showcase
+                    <span style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;">&nbsp;9,4%</span>
+                    <span style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">&nbsp;·&nbsp;se movió ▲ 2,8 pp</span>
                   </td>
                 </tr>
               </table>
@@ -297,21 +378,21 @@
                 <tr>
                   <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
                     Vieron un error
-                    <span style="font-size:12px;color:#899094;">· disponibilidad {{ params.health_error_availability }} · reserva {{ params.health_error_booking }}</span>
+                    <span style="font-size:12px;color:#899094;">· disponibilidad 5 · reserva 2</span>
                   </td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_error_pct }}</td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">4,7%</td>
                 </tr>
                 <tr>
                   <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Sin horarios para ofrecer</td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_empty_pct }}</td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">6,1%</td>
                 </tr>
                 <tr>
                   <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Eligieron horario y no reservaron</td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_selected_not_booked_pct }}</td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">56,1%</td>
                 </tr>
                 <tr>
                   <td style="padding:13px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Llegaron sin identidad en el link</td>
-                  <td align="right" style="padding:13px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_no_identity_pct }}</td>
+                  <td align="right" style="padding:13px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">2,7%</td>
                 </tr>
               </table>
             </td>
@@ -335,9 +416,9 @@
                       <tr><td style="padding:14px 16px;">
                         <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Franja</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Mañana <strong style="color:#3A3E40;">{{ params.pref_morning }}</strong><br />
-                          Mediodía <strong style="color:#3A3E40;">{{ params.pref_midday }}</strong><br />
-                          Tarde <strong style="color:#3A3E40;">{{ params.pref_afternoon }}</strong>
+                          Mañana <strong style="color:#3A3E40;">9</strong><br />
+                          Mediodía <strong style="color:#3A3E40;">5</strong><br />
+                          Tarde <strong style="color:#3A3E40;">4</strong>
                         </p>
                       </td></tr>
                     </table>
@@ -347,11 +428,11 @@
                       <tr><td style="padding:14px 16px;">
                         <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Día de la semana</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Lun <strong style="color:#3A3E40;">{{ params.pref_mon }}</strong> ·
-                          Mar <strong style="color:#3A3E40;">{{ params.pref_tue }}</strong> ·
-                          Mié <strong style="color:#3A3E40;">{{ params.pref_wed }}</strong><br />
-                          Jue <strong style="color:#3A3E40;">{{ params.pref_thu }}</strong> ·
-                          Vie <strong style="color:#3A3E40;">{{ params.pref_fri }}</strong>
+                          Lun <strong style="color:#3A3E40;">2</strong> ·
+                          Mar <strong style="color:#3A3E40;">6</strong> ·
+                          Mié <strong style="color:#3A3E40;">5</strong><br />
+                          Jue <strong style="color:#3A3E40;">4</strong> ·
+                          Vie <strong style="color:#3A3E40;">1</strong>
                         </p>
                       </td></tr>
                     </table>
@@ -363,11 +444,11 @@
                       <tr><td style="padding:14px 16px;">
                         <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Camino y dispositivo</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Tarjetas <strong style="color:#3A3E40;">{{ params.pref_path_card }}</strong> ·
-                          Calendario <strong style="color:#3A3E40;">{{ params.pref_path_calendar }}</strong><br />
-                          Desktop <strong style="color:#3A3E40;">{{ params.pref_desktop }}</strong> ·
-                          Mobile <strong style="color:#3A3E40;">{{ params.pref_mobile }}</strong> ·
-                          Tablet <strong style="color:#3A3E40;">{{ params.pref_tablet }}</strong>
+                          Tarjetas <strong style="color:#3A3E40;">12</strong> ·
+                          Calendario <strong style="color:#3A3E40;">6</strong><br />
+                          Desktop <strong style="color:#3A3E40;">11</strong> ·
+                          Mobile <strong style="color:#3A3E40;">6</strong> ·
+                          Tablet <strong style="color:#3A3E40;">1</strong>
                         </p>
                       </td></tr>
                     </table>
@@ -377,9 +458,9 @@
                       <tr><td style="padding:14px 16px;">
                         <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Tiempos</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Click → reserva <strong style="color:#3A3E40;">{{ params.time_click_to_book_median }}</strong><br />
-                          <span style="font-size:12px;color:#899094;">p90 {{ params.time_click_to_book_p90 }}</span><br />
-                          Anticipación <strong style="color:#3A3E40;">{{ params.time_lead_median }}</strong>
+                          Click → reserva <strong style="color:#3A3E40;">14 min</strong><br />
+                          <span style="font-size:12px;color:#899094;">p90 2 h 10 min</span><br />
+                          Anticipación <strong style="color:#3A3E40;">3 días</strong>
                         </p>
                       </td></tr>
                     </table>
@@ -396,7 +477,7 @@
                 <tr>
                   <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#005F74;">
                     El detalle de los eventos de la semana va adjunto en CSV, una fila por evento.
-                    {{ params.attachment_note }}
+                    
                   </td>
                 </tr>
               </table>

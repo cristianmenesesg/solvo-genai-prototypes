@@ -286,6 +286,81 @@
             </td>
           </tr>
 
+          <!-- ============ SHOWCASE DE TALENTO ============ -->
+          <tr>
+            <td class="px-32" style="padding:30px 32px 0 32px;">
+              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Showcase de talento</p>
+              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
+                Sobre el total de visitas del período · el showcase va debajo del bloque de reserva
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E3E3E3;border-radius:12px;">
+                <tr>
+                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
+                    Abrieron un currículo
+                    <span style="font-size:12px;color:#899094;">· coincidencia {{ params.sc_match_opens }} · muestra de roles {{ params.sc_roles_opens }}</span>
+                  </td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.sc_opens }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Qué parte de las visitas lo hizo</td>
+                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.sc_opens_pct }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:13px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
+                    Pasaron al agendamiento desde el detalle
+                    <span style="font-size:12px;color:#899094;">· sobre quienes abrieron</span>
+                  </td>
+                  <td align="right" style="padding:13px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.sc_cta_pct }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-32" style="padding:12px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="stack" width="50%" valign="top" style="padding:0 6px 0 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E0F8FB;border:1px solid #00BED6;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#005F74;">Conversión a reunión</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#005F74;">
+                          Abrió un currículo <strong style="color:#0089AB;">{{ params.sc_rate_opened }}</strong><br />
+                          No lo abrió <strong style="color:#0089AB;">{{ params.sc_rate_not_opened }}</strong><br />
+                          Diferencia <strong style="color:#0089AB;">{{ params.sc_rate_lift }}</strong>
+                        </p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td class="stack" width="50%" valign="top" style="padding:0 0 0 6px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Según cómo se presentó</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
+                          Coincidencia <strong style="color:#3A3E40;">{{ params.sc_rate_match }}</strong><br />
+                          Muestra de roles <strong style="color:#3A3E40;">{{ params.sc_rate_roles }}</strong><br />
+                          <span style="font-size:12px;color:#899094;">conversión de quienes abrieron</span>
+                        </p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-32" style="padding:12px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E3E3E3;border-radius:12px;">
+                <tr>
+                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#53585A;">
+                    Conversión previa al showcase
+                    <span style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;">&nbsp;{{ params.sc_baseline_rate }}</span>
+                    <span style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">&nbsp;·&nbsp;se movió {{ params.sc_baseline_delta }}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
           <!-- ============ SALUD DEL RECORRIDO ============ -->
           <tr>
             <td class="px-32" style="padding:30px 32px 0 32px;">

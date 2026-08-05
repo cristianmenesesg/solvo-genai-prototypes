@@ -73,7 +73,18 @@ export const products = [
         nombre: 'Reporte semanal del funnel (email)',
         categoria: 'Email',
         bundle: 'email-cold-outreach-funnel-report',
-        notas: 'Reporte interno: KPIs, embudo, showcase de talento, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
+        notas: 'Reporte interno: KPIs, embudo, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
+        versions: [
+          { label: 'Preview', file: 'brevo-funnel-report-preview.html' },
+          { label: 'Email (Brevo)', file: 'brevo-funnel-report.html' },
+        ],
+      },
+      {
+        id: 'funnel-report-release-2',
+        nombre: 'Reporte semanal del funnel (email) — Release 2',
+        categoria: 'Email',
+        bundle: 'email-cold-outreach-funnel-report-release-2',
+        notas: 'El mismo reporte con la sección de showcase de talento entre el embudo y la salud del recorrido: aperturas de currículo, paso al agendamiento y conversión contra la línea base previa al showcase.',
         versions: [
           { label: 'Preview', file: 'brevo-funnel-report-preview.html' },
           { label: 'Email (Brevo)', file: 'brevo-funnel-report.html' },
