@@ -61,62 +61,111 @@ const DEMO_USERS = {
   administrador: TEAM_MEMBERS[10]  // Pedro Sánchez
 };
 
-// === MOCK ASSIGNMENT DATA (Dual: Sales Rep + SDR) ===
-const MOCK_COMPANIES = [
-  { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', location: 'Miami, FL', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', pipelineStage: 'onboarding_started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 4 },
-  { id: 'comp-002', name: 'GlobalHealth Inc', industry: 'Healthcare', location: 'New York, NY', website: 'https://globalhealth.com', linkedinId: 'globalhealth-inc', pipelineStage: 'prospecting', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
-  { id: 'comp-003', name: 'FinServe Partners', industry: 'Finance', location: 'Chicago, IL', website: 'https://finserve.com', linkedinId: 'finserve-partners', pipelineStage: 'engaged', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 3 },
-  { id: 'comp-004', name: 'DataStream Analytics', industry: 'Technology', location: 'Austin, TX', website: 'https://datastream.io', linkedinId: 'datastream-analytics', pipelineStage: 'lead', type: 'prospecto', remoteViable: true, comercialId: null, sdrId: 'uuid-staff-006', coordinatorId: null, contactsCount: 1 },
-  { id: 'comp-005', name: 'Meridian Logistics', industry: 'Logistics', location: 'Dallas, TX', website: 'https://meridianlog.com', linkedinId: null, pipelineStage: 'initial_appointment_held', type: 'prospecto', remoteViable: false, comercialId: 'uuid-staff-003', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 2 },
-  { id: 'comp-006', name: 'NovaTech Industries', industry: 'Manufacturing', location: 'Seattle, WA', website: 'https://novatech.com', linkedinId: 'novatech-industries', pipelineStage: 'client', type: 'client', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-008', contactsCount: 5 },
-  { id: 'comp-007', name: 'Summit Education', industry: 'Education', location: 'Boston, MA', website: 'https://summitedu.org', linkedinId: 'summit-education', pipelineStage: 'lead', type: 'prospecto', remoteViable: true, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0 },
-  { id: 'comp-008', name: 'Apex Retail Group', industry: 'Retail', location: 'Los Angeles, CA', website: 'https://apexretail.com', linkedinId: 'apex-retail-group', pipelineStage: 'prospecting', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-003', sdrId: 'uuid-staff-011', coordinatorId: 'uuid-staff-009', contactsCount: 3 },
-  { id: 'comp-009', name: 'CloudBridge Systems', industry: 'Technology', location: 'San Francisco, CA', website: 'https://cloudbridge.io', linkedinId: 'cloudbridge-systems', pipelineStage: 'engaged', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
-  { id: 'comp-010', name: 'PharmaVita Labs', industry: 'Healthcare', location: 'Philadelphia, PA', website: 'https://pharmavita.com', linkedinId: null, pipelineStage: 'lost', type: 'inactivo', remoteViable: false, comercialId: 'uuid-staff-002', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 }
+// === CATÁLOGO ESTÁNDAR DE INDUSTRIAS (HUSPL-0.1) ===
+// Fuente única del vocabulario de industria: alimenta el filtro de los dos listados,
+// el formulario de empresa y la clasificación automática. Mantenerlo es editar este dato,
+// no desplegar la app: `active: false` retira una entrada de lo que se ofrece para clasificar,
+// y las empresas que ya la tienen conservan su código y siguen mostrándose con su etiqueta.
+const INDUSTRY_CATALOG = [
+  { code: 'healthcare', label: 'Healthcare', active: true },
+  { code: 'education', label: 'Education', active: true },
+  { code: 'financial_services', label: 'Financial Services', active: true },
+  { code: 'insurance', label: 'Insurance', active: true },
+  { code: 'real_estate', label: 'Real Estate', active: true },
+  { code: 'legal_services', label: 'Legal Services', active: true },
+  { code: 'technology_software', label: 'Technology & Software', active: true },
+  { code: 'staffing_recruiting', label: 'Staffing & Recruiting', active: true },
+  { code: 'professional_services', label: 'Professional Services', active: true },
+  { code: 'logistics_transportation', label: 'Logistics & Transportation', active: true },
+  { code: 'manufacturing', label: 'Manufacturing', active: true },
+  { code: 'construction', label: 'Construction', active: true },
+  { code: 'retail_ecommerce', label: 'Retail & E-commerce', active: true },
+  { code: 'hospitality_travel', label: 'Hospitality & Travel', active: true },
+  { code: 'marketing_advertising', label: 'Marketing & Advertising', active: true },
+  { code: 'media_entertainment', label: 'Media & Entertainment', active: true },
+  { code: 'energy_utilities', label: 'Energy & Utilities', active: true },
+  { code: 'telecommunications', label: 'Telecommunications', active: true },
+  { code: 'nonprofit', label: 'Nonprofit', active: true },
+  { code: 'government_public_sector', label: 'Government & Public Sector', active: true },
+  { code: 'agriculture', label: 'Agriculture', active: true },
+  { code: 'automotive', label: 'Automotive', active: true },
+  { code: 'other', label: 'Other', active: true }
 ];
 
-// Mock contacts based on company_contacts schema
+// Entradas ofrecidas para clasificar, por etiqueta alfabética.
+function getActiveIndustries() {
+  return INDUSTRY_CATALOG.filter(function (i) { return i.active; })
+    .slice()
+    .sort(function (a, b) { return a.label.localeCompare(b.label); });
+}
+
+// Etiqueta del catálogo. Una empresa sin clasificar no muestra nada: nunca el texto crudo.
+function getIndustryLabel(code) {
+  if (!code) return '';
+  var entry = INDUSTRY_CATALOG.find(function (i) { return i.code === code; });
+  return entry ? entry.label : '';
+}
+
+// === MOCK ASSIGNMENT DATA (Dual: Sales Rep + SDR) ===
+// `industry` conserva el texto crudo que escribió la fuente y ya no se muestra en ningún lado;
+// `industryCode` es la clasificación contra el catálogo (null = sin clasificar).
+// La marca de exportación (lastExportedBy / lastExportedAt / exportCount) la siembra seedExportState().
+const MOCK_COMPANIES = [
+  { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', industryCode: 'technology_software', location: 'Miami, FL', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', indeedId: 'techcorp-solutions', sizeEmployees: 750, lastContactedAt: null, researchedAt: '2025-12-15', salesPitch: 'TechCorp offers customized solutions with demonstrable ROI within 6 months. Their 500+ engineering team guarantees 24/7 support and continuous updates.', pipelineStage: 'onboarding_started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
+  { id: 'comp-002', name: 'GlobalHealth Inc', industry: 'Hospital & Health Care', industryCode: 'healthcare', location: 'New York, NY', website: 'https://globalhealth.com', linkedinId: 'globalhealth-inc', indeedId: 'globalhealth-inc', sizeEmployees: 1200, lastContactedAt: null, researchedAt: '2026-01-10', salesPitch: 'GlobalHealth is expanding rapidly and needs staffing solutions for their new clinics.', pipelineStage: 'prospecting', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-003', name: 'FinServe Partners', industry: 'financial services', industryCode: 'financial_services', location: 'Chicago, IL', website: 'https://finserve.com', linkedinId: 'finserve-partners', indeedId: null, sizeEmployees: 320, lastContactedAt: null, researchedAt: '2026-02-02', salesPitch: 'Mid-market advisory firm scaling its back office; open to nearshore analysts.', pipelineStage: 'engaged', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-004', name: 'DataStream Analytics', industry: 'Computer Software', industryCode: 'technology_software', location: 'Austin, TX', website: 'https://datastream.io', linkedinId: 'datastream-analytics', indeedId: 'datastream-analytics', sizeEmployees: 85, lastContactedAt: null, researchedAt: '2026-03-18', salesPitch: 'Series A startup hiring fast with no internal recruiting team.', pipelineStage: 'lead', type: 'prospecto', remoteViable: true, comercialId: null, sdrId: 'uuid-staff-006', coordinatorId: null, contactsCount: 1 },
+  { id: 'comp-005', name: 'Meridian Logistics', industry: 'Transportation/Trucking/Railroad', industryCode: 'logistics_transportation', location: 'Dallas, TX', website: 'https://meridianlog.com', linkedinId: null, indeedId: null, sizeEmployees: 460, lastContactedAt: null, researchedAt: '2026-02-27', salesPitch: 'Regional carrier with heavy back-office load in dispatch and billing.', pipelineStage: 'initial_appointment_held', type: 'prospecto', remoteViable: false, comercialId: 'uuid-staff-003', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-006', name: 'NovaTech Industries', industry: 'Industrial Automation', industryCode: 'manufacturing', location: 'Seattle, WA', website: 'https://novatech.com', linkedinId: 'novatech-industries', indeedId: 'novatech-industries', sizeEmployees: 2100, lastContactedAt: null, researchedAt: '2026-01-29', salesPitch: 'Established client expanding shared services; recurring bilingual support demand.', pipelineStage: 'client', type: 'client', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-008', contactsCount: 2 },
+  { id: 'comp-007', name: 'Summit Education', industry: 'education management', industryCode: 'education', location: 'Boston, MA', website: 'https://summitedu.org', linkedinId: 'summit-education', indeedId: null, sizeEmployees: 140, lastContactedAt: null, researchedAt: '2026-03-05', salesPitch: 'Charter network with seasonal admissions and enrollment support peaks.', pipelineStage: 'lead', type: 'prospecto', remoteViable: true, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0 },
+  // El slug de LinkedIn viene guardado como dirección completa: el archivo exportado la entrega tal cual.
+  { id: 'comp-008', name: 'Apex Retail Group', industry: 'Retail', industryCode: 'retail_ecommerce', location: 'Los Angeles, CA', website: 'https://apexretail.com', linkedinId: 'https://www.linkedin.com/company/apex-retail-group', indeedId: null, sizeEmployees: 5400, lastContactedAt: null, researchedAt: '2026-02-14', salesPitch: 'National retailer with high-volume seasonal hiring in customer care.', pipelineStage: 'prospecting', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-003', sdrId: 'uuid-staff-011', coordinatorId: 'uuid-staff-009', contactsCount: 0 },
+  // Llegó de General US Openings, que crea la empresa sin industria de origen: queda sin clasificar.
+  { id: 'comp-009', name: 'CloudBridge Systems', industry: '', industryCode: null, location: 'San Francisco, CA', website: 'https://cloudbridge.io', linkedinId: 'cloudbridge-systems', indeedId: 'cloudbridge-systems', sizeEmployees: 210, lastContactedAt: null, researchedAt: '2026-03-22', salesPitch: 'B2B SaaS scaling support coverage to US business hours.', pipelineStage: 'engaged', type: 'prospecto', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-010', name: 'PharmaVita Labs', industry: 'Pharmaceuticals', industryCode: 'healthcare', location: 'Philadelphia, PA', website: 'https://pharmavita.com', linkedinId: null, indeedId: null, sizeEmployees: 890, lastContactedAt: null, researchedAt: '2025-11-08', salesPitch: 'Closed the cycle without moving forward; revisit next budget season.', pipelineStage: 'lost', type: 'inactivo', remoteViable: false, comercialId: 'uuid-staff-002', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  // Empresa todavía sin investigar: sin industria, tamaño, sitio web ni perfiles corporativos.
+  { id: 'comp-011', name: 'Harbor Point Services', industry: '', industryCode: null, location: 'Tampa, FL', website: null, linkedinId: null, indeedId: null, sizeEmployees: null, lastContactedAt: null, researchedAt: null, salesPitch: null, pipelineStage: 'lead', type: 'prospecto', remoteViable: true, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0 }
+];
+
+// Mock contacts based on company_contacts schema.
+// Lo guardado refleja el filtro de rol decisor de Company Decision Maker: el cargo se contrasta
+// contra el catálogo de roles y cada empresa conserva sus contactos de primer nivel de decisión
+// —CEO, President, Chairman, CFO, CRO, VP of Sales— o, solo cuando no tiene ninguno, un único
+// alterno de segundo nivel (COO, Owner/Founder, Managing Director, Executive Director).
+// Los cargos que no califican no llegan a company_contacts, así que una empresa puede quedar
+// sin contactos: Summit Education, Apex Retail y Harbor Point son ese caso.
 const MOCK_CONTACTS = [
-  { id: 'ct-001', companyId: 'comp-001', fullName: 'James Wilson', position: 'CTO', department: 'Technology', seniorityLevel: 'C-Level', email: 'j.wilson@techcorp.com', phone: '+1 305-555-0101', linkedinUrl: 'https://linkedin.com/in/jameswilson' },
-  { id: 'ct-002', companyId: 'comp-001', fullName: 'Sarah Chen', position: 'VP Engineering', department: 'Technology', seniorityLevel: 'VP', email: 's.chen@techcorp.com', phone: '+1 305-555-0102', linkedinUrl: 'https://linkedin.com/in/sarachen' },
-  { id: 'ct-003', companyId: 'comp-001', fullName: 'Mike Thompson', position: 'HR Director', department: 'Human Resources', seniorityLevel: 'Director', email: 'm.thompson@techcorp.com', phone: '+1 305-555-0103', linkedinUrl: 'https://linkedin.com/in/mikethompson' },
-  { id: 'ct-004', companyId: 'comp-001', fullName: 'Emily Davis', position: 'Talent Acquisition Lead', department: 'Human Resources', seniorityLevel: 'Manager', email: 'e.davis@techcorp.com', phone: null, linkedinUrl: 'https://linkedin.com/in/emilydavis' },
-  { id: 'ct-005', companyId: 'comp-002', fullName: 'Dr. Robert Kim', position: 'CEO', department: 'Executive', seniorityLevel: 'C-Level', email: 'r.kim@globalhealth.com', phone: '+1 212-555-0201', linkedinUrl: 'https://linkedin.com/in/drrobertkim' },
-  { id: 'ct-006', companyId: 'comp-002', fullName: 'Lisa Park', position: 'VP Operations', department: 'Operations', seniorityLevel: 'VP', email: 'l.park@globalhealth.com', phone: '+1 212-555-0202', linkedinUrl: null },
-  { id: 'ct-007', companyId: 'comp-003', fullName: 'David Martinez', position: 'Managing Partner', department: 'Executive', seniorityLevel: 'C-Level', email: 'd.martinez@finserve.com', phone: '+1 312-555-0301', linkedinUrl: 'https://linkedin.com/in/davidmartinez' },
-  { id: 'ct-008', companyId: 'comp-003', fullName: 'Jennifer Lee', position: 'CFO', department: 'Finance', seniorityLevel: 'C-Level', email: 'j.lee@finserve.com', phone: '+1 312-555-0302', linkedinUrl: 'https://linkedin.com/in/jenniferlee' },
-  { id: 'ct-009', companyId: 'comp-003', fullName: 'Tom Baker', position: 'Recruiting Manager', department: 'Human Resources', seniorityLevel: 'Manager', email: 't.baker@finserve.com', phone: null, linkedinUrl: null },
+  { id: 'ct-001', companyId: 'comp-001', fullName: 'James Wilson', position: 'Chief Executive Officer', department: 'Executive', seniorityLevel: 'C-Level', email: 'j.wilson@techcorp.com', phone: '+1 305-555-0101', linkedinUrl: 'https://linkedin.com/in/jameswilson' },
+  { id: 'ct-002', companyId: 'comp-001', fullName: 'Sarah Chen', position: 'VP of Sales', department: 'Sales', seniorityLevel: 'VP', email: 's.chen@techcorp.com', phone: '+1 305-555-0102', linkedinUrl: 'https://linkedin.com/in/sarachen' },
+  { id: 'ct-005', companyId: 'comp-002', fullName: 'Dr. Robert Kim', position: 'President & CEO', department: 'Executive', seniorityLevel: 'C-Level', email: 'r.kim@globalhealth.com', phone: '+1 212-555-0201', linkedinUrl: 'https://linkedin.com/in/drrobertkim' },
+  { id: 'ct-008', companyId: 'comp-003', fullName: 'Jennifer Lee', position: 'Chief Financial Officer', department: 'Finance', seniorityLevel: 'C-Level', email: 'j.lee@finserve.com', phone: '+1 312-555-0302', linkedinUrl: 'https://linkedin.com/in/jenniferlee' },
   { id: 'ct-010', companyId: 'comp-004', fullName: 'Alex Rivera', position: 'Founder & CEO', department: 'Executive', seniorityLevel: 'C-Level', email: 'a.rivera@datastream.io', phone: '+1 512-555-0401', linkedinUrl: 'https://linkedin.com/in/alexrivera' },
-  { id: 'ct-011', companyId: 'comp-005', fullName: 'Karen White', position: 'COO', department: 'Operations', seniorityLevel: 'C-Level', email: 'k.white@meridianlog.com', phone: '+1 214-555-0501', linkedinUrl: 'https://linkedin.com/in/karenwhite' },
-  { id: 'ct-012', companyId: 'comp-005', fullName: 'Steve Brown', position: 'Logistics Director', department: 'Operations', seniorityLevel: 'Director', email: 's.brown@meridianlog.com', phone: '+1 214-555-0502', linkedinUrl: null },
-  { id: 'ct-013', companyId: 'comp-006', fullName: 'Rachel Green', position: 'CEO', department: 'Executive', seniorityLevel: 'C-Level', email: 'r.green@novatech.com', phone: '+1 206-555-0601', linkedinUrl: 'https://linkedin.com/in/rachelgreen' },
+  // Meridian no tiene ningún contacto de primer nivel: se conserva un único alterno.
+  { id: 'ct-011', companyId: 'comp-005', fullName: 'Karen White', position: 'Chief Operating Officer', department: 'Operations', seniorityLevel: 'C-Level', email: 'k.white@meridianlog.com', phone: '+1 214-555-0501', linkedinUrl: 'https://linkedin.com/in/karenwhite' },
+  { id: 'ct-013', companyId: 'comp-006', fullName: 'Rachel Green', position: 'Chief Executive Officer', department: 'Executive', seniorityLevel: 'C-Level', email: 'r.green@novatech.com', phone: '+1 206-555-0601', linkedinUrl: 'https://linkedin.com/in/rachelgreen' },
   { id: 'ct-014', companyId: 'comp-006', fullName: 'Mark Johnson', position: 'VP Sales', department: 'Sales', seniorityLevel: 'VP', email: 'm.johnson@novatech.com', phone: '+1 206-555-0602', linkedinUrl: 'https://linkedin.com/in/markjohnson' },
-  { id: 'ct-015', companyId: 'comp-006', fullName: 'Amy Wu', position: 'Engineering Manager', department: 'Technology', seniorityLevel: 'Manager', email: 'a.wu@novatech.com', phone: null, linkedinUrl: 'https://linkedin.com/in/amywu' },
-  { id: 'ct-016', companyId: 'comp-006', fullName: 'Chris Taylor', position: 'HR Business Partner', department: 'Human Resources', seniorityLevel: 'Manager', email: 'c.taylor@novatech.com', phone: '+1 206-555-0604', linkedinUrl: null },
-  { id: 'ct-017', companyId: 'comp-006', fullName: 'Diana Ross', position: 'Plant Manager', department: 'Manufacturing', seniorityLevel: 'Director', email: 'd.ross@novatech.com', phone: '+1 206-555-0605', linkedinUrl: 'https://linkedin.com/in/dianaross' },
-  { id: 'ct-018', companyId: 'comp-008', fullName: 'Paul Adams', position: 'VP Retail Operations', department: 'Operations', seniorityLevel: 'VP', email: 'p.adams@apexretail.com', phone: '+1 310-555-0801', linkedinUrl: 'https://linkedin.com/in/pauladams' },
-  { id: 'ct-019', companyId: 'comp-008', fullName: 'Monica Bell', position: 'Talent Director', department: 'Human Resources', seniorityLevel: 'Director', email: 'm.bell@apexretail.com', phone: '+1 310-555-0802', linkedinUrl: 'https://linkedin.com/in/monicabell' },
-  { id: 'ct-020', companyId: 'comp-008', fullName: 'Nathan Clark', position: 'Marketing Manager', department: 'Marketing', seniorityLevel: 'Manager', email: 'n.clark@apexretail.com', phone: null, linkedinUrl: null },
-  { id: 'ct-021', companyId: 'comp-009', fullName: 'Sophia Nguyen', position: 'CTO', department: 'Technology', seniorityLevel: 'C-Level', email: 's.nguyen@cloudbridge.io', phone: '+1 415-555-0901', linkedinUrl: 'https://linkedin.com/in/sophianguyen' },
-  { id: 'ct-022', companyId: 'comp-009', fullName: 'Ryan Foster', position: 'Head of Product', department: 'Product', seniorityLevel: 'Director', email: 'r.foster@cloudbridge.io', phone: '+1 415-555-0902', linkedinUrl: 'https://linkedin.com/in/ryanfoster' },
-  { id: 'ct-023', companyId: 'comp-010', fullName: 'Dr. Helen Moore', position: 'Chief Scientific Officer', department: 'R&D', seniorityLevel: 'C-Level', email: 'h.moore@pharmavita.com', phone: '+1 215-555-1001', linkedinUrl: 'https://linkedin.com/in/drhelenmoore' }
+  { id: 'ct-021', companyId: 'comp-009', fullName: 'Sophia Nguyen', position: 'Chief Executive Officer', department: 'Executive', seniorityLevel: 'C-Level', email: 's.nguyen@cloudbridge.io', phone: '+1 415-555-0901', linkedinUrl: 'https://linkedin.com/in/sophianguyen' },
+  { id: 'ct-023', companyId: 'comp-010', fullName: 'Dr. Helen Moore', position: 'Chairwoman of the Board', department: 'Executive', seniorityLevel: 'C-Level', email: 'h.moore@pharmavita.com', phone: '+1 215-555-1001', linkedinUrl: 'https://linkedin.com/in/drhelenmoore' }
 ];
 
 function getContactsForCompany(companyId) {
   return MOCK_CONTACTS.filter(c => c.companyId === companyId);
 }
 
+// `source` es el pipeline que detectó la vacante (vacancies.source_project) y `sourcePortal`,
+// el portal del que salió el aviso (vacancies.source). `detectedAt` (created_at) y `publishedDate`
+// son dos fechas distintas y las siembra seedDetectionDates().
 const MOCK_VACANCIES = [
-  { id: 'vac-001', title: 'Senior Software Engineer', companyId: 'comp-001', status: 'contacted', source: 'general_us', stateCode: 'FL', remoteViable: true, salary: '$120K - $150K', salaryBucket: '100-150', description: 'Build scalable microservices using Node.js and AWS.', detectedAt: '2026-04-10', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-002', title: 'DevOps Lead', companyId: 'comp-001', status: 'proposal', source: 'general_us', stateCode: 'FL', remoteViable: true, salary: '$130K - $160K', salaryBucket: '100-150', description: 'Lead CI/CD pipeline architecture for cloud infrastructure.', detectedAt: '2026-04-08', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-003', title: 'Product Manager', companyId: 'comp-001', status: 'detected', source: 'current_client', stateCode: 'FL', remoteViable: true, salary: '$110K - $140K', salaryBucket: '100-150', description: 'Drive product strategy for SaaS platform.', detectedAt: '2026-04-12', comercialId: 'uuid-staff-002', comercialType: 'direct', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-004', title: 'Data Scientist', companyId: 'comp-002', status: 'detected', source: 'general_us', stateCode: 'NY', remoteViable: true, salary: '$140K - $170K', salaryBucket: '150+', description: 'ML models for patient outcome prediction.', detectedAt: '2026-04-11', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
-  { id: 'vac-005', title: 'Financial Analyst', companyId: 'comp-003', status: 'contacted', source: 'general_us', stateCode: 'IL', remoteViable: true, salary: '$80K - $100K', salaryBucket: '50-100', description: 'Financial modeling and forecasting for investment portfolio.', detectedAt: '2026-04-09', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-006', title: 'React Developer', companyId: 'comp-004', status: 'detected', source: 'general_us', stateCode: 'TX', remoteViable: true, salary: '$90K - $120K', salaryBucket: '50-100', description: 'Frontend development with React and TypeScript.', detectedAt: '2026-04-13', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-007', title: 'Supply Chain Manager', companyId: 'comp-005', status: 'won', source: 'current_client', stateCode: 'TX', remoteViable: false, salary: '$95K - $115K', salaryBucket: '50-100', description: 'End-to-end supply chain optimization.', detectedAt: '2026-03-28', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
-  { id: 'vac-008', title: 'QA Automation Engineer', companyId: 'comp-006', status: 'contacted', source: 'general_us', stateCode: 'WA', remoteViable: true, salary: '$100K - $130K', salaryBucket: '100-150', description: 'Build automated test suites for manufacturing control systems.', detectedAt: '2026-04-07', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
-  { id: 'vac-009', title: 'UX Researcher', companyId: 'comp-009', status: 'detected', source: 'general_us', stateCode: 'CA', remoteViable: true, salary: '$105K - $130K', salaryBucket: '100-150', description: 'User research for B2B SaaS products.', detectedAt: '2026-04-12', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
-  { id: 'vac-010', title: 'Marketing Coordinator', companyId: 'comp-008', status: 'lost', source: 'general_us', stateCode: 'CA', remoteViable: true, salary: '$55K - $70K', salaryBucket: '50-100', description: 'Manage digital marketing campaigns for retail brand.', detectedAt: '2026-03-20', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' }
+  { id: 'vac-001', title: 'Senior Software Engineer', companyId: 'comp-001', status: 'contacted', source: 'general_us', sourcePortal: 'LinkedIn', stateCode: 'FL', location: 'Miami, FL', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3901247115', remoteViable: true, salary: '$120K - $150K', salaryBucket: '100-150', seniorityLevel: 'Senior', department: 'Engineering', skills: 'Node.js, AWS, PostgreSQL, Docker', description: 'Build scalable microservices using Node.js and AWS.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-002', title: 'DevOps Lead', companyId: 'comp-001', status: 'proposal', source: 'general_us', sourcePortal: 'Indeed', stateCode: 'FL', location: 'Miami, FL', workModality: 'Hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=8b1f4c02ad77e310', remoteViable: true, salary: '$130K - $160K', salaryBucket: '100-150', seniorityLevel: 'Lead', department: 'Engineering', skills: 'Kubernetes, Terraform, CI/CD, Azure', description: 'Lead CI/CD pipeline architecture for cloud infrastructure.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-003', title: 'Product Manager', companyId: 'comp-001', status: 'detected', source: 'current_client', sourcePortal: 'LinkedIn', stateCode: 'FL', location: 'Miami, FL', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3899014772', remoteViable: true, salary: '$110K - $140K', salaryBucket: '100-150', seniorityLevel: 'Mid', department: 'Product', skills: 'Roadmapping, Discovery, SQL, Agile', description: 'Drive product strategy for SaaS platform.', comercialId: 'uuid-staff-002', comercialType: 'direct', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-004', title: 'Data Scientist', companyId: 'comp-002', status: 'detected', source: 'general_us', sourcePortal: 'LinkedIn', stateCode: 'NY', location: 'New York, NY', workModality: 'Hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3902663841', remoteViable: true, salary: '$140K - $170K', salaryBucket: '150+', seniorityLevel: 'Senior', department: 'Data', skills: 'Python, scikit-learn, MLflow, SQL', description: 'ML models for patient outcome prediction.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-005', title: 'Financial Analyst', companyId: 'comp-003', status: 'contacted', source: 'general_us', sourcePortal: 'Indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'On-site', jobUrl: 'https://www.indeed.com/viewjob?jk=2fd903b7c1e845aa', remoteViable: true, salary: '$80K - $100K', salaryBucket: '50-100', seniorityLevel: 'Mid', department: 'Finance', skills: 'Excel, Financial modeling, Power BI', description: 'Financial modeling and forecasting for investment portfolio.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-006', title: 'React Developer', companyId: 'comp-004', status: 'detected', source: 'general_us', sourcePortal: 'LinkedIn', stateCode: 'TX', location: 'Austin, TX', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3903771208', remoteViable: true, salary: '$90K - $120K', salaryBucket: '50-100', seniorityLevel: 'Mid', department: 'Engineering', skills: 'React, TypeScript, GraphQL', description: 'Frontend development with React and TypeScript.', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-007', title: 'Supply Chain Manager', companyId: 'comp-005', status: 'won', source: 'current_client', sourcePortal: 'Indeed', stateCode: 'TX', location: 'Dallas, TX', workModality: 'On-site', jobUrl: 'https://www.indeed.com/viewjob?jk=71ac4e9d0b3f6612', remoteViable: false, salary: '$95K - $115K', salaryBucket: '50-100', seniorityLevel: 'Manager', department: 'Operations', skills: 'S&OP, SAP, Demand planning', description: 'End-to-end supply chain optimization.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-008', title: 'QA Automation Engineer', companyId: 'comp-006', status: 'contacted', source: 'general_us', sourcePortal: 'LinkedIn', stateCode: 'WA', location: 'Seattle, WA', workModality: 'Hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3897520946', remoteViable: true, salary: '$100K - $130K', salaryBucket: '100-150', seniorityLevel: 'Mid', department: 'Engineering', skills: 'Playwright, Python, CI/CD', description: 'Build automated test suites for manufacturing control systems.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-009', title: 'UX Researcher', companyId: 'comp-009', status: 'detected', source: 'general_us', sourcePortal: 'LinkedIn', stateCode: 'CA', location: 'San Francisco, CA', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3904118530', remoteViable: true, salary: '$105K - $130K', salaryBucket: '100-150', seniorityLevel: 'Mid', department: 'Design', skills: 'User interviews, Usability testing, Figma', description: 'User research for B2B SaaS products.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-010', title: 'Marketing Coordinator', companyId: 'comp-008', status: 'lost', source: 'general_us', sourcePortal: 'Indeed', stateCode: 'CA', location: 'Los Angeles, CA', workModality: 'Hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=5c08a26fb914d773', remoteViable: true, salary: '$55K - $70K', salaryBucket: '50-100', seniorityLevel: 'Junior', department: 'Marketing', skills: 'HubSpot, Paid media, Copywriting', description: 'Manage digital marketing campaigns for retail brand.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' }
 ];
 
 // === ON-DEMAND OPENINGS (ODO) ===
@@ -127,27 +176,94 @@ const MOCK_VACANCIES = [
   MOCK_COMPANIES.forEach(function (c) { c.lastScrapedAt = seed[c.id] || null; });
 })();
 
-// Seed portal URLs per company (base de los badges LinkedIn/Indeed). Reutiliza company.linkedinId / indeedId.
-// Variedad: algunas con ambos portales, otras con uno solo, otras con ninguno.
+// Seed portal URLs per company (base de los badges LinkedIn/Indeed). Reutiliza company.linkedinId / indeedId,
+// que la base guarda como slug: las direcciones navegables se rearman con los helpers del final del archivo.
 (function seedPortalUrls() {
-  var hasIndeed = { 'comp-001': true, 'comp-002': true, 'comp-004': true, 'comp-006': true, 'comp-009': true };
   MOCK_COMPANIES.forEach(function (c) {
-    c.linkedinUrl = c.linkedinId ? ('https://linkedin.com/company/' + c.linkedinId) : null;
-    if (hasIndeed[c.id]) {
-      c.indeedId = c.indeedId || c.id;
-      c.indeedUrl = 'https://indeed.com/cmp/' + (c.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    } else {
-      c.indeedId = null; c.indeedUrl = null;
-    }
+    c.linkedinUrl = companyLinkedinUrl(c) || null;
+    c.indeedUrl = companyIndeedUrl(c) || null;
   });
 })();
 
 // On-demand vacancies (origin = on_demand) returned by a previous on-demand run
 MOCK_VACANCIES.push(
-  { id: 'vac-od-001', title: 'Bilingual Customer Service Rep', companyId: 'comp-006', status: 'detected', source: 'on_demand', stateCode: 'WA', remoteViable: true, salary: '$45K - $55K', salaryBucket: '50-100', description: 'Inbound/outbound support for US customers, English C1+.', detectedAt: '2026-06-15', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
-  { id: 'vac-od-002', title: 'Collections Specialist', companyId: 'comp-006', status: 'detected', source: 'on_demand', stateCode: 'WA', remoteViable: true, salary: '$50K - $62K', salaryBucket: '50-100', description: 'B2B collections, bilingual.', detectedAt: '2026-06-15', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
-  { id: 'vac-od-003', title: 'Virtual Assistant', companyId: 'comp-009', status: 'detected', source: 'on_demand', stateCode: 'CA', remoteViable: true, salary: '$40K - $50K', salaryBucket: '0-50', description: 'Executive assistant, fully remote.', detectedAt: '2026-06-10', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
+  { id: 'vac-od-001', title: 'Bilingual Customer Service Rep', companyId: 'comp-006', status: 'detected', source: 'on_demand', sourcePortal: 'LinkedIn', stateCode: 'WA', location: 'Seattle, WA', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3906442017', remoteViable: true, salary: '$45K - $55K', salaryBucket: '50-100', seniorityLevel: 'Junior', department: 'Customer Service', skills: 'English C1, CRM, Inbound support', description: 'Inbound/outbound support for US customers, English C1+.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-od-002', title: 'Collections Specialist', companyId: 'comp-006', status: 'detected', source: 'on_demand', sourcePortal: 'Indeed', stateCode: 'WA', location: 'Seattle, WA', workModality: 'Remote', jobUrl: 'https://www.indeed.com/viewjob?jk=93bd1170e5c2a408', remoteViable: true, salary: '$50K - $62K', salaryBucket: '50-100', seniorityLevel: 'Mid', department: 'Finance', skills: 'B2B collections, Bilingual, ERP', description: 'B2B collections, bilingual.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-od-003', title: 'Virtual Assistant', companyId: 'comp-009', status: 'detected', source: 'on_demand', sourcePortal: 'LinkedIn', stateCode: 'CA', location: 'San Francisco, CA', workModality: 'Remote', jobUrl: 'https://www.linkedin.com/jobs/view/3905880134', remoteViable: true, salary: '$40K - $50K', salaryBucket: '0-50', seniorityLevel: 'Junior', department: 'Operations', skills: 'Calendar management, English C1, Google Workspace', description: 'Executive assistant, fully remote.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
 );
+
+// === FECHAS DE DETECCIÓN Y PUBLICACIÓN (HUSPL-1.1) ===
+// Se siembran relativas a hoy para que el rango "Detected" siempre tenga material que recortar.
+// El offset de publicación es mayor o igual al de detección: el aviso se publicó antes de que el
+// sistema lo detectara, y `vac-007` es el caso extremo —publicada hace meses, detectada esta semana—
+// que es justo lo que el criterio anterior sobre la fecha de publicación dejaba fuera.
+(function seedDetectionDates() {
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+  var companyOffsets = {
+    'comp-001': 120, 'comp-002': 96, 'comp-003': 74, 'comp-004': 41, 'comp-005': 63,
+    'comp-006': 133, 'comp-007': 17, 'comp-008': 52, 'comp-009': 9, 'comp-010': 148, 'comp-011': 3
+  };
+  MOCK_COMPANIES.forEach(function (c) {
+    c.createdAt = daysAgo(companyOffsets[c.id] !== undefined ? companyOffsets[c.id] : 90);
+    c.lastContactedAt = c.lastContactedAt || null;
+  });
+  // [detección, publicación] en días atrás
+  var vacancyOffsets = {
+    'vac-001': [28, 34], 'vac-002': [26, 30], 'vac-003': [12, 15], 'vac-004': [11, 13],
+    'vac-005': [19, 26], 'vac-006': [6, 8], 'vac-007': [4, 97], 'vac-008': [33, 38],
+    'vac-009': [8, 9], 'vac-010': [45, 51],
+    'vac-od-001': [2, 2], 'vac-od-002': [2, 3], 'vac-od-003': [5, 6]
+  };
+  MOCK_VACANCIES.forEach(function (v) {
+    var o = vacancyOffsets[v.id] || [30, 35];
+    v.detectedAt = daysAgo(o[0]);
+    v.publishedDate = daysAgo(o[1]);
+  });
+  // Última vez contactada de las empresas que ya entraron en conversación.
+  var contactedOffsets = { 'comp-001': 7, 'comp-002': 21, 'comp-003': 14, 'comp-005': 30, 'comp-006': 5, 'comp-010': 112 };
+  MOCK_COMPANIES.forEach(function (c) {
+    if (contactedOffsets[c.id] !== undefined) c.lastContactedAt = daysAgo(contactedOffsets[c.id]) + ' 09:30';
+  });
+  MOCK_CONTACTS.forEach(function (ct) {
+    var company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    ct.createdAt = company ? company.createdAt : daysAgo(60);
+  });
+})();
+
+// === MEMORIA DE EXPORTACIÓN (HUSPL-0.2) ===
+// Cada empresa, vacante y contacto recuerda quién lo exportó por última vez, cuándo, y cuántas
+// veces salió en total. Es un único juego de campos por registro: la última exportación sea de quien
+// sea, no una marca por usuario. Se siembra parte del universo como ya repartido para que el filtro
+// por estado de exportación arranque con contenido en sus tres valores.
+(function seedExportState() {
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+  var seed = {
+    // Ana Rodríguez (coordinadora, usuario demo) — aparecen bajo "Exported by me" en su sesión
+    'comp-002': ['uuid-staff-004', 2, 1],
+    'vac-002': ['uuid-staff-004', 2, 1],
+    'vac-od-001': ['uuid-staff-004', 1, 1],
+    // Roberto Vargas y Patricia Morales — aparecen bajo "Exported by others"
+    'comp-006': ['uuid-staff-008', 5, 2],
+    'comp-010': ['uuid-staff-009', 9, 1],
+    'vac-005': ['uuid-staff-008', 5, 3],
+    'vac-007': ['uuid-staff-009', 12, 1]
+  };
+  function apply(record) {
+    var mark = seed[record.id];
+    record.lastExportedBy = mark ? mark[0] : null;
+    record.lastExportedAt = mark ? daysAgo(mark[1]) + ' 16:45' : null;
+    record.exportCount = mark ? mark[2] : 0;
+  }
+  MOCK_COMPANIES.forEach(apply);
+  MOCK_VACANCIES.forEach(apply);
+  // Los contactos salen en el archivo junto a su empresa: heredan su marca.
+  MOCK_CONTACTS.forEach(function (ct) {
+    var company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    ct.lastExportedBy = company ? company.lastExportedBy : null;
+    ct.lastExportedAt = company ? company.lastExportedAt : null;
+    ct.exportCount = company ? company.exportCount : 0;
+  });
+})();
 
 // ODO config (single window) — persisted in localStorage. La ventana es a la vez cool-down y antigüedad máx. de vacantes.
 var ODO_DEFAULTS = { windowDays: 1, minWindowDays: 1 };
@@ -237,6 +353,90 @@ function getActiveSDRs() { return getActiveByRole('sdr'); }
 
 function getMemberById(id) {
   return TEAM_MEMBERS.find(m => m.id === id) || null;
+}
+
+// Email del staff asignado a un slot. Es lo que entregan las columnas de asignación de los archivos.
+function staffEmail(id) {
+  const member = id ? getMemberById(id) : null;
+  return member ? member.email : '';
+}
+
+// === ENLACES CORPORATIVOS ===
+// company.linkedin_id y company.indeed_id guardan el slug, no la dirección: el flujo de investigación
+// les quita el protocolo, el www. y el path antes de persistirlos. Acá se rearma la dirección navegable.
+// El dato viene inconsistente entre flujos, así que un valor que ya trae el dominio se entrega tal cual.
+function rebuildPortalUrl(id, prefix, domain) {
+  if (!id) return '';
+  const raw = String(id).trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw) || raw.toLowerCase().indexOf(domain) !== -1) return raw;
+  return prefix + raw;
+}
+
+function companyLinkedinUrl(company) {
+  return company ? rebuildPortalUrl(company.linkedinId, 'https://www.linkedin.com/company/', 'linkedin.com') : '';
+}
+
+function companyIndeedUrl(company) {
+  return company ? rebuildPortalUrl(company.indeedId, 'https://www.indeed.com/cmp/', 'indeed.com') : '';
+}
+
+// === ESTADO DE EXPORTACIÓN (HUSPL-2.3 / HUSPL-2.4) ===
+const EXPORT_STATUS_OPTIONS = [
+  { value: 'not_exported', label: 'Not exported' },
+  { value: 'exported_by_me', label: 'Exported by me' },
+  { value: 'exported_by_others', label: 'Exported by others' },
+  { value: 'all', label: 'All' }
+];
+
+// Los cuatro valores del filtro solo aplican a los roles de coordinación; para Sales Rep y SDR
+// el listado se comporta como antes de la épica.
+function canFilterByExportStatus() {
+  return canViewAll();
+}
+
+function getExportStatus(record) {
+  const user = getCurrentUser();
+  if (!record || !record.lastExportedBy) return 'not_exported';
+  return user && record.lastExportedBy === user.id ? 'exported_by_me' : 'exported_by_others';
+}
+
+function filterByExportStatus(list, status) {
+  if (!canFilterByExportStatus() || !status || status === 'all') return list;
+  return list.filter(r => getExportStatus(r) === status);
+}
+
+// Rango de fecha de detección: extremos opcionales e independientes, ambos incluidos como día completo.
+function filterByDetectedRange(list, from, to, field) {
+  const key = field || 'detectedAt';
+  if (!from && !to) return list;
+  return list.filter(r => {
+    const value = (r[key] || '').slice(0, 10);
+    if (!value) return false;
+    if (from && value < from) return false;
+    if (to && value > to) return false;
+    return true;
+  });
+}
+
+// Marca los registros entregados con quién los exportó y cuándo, e incrementa su conteo.
+// Se ejecuta después de componer el archivo: el contenido entregado no depende de esta marca.
+function markExported(records) {
+  const user = getCurrentUser();
+  if (!user || !records || !records.length) return;
+  const now = new Date();
+  const stamp = now.toISOString().slice(0, 10) + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  records.forEach(r => {
+    r.lastExportedBy = user.id;
+    r.lastExportedAt = stamp;
+    r.exportCount = (r.exportCount || 0) + 1;
+  });
+}
+
+// Cuántos registros del recorte ya salieron alguna vez — alimenta el aviso de solapamiento del popup.
+function countAlreadyExported(records) {
+  return (records || []).filter(r => r && r.lastExportedBy).length;
 }
 
 // Get companies visible to current user
@@ -773,6 +973,7 @@ function openExportPopup(options) {
     entityCount = 0,
     contactsCount = 0,              // total contacts across entities (0 = hide checkbox)
     showContactsOption = false,     // show "Include contacts" checkbox
+    alreadyExported = 0,            // cuántos del recorte ya salieron: dispara el aviso de solapamiento
     onExport = (includeContacts) => {}
   } = options;
 
@@ -782,6 +983,16 @@ function openExportPopup(options) {
   }
 
   let includeContacts = false;
+
+  // Aviso de solapamiento: repetir material ya repartido tiene que ser una decisión, no un descuido.
+  const overlapSection = alreadyExported > 0 ? `
+    <div class="export-overlap-note">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+        <line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line>
+      </svg>
+      <span><strong>${alreadyExported}</strong> of ${entityCount} ${entityLabel} were already exported. Exporting again will reassign them to you.</span>
+    </div>` : '';
 
   const overlay = document.createElement('div');
   overlay.className = 'assign-popup-overlay';
@@ -810,6 +1021,7 @@ function openExportPopup(options) {
           <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} to export</div>
           <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Based on the active filters</div>
         </div>
+        ${overlapSection}
         ${contactsSection}
       </div>
       <div class="assign-popup-footer">
@@ -1049,19 +1261,300 @@ function openScrapePopup(options) {
 }
 
 // === CSV EXPORT ===
-function exportToCSV(rows, filename) {
-  const BOM = '\uFEFF';
-  const headers = Object.keys(rows[0]);
-  const csv = BOM + headers.join(',') + '\n' + rows.map(r => headers.map(h => {
-    const val = (r[h] || '').toString().replace(/"/g, '""');
-    return val.includes(',') || val.includes('"') || val.includes('\n') ? `"${val}"` : val;
-  }).join(',')).join('\n');
+// Contrato com\u00FAn de los archivos exportados (FSPL-2): UTF-8 con BOM, separados por coma y con salto
+// de l\u00EDnea CRLF, para que abran en Excel con las tildes correctas sin limpieza previa. Los valores con
+// coma, comilla doble o salto de l\u00EDnea van entrecomillados con las comillas internas duplicadas, y una
+// celda sin dato se entrega vac\u00EDa: nunca `null`, `N/A` ni un guion.
+
+// Fecha con hora `AAAA-MM-DD HH:MM`, o solo fecha `AAAA-MM-DD`. Vac\u00EDo si no hay dato.
+function csvDate(value, withTime) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  return withTime ? raw.slice(0, 16) : raw.slice(0, 10);
+}
+
+// Nombre del archivo: <entidad>_<inicio>_<fin>.csv con los extremos del rango de fecha de detecci\u00F3n
+// cuando hay rango aplicado, y <entidad>_<AAAA-MM-DD>.csv con la fecha de generaci\u00F3n cuando no lo hay.
+function exportFilename(entity, from, to) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (from || to) return `${entity}_${from || today}_${to || today}.csv`;
+  return `${entity}_${today}.csv`;
+}
+
+// Orden de las filas: fecha de detecci\u00F3n descendente y, a igual fecha, nombre de empresa ascendente.
+function sortForExport(rows, detectedKey, companyKey) {
+  return rows.slice().sort((a, b) => {
+    const da = String(a[detectedKey] || ''), db = String(b[detectedKey] || '');
+    if (da !== db) return db.localeCompare(da);
+    return String(a[companyKey] || '').localeCompare(String(b[companyKey] || ''));
+  });
+}
+
+function csvCell(value) {
+  if (value === null || value === undefined) return '';
+  const val = String(value).replace(/"/g, '""');
+  return /[",\n\r]/.test(val) ? `"${val}"` : val;
+}
+
+// `headers` fija el set y el orden de columnas, y permite entregar el archivo con su fila de
+// encabezados aunque el recorte no devuelva ninguna fila.
+function exportToCSV(rows, filename, headers) {
+  const cols = headers || (rows.length ? Object.keys(rows[0]) : []);
+  const lines = [cols.map(csvCell).join(',')];
+  rows.forEach(r => lines.push(cols.map(h => csvCell(r[h])).join(',')));
+  const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = filename;
   link.click();
-  showToast(`Exportado: ${filename}`);
+  showToast(`Exported: ${filename}`);
+}
+
+// === COMPOSICIÓN DE LOS ARCHIVOS EXPORTADOS (HUSPL-2.1 / HUSPL-2.2) ===
+// Los tres archivos entregan el set de columnas del reporte semanal de estatus, con lo accionable
+// primero y el contexto después. Los encabezados son contrato y van en español, como los nombra la HU.
+// Ningún archivo incluye quién exportó ni cuándo: eso vive en el listado, no en el archivo.
+
+const EXPORT_COLUMNS_COMPANIES = [
+  'Empresa', 'Industria', 'Ubicación', 'Sitio web', 'LinkedIn de la empresa', 'Indeed de la empresa',
+  'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Relación', 'Etapa del embudo',
+  'Última vez contactada', 'Detectada', 'Investigada', 'Tamaño', 'ID de empresa', 'Pitch de venta'
+];
+
+const EXPORT_COLUMNS_CONTACTS = [
+  'Nombre', 'Cargo', 'Correo', 'Teléfono', 'LinkedIn', 'Empresa',
+  'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Última vez contactada',
+  'Detectado', 'Seniority', 'Departamento', 'Industria', 'Tamaño', 'Ubicación', 'Sitio web',
+  'LinkedIn de la empresa', 'Indeed de la empresa', 'Relación', 'Etapa del embudo', 'Investigada',
+  'ID de empresa', 'Pitch de venta'
+];
+
+const EXPORT_COLUMNS_VACANCIES = [
+  'Empresa', 'Cargo', 'Ubicación', 'Modalidad', 'Enlace al aviso',
+  'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Estado comercial',
+  'Última vez contactada', 'Detectada', 'Seniority', 'Departamento', 'Skills', 'Rango salarial',
+  'Publicada', 'Fuente', 'Pipeline de origen', 'Industria', 'Tamaño', 'Sitio web',
+  'LinkedIn de la empresa', 'Indeed de la empresa', 'Relación', 'Etapa del embudo', 'ID de empresa'
+];
+
+// Bloque de contexto de la empresa, compartido por los tres archivos. Una empresa todavía sin
+// investigar deja vacías industria, tamaño, sitio web, LinkedIn, Indeed, investigada y pitch,
+// y la fila se entrega igual: el ID de empresa se entrega siempre.
+function companyContextCells(company) {
+  return {
+    'Industria': company ? getIndustryLabel(company.industryCode) : '',
+    'Tamaño': company && company.sizeEmployees ? company.sizeEmployees : '',
+    'Ubicación': company ? company.location : '',
+    'Sitio web': company ? company.website : '',
+    'LinkedIn de la empresa': companyLinkedinUrl(company),
+    'Indeed de la empresa': companyIndeedUrl(company),
+    'Relación': company ? company.type : '',
+    'Etapa del embudo': company ? company.pipelineStage : '',
+    'Investigada': company ? csvDate(company.researchedAt) : '',
+    'Última vez contactada': company ? csvDate(company.lastContactedAt, true) : '',
+    'Pitch de venta': company ? company.salesPitch : ''
+  };
+}
+
+// Emails del staff asignado en cada slot. El slot sin asignar deja su celda vacía.
+function assignmentCells(record) {
+  return {
+    'Comercial asignado': staffEmail(record.comercialId),
+    'SDR asignado': staffEmail(record.sdrId),
+    'Coordinador/supervisor asignado': staffEmail(record.coordinatorId)
+  };
+}
+
+function buildCompanyExportRows(companies) {
+  const rows = companies.map(c => {
+    const ctx = companyContextCells(c);
+    return Object.assign({}, assignmentCells(c), {
+      'Empresa': c.name,
+      'Industria': ctx['Industria'],
+      'Ubicación': ctx['Ubicación'],
+      'Sitio web': ctx['Sitio web'],
+      'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
+      'Indeed de la empresa': ctx['Indeed de la empresa'],
+      'Relación': ctx['Relación'],
+      'Etapa del embudo': ctx['Etapa del embudo'],
+      'Última vez contactada': ctx['Última vez contactada'],
+      'Detectada': csvDate(c.createdAt),
+      'Investigada': ctx['Investigada'],
+      'Tamaño': ctx['Tamaño'],
+      'ID de empresa': c.id,
+      'Pitch de venta': ctx['Pitch de venta']
+    });
+  });
+  return sortForExport(rows, 'Detectada', 'Empresa');
+}
+
+// Una fila por contacto de las empresas incluidas en el recorte. La empresa de cada contacto se
+// resuelve por company_id, y su investigación por company_research.company_id (relación uno a uno).
+function buildContactExportRows(companies) {
+  const rows = [];
+  companies.forEach(c => {
+    getContactsForCompany(c.id).forEach(ct => {
+      const ctx = companyContextCells(c);
+      rows.push(Object.assign({}, ctx, assignmentCells(c), {
+        'Nombre': ct.fullName,
+        'Cargo': ct.position,
+        'Correo': ct.email,
+        'Teléfono': ct.phone,
+        'LinkedIn': ct.linkedinUrl,
+        'Empresa': c.name,
+        'Detectado': csvDate(ct.createdAt),
+        'Seniority': ct.seniorityLevel,
+        'Departamento': ct.department,
+        'ID de empresa': c.id
+      }));
+    });
+  });
+  return sortForExport(rows, 'Detectado', 'Empresa');
+}
+
+// Una vacante cuya empresa esté borrada lógicamente se entrega igual, con las columnas de empresa
+// vacías y el ID de empresa informado.
+function buildVacancyExportRows(vacancies) {
+  const rows = vacancies.map(v => {
+    const company = MOCK_COMPANIES.find(c => c.id === v.companyId) || null;
+    const ctx = companyContextCells(company);
+    // El archivo de vacantes no lleva investigada ni pitch de venta: se toma del contexto de
+    // empresa solo lo que su tabla de columnas nombra.
+    return Object.assign({}, assignmentCells(v), {
+      'Empresa': company ? company.name : '',
+      'Cargo': v.title,
+      'Ubicación': v.location,
+      'Modalidad': v.workModality,
+      'Enlace al aviso': v.jobUrl,
+      'Coordinador/supervisor asignado': staffEmail(company ? company.coordinatorId : null),
+      'Estado comercial': v.status,
+      'Última vez contactada': ctx['Última vez contactada'],
+      'Detectada': csvDate(v.detectedAt),
+      'Seniority': v.seniorityLevel,
+      'Departamento': v.department,
+      'Skills': v.skills,
+      'Rango salarial': v.salary,
+      'Publicada': csvDate(v.publishedDate),
+      'Fuente': v.sourcePortal,
+      'Pipeline de origen': v.source,
+      'Industria': ctx['Industria'],
+      'Tamaño': ctx['Tamaño'],
+      'Sitio web': ctx['Sitio web'],
+      'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
+      'Indeed de la empresa': ctx['Indeed de la empresa'],
+      'Relación': ctx['Relación'],
+      'Etapa del embudo': ctx['Etapa del embudo'],
+      'ID de empresa': v.companyId
+    });
+  });
+  return sortForExport(rows, 'Detectada', 'Empresa');
+}
+
+// === DATE RANGE FILTER (HUSPL-1.1-FE) ===
+// Rango de fecha de detección. Los dos listados usan este mismo componente, con el mismo rótulo y
+// la misma posición dentro de su barra de filtros: es lo que hace comparable pedir el mismo período
+// en Vacancies y en Companies. Cada extremo se elige o se vacía por separado, y el control no deja
+// confirmar un inicial posterior al final — bloquea la combinación antes de disparar la consulta.
+function renderDateRangeFilter(containerId, options = {}) {
+  const { onChange = () => {} } = options;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="date-range-filter">
+      <input type="date" class="form-input sm" id="${containerId}-from" aria-label="Detected from" />
+      <span class="date-range-sep">&rarr;</span>
+      <input type="date" class="form-input sm" id="${containerId}-to" aria-label="Detected to" />
+    </div>`;
+
+  const fromInput = document.getElementById(`${containerId}-from`);
+  const toInput = document.getElementById(`${containerId}-to`);
+
+  function sync() {
+    toInput.min = fromInput.value || '';
+    fromInput.max = toInput.value || '';
+    onChange({ from: fromInput.value, to: toInput.value });
+  }
+
+  fromInput.addEventListener('change', sync);
+  toInput.addEventListener('change', sync);
+
+  return {
+    getValue: () => ({ from: fromInput.value, to: toInput.value }),
+    reset: () => {
+      fromInput.value = '';
+      toInput.value = '';
+      fromInput.max = '';
+      toInput.min = '';
+    }
+  };
+}
+
+// === MULTI-SELECT FILTER (HUSPL-3.3-FE) ===
+// Desplegable de selección múltiple para el filtro de Industria. Los ítems llegan como
+// { value, label }; el valor reservado `unclassified` se pasa como un ítem más y el llamador
+// decide dónde va. Sin selección, no envía el parámetro.
+function renderMultiSelect(containerId, items, options = {}) {
+  const { onChange = () => {}, placeholder = 'All' } = options;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  let selected = [];
+
+  container.innerHTML = `
+    <div class="multiselect">
+      <button type="button" class="multiselect-toggle" id="${containerId}-toggle">
+        <span id="${containerId}-summary">${placeholder}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+      <div class="multiselect-panel" id="${containerId}-panel">
+        ${items.map(i => `
+          <label class="multiselect-option${i.special ? ' multiselect-option-special' : ''}">
+            <input type="checkbox" value="${i.value}" />
+            <span>${i.label}</span>
+          </label>`).join('')}
+      </div>
+    </div>`;
+
+  const toggle = document.getElementById(`${containerId}-toggle`);
+  const panel = document.getElementById(`${containerId}-panel`);
+  const summary = document.getElementById(`${containerId}-summary`);
+
+  function refreshSummary() {
+    if (!selected.length) { summary.textContent = placeholder; return; }
+    if (selected.length === 1) {
+      const item = items.find(i => i.value === selected[0]);
+      summary.textContent = item ? item.label : placeholder;
+      return;
+    }
+    summary.textContent = `${selected.length} selected`;
+  }
+
+  panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      selected = Array.prototype.slice.call(panel.querySelectorAll('input:checked')).map(i => i.value);
+      refreshSummary();
+      onChange(selected);
+    });
+  });
+
+  toggle.addEventListener('click', e => {
+    e.stopPropagation();
+    panel.classList.toggle('open');
+  });
+  document.addEventListener('click', e => {
+    if (!container.contains(e.target)) panel.classList.remove('open');
+  });
+
+  return {
+    getValue: () => selected.slice(),
+    reset: () => {
+      selected = [];
+      panel.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+      panel.classList.remove('open');
+      refreshSummary();
+    }
+  };
 }
 
 // === FILTER SEARCHBOX (for listing pages) ===

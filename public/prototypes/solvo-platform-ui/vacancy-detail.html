@@ -113,6 +113,15 @@
                 <span class="detail-value" id="detailDetected">Apr 12, 2026</span>
               </div>
             </div>
+            <div class="detail-row">
+              <!-- Fecha del aviso en el portal de origen: se conserva acá aunque el listado
+                   ya no la use como criterio de recorte. -->
+              <div class="detail-item">
+                <span class="detail-label">Published</span>
+                <span class="detail-value" id="detailPublished">Apr 8, 2026</span>
+              </div>
+              <div class="detail-item"></div>
+            </div>
           </div>
 
           <div class="detail-card">
@@ -328,6 +337,7 @@
     document.getElementById('detailRemote').textContent = vacancy.remoteViable ? 'Yes' : 'No';
     document.getElementById('detailSalary').textContent = vacancy.salary;
     document.getElementById('detailDetected').textContent = formatDate(vacancy.detectedAt);
+    document.getElementById('detailPublished').textContent = vacancy.publishedDate ? formatDate(vacancy.publishedDate) : '—';
     document.getElementById('detailDescription').textContent = vacancy.description;
 
     const dcLink = document.getElementById('detailCompanyLink');

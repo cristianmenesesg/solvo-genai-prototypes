@@ -80,6 +80,24 @@
             </div>
           </div>
 
+          <!-- Rango de fecha de detección: mismo componente y misma posición que en Companies -->
+          <div class="filter-group">
+            <label class="filter-label">Detected</label>
+            <div id="detectedRangeFilter"></div>
+          </div>
+
+          <!-- Estado de exportación (coord/supervisor/admin only) -->
+          <div class="filter-group" id="exportStatusFilterGroup" style="display: none;">
+            <label class="filter-label">Export status</label>
+            <select class="form-select sm" id="exportStatusFilter"></select>
+          </div>
+
+          <!-- Industria: el listado de Vacantes no tenía este filtro; resuelve por la empresa -->
+          <div class="filter-group">
+            <label class="filter-label">Industry</label>
+            <div id="industryFilter"></div>
+          </div>
+
           <div class="filter-group">
             <label class="filter-label">Status</label>
             <select class="form-select sm" id="statusFilter">
@@ -451,16 +469,74 @@
       }
 
       html += '<th>Source</th>';
-      html += '<th>Published <span class="sort-icon">↕</span></th>';
+      // La columna rotulaba "Published" pero entregaba la fecha de detección: cada fecha se llama
+      // por lo que es, y la de publicación del aviso sigue en el detalle de la vacante.
+      html += '<th>Detected <span class="sort-icon">↕</span></th>';
+      if (canFilterByExportStatus()) {
+        html += '<th>Exported by</th>';
+        html += '<th>Export date</th>';
+      }
       html += '<th>Actions</th>';
 
       thead.innerHTML = html;
     }
 
+    // === FILTROS NUEVOS DE LA ÉPICA DE MANTENIMIENTO ===
+    let detectedRangeFilter = null;
+    let industryFilter = null;
+
+    function setupIndustryFilter() {
+      const items = getActiveIndustries().map(i => ({ value: i.code, label: i.label }));
+      items.unshift({ value: 'unclassified', label: 'Unclassified', special: true });
+      industryFilter = renderMultiSelect('industryFilter', items, {
+        placeholder: 'All',
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    function setupDetectedFilter() {
+      detectedRangeFilter = renderDateRangeFilter('detectedRangeFilter', {
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    // El desplegable arranca en "Not exported": el listado abre mostrando solo lo que queda por repartir.
+    function setupExportStatusFilter() {
+      if (!canFilterByExportStatus()) return;
+      document.getElementById('exportStatusFilterGroup').style.display = '';
+      const select = document.getElementById('exportStatusFilter');
+      select.innerHTML = EXPORT_STATUS_OPTIONS
+        .map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      select.value = 'not_exported';
+      select.addEventListener('change', () => applyFilters(true));
+    }
+
+    function getExportStatusValue() {
+      const select = document.getElementById('exportStatusFilter');
+      return canFilterByExportStatus() && select ? select.value : 'all';
+    }
+
+    // Celdas de trazabilidad: un registro nunca exportado las deja vacías; uno con más de una
+    // exportación muestra la última junto al total de veces que salió.
+    function exportTraceCells(record) {
+      if (!canFilterByExportStatus()) return '';
+      const member = record.lastExportedBy ? getMemberById(record.lastExportedBy) : null;
+      const count = record.exportCount > 1
+        ? `<span class="export-count-badge">&times;${record.exportCount}</span>` : '';
+      return `<td>${member ? member.shortName : ''}</td>` +
+             `<td>${record.lastExportedAt ? record.lastExportedAt + count : ''}</td>`;
+    }
+
+    // Industria de una vacante: la de la empresa a la que pertenece (vacancies.company_id).
+    // `public.vacancies` no incorpora ningún campo de industria.
+    function getVacancyIndustryCode(vacancy) {
+      const company = MOCK_COMPANIES.find(c => c.id === vacancy.companyId);
+      return company ? company.industryCode : null;
+    }
+
     // === SKELETON LOADING ===
     function renderSkeletonTable() {
       const tbody = document.getElementById('vacanciesTable');
-      const colCount = isAdmin ? 9 : 8;
       const skeletonRows = Array(8).fill(0).map(() => {
         let cells = '';
         cells += '<td><div class="table-skeleton" style="width: 180px;"></div></td>';  // title
@@ -474,7 +550,11 @@
           cells += '<td><div class="table-skeleton" style="width: 100px;"></div></td>'; // single assignment col
         }
         cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // source
-        cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // published
+        cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // detected
+        if (canFilterByExportStatus()) {
+          cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // exported by
+          cells += '<td><div class="table-skeleton" style="width: 80px;"></div></td>';  // export date
+        }
         cells += '<td><div class="table-skeleton" style="width: 50px;"></div></td>';  // actions
         return `<tr>${cells}</tr>`;
       }).join('');
@@ -529,11 +609,14 @@
         // Source
         row += `<td>${getSourceLabel(v.source)}</td>`;
 
-        // Published
-        const published = v.detectedAt
+        // Detected (vacancies.created_at)
+        const detected = v.detectedAt
           ? new Date(v.detectedAt + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           : '—';
-        row += `<td>${published}</td>`;
+        row += `<td>${detected}</td>`;
+
+        // Exported by / Export date
+        row += exportTraceCells(v);
 
         // Actions
         const deleteBtn = canDelete()
@@ -587,8 +670,12 @@
       const comercialFilter = comercialFilterSB ? comercialFilterSB.getValue() : 'all';
       const sdrFilter = sdrFilterSB ? sdrFilterSB.getValue() : 'all';
       const assignType = isAdmin ? document.getElementById('assignTypeFilter').value : '';
+      const industryCodes = industryFilter ? industryFilter.getValue() : [];
+      const detected = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
 
-      let baseData = getVisibleVacancies();
+      // El rango de detección y el estado de exportación se combinan con los demás filtros con lógica AND
+      let baseData = filterByExportStatus(getVisibleVacancies(), getExportStatusValue());
+      baseData = filterByDetectedRange(baseData, detected.from, detected.to);
 
       return baseData.filter(v => {
         if (search && !v.title.toLowerCase().includes(search)) return false;
@@ -596,6 +683,14 @@
         if (status && v.status !== status) return false;
         if (source && v.source !== source) return false;
         if (remoteViable && !v.remoteViable) return false;
+
+        // Industria de la empresa asociada. Una vacante cuya empresa está sin clasificar se
+        // devuelve bajo `unclassified` y no se omite del listado.
+        if (industryCodes.length) {
+          const code = getVacancyIndustryCode(v);
+          const matches = industryCodes.some(c => c === 'unclassified' ? !code : code === c);
+          if (!matches) return false;
+        }
 
         // Salary bucket filter
         if (salaryBucket && v.salaryBucket !== salaryBucket) return false;
@@ -653,6 +748,10 @@
       if (comercialFilterSB) comercialFilterSB.reset();
       if (sdrFilterSB) sdrFilterSB.reset();
       if (isAdmin) document.getElementById('assignTypeFilter').value = '';
+      if (industryFilter) industryFilter.reset();
+      if (detectedRangeFilter) detectedRangeFilter.reset();
+      // "Clear" devuelve el estado de exportación a su valor por defecto, no a "Todos"
+      if (canFilterByExportStatus()) document.getElementById('exportStatusFilter').value = 'not_exported';
       applyFilters(true);
     }
 
@@ -699,34 +798,24 @@
     }
 
     // === EXPORT CSV ===
+    // El archivo hereda los filtros activos del listado —incluidos el rango de fecha de detección,
+    // el estado de exportación y lo que el toggle de viabilidad remota esté dejando ver— y toma
+    // del rango el nombre del archivo.
     function handleExportCSV() {
       const data = filterVacancies();
+      const range = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
 
       openExportPopup({
-        entityLabel: 'vacantes',
+        entityLabel: 'vacancies',
         entityCount: data.length,
         showContactsOption: false,
+        alreadyExported: countAlreadyExported(data),
         onExport: () => {
-          const rows = data.map(v => {
-            const comercial = v.comercialId ? getMemberById(v.comercialId) : null;
-            const sdr = v.sdrId ? getMemberById(v.sdrId) : null;
-            const coordinator = MOCK_COMPANIES.find(c => c.id === v.companyId);
-            return {
-              Titulo: v.title,
-              Empresa: getCompanyName(v.companyId),
-              Status: getStatusLabel(v.status),
-              Salario: v.salary || '',
-              'Remote Viable': v.remoteViable ? 'Sí' : 'No',
-              Fuente: getSourceLabel(v.source),
-              Descripcion: v.description || '',
-              'Fecha Deteccion': v.detectedAt,
-              'Comercial Asignado': comercial ? comercial.name : '',
-              'Tipo Asignacion Comercial': v.comercialType || '',
-              'SDR Asignado': sdr ? sdr.name : '',
-              'Tipo Asignacion SDR': v.sdrType || ''
-            };
-          });
-          exportToCSV(rows, `vacantes_${new Date().toISOString().slice(0,10)}.csv`);
+          // El archivo se compone antes de tocar nada: lo que se entrega no depende del marcado.
+          const rows = buildVacancyExportRows(data);
+          exportToCSV(rows, exportFilename('vacantes', range.from, range.to), EXPORT_COLUMNS_VACANCIES);
+          markExported(data);
+          applyFilters(false);
         }
       });
     }
@@ -780,11 +869,13 @@
 
     // === INITIAL RENDER ===
     renderTableHead();
+    setupDetectedFilter();
+    setupExportStatusFilter();
+    setupIndustryFilter();
     setupPersonalEmptyState();
     renderSkeletonTable();
     setTimeout(() => {
-      const initialData = getVisibleVacancies();
-      renderTable(initialData);
+      renderTable(filterVacancies());
     }, 800);
   </script>
 </body>

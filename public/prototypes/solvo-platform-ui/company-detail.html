@@ -356,19 +356,8 @@
 
             <div class="form-group">
               <label class="form-label">Industry</label>
-              <select class="form-select" id="editIndustry">
-                <option value="">Select...</option>
-                <option value="Technology" selected>Technology</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Financial Services">Financial Services</option>
-                <option value="Manufacturing">Manufacturing</option>
-                <option value="Retail">Retail</option>
-                <option value="Energy">Energy</option>
-                <option value="Education">Education</option>
-                <option value="Logistics">Logistics</option>
-                <option value="Construction">Construction</option>
-                <option value="Other">Other</option>
-              </select>
+              <!-- Poblado con el catálogo estándar; admite quedar vacío (empresa sin clasificar) -->
+              <select class="form-select" id="editIndustry"></select>
             </div>
 
             <div class="form-group">
@@ -704,17 +693,11 @@
     // Delete: administrador y coordinador
     if (canDelete()) document.getElementById('deleteCompanyBtn').style.display = '';
 
-    // Extended local data for display (fields not in MOCK_COMPANIES)
+    // Extended local data for display (prosa de investigación, sin lugar en MOCK_COMPANIES)
     const COMPANY_EXTENDED = {
       'comp-001': {
-        website: 'https://techcorp.com',
-        size_employees: 750,
         revenue_usd: 12000000,
         year_founded: 2010,
-        contacts: [
-          { id: 1, full_name: 'John Smith', job_title: 'HR Director', department: 'hr', seniority_level: 'Director', email: 'john.smith@techcorp.com', phone: '+1 (305) 555-0124', linkedin_url: 'linkedin.com/in/johnsmith', is_primary: true },
-          { id: 2, full_name: 'Sarah Johnson', job_title: 'Talent Acquisition Manager', department: 'hr', seniority_level: 'Manager', email: 'sarah.j@techcorp.com', phone: '+1 (305) 555-0125', linkedin_url: 'linkedin.com/in/sarahjohnson', is_primary: false }
-        ],
         research: {
           value_proposition: 'Innovative technology solutions that transform the way companies operate, increasing operational efficiency by an average of 40%.',
           mission: 'Empowering organizations with cutting-edge technology to drive their digital transformation.',
@@ -726,13 +709,8 @@
         }
       },
       'comp-002': {
-        website: 'https://globalhealth.com',
-        size_employees: 1200,
         revenue_usd: 45000000,
         year_founded: 2005,
-        contacts: [
-          { id: 3, full_name: 'Emily Davis', job_title: 'VP of Operations', department: 'operations', seniority_level: 'VP', email: 'emily.davis@globalhealth.com', phone: '+1 (212) 555-0201', linkedin_url: 'linkedin.com/in/emilydavis', is_primary: true }
-        ],
         research: {
           value_proposition: 'Leading healthcare provider with a network of 15 clinics across the Northeast US.',
           mission: 'Improving community health through accessible and innovative medical services.',
@@ -745,16 +723,36 @@
       }
     };
 
+    // Los contactos salen de MOCK_CONTACTS —la misma fuente que el listado y la exportación— para
+    // que el detalle no muestre una lista distinta de la que se reparte. El detalle los edita en
+    // snake_case, así que se adaptan acá.
+    function toDetailContact(ct, index) {
+      return {
+        id: ct.id,
+        full_name: ct.fullName,
+        job_title: ct.position || '',
+        department: (ct.department || '').toLowerCase() || null,
+        seniority_level: ct.seniorityLevel === 'C-Level' ? 'C-level' : (ct.seniorityLevel || null),
+        email: ct.email || null,
+        phone: ct.phone || null,
+        linkedin_url: ct.linkedinUrl || null,
+        is_primary: index === 0
+      };
+    }
+
     // Merge extended data with MOCK_COMPANIES entry
     const ext = COMPANY_EXTENDED[company.id] || COMPANY_EXTENDED['comp-001'];
     const companyData = {
       ...company,
-      website: ext.website,
-      size_employees: ext.size_employees,
+      website: company.website,
+      size_employees: company.sizeEmployees,
       revenue_usd: ext.revenue_usd,
       year_founded: ext.year_founded,
-      contacts: ext.contacts,
-      research: ext.research
+      contacts: getContactsForCompany(company.id).map(toDetailContact),
+      research: Object.assign({}, ext.research, {
+        sales_pitch: company.salesPitch || '',
+        last_research_date: company.researchedAt || null
+      })
     };
 
     // Filter vacancies from MOCK_VACANCIES for this company
@@ -925,7 +923,7 @@
                 </div>\
                 <div class="contact-edit-actions">\
                   <button class="btn btn-secondary btn-sm" onclick="cancelEditContact()">Cancel</button>\
-                  <button class="btn btn-primary btn-sm" onclick="saveContact(' + contact.id + ')">Save</button>\
+                  <button class="btn btn-primary btn-sm" onclick="saveContact(\'' + contact.id + '\')">Save</button>\
                 </div>\
               </div>\
             </div>';
@@ -933,12 +931,12 @@
           return '\
             <div class="contact-card contact-card-editable">\
               <div class="contact-actions">\
-                <button onclick="editContact(' + contact.id + ')" title="Edit contact">\
+                <button onclick="editContact(\'' + contact.id + '\')" title="Edit contact">\
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">\
                     <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>\
                   </svg>\
                 </button>\
-                <button class="contact-delete-btn" onclick="confirmDeleteContact(' + contact.id + ')" title="Delete contact">\
+                <button class="contact-delete-btn" onclick="confirmDeleteContact(\'' + contact.id + '\')" title="Delete contact">\
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>\
                 </button>\
               </div>\
@@ -1174,7 +1172,18 @@
       });
     }
 
+    // El campo Industria usa el mismo catálogo que el filtro y el resto del sistema.
+    function setupIndustryFormField() {
+      var select = document.getElementById('editIndustry');
+      select.innerHTML = '<option value="">Select...</option>' +
+        getActiveIndustries().map(function (i) {
+          return '<option value="' + i.code + '">' + i.label + '</option>';
+        }).join('');
+      select.value = companyData.industryCode || '';
+    }
+
     function openEditModal() {
+      setupIndustryFormField();
       document.getElementById('editModal').classList.add('active');
     }
     function closeEditModal() {
@@ -1237,7 +1246,7 @@
         companyData.contacts.forEach(function(c) { c.is_primary = false; });
       }
 
-      var newId = Math.max.apply(null, companyData.contacts.map(function(c) { return c.id; }).concat([0])) + 1;
+      var newId = 'ct-new-' + (companyData.contacts.length + 1);
       companyData.contacts.push({
         id: newId, full_name: name, job_title: title || '', department: department || null,
         seniority_level: seniority || null, email: email || null, phone: phone || null,
@@ -1394,13 +1403,14 @@
 
     // === Populate static fields from companyData ===
     var typeLabels = { client: 'Client', prospecto: 'Prospect', inactivo: 'Inactive' };
-    document.getElementById('detailIndustry').textContent = companyData.industry;
+    // Industria: etiqueta del catálogo estándar. Una empresa sin clasificar no muestra nada.
+    document.getElementById('detailIndustry').textContent = getIndustryLabel(companyData.industryCode) || '\u2014';
     document.getElementById('detailLocation').textContent = companyData.location;
     var websiteEl = document.getElementById('detailWebsite');
-    websiteEl.textContent = companyData.website;
-    websiteEl.href = companyData.website;
+    websiteEl.textContent = companyData.website || '\u2014';
+    websiteEl.href = companyData.website || '#';
     document.getElementById('detailType').textContent = typeLabels[companyData.type] || companyData.type;
-    document.getElementById('detailEmployees').textContent = companyData.size_employees.toLocaleString();
+    document.getElementById('detailEmployees').textContent = companyData.size_employees ? companyData.size_employees.toLocaleString() : '\u2014';
     document.getElementById('detailYearFounded').textContent = companyData.year_founded;
     var revenueM = companyData.revenue_usd / 1000000;
     document.getElementById('detailRevenue').textContent = '$' + revenueM + 'M USD';

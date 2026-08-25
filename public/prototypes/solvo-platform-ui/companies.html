@@ -91,18 +91,21 @@
             </select>
           </div>
 
+          <!-- Rango de fecha de detección: mismo componente y misma posición que en Vacancies -->
+          <div class="filter-group">
+            <label class="filter-label">Detected</label>
+            <div id="detectedRangeFilter"></div>
+          </div>
+
+          <!-- Estado de exportación (coord/supervisor/admin only) -->
+          <div class="filter-group" id="exportStatusFilterGroup" style="display: none;">
+            <label class="filter-label">Export status</label>
+            <select class="form-select sm" id="exportStatusFilter"></select>
+          </div>
+
           <div class="filter-group">
             <label class="filter-label">Industry</label>
-            <select class="form-select sm" id="industryFilter">
-              <option value="">All</option>
-              <option value="Technology">Technology</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Finance">Finance</option>
-              <option value="Logistics">Logistics</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Education">Education</option>
-              <option value="Retail">Retail</option>
-            </select>
+            <div id="industryFilter"></div>
           </div>
 
           <div class="filter-group">
@@ -225,21 +228,10 @@
               <input type="text" class="form-input" id="createName" placeholder="Company name" required>
             </div>
 
+            <!-- Poblado con el catálogo estándar; admite quedar vacío (empresa sin clasificar) -->
             <div class="form-group">
               <label class="form-label">Industry</label>
-              <select class="form-select" id="createIndustry">
-                <option value="">Select...</option>
-                <option value="Technology">Technology</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Financial Services">Financial Services</option>
-                <option value="Manufacturing">Manufacturing</option>
-                <option value="Retail">Retail</option>
-                <option value="Energy">Energy</option>
-                <option value="Education">Education</option>
-                <option value="Logistics">Logistics</option>
-                <option value="Construction">Construction</option>
-                <option value="Other">Other</option>
-              </select>
+              <select class="form-select" id="createIndustry"></select>
             </div>
 
             <div class="form-group">
@@ -383,6 +375,7 @@
       headerHTML += '<th>Location <span class="sort-icon">&#8597;</span></th>';
       headerHTML += '<th>Type</th>';
       headerHTML += '<th>Pipeline <span class="sort-icon">&#8597;</span></th>';
+      headerHTML += '<th>Detected <span class="sort-icon">&#8597;</span></th>';
 
       if (showDualColumns) {
         // Coord/Supervisor/Admin: see both assignment columns
@@ -397,9 +390,60 @@
       }
 
       headerHTML += '<th>Vacancies</th>';
+      // Trazabilidad de exportación: solo para los roles que reparten material
+      if (canFilterByExportStatus()) {
+        headerHTML += '<th>Exported by</th>';
+        headerHTML += '<th>Export date</th>';
+      }
       headerHTML += '<th>Actions</th>';
 
       headerRow.innerHTML = headerHTML;
+    }
+
+    // === FILTROS NUEVOS DE LA ÉPICA DE MANTENIMIENTO ===
+    let detectedRangeFilter = null;
+    let industryFilter = null;
+
+    function setupIndustryFilter() {
+      const items = getActiveIndustries().map(i => ({ value: i.code, label: i.label }));
+      items.unshift({ value: 'unclassified', label: 'Unclassified', special: true });
+      industryFilter = renderMultiSelect('industryFilter', items, {
+        placeholder: 'All',
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    function setupDetectedFilter() {
+      detectedRangeFilter = renderDateRangeFilter('detectedRangeFilter', {
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    // El desplegable arranca en "Not exported": el listado abre mostrando solo lo que queda por repartir.
+    function setupExportStatusFilter() {
+      if (!canFilterByExportStatus()) return;
+      document.getElementById('exportStatusFilterGroup').style.display = '';
+      const select = document.getElementById('exportStatusFilter');
+      select.innerHTML = EXPORT_STATUS_OPTIONS
+        .map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      select.value = 'not_exported';
+      select.addEventListener('change', () => applyFilters(true));
+    }
+
+    function getExportStatusValue() {
+      const select = document.getElementById('exportStatusFilter');
+      return canFilterByExportStatus() && select ? select.value : 'all';
+    }
+
+    // Celdas de trazabilidad: un registro nunca exportado las deja vacías; uno con más de una
+    // exportación muestra la última junto al total de veces que salió.
+    function exportTraceCells(record) {
+      if (!canFilterByExportStatus()) return '';
+      const member = record.lastExportedBy ? getMemberById(record.lastExportedBy) : null;
+      const count = record.exportCount > 1
+        ? `<span class="export-count-badge">&times;${record.exportCount}</span>` : '';
+      return `<td>${member ? member.shortName : ''}</td>` +
+             `<td>${record.lastExportedAt ? record.lastExportedAt + count : ''}</td>`;
     }
 
     // === FILTER SEARCHBOXES (coord/supervisor/admin) ===
@@ -446,8 +490,9 @@
     }
 
     function getColumnCount() {
-      if (showDualColumns) return 9; // Company, Industry, Location, Type, Pipeline, Sales Rep, SDR, Vacancies, Actions
-      return 8; // Company, Industry, Location, Type, Pipeline, [other role], Vacancies, Actions
+      // Company, Industry, Location, Type, Pipeline, Detected, [asignaciones], Vacancies, [trazabilidad], Actions
+      const base = showDualColumns ? 10 : 9;
+      return base + (canFilterByExportStatus() ? 2 : 0);
     }
 
     // Render table with data
@@ -479,14 +524,17 @@
 
         // Company name
         cells += `<td><span class="font-medium">${company.name}</span></td>`;
-        // Industry
-        cells += `<td>${company.industry}</td>`;
+        // Industry: etiqueta del catálogo. Una empresa sin clasificar deja la celda vacía
+        // y no muestra el texto crudo que escribió la fuente.
+        cells += `<td>${getIndustryLabel(company.industryCode)}</td>`;
         // Location
         cells += `<td>${company.location}</td>`;
         // Type
         cells += `<td><span class="badge-type badge-type-${company.type}">${company.type === 'client' ? 'Client' : 'Prospect'}</span></td>`;
         // Pipeline
         cells += `<td><span class="badge-pipeline badge-pipeline-${company.pipelineStage}" onclick="event.stopPropagation();">${getPipelineLabel(company.pipelineStage)}</span></td>`;
+        // Detected
+        cells += `<td>${formatDetected(company.createdAt)}</td>`;
 
         if (showDualColumns) {
           // Comercial column
@@ -509,6 +557,9 @@
         const vacCount = MOCK_VACANCIES.filter(v => v.companyId === company.id).length;
         cells += `<td><span class="vacancy-count-badge${vacCount ? '' : ' zero'}">${vacCount}</span></td>`;
 
+        // Exported by / Export date
+        cells += exportTraceCells(company);
+
         // Actions
         const deleteBtn = canDelete()
           ? `<button class="table-action-delete" title="Eliminar empresa" onclick="event.stopPropagation(); confirmDeleteCompany('${company.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`
@@ -518,6 +569,13 @@
         return `<tr onclick="goToDetail('${company.id}')" style="cursor: pointer;">${cells}</tr>`;
       }).join('');
 
+    }
+
+    // Fecha de detección del registro (company.created_at)
+    function formatDetected(iso) {
+      if (!iso) return '';
+      return new Date(iso.slice(0, 10) + 'T00:00:00')
+        .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     // Pipeline label mapping
@@ -579,59 +637,33 @@
     }
 
     // === EXPORT CSV ===
+    // El archivo hereda los filtros activos del listado, incluidos el rango de fecha de detección
+    // y el estado de exportación, y toma de ellos el nombre del archivo.
     function handleExportCSV() {
       const data = filterCompanies();
       const allContacts = data.flatMap(c => getContactsForCompany(c.id));
+      const range = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
 
       openExportPopup({
-        entityLabel: 'empresas',
+        entityLabel: 'companies',
         entityCount: data.length,
         contactsCount: allContacts.length,
         showContactsOption: true,
+        alreadyExported: countAlreadyExported(data),
         onExport: (includeContacts) => {
-          const today = new Date().toISOString().slice(0,10);
+          // Los dos archivos se componen antes de tocar nada: lo que se entrega no depende del marcado.
+          const companyRows = buildCompanyExportRows(data);
+          const contactRows = includeContacts ? buildContactExportRows(data) : null;
 
-          // CSV 1: Empresas
-          const companyRows = data.map(c => {
-            const comercial = c.comercialId ? getMemberById(c.comercialId) : null;
-            const sdr = c.sdrId ? getMemberById(c.sdrId) : null;
-            const coordinator = c.coordinatorId ? getMemberById(c.coordinatorId) : null;
-            return {
-              Empresa: c.name,
-              Industria: c.industry,
-              Ubicacion: c.location,
-              Website: c.website || '',
-              'LinkedIn Empresa': c.linkedinId ? 'https://linkedin.com/company/' + c.linkedinId : '',
-              Pipeline: getPipelineLabel(c.pipelineStage),
-              Tipo: c.type,
-              'Comercial Asignado': comercial ? comercial.name : '',
-              'SDR Asignado': sdr ? sdr.name : '',
-              'Coordinador': coordinator ? coordinator.name : '',
-              'Remote Viable': c.remoteViable ? 'Sí' : 'No',
-              Contactos: getContactsForCompany(c.id).length
-            };
-          });
-          exportToCSV(companyRows, `empresas_${today}.csv`);
-
-          // CSV 2: Contactos (archivo separado)
-          if (includeContacts && allContacts.length > 0) {
-            const contactRows = allContacts.map(ct => {
-              const company = MOCK_COMPANIES.find(c => c.id === ct.companyId);
-              return {
-                Empresa: company ? company.name : '',
-                'Website Empresa': company ? (company.website || '') : '',
-                'LinkedIn Empresa': company && company.linkedinId ? 'https://linkedin.com/company/' + company.linkedinId : '',
-                'Nombre Contacto': ct.fullName,
-                Cargo: ct.position || '',
-                Departamento: ct.department || '',
-                'Nivel Seniority': ct.seniorityLevel || '',
-                Email: ct.email || '',
-                Telefono: ct.phone || '',
-                'LinkedIn Contacto': ct.linkedinUrl || ''
-              };
-            });
-            setTimeout(() => exportToCSV(contactRows, `contactos_${today}.csv`), 500);
+          exportToCSV(companyRows, exportFilename('empresas', range.from, range.to), EXPORT_COLUMNS_COMPANIES);
+          if (contactRows) {
+            setTimeout(() => exportToCSV(contactRows, exportFilename('contactos', range.from, range.to), EXPORT_COLUMNS_CONTACTS), 500);
           }
+
+          // Cada registro entregado queda con quién lo exportó, cuándo, y su conteo incrementado.
+          markExported(data);
+          if (contactRows) markExported(allContacts);
+          applyFilters(false);
         }
       });
     }
@@ -649,19 +681,24 @@
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
       const typeFilter = document.getElementById('typeFilter').value;
       const pipelineFilter = document.getElementById('pipelineFilter').value;
-      const industryFilter = document.getElementById('industryFilter').value;
+      const industryCodes = industryFilter ? industryFilter.getValue() : [];
       const contactsFilter = document.getElementById('contactsFilter').value;
       const remoteViableFilter = document.getElementById('remoteViableFilter').checked;
       const comercialFilterValue = comercialFilterSearchbox ? comercialFilterSearchbox.getValue() : 'all';
       const sdrFilterValue = sdrFilterSearchbox ? sdrFilterSearchbox.getValue() : 'all';
+      const detected = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
 
-      let base = getVisibleCompanies();
+      // El rango de detección y el estado de exportación se combinan con los demás filtros con lógica AND
+      let base = filterByExportStatus(getVisibleCompanies(), getExportStatusValue());
+      base = filterByDetectedRange(base, detected.from, detected.to, 'createdAt');
 
       return base.filter(company => {
         const matchesSearch = !searchTerm || company.name.toLowerCase().includes(searchTerm);
         const matchesType = !typeFilter || company.type === typeFilter;
         const matchesPipeline = !pipelineFilter || company.pipelineStage === pipelineFilter;
-        const matchesIndustry = !industryFilter || company.industry === industryFilter;
+        // Resuelve contra el código de clasificación; `unclassified` pide los que la tienen vacía
+        const matchesIndustry = !industryCodes.length || industryCodes.some(code =>
+          code === 'unclassified' ? !company.industryCode : company.industryCode === code);
         const matchesRemoteViable = !remoteViableFilter || company.remoteViable === true;
 
         // Contacts filter
@@ -732,7 +769,6 @@
     document.getElementById('searchInput').addEventListener('input', handleSearchInput);
     document.getElementById('typeFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('pipelineFilter').addEventListener('change', () => applyFilters(true));
-    document.getElementById('industryFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('contactsFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('remoteViableFilter').addEventListener('change', function() {
       document.getElementById('remoteViableLabel').textContent = this.checked ? 'On' : 'Off';
@@ -743,12 +779,15 @@
       document.getElementById('searchInput').value = '';
       document.getElementById('typeFilter').value = '';
       document.getElementById('pipelineFilter').value = '';
-      document.getElementById('industryFilter').value = '';
       document.getElementById('contactsFilter').value = '';
       document.getElementById('remoteViableFilter').checked = true;
       document.getElementById('remoteViableLabel').textContent = 'On';
       if (comercialFilterSearchbox) comercialFilterSearchbox.reset();
       if (sdrFilterSearchbox) sdrFilterSearchbox.reset();
+      if (industryFilter) industryFilter.reset();
+      if (detectedRangeFilter) detectedRangeFilter.reset();
+      // "Clear" devuelve el estado de exportación a su valor por defecto, no a "Todos"
+      if (canFilterByExportStatus()) document.getElementById('exportStatusFilter').value = 'not_exported';
       showSearchIndicator(false);
       applyFilters(true);
     }
@@ -765,14 +804,25 @@
       }
     });
 
+    // El campo Industria del formulario usa el mismo catálogo que el filtro y el resto del sistema
+    function setupIndustryFormField() {
+      document.getElementById('createIndustry').innerHTML =
+        '<option value="">Select...</option>' +
+        getActiveIndustries().map(i => `<option value="${i.code}">${i.label}</option>`).join('');
+    }
+
     // === INITIALIZATION ===
     setupTableHeader();
     setupAssignmentFilters();
+    setupDetectedFilter();
+    setupExportStatusFilter();
+    setupIndustryFilter();
+    setupIndustryFormField();
     renderSkeletonTable();
     setTimeout(() => {
-      const visible = getVisibleCompanies();
-      renderTable(visible);
-      updateResultsCount(visible.length);
+      const initial = filterCompanies();
+      renderTable(initial);
+      updateResultsCount(initial.length);
     }, 800);
   </script>
 </body>

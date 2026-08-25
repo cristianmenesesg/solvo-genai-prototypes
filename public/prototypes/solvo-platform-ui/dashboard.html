@@ -231,8 +231,8 @@
 
     function computeCompanyKpis(companies) {
       return {
-        detected24h: 0, // companies don't have detectedAt — show 0 for personal, mock for team
-        detectedMonth: companies.length,
+        detected24h: companies.filter(c => isDetected24h(c.createdAt)).length,
+        detectedMonth: companies.filter(c => isDetectedThisMonth(c.createdAt)).length,
         prospectingMonth: companies.filter(c => c.pipelineStage === 'prospecting').length,
         onboardingMonth: companies.filter(c => c.pipelineStage === 'onboarding_started').length,
         lostMonth: companies.filter(c => c.pipelineStage === 'lost').length
