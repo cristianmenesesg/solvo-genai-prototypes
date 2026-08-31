@@ -45,6 +45,13 @@
               Search
             </button>
           </div>
+          <div class="filter-group">
+            <label class="filter-label">&nbsp;</label>
+            <button class="btn btn-ai btn-sm" onclick="openAiSearch()" style="height:36px;" title="Describe the profile you need and we'll search LinkedIn live">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"></path><circle cx="12" cy="12" r="3.2"></circle></svg>
+              AI Search
+            </button>
+          </div>
           <div class="filter-group" style="justify-content:flex-end;">
             <span class="search-indicator" id="searchIndicator" style="display:none;">
               <span class="spinner"></span> Searching…
@@ -56,11 +63,13 @@
         <div class="empty-state" id="emptyState" style="display:flex; flex-direction:column; align-items:center; padding:64px 24px; text-align:center;">
           <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
           <h3 id="emptyTitle" style="margin-top:14px; color:var(--text-primary); font-size:var(--font-size-lg);">Find candidates open to work</h3>
-          <p id="emptyMsg" style="color:var(--text-muted); margin-top:6px; max-width:46ch;">Pick a search profile and, if you want, add up to 3 keywords to narrow it down. You'll see matching candidates right away, with their contact email when we have it.</p>
+          <p id="emptyMsg" style="color:var(--text-muted); margin-top:6px; max-width:52ch;">Pick a search profile and, if you want, add up to 3 keywords to narrow it down — that searches the pool we already built. Or hit <b>AI Search</b> to describe the profile you need and go find new candidates on LinkedIn.</p>
         </div>
 
         <!-- Resultados -->
         <div id="resultsCard" style="display:none;">
+          <div class="ai-panel" id="aiPanel" style="display:none;"></div>
+
           <div class="load-note" id="loadNote"><span class="spinner"></span> <span data-note></span></div>
 
           <!-- Barra de filtros del listado (client-side, HUTPS-4.6-FE) -->
@@ -78,12 +87,36 @@
               <select class="form-select sm" id="fltLoc" style="min-width:170px;"><option value="">All locations</option></select>
             </div>
             <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <select class="form-select sm" id="fltStatus" style="min-width:150px;">
+                <option value="">All statuses</option>
+                <option value="detected">Detected</option>
+                <option value="contacted">Cold email sent</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Export</label>
+              <select class="form-select sm" id="fltExport" style="min-width:160px;">
+                <option value="none" selected>Not exported</option>
+                <option value="all">All</option>
+                <option value="me">Exported by me</option>
+                <option value="other">Exported by others</option>
+              </select>
+            </div>
+            <div class="filter-group">
               <label class="filter-label">&nbsp;</label>
               <label class="toggle-pill"><input type="checkbox" id="fltEmail"><span class="toggle-pill-track"><span class="toggle-pill-knob"></span></span> With email</label>
             </div>
             <div class="filter-group" style="margin-left:auto;">
               <label class="filter-label">&nbsp;</label>
               <button class="btn btn-secondary btn-sm" onclick="clearFilters()" style="height:36px;">Clear</button>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">&nbsp;</label>
+              <button class="btn btn-secondary btn-sm" onclick="openExport()" style="height:36px;" title="Export the candidates matching the current filters">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>
+                Export
+              </button>
             </div>
           </div>
 
@@ -96,6 +129,8 @@
                 <th>Skills</th>
                 <th>Languages</th>
                 <th>Email</th>
+                <th>Status</th>
+                <th>Exported</th>
                 <th>LinkedIn</th>
               </tr></thead>
               <tbody id="candRows"></tbody>
@@ -136,7 +171,11 @@
     <div class="drawer-body">
       <div class="drawer-section">
         <span class="detail-label">Status</span>
-        <span class="badge badge-success">Open to work</span>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span class="badge badge-success">Open to work</span>
+          <span data-d-status></span>
+        </div>
+        <div class="drawer-kv" style="margin-top:10px;"><b>Exported</b><span data-d-export>—</span></div>
       </div>
       <div class="drawer-section">
         <span class="detail-label">Details</span>
@@ -152,11 +191,79 @@
         <span class="detail-label">Skills</span>
         <div data-d-skills></div>
       </div>
+      <div class="drawer-section">
+        <span class="detail-label">Notes</span>
+        <div id="notesThread" class="notes-thread"></div>
+        <div class="note-compose">
+          <textarea id="noteInput" class="form-input" rows="2" placeholder="Add a note for the team…"></textarea>
+          <button class="btn btn-secondary btn-sm" onclick="addNote()">Add note</button>
+        </div>
+      </div>
       <div class="drawer-action">
         <a class="btn btn-secondary" href="#" target="_blank" rel="noopener" style="width:100%; justify-content:center;">View LinkedIn profile ↗</a>
       </div>
     </div>
   </aside>
+
+  <!-- AI Search -->
+  <div class="modal-overlay" id="aiModal">
+    <div class="modal" style="max-width:640px;">
+      <div class="modal-header">
+        <h3 class="modal-title">AI Search</h3>
+        <button class="modal-close" onclick="closeModal('aiModal')" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="aiProfile">Search profile</label>
+          <select class="form-select" id="aiProfile"></select>
+          <p class="filter-hint">Candidates we find get attached to this profile, so you can look them up later the usual way.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="aiDesc">Describe the profile you need</label>
+          <textarea class="form-input" id="aiDesc" rows="5" placeholder="Paste a job description, a paragraph, or a single sentence. Example: Paralegal with 3+ years in immigration law, USCIS filings, English C1, available full time."></textarea>
+        </div>
+
+        <div class="ai-form-row">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="aiLang">Required language <span class="opt">optional</span></label>
+            <select class="form-select" id="aiLang"><option value="">Any language</option></select>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label" for="aiPages">Pages per city</label>
+            <select class="form-select" id="aiPages" onchange="updateAiEstimate()">
+              <option value="1">1 page — up to 25 per city</option>
+              <option value="2" selected>2 pages — up to 50 per city</option>
+              <option value="3">3 pages — up to 75 per city</option>
+              <option value="4">4 pages — up to 100 per city</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cities to search</label>
+          <div class="city-chips" id="aiCities"></div>
+          <p class="filter-hint">The pages you pick are searched <b>in each city you select</b>, so both the result and the cost multiply.</p>
+        </div>
+
+        <div class="ai-estimate">
+          <div class="ai-est-row"><span class="ai-est-label">Scope</span><span id="aiMath">—</span></div>
+          <div class="ai-est-row"><span class="ai-est-label">Candidates</span><span id="aiCands">—</span></div>
+          <div class="ai-est-row ai-est-total"><span class="ai-est-label">Estimated cost</span><span id="aiCost">—</span></div>
+          <p class="ai-est-break" id="aiCostBreak"></p>
+          <div class="ai-budget">
+            <div class="ai-budget-bar" id="aiBudgetBar"></div>
+            <span id="aiBudget"></span>
+          </div>
+          <div class="ai-warn" id="aiBudgetWarn" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('aiModal')">Cancel</button>
+        <button class="btn btn-primary" id="aiSubmit" onclick="submitAiSearch()">Search</button>
+      </div>
+    </div>
+  </div>
 
   <div class="toast-container" id="toastContainer"></div>
 

@@ -278,3 +278,226 @@
 
 /* .toggle-pill (base) lo provee styles.css (promovido del DS platform, activo en teal);
    acá solo el override específico de la tabla de ubicaciones (.loc-table .toggle-pill). */
+
+/* ========================================================================
+   Release 2 — AI Search, estatus, notas y memoria de exportación
+   ======================================================================== */
+
+/* La tabla creció a 9 columnas: scrollea en su propio contenedor. */
+.table-container { overflow-x: auto; }
+.table-container table { min-width: 1180px; }
+
+/* ---------- Botón AI Search ---------- */
+.btn-ai {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+  color: #fff; border: none;
+}
+.btn-ai:hover { filter: brightness(1.08); }
+.btn-ai svg { opacity: .9; }
+
+/* ---------- Indicador de notas en la fila ---------- */
+.note-dot {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 6px;
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  vertical-align: middle;
+}
+.note-dot svg { opacity: .7; }
+
+/* ---------- Celda de trazabilidad de exportación ---------- */
+.exp-badge { display: flex; flex-direction: column; gap: 2px; line-height: 1.2; }
+.exp-who {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--font-size-xs); font-weight: 600; color: var(--text-primary);
+}
+.exp-times {
+  font-size: 10px; font-weight: 700; color: var(--text-muted);
+  background: var(--bg-muted); border-radius: var(--radius-full); padding: 0 5px;
+}
+.exp-when { font-size: 10px; color: var(--text-muted); }
+.exp-none { color: var(--text-muted); }
+
+/* ---------- Notas en el drawer ---------- */
+.notes-thread { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.note-item {
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--radius-md); padding: 10px 12px;
+}
+.note-meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.note-author { font-size: var(--font-size-xs); font-weight: 600; color: var(--text-primary); }
+.note-date { font-size: 10px; color: var(--text-muted); }
+.note-text { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.5; margin: 0; }
+.note-empty { font-size: var(--font-size-sm); color: var(--text-muted); font-style: italic; margin: 0 0 12px; }
+.note-compose { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.note-compose textarea { width: 100%; resize: vertical; font-family: inherit; }
+
+/* ---------- Cuadro de diálogo de AI Search ---------- */
+.ai-form-row { display: flex; gap: var(--spacing-md); }
+.form-label .opt { font-weight: 400; color: var(--text-muted); font-size: 11px; }
+
+.city-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.city-chip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 6px 11px; border-radius: var(--radius-full);
+  border: 1px solid var(--border-color); background: var(--bg-card);
+  color: var(--text-secondary); font-size: var(--font-size-xs); font-weight: 500;
+  cursor: pointer; transition: all .15s ease;
+}
+.city-chip:hover { border-color: var(--color-secondary); color: var(--text-primary); }
+.city-chip.on {
+  background: var(--status-accent-bg); color: var(--status-accent-fg);
+  border-color: transparent; font-weight: 600;
+}
+.city-country { font-size: 10px; opacity: .65; }
+
+.ai-estimate {
+  margin-top: var(--spacing-md); padding: var(--spacing-md);
+  background: var(--bg-muted); border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+.ai-est-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  font-size: var(--font-size-sm); color: var(--text-primary); padding: 3px 0;
+}
+.ai-est-label { color: var(--text-muted); font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: .04em; }
+.ai-est-total { font-size: var(--font-size-base); padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--border-color); }
+.ai-est-break { font-size: 11px; color: var(--text-muted); margin: 4px 0 0; text-align: right; }
+
+.ai-budget { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 11px; color: var(--text-muted); }
+.ai-budget-bar {
+  flex: 1; height: 5px; border-radius: var(--radius-full);
+  background: var(--bg-hover); overflow: hidden; position: relative;
+}
+.ai-budget-bar::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: var(--pct, 0%);
+  background: var(--color-secondary); border-radius: var(--radius-full);
+}
+.ai-warn {
+  display: flex; gap: 8px; margin-top: 10px; padding: 8px 10px;
+  background: var(--status-warning-bg); color: var(--status-warning-fg);
+  border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 500;
+}
+
+/* ---------- Panel de interpretación sobre los resultados ---------- */
+.ai-panel {
+  margin-bottom: var(--spacing-md); padding: var(--spacing-md);
+  background: var(--bg-card); border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+.ai-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ai-badge {
+  padding: 3px 9px; border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+  color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+}
+.ai-panel-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); }
+
+.crit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.crit-chip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  background: var(--bg-muted); border: 1px solid var(--border-color);
+  font-size: var(--font-size-xs); color: var(--text-primary);
+}
+.crit-key { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+
+.ai-levels { display: flex; flex-direction: column; gap: 6px; }
+.ai-level {
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color); background: var(--bg-muted); opacity: .55;
+}
+.ai-level.active { opacity: 1; border-color: var(--color-secondary); background: var(--status-accent-bg); }
+.ai-level.used { opacity: .8; }
+.ai-level-name {
+  display: block; font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;
+}
+.ai-level-query {
+  display: block; font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10.5px; line-height: 1.5; color: var(--text-secondary); word-break: break-word;
+}
+
+.ai-spend {
+  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);
+  font-size: 11px; color: var(--text-muted);
+}
+.ai-spend b { color: var(--text-primary); font-weight: 600; }
+.ai-spend-cost { margin-left: auto; }
+.ai-spend-budget { color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .ai-form-row { flex-direction: column; gap: 0; }
+  .ai-spend-cost { margin-left: 0; }
+}
+
+/* ========================================================================
+   Parameters — presupuesto de AI Search y proyección de costo
+   ======================================================================== */
+
+/* Inputs con prefijo de moneda o sufijo de porcentaje. */
+/* Input con prefijo de moneda (el techo de presupuesto). */
+.input-money { display: flex; align-items: center; gap: 6px; }
+.input-money > span { color: var(--text-muted); font-size: var(--font-size-sm); }
+.input-money input { flex: 1; min-width: 0; }
+
+/* ---------- Presupuesto ---------- */
+.budget-state { margin-top: 4px; }
+.budget-bar {
+  height: 8px; border-radius: var(--radius-full);
+  background: var(--bg-hover); overflow: hidden;
+}
+.budget-bar span {
+  display: block; height: 100%; width: 0;
+  background: var(--color-secondary); border-radius: var(--radius-full);
+  transition: width .25s ease;
+}
+.budget-bar span.warn { background: var(--status-warning-fg); }
+.budget-bar span.over { background: var(--status-error-fg); }
+.budget-legend {
+  display: flex; gap: 18px; align-items: baseline; margin-top: 8px;
+  font-size: var(--font-size-xs); color: var(--text-muted);
+}
+.budget-legend b { color: var(--text-primary); font-weight: 600; }
+.budget-pct { margin-left: auto; }
+
+/* ---------- Proyección ---------- */
+.proj-total { text-align: right; }
+.proj-total-value {
+  display: block; font-family: var(--font-heading);
+  font-size: var(--font-size-xl); font-weight: 700; color: var(--text-strong);
+}
+.proj-total-unit { display: block; font-size: var(--font-size-xs); color: var(--text-secondary); margin-top: 2px; }
+.proj-total-delta { display: block; font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px; }
+.proj-total-delta.up { color: var(--status-error-fg); font-weight: 600; }
+.proj-total-delta.down { color: var(--status-success-fg); font-weight: 600; }
+
+.proj-inputs {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--spacing-md); margin-top: var(--spacing-md);
+}
+.proj-input { display: flex; flex-direction: column; gap: 4px; }
+.proj-input output {
+  font-size: var(--font-size-lg); font-weight: 600; color: var(--text-strong);
+  line-height: 1.9;
+}
+.proj-src { font-size: 10px; color: var(--text-muted); }
+
+.proj-volume {
+  display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: center;
+  margin-top: var(--spacing-md); padding: 10px 12px;
+  background: var(--bg-muted); border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs); color: var(--text-muted);
+}
+.proj-volume b { color: var(--text-primary); font-weight: 600; }
+.proj-vol-runs { margin-left: auto; font-style: italic; }
+
+
+@media (max-width: 640px) {
+  .proj-total { text-align: left; margin-top: 10px; }
+  .proj-vol-runs { margin-left: 0; }
+}
+
+/* Descartes del intérprete de AI Search: lo que se leyó y no se usó. */
+.crit-discarded { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -6px 0 14px; }
+.crit-chip.out { opacity: .5; text-decoration: line-through; }
+.ai-status { font-weight: 700; }

@@ -174,7 +174,9 @@ function showToast(message, type = 'success') {
 const CONFIRM_ICONS = {
   trash: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
   search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>',
-  mail: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>'
+  mail: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>',
+  download: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>',
+  sparkle: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"></path><circle cx="12" cy="12" r="3.2"></circle></svg>'
 };
 
 function openConfirmPopup(options) {
@@ -314,6 +316,7 @@ function runSearch() {
 
   empty.style.display = 'none';
   card.style.display = 'block';
+  const aip = document.getElementById('aiPanel'); if (aip) aip.style.display = 'none';
   if (ind) ind.style.display = 'flex';
   note.style.display = 'flex';
   document.querySelector('[data-note]').textContent = 'Checking which candidates are still open to work — more may appear as we go…';
@@ -323,30 +326,17 @@ function runSearch() {
 
   CANDIDATES.forEach((c, idx) => {
     setTimeout(() => {
-      const hasEmail = EMAIL_RESOLUTION[c.id];
-      const tr = document.createElement('tr');
-      tr.className = 'cand-row';
-      tr.style.cursor = 'pointer';
-      tr.dataset.text = (c.headline + ' ' + c.about + ' ' + c.skills.join(' ')).toLowerCase();
-      tr.dataset.langs = c.languages.join('|');
-      tr.dataset.country = candCountry(c);
-      tr.dataset.email = hasEmail ? '1' : '0';
-      tr.innerHTML = `
-        <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
-        <td><div class="cand-name"><span class="cand-avatar">${initials(c)}</span>
-            <div><span class="font-medium">${c.first} ${c.last}</span><br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
-        <td>${c.headline}</td>
-        <td>${chips(c.skills)}</td>
-        <td>${chips(c.languages)}</td>
-        <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
-        <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
-      tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
-      tbody.appendChild(tr);
+      tbody.appendChild(buildCandRow(c));
       applyFilters(); // aplica los filtros activos también a las filas que van llegando
       if (idx === CANDIDATES.length - 1) { note.style.display = 'none'; if (ind) ind.style.display = 'none'; }
     }, 300 + idx * 240);
   });
 
+  bindRowSelection(tbody);
+}
+
+/* La selección por casilla la usan tanto la búsqueda por perfil como AI Search. */
+function bindRowSelection(tbody) {
   tbody.onchange = e => {
     if (e.target.matches('input[type=checkbox]')) {
       const id = +e.target.dataset.id;
@@ -362,11 +352,11 @@ function populateFilterOptions() {
   const langSel = document.getElementById('fltLang');
   const locSel = document.getElementById('fltLoc');
   if (langSel) {
-    const langs = [...new Set(CANDIDATES.flatMap(c => c.languages))].sort();
+    const langs = [...new Set(ALL_CANDS().flatMap(c => c.languages))].sort();
     langSel.innerHTML = '<option value="">All languages</option>' + langs.map(l => `<option>${l}</option>`).join('');
   }
   if (locSel) {
-    const locs = [...new Set(CANDIDATES.map(candCountry))].sort();
+    const locs = [...new Set(ALL_CANDS().map(candCountry))].sort();
     locSel.innerHTML = '<option value="">All locations</option>' + locs.map(l => `<option>${l}</option>`).join('');
   }
 }
@@ -374,6 +364,8 @@ function populateFilterOptions() {
    El contador total vive en el pager (no hay línea de conteo aparte). */
 const CAND_PAGE_SIZE = 5;
 let candPage = 0;
+/* Filas que pasan los filtros activos: es lo que exporta el botón Export. */
+let LAST_MATCHES = [];
 
 function applyFilters() {
   const rows = [...document.querySelectorAll('#candRows tr')];
@@ -381,14 +373,19 @@ function applyFilters() {
   const lang = document.getElementById('fltLang')?.value || '';
   const loc = document.getElementById('fltLoc')?.value || '';
   const onlyEmail = document.getElementById('fltEmail')?.checked;
+  const status = document.getElementById('fltStatus')?.value || '';
+  const expF = document.getElementById('fltExport')?.value || 'none';
 
   const matches = rows.filter(tr => {
     if (q && !tr.dataset.text.includes(q)) return false;
     if (lang && !tr.dataset.langs.split('|').includes(lang)) return false;
     if (loc && tr.dataset.country !== loc) return false;
     if (onlyEmail && tr.dataset.email !== '1') return false;
+    if (status && tr.dataset.status !== status) return false;
+    if (expF !== 'all' && tr.dataset.exp !== expF) return false;
     return true;
   });
+  LAST_MATCHES = matches;
 
   const pages = Math.max(1, Math.ceil(matches.length / CAND_PAGE_SIZE));
   candPage = Math.min(Math.max(candPage, 0), pages - 1);
@@ -416,6 +413,8 @@ function clearFilters() {
   const l = document.getElementById('fltLang'); if (l) l.value = '';
   const o = document.getElementById('fltLoc'); if (o) o.value = '';
   const e = document.getElementById('fltEmail'); if (e) e.checked = false;
+  const st = document.getElementById('fltStatus'); if (st) st.value = '';
+  const ex = document.getElementById('fltExport'); if (ex) ex.value = 'none';
   candPage = 0;
   applyFilters();
 }
@@ -425,6 +424,8 @@ function initFilters() {
   document.getElementById('fltLang')?.addEventListener('change', refilter);
   document.getElementById('fltLoc')?.addEventListener('change', refilter);
   document.getElementById('fltEmail')?.addEventListener('change', refilter);
+  document.getElementById('fltStatus')?.addEventListener('change', refilter);
+  document.getElementById('fltExport')?.addEventListener('change', refilter);
   document.getElementById('candPrev')?.addEventListener('click', () => { if (candPage > 0) { candPage--; applyFilters(); } });
   document.getElementById('candNext')?.addEventListener('click', () => { candPage++; applyFilters(); });
 }
@@ -467,15 +468,23 @@ function fillDrawer(c) {
   d.querySelector('[data-d-about]').textContent = c.about;
   d.querySelector('[data-d-loc]').textContent = c.loc;
   const langEl = d.querySelector('[data-d-langs]'); if (langEl) langEl.textContent = c.languages.join(', ');
-  d.querySelector('[data-d-email]').textContent = EMAIL_RESOLUTION[c.id] ? c.email : 'no email';
+  d.querySelector('[data-d-email]').textContent = hasEmailFor(c.id) ? c.email : 'no email';
   d.querySelector('[data-d-skills]').innerHTML = chips(c.skills);
+  DRAWER_ID = c.id;
+  const st = candState(c.id);
+  const stEl = d.querySelector('[data-d-status]'); if (stEl) stEl.innerHTML = statusBadge(st.status);
+  const expEl = d.querySelector('[data-d-export]');
+  if (expEl) expEl.innerHTML = st.exp
+    ? `${shortName(st.exp.by)} · ${shortDate(st.exp.at)}${st.exp.times > 1 ? ` · ${st.exp.times} times` : ''}`
+    : 'Never exported';
+  renderNotes();
 }
 
 /* ----------------- Outreach ----------------- */
 function openOutreach() {
   if (!SELECTED.size) return;
   const n = SELECTED.size;
-  const noEmail = [...SELECTED].filter(id => !EMAIL_RESOLUTION[id]).length;
+  const noEmail = [...SELECTED].filter(id => !hasEmailFor(id)).length;
   openConfirmPopup({
     title: 'Send invitation email',
     message: noEmail
@@ -488,10 +497,673 @@ function openOutreach() {
   });
 }
 function confirmOutreach() {
-  let withEmail = 0; SELECTED.forEach(id => { if (EMAIL_RESOLUTION[id]) withEmail++; });
+  let withEmail = 0;
+  SELECTED.forEach(id => {
+    if (!hasEmailFor(id)) return;
+    withEmail++;
+    /* El estatus lo mueve el envío: a quien se omite o falla no se le toca. */
+    candState(id).status = 'contacted';
+    refreshRowState(id);
+  });
   const skipped = SELECTED.size - withEmail;
+  applyFilters();
   showToast(
     `${withEmail} invitation${withEmail === 1 ? '' : 's'} sent${skipped ? ` · ${skipped} skipped, no email address` : ''}`,
     skipped ? 'info' : 'success'
   );
+}
+
+
+/* ========================================================================
+   Release 2 — estatus y notas, memoria de exportación, y AI Search.
+   Todo simulado (mock). Los precios replican el modelo del brief de costos:
+   $0.10 por página + $0.004 por perfil (25 perfiles/página) = $0.20 la página
+   llena; el email se compra aparte, solo para los que resultan disponibles.
+   ======================================================================== */
+
+/* ----------------- Catálogo y constantes ----------------- */
+/* Ciudades activas (espejo de las marcadas a:true en parametros.html). */
+const ACTIVE_CITIES = [
+  { city:'Bogotá', country:'Colombia' },
+  { city:'Medellín', country:'Colombia' },
+  { city:'Medellín Area Metropolitana', country:'Colombia' },
+  { city:'Barranquilla', country:'Colombia' },
+  { city:'Buenos Aires', country:'Argentina' },
+  { city:'Córdoba, Argentina', country:'Argentina' },
+  { city:'Chihuahua', country:'México' },
+  { city:'Mérida', country:'México' },
+  { city:'Lima', country:'Perú' },
+  { city:'Nairobi', country:'Kenia' },
+];
+
+const REQUIRED_LANGS = ['English', 'Spanish', 'Portuguese', 'French'];
+
+/* Tarifa vigente de la fuente — en operación la mantiene el admin en Parameters. */
+const RATE = { perPage: 0.10, perProfile: 0.004, perEmail: 0.01, profilesPerPage: 25, otwYield: 0.28 };
+/* Techo de presupuesto y consumo acumulado del período.
+   Se persiste para que Parameters y AI Search vean el mismo saldo. */
+function loadBudget() {
+  try {
+    const b = JSON.parse(localStorage.getItem('tps_budget'));
+    if (b && typeof b.cap === 'number') return b;
+  } catch (e) {}
+  return { cap: 105, spent: 28.7, periodDays: 30 };
+}
+const BUDGET = loadBudget();
+function saveBudget() { try { localStorage.setItem('tps_budget', JSON.stringify(BUDGET)); } catch (e) {} }
+/* Mínimo de candidatos por debajo del cual la búsqueda se amplía al criterio siguiente. */
+const BROADEN_MIN = 8;
+
+const STATUS_LABEL = { detected: 'Detected', contacted: 'Cold email sent' };
+const money = n => '$' + n.toFixed(2);
+const money4 = n => '$' + n.toFixed(4);
+const shortDate = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+function shortName(full) {
+  const p = full.trim().split(/\s+/);
+  return p.length > 1 ? `${p[0]} ${p[p.length - 1][0]}.` : p[0];
+}
+
+/* ----------------- Estado de gestión por candidato (mock) ----------------- */
+/* status · notes (hilo con autor y fecha) · exp (memoria de exportación) */
+const CAND_STATE = {};
+function candState(id) {
+  if (!CAND_STATE[id]) CAND_STATE[id] = { status: 'detected', notes: [], exp: null };
+  return CAND_STATE[id];
+}
+(function seedState() {
+  const d = (dd, mm) => new Date(2026, mm - 1, dd);
+  CAND_STATE[1] = { status:'contacted', exp:{ by:'Andrea Ramírez', at:d(12,8), times:2 },
+    notes:[ { by:'Andrea Ramírez', at:d(11,8), text:'Habla inglés C1 confirmado en la llamada. Disponible para turno US East.' },
+            { by:'Carlos Ortega', at:d(12,8), text:'Enviado a la vacante de CSR bilingüe de Acme.' } ] };
+  CAND_STATE[2] = { status:'detected', exp:{ by:'Andrea Ramírez', at:d(12,8), times:1 }, notes:[] };
+  CAND_STATE[4] = { status:'contacted', exp:null,
+    notes:[ { by:'Carlos Ortega', at:d(19,8), text:'Zona horaria de Filipinas: solo sirve para cuentas con turno nocturno.' } ] };
+  CAND_STATE[6] = { status:'detected', exp:{ by:'Carlos Ortega', at:d(20,8), times:1 }, notes:[] };
+  CAND_STATE[8] = { status:'detected', exp:null,
+    notes:[ { by:'Laura Méndez', at:d(21,8), text:'Perfil técnico más fuerte de lo que pide la vacante; considerar para soporte L2.' } ] };
+})();
+
+/* ----------------- Celdas derivadas del estado ----------------- */
+function statusBadge(status) {
+  const cls = status === 'contacted' ? 'contacted' : 'detected';
+  return `<span class="badge-pipeline badge-pipeline-${cls}" style="cursor:default;">${STATUS_LABEL[status]}</span>`;
+}
+function exportCell(exp) {
+  if (!exp) return '<span class="exp-none">—</span>';
+  return `<div class="exp-badge">
+      <span class="exp-who">${shortName(exp.by)}${exp.times > 1 ? `<span class="exp-times">×${exp.times}</span>` : ''}</span>
+      <span class="exp-when">${shortDate(exp.at)}</span>
+    </div>`;
+}
+function noteDot(n) {
+  return `<span class="note-dot" title="${n} note${n === 1 ? '' : 's'}">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>${n}</span>`;
+}
+/* Relación del candidato con quien mira: sin exportar, propio o de otro. */
+function expOwner(exp) {
+  if (!exp) return 'none';
+  const me = getCurrentUser();
+  return me && exp.by === me.name ? 'me' : 'other';
+}
+
+/* ----------------- Constructor de fila (compartido por ambas búsquedas) ----------------- */
+function buildCandRow(c) {
+  const hasEmail = c.emailKnown !== undefined ? c.emailKnown : EMAIL_RESOLUTION[c.id];
+  const st = candState(c.id);
+  const tr = document.createElement('tr');
+  tr.className = 'cand-row';
+  tr.style.cursor = 'pointer';
+  tr.dataset.id = c.id;
+  tr.dataset.text = (c.headline + ' ' + c.about + ' ' + c.skills.join(' ')).toLowerCase();
+  tr.dataset.langs = c.languages.join('|');
+  tr.dataset.country = candCountry(c);
+  tr.dataset.email = hasEmail ? '1' : '0';
+  tr.dataset.status = st.status;
+  tr.dataset.exp = expOwner(st.exp);
+  tr.innerHTML = `
+    <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
+    <td><div class="cand-name"><span class="cand-avatar">${initials(c)}</span>
+        <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
+    <td>${c.headline}</td>
+    <td>${chips(c.skills)}</td>
+    <td>${chips(c.languages)}</td>
+    <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
+    <td data-cell="status">${statusBadge(st.status)}</td>
+    <td data-cell="export">${exportCell(st.exp)}</td>
+    <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
+  tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
+  return tr;
+}
+
+/* Refresca in situ las celdas que dependen del estado, sin re-renderizar la tabla. */
+function refreshRowState(id) {
+  const tr = document.querySelector(`#candRows tr[data-id="${id}"]`);
+  if (!tr) return;
+  const st = candState(id);
+  tr.dataset.status = st.status;
+  tr.dataset.exp = expOwner(st.exp);
+  tr.querySelector('[data-cell="status"]').innerHTML = statusBadge(st.status);
+  tr.querySelector('[data-cell="export"]').innerHTML = exportCell(st.exp);
+  const nameCell = tr.querySelector('.cand-name .font-medium');
+  const dot = tr.querySelector('.note-dot');
+  if (st.notes.length && !dot) nameCell.insertAdjacentHTML('afterend', noteDot(st.notes.length));
+  else if (st.notes.length && dot) dot.outerHTML = noteDot(st.notes.length);
+}
+
+
+/* ========================================================================
+   AI Search — interpretación de la descripción y búsqueda en la fuente
+   ======================================================================== */
+
+/* Léxico del intérprete. En operación esto lo resuelve el modelo de lenguaje;
+   acá se replica con coincidencia de términos para que la demo sea real. */
+const LEX = {
+  roles: {
+    'Paralegal': ['paralegal'],
+    'Legal Assistant': ['legal assistant','asistente legal','asistente jurídico','law clerk'],
+    'Customer Service Representative': ['customer service','servicio al cliente','csr','customer support','soporte al cliente'],
+    'Executive Assistant': ['executive assistant','asistente ejecutiv','virtual assistant','asistente virtual'],
+    'Sales Development Representative': ['sdr','sales development','inside sales','representante de ventas'],
+    'Collections Specialist': ['collections','cobranza'],
+    'Medical Biller': ['medical billing','medical biller','facturación médica'],
+    'Bookkeeper': ['bookkeeper','auxiliar contable','accounting assistant'],
+    'Technical Support Specialist': ['technical support','soporte técnico','help desk'],
+  },
+  skills: {
+    'Litigation': ['litigation','litigio'],
+    'Immigration Law': ['immigration','inmigración','migratorio'],
+    'Personal Injury': ['personal injury','lesiones personales'],
+    'Case Management': ['case management','manejo de casos','expedientes'],
+    'Drafting': ['drafting','redacción','pleadings','demandas'],
+    'Salesforce': ['salesforce'],
+    'Zendesk': ['zendesk'],
+    'HubSpot': ['hubspot'],
+    'QuickBooks': ['quickbooks'],
+    'CRM': ['crm'],
+    'Call Center': ['call center','contact center'],
+    'E-commerce': ['e-commerce','ecommerce','shopify'],
+    'Cold Calling': ['cold call','llamada en frío'],
+  },
+  industries: {
+    'Legal': ['law firm','bufete','legal','jurídic'],
+    'Healthcare': ['healthcare','salud','medical','médic'],
+    'Fintech': ['fintech','banking','banca'],
+    'SaaS': ['saas','software'],
+    'Logistics': ['logistics','logística','freight'],
+    'BPO': ['bpo','outsourcing','tercerizac'],
+  },
+  seniority: {
+    'Entry level': ['entry level','junior','trainee','sin experiencia'],
+    'Mid-Senior': ['semi senior','mid','intermedio'],
+    'Senior': ['senior','sr.','experimentad'],
+    'Manager': ['manager','gerente','jefe de'],
+  },
+  languages: {
+    'English': ['english','inglés','ingles','bilingual','bilingüe','c1','b2'],
+    'Portuguese': ['portuguese','portugués'],
+    'French': ['french','francés'],
+  },
+};
+
+/* Palabras que no aportan a una búsqueda de perfiles. */
+const STOPWORDS = new Set(('necesito busco buscamos quiero requiero alguien persona candidato candidata ' +
+  'que para con una unos unas los las del de la el en por sobre como muy más mas tenga tener sea ser ' +
+  'need needing looking want wanted someone person candidate profile that for with the and are who ' +
+  'able must should have has our we').split(/\s+/));
+
+function keyTerms(raw) {
+  const words = raw.toLowerCase()
+    .replace(/[^\p{L}\p{N}\s+#]/gu, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOPWORDS.has(w));
+  const uniq = [...new Set(words)].slice(0, 3);
+  return uniq.length ? [uniq.join(' ')] : ['Customer Service Representative'];
+}
+
+function matchLex(text, group) {
+  const out = [];
+  for (const [label, terms] of Object.entries(group)) {
+    if (terms.some(t => text.includes(t))) out.push(label);
+  }
+  return out;
+}
+
+/* Traduce el texto libre a criterios + tres consultas jerárquicas. */
+function interpretDescription(raw, langHint) {
+  const text = raw.toLowerCase();
+  const roles = matchLex(text, LEX.roles);
+  const skills = matchLex(text, LEX.skills);
+  const industries = matchLex(text, LEX.industries);
+  const seniority = matchLex(text, LEX.seniority);
+  const langs = matchLex(text, LEX.languages);
+  if (langHint && !langs.includes(langHint)) langs.unshift(langHint);
+
+  const yearsMatch = text.match(/(\d+)\s*\+?\s*(años|years|year|año)/);
+  const years = yearsMatch ? parseInt(yearsMatch[1], 10) : null;
+
+  /* Si el texto no dispara ningún rol conocido, se destilan las palabras con
+     contenido y se usan como frase de búsqueda: es lo que haría el modelo ante
+     una descripción atípica, en vez de mandar la oración entera a la fuente. */
+  const roleTerms = roles.length ? roles : keyTerms(raw);
+  const roleFromText = !roles.length;
+
+  const OTW = '("Open to work" OR "#OpenToWork" OR "Búsqueda activa")';
+  const NOT_REC = 'NOT (recruiter OR reclutador OR "talent acquisition")';
+  const q = arr => arr.map(t => `"${t}"`).join(' OR ');
+
+  const levels = [
+    { name: 'Specific',
+      query: `(${q(roleTerms)}) AND ${OTW}` +
+             (skills.length ? ` AND (${q(skills.slice(0, 2))})` : '') +
+             (langs.length ? ` AND "${langs[0]}"` : '') + ` ${NOT_REC}` },
+    { name: 'Broader',
+      query: `(${q(roleTerms)}) AND ${OTW}` +
+             (skills.length ? ` AND (${q(skills.slice(0, 1))})` : '') + ` ${NOT_REC}` },
+    { name: 'Generic',
+      query: `(${q(roleTerms)}) AND ${OTW} ${NOT_REC}` },
+  ];
+
+  const keywords = [...roleTerms, ...skills, ...industries, ...seniority, ...langs];
+  const discarded = descartes(raw, keywords);
+  return { keywords, discarded, levels };
+}
+
+/* Lo que el modelo leyó y decidió no usar: describe al puesto, no al candidato. */
+const RUIDO = ['remoto','remote','full time','tiempo completo','beneficios','seguro','pto',
+  'vacaciones','salario','comisión','ambiente','crecimiento','proactiv','responsab','puntual',
+  'detallista','organizad','bajo presión','multitarea','atención al detalle','años de experiencia',
+  'microsoft office','contrato','quincenal','estabilidad'];
+function descartes(raw, usados) {
+  const t = raw.toLowerCase();
+  const hit = RUIDO.filter(r => t.includes(r));
+  const uniq = [...new Set(hit)].slice(0, 6);
+  return uniq.map(x => x.charAt(0).toUpperCase() + x.slice(1));
+}
+
+/* ----------------- Estimación de alcance y costo ----------------- */
+function estimate(pages, cityCount) {
+  const totalPages = pages * cityCount;
+  const maxCands = totalPages * RATE.profilesPerPage;
+  const expected = Math.round(maxCands * RATE.otwYield);
+  const searchCost = totalPages * (RATE.perPage + RATE.profilesPerPage * RATE.perProfile);
+  const emailCost = expected * RATE.perEmail;
+  return { totalPages, maxCands, expected, searchCost, emailCost, total: searchCost + emailCost };
+}
+const budgetLeft = () => BUDGET.cap - BUDGET.spent;
+
+/* ----------------- Candidatos que trae la búsqueda asistida (mock) ----------------- */
+const AI_POOL = [
+  { id:101, first:'Camila', last:'Ospina', loc:'Bogotá, Colombia', verified:true, emailKnown:true,
+    headline:'Paralegal | Immigration & Family Law', email:'camila.ospina@gmail.com',
+    skills:['Immigration Law','Case Management','Drafting'], languages:['Español','Inglés'],
+    about:'Paralegal con 5 años en firmas de inmigración. Manejo de expedientes USCIS. Inglés C1. Open to work.' },
+  { id:102, first:'Tomás', last:'Aguirre', loc:'Buenos Aires, Argentina', verified:true, emailKnown:true,
+    headline:'Legal Assistant | Personal Injury', email:'tomas.aguirre@outlook.com',
+    skills:['Personal Injury','Litigation','Case Management'], languages:['Español','Inglés'],
+    about:'Asistente legal especializado en personal injury para firmas de EE. UU. Redacción de demandas.' },
+  { id:103, first:'Daniela', last:'Rojas', loc:'Medellín, Colombia', verified:false, emailKnown:false,
+    headline:'Paralegal | Corporate & Contracts', email:null,
+    skills:['Drafting','Case Management'], languages:['Español','Inglés'],
+    about:'Paralegal corporativa, revisión y redacción de contratos. Inglés avanzado, disponible de inmediato.' },
+  { id:104, first:'Andrés', last:'Quispe', loc:'Lima, Perú', verified:true, emailKnown:true,
+    headline:'Legal Assistant | Immigration Law', email:'a.quispe@proton.me',
+    skills:['Immigration Law','Drafting'], languages:['Español','Inglés'],
+    about:'Asistente jurídico con foco migratorio. Preparación de peticiones y seguimiento de casos.' },
+  { id:105, first:'Lucía', last:'Ferreira', loc:'Córdoba, Argentina', verified:false, emailKnown:true,
+    headline:'Paralegal | Litigation Support', email:'lucia.ferreira@gmail.com',
+    skills:['Litigation','Case Management','Drafting'], languages:['Español','Inglés','Portugués'],
+    about:'Paralegal con experiencia en litigio civil. Soporte a abogados en descubrimiento de prueba.' },
+  { id:106, first:'Jorge', last:'Betancur', loc:'Barranquilla, Colombia', verified:true, emailKnown:false,
+    headline:'Legal Assistant | Bilingual', email:null,
+    skills:['Case Management'], languages:['Español','Inglés'],
+    about:'Asistente legal bilingüe. Atención a clientes y gestión documental para firma en Florida.' },
+  { id:107, first:'Paula', last:'Ncube', loc:'Nairobi, Kenia', verified:true, emailKnown:true,
+    headline:'Legal Assistant | Contracts & Compliance', email:'p.ncube@gmail.com',
+    skills:['Drafting','Case Management'], languages:['Inglés'],
+    about:'Legal assistant supporting US-based contract review. Native English, remote-first.' },
+  { id:108, first:'Ricardo', last:'Salas', loc:'Chihuahua, México', verified:false, emailKnown:true,
+    headline:'Paralegal | Immigration', email:'ricardo.salas@hotmail.com',
+    skills:['Immigration Law','Drafting'], languages:['Español','Inglés'],
+    about:'Paralegal migratorio con 3 años en despacho binacional. Buscando rol remoto.' },
+  { id:109, first:'Mariana', last:'Duarte', loc:'Mérida, México', verified:true, emailKnown:false,
+    headline:'Legal Support Specialist | Family Law', email:null,
+    skills:['Case Management','Drafting'], languages:['Español','Inglés'],
+    about:'Soporte legal en derecho de familia. Inglés B2, disponible medio tiempo o completo.' },
+  { id:110, first:'Sebastián', last:'Rivas', loc:'Medellín Area Metropolitana, Colombia', verified:false, emailKnown:true,
+    headline:'Paralegal Assistant | Real Estate Closings', email:'seb.rivas@gmail.com',
+    skills:['Drafting','Case Management'], languages:['Español','Inglés'],
+    about:'Asistente paralegal en cierres inmobiliarios para clientes de EE. UU.' },
+];
+
+
+/* ----------------- Utilidades compartidas ----------------- */
+let DRAWER_ID = null;
+const ALL_CANDS = () => CANDIDATES.concat(AI_POOL);
+const candById = id => ALL_CANDS().find(c => c.id === +id);
+function hasEmailFor(id) {
+  const c = candById(id);
+  if (c && c.emailKnown !== undefined) return c.emailKnown;
+  return !!EMAIL_RESOLUTION[id];
+}
+
+/* ----------------- Notas (hilo con autor y fecha) ----------------- */
+function renderNotes() {
+  const wrap = document.getElementById('notesThread');
+  if (!wrap || DRAWER_ID == null) return;
+  const notes = candState(DRAWER_ID).notes;
+  wrap.innerHTML = notes.length
+    ? notes.map(n => `<div class="note-item">
+          <div class="note-meta"><span class="note-author">${n.by}</span><span class="note-date">${shortDate(n.at)}</span></div>
+          <p class="note-text">${n.text}</p>
+        </div>`).join('')
+    : '<p class="note-empty">No notes yet. Add the first one so the team knows what you found.</p>';
+}
+function addNote() {
+  const ta = document.getElementById('noteInput');
+  const text = (ta?.value || '').trim();
+  if (!text || DRAWER_ID == null) return;
+  const me = getCurrentUser();
+  candState(DRAWER_ID).notes.push({ by: me ? me.name : 'Unknown', at: new Date(), text });
+  ta.value = '';
+  renderNotes();
+  refreshRowState(DRAWER_ID);
+  showToast('Note added', 'success');
+}
+
+/* ----------------- Exportación con trazabilidad ----------------- */
+function openExport() {
+  if (!LAST_MATCHES.length) { showToast('Nothing to export with the current filters', 'info'); return; }
+  const n = LAST_MATCHES.length;
+  const already = LAST_MATCHES.filter(tr => tr.dataset.exp !== 'none').length;
+  openConfirmPopup({
+    title: 'Export candidates',
+    message: already
+      ? `We'll export the candidates matching your current filters. <b>${already}</b> of them ${already === 1 ? 'was' : 'were'} already exported by someone on the team.`
+      : "We'll export the candidates matching your current filters. None of them has been exported before.",
+    highlight: `${n} candidate${n === 1 ? '' : 's'} · CSV`,
+    icon: 'download',
+    confirmLabel: 'Export CSV',
+    onConfirm: () => confirmExport(LAST_MATCHES.map(tr => +tr.dataset.id))
+  });
+}
+function confirmExport(ids) {
+  const me = getCurrentUser();
+  const now = new Date();
+  ids.forEach(id => {
+    const st = candState(id);
+    /* La marca se escribe una vez compuesto el archivo: último actor, momento y conteo. */
+    st.exp = { by: me ? me.name : 'Unknown', at: now, times: (st.exp?.times || 0) + 1 };
+    refreshRowState(id);
+  });
+  applyFilters();
+  if (DRAWER_ID != null) { const c = candById(DRAWER_ID); if (c) fillDrawer(c); }
+  showToast(`${ids.length} candidate${ids.length === 1 ? '' : 's'} exported · marked with your name`, 'success');
+}
+
+/* ========================================================================
+   AI Search — cuadro de diálogo
+   ======================================================================== */
+const AI_FORM = { cities: new Set(['Bogotá', 'Medellín', 'Barranquilla', 'Lima']), pages: 2 };
+
+function openAiSearch() {
+  renderAiCities();
+  const langSel = document.getElementById('aiLang');
+  if (langSel && langSel.options.length <= 1) {
+    langSel.innerHTML = '<option value="">Any language</option>' +
+      REQUIRED_LANGS.map(l => `<option>${l}</option>`).join('');
+  }
+  const prof = document.getElementById('aiProfile');
+  if (prof && !prof.options.length) prof.innerHTML = PROFILES.map(p => `<option>${p}</option>`).join('');
+  updateAiEstimate();
+  openModal('aiModal');
+}
+
+function renderAiCities() {
+  const wrap = document.getElementById('aiCities');
+  if (!wrap) return;
+  wrap.innerHTML = ACTIVE_CITIES.map(c => {
+    const on = AI_FORM.cities.has(c.city);
+    return `<button type="button" class="city-chip${on ? ' on' : ''}" data-city="${c.city}">
+        ${c.city}<span class="city-country">${c.country}</span></button>`;
+  }).join('');
+  wrap.onclick = e => {
+    const b = e.target.closest('.city-chip'); if (!b) return;
+    const city = b.dataset.city;
+    AI_FORM.cities.has(city) ? AI_FORM.cities.delete(city) : AI_FORM.cities.add(city);
+    renderAiCities(); updateAiEstimate();
+  };
+}
+
+function updateAiEstimate() {
+  const pages = +(document.getElementById('aiPages')?.value || AI_FORM.pages);
+  AI_FORM.pages = pages;
+  const cities = AI_FORM.cities.size;
+  const est = estimate(pages, cities);
+  const left = budgetLeft();
+
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  set('aiMath', cities
+    ? `<b>${pages}</b> page${pages === 1 ? '' : 's'} × <b>${cities}</b> cit${cities === 1 ? 'y' : 'ies'} = <b>${est.totalPages}</b> pages`
+    : 'Pick at least one city');
+  set('aiCands', cities ? `up to <b>${est.maxCands}</b> candidates · <b>~${est.expected}</b> expected available` : '—');
+  set('aiCost', cities ? `<b>${money(est.total)}</b>` : '—');
+  set('aiCostBreak', cities
+    ? `search ${money(est.searchCost)} (capped by your pages) + email ~${money(est.emailCost)} (only for available ones)`
+    : '');
+  set('aiBudget', `${money(left)} left of ${money(BUDGET.cap)} this period`);
+
+  const over = cities && est.total > left;
+  const btn = document.getElementById('aiSubmit');
+  const warn = document.getElementById('aiBudgetWarn');
+  if (btn) btn.disabled = !cities || over;
+  if (warn) {
+    warn.style.display = over ? 'flex' : 'none';
+    warn.innerHTML = over
+      ? `This search would cost ${money(est.total)} and only ${money(left)} is left. Reduce pages or cities.` : '';
+  }
+  document.getElementById('aiBudgetBar')?.style.setProperty('--pct', (BUDGET.spent / BUDGET.cap * 100).toFixed(1) + '%');
+}
+
+function submitAiSearch() {
+  const desc = (document.getElementById('aiDesc')?.value || '').trim();
+  if (!desc) { showToast('Describe the profile you need', 'info'); return; }
+  if (!AI_FORM.cities.size) { showToast('Pick at least one city', 'info'); return; }
+  const est = estimate(AI_FORM.pages, AI_FORM.cities.size);
+  closeModal('aiModal');
+  openConfirmPopup({
+    title: 'Start AI search',
+    message: `We'll search LinkedIn live across <b>${AI_FORM.cities.size}</b> cit${AI_FORM.cities.size === 1 ? 'y' : 'ies'}, up to <b>${AI_FORM.pages}</b> page${AI_FORM.pages === 1 ? '' : 's'} each. Candidates will appear in the table as we find them.`,
+    highlight: `Estimated cost up to ${money(est.total)}`,
+    icon: 'sparkle',
+    confirmLabel: 'Search now',
+    onConfirm: () => runAiSearch(desc, document.getElementById('aiLang')?.value || '')
+  });
+}
+
+/* ----------------- AI Search — ejecución ----------------- */
+function runAiSearch(desc, langHint) {
+  const tbody = document.getElementById('candRows'); if (!tbody) return;
+  const crit = interpretDescription(desc, langHint);
+  const cities = AI_FORM.cities.size;
+  const pageBudget = AI_FORM.pages * cities;
+
+  SELECTED.clear(); updateBulk();
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultsCard').style.display = 'block';
+  tbody.innerHTML = '';
+  clearFilters();
+  populateFilterOptions();
+  bindRowSelection(tbody);
+  renderAiPanel(crit, 0);
+
+  const note = document.getElementById('loadNote');
+  const ind = document.getElementById('searchIndicator');
+  const setNote = txt => { note.style.display = 'flex'; document.querySelector('[data-note]').textContent = txt; };
+  if (ind) ind.style.display = 'flex';
+
+  /* La ampliación consume el mismo presupuesto de páginas, no uno adicional. */
+  const l1Pages = Math.max(1, Math.min(pageBudget, Math.round(pageBudget * 0.55)));
+  const l2Pages = pageBudget - l1Pages;
+  const spent = { pages: 0, profiles: 0, emails: 0 };
+  const delivered = [];
+
+  const scrapedFor = p => Math.round(p * RATE.profilesPerPage * 0.85);
+
+  function deliver(list, from, done) {
+    list.forEach((c, i) => {
+      setTimeout(() => {
+        delivered.push(c.id);
+        if (c.emailKnown) spent.emails++;
+        tbody.appendChild(buildCandRow(c));
+        applyFilters();
+        if (i === list.length - 1) done();
+      }, from + i * 260);
+    });
+  }
+
+  setNote(`Searching the most specific criteria across ${cities} cit${cities === 1 ? 'y' : 'ies'}…`);
+  spent.pages += l1Pages; spent.profiles += scrapedFor(l1Pages);
+
+  deliver(AI_POOL.slice(0, 4), 700, () => {
+    if (delivered.length >= BROADEN_MIN || l2Pages < 1) return finish();
+    /* Por debajo del mínimo: se amplía al criterio siguiente y se acumula sin duplicar. */
+    renderAiPanel(crit, 1);
+    setNote(`Only ${delivered.length} matched — broadening to a wider criteria with the pages left…`);
+    spent.pages += l2Pages; spent.profiles += scrapedFor(l2Pages);
+    setTimeout(() => deliver(AI_POOL.slice(4), 0, finish), 900);
+  });
+
+  function finish() {
+    note.style.display = 'none';
+    if (ind) ind.style.display = 'none';
+    const real = spent.pages * RATE.perPage + spent.profiles * RATE.perProfile + spent.emails * RATE.perEmail;
+    const est = estimate(AI_FORM.pages, cities);
+    BUDGET.spent += real;
+    saveBudget();
+    /* Estado con que cierra el flujo: done · empty · partial · error. */
+    const status = !delivered.length ? 'empty'
+      : (spent.pages < pageBudget && delivered.length < BROADEN_MIN ? 'partial' : 'done');
+    renderAiSpend(spent, real, est.total, status);
+    if (status === 'empty') {
+      showToast('No candidates matched. Try a broader description or add cities.', 'info');
+    } else if (status === 'partial') {
+      showToast(`${delivered.length} candidates added · the source limited usage before the budget ran out`, 'info');
+    } else {
+      showToast(`${delivered.length} candidates added · ${money(real)} spent of ${money(est.total)} estimated`, 'success');
+    }
+  }
+}
+
+/* Panel de interpretación: qué entendió el modelo y con qué criterio está buscando. */
+function renderAiPanel(crit, activeLevel) {
+  const panel = document.getElementById('aiPanel'); if (!panel) return;
+  panel.style.display = 'block';
+  const kw = crit.keywords.map(k => `<span class="crit-chip">${k}</span>`).join('');
+  const dis = crit.discarded.length
+    ? `<div class="crit-discarded"><span class="crit-key">descartado</span>${crit.discarded.map(d => `<span class="crit-chip out">${d}</span>`).join('')}</div>` : '';
+  panel.innerHTML = `
+    <div class="ai-panel-head">
+      <span class="ai-badge">AI Search</span>
+      <span class="ai-panel-title">Palabras clave con que estamos buscando</span>
+    </div>
+    <div class="crit-chips">${kw}</div>
+    ${dis}
+    <div class="ai-levels">
+      ${crit.levels.map((l, i) => `
+        <div class="ai-level${i === activeLevel ? ' active' : ''}${i < activeLevel ? ' used' : ''}">
+          <span class="ai-level-name">${i + 1}. ${l.name}${i === activeLevel ? ' · en curso' : (i < activeLevel ? ' · pocos resultados' : '')}</span>
+          <code class="ai-level-query">${l.query.replace(/</g, '&lt;')}</code>
+        </div>`).join('')}
+    </div>
+    <div id="aiSpend" class="ai-spend" style="display:none;"></div>`;
+}
+
+const AI_STATUS = {
+  done:    { t:'Búsqueda completada', c:'var(--status-success-fg)' },
+  empty:   { t:'Sin resultados', c:'var(--text-muted)' },
+  partial: { t:'Resultado parcial — la fuente limitó el uso', c:'var(--status-warning-fg)' },
+  error:   { t:'La búsqueda falló', c:'var(--status-error-fg)' },
+};
+function renderAiSpend(spent, real, est, status = 'done') {
+  const el = document.getElementById('aiSpend'); if (!el) return;
+  const st = AI_STATUS[status] || AI_STATUS.done;
+  el.style.display = 'flex';
+  el.innerHTML = `
+    <span class="ai-status" style="color:${st.c}">${st.t}</span>
+    <span><b>${spent.pages}</b> pages opened</span>
+    <span><b>${spent.profiles}</b> profiles scraped</span>
+    <span><b>${spent.emails}</b> emails captured</span>
+    <span class="ai-spend-cost">Real cost <b>${money(real)}</b> vs ${money(est)} estimated</span>
+    <span class="ai-spend-budget">${money(budgetLeft())} left of ${money(BUDGET.cap)}</span>`;
+}
+
+
+/* ========================================================================
+   Proyección de costo mensual del pipeline programado.
+
+   Fuentes de precio (agosto 2026):
+   · Búsqueda  — harvestapi/linkedin-profile-search, modo Full:
+                 $0.10 por página abierta + $0.004 por perfil.
+   · Email     — harvestapi/linkedin-profile-scraper, "Profile details +
+                 email search": $10 por 1.000 perfiles. Se toma el máximo:
+                 la fuente no cobra el intento cuando el perfil no da datos,
+                 así que el real entra por debajo.
+   · Scraping de enriquecimiento — Bright Data, dataset LinkedIn people
+                 profiles: $1.50 por 1.000 registros (pay-as-you-go).
+   · IA        — gpt-5-mini: $0.25 por 1M de entrada, $2.00 por 1M de salida.
+                 Los tokens por candidato salen del prompt real del agente
+                 (instrucción + perfil completo pretty-printed → salida JSON).
+
+   Se calcula con valores máximos: páginas llenas de 25 perfiles y email
+   siempre cobrado. La deduplicación es un factor único sobre los candidatos
+   disponibles, porque la búsqueda se paga en bruto pero el email y la IA
+   corren sobre filas ya deduplicadas en la base.
+   ======================================================================== */
+const COST_MODEL = {
+  profilesPerPage: 25,     // máximo que entrega una página de la fuente
+  pagesPerCombo: 1,        // hoy fijo en el pipeline; no es parámetro todavía
+  otwYield: 0.28,          // rendimiento open-to-work observado (7 de 25)
+  uniqueRate: 0.85,        // deduplicación básica entre combinaciones
+  rateSearchPage: 0.10,
+  rateProfile: 0.004,
+  rateEmail: 0.010,
+  rateBrightData: 0.0015,
+  aiInTokens: 5000,        // instrucción + perfil completo del agente
+  aiOutTokens: 350,
+  aiInPer1M: 0.25,
+  aiOutPer1M: 2.00,
+};
+/* Espejo del catálogo de perfiles de búsqueda (perfiles.html): 12 de 13 activos. */
+const ACTIVE_PROFILES = 12;
+const DAYS_PER_MONTH = 30.44;
+
+function projectCost(o) {
+  const m = { ...COST_MODEL, ...o };
+  const combos = m.profiles * m.cities;
+  const pages = combos * m.pagesPerCombo;
+  const scraped = pages * m.profilesPerPage;
+  const otw = scraped * m.otwYield;
+  const unique = otw * m.uniqueRate;
+
+  const search = pages * (m.rateSearchPage + m.profilesPerPage * m.rateProfile);
+  const email = unique * m.rateEmail;
+  const brightData = unique * m.rateBrightData;
+  const ai = unique * (m.aiInTokens * m.aiInPer1M / 1e6 + m.aiOutTokens * m.aiOutPer1M / 1e6);
+
+  const perRun = search + email + brightData + ai;
+  const runsPerMonth = DAYS_PER_MONTH / m.frequencyDays;
+  return {
+    combos, pages, scraped,
+    otw: Math.round(otw), unique: Math.round(unique),
+    runsPerMonth,
+    lines: [
+      { key: 'search',     label: 'Candidate search',   vendor: 'Apify',       run: search },
+      { key: 'email',      label: 'Email capture',      vendor: 'Apify',       run: email },
+      { key: 'brightdata', label: 'Profile enrichment', vendor: 'Bright Data', run: brightData },
+      { key: 'ai',         label: 'AI analysis',        vendor: 'gpt-5-mini',  run: ai },
+    ],
+    perRun,
+    perMonth: perRun * runsPerMonth,
+    aiTokensPerMonth: unique * (m.aiInTokens + m.aiOutTokens) * runsPerMonth,
+  };
 }

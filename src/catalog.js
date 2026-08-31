@@ -134,8 +134,11 @@ export const products = [
         bundle: 'solvo-recruiter-platform-app',
         tokens: 'platform',
         multipage: true,
-        notas: 'Arranca en el login; usá el selector de usuario demo para entrar.',
-        versions: [{ label: 'App', file: 'index.html' }],
+        notas: 'Arranca en el login; usá el selector de usuario demo para entrar. En Candidate search: AI Search (descripción libre → búsqueda en vivo con costo estimado), estatus y notas por candidato, y exportación con trazabilidad.',
+        versions: [
+          { label: 'App', file: 'index.html' },
+          { label: 'Flujo n8n', file: 'flujo-n8n.html' },
+        ],
       },
       {
         id: 'outreach-invitation',

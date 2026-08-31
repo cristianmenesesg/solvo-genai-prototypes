@@ -31,15 +31,100 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">How often we search</label>
-              <input class="form-input param-input" type="number" value="7" min="1">
+              <input class="form-input param-input" type="number" id="paramFreq" value="7" min="1">
               <p class="filter-hint">Days between each automatic search for new candidates. Default: 7 days.</p>
             </div>
             <div class="form-group">
               <label class="form-label">How long results stay fresh</label>
-              <input class="form-input param-input" type="number" value="2" min="1">
+              <input class="form-input param-input" type="number" id="paramValidity" value="2" min="1">
               <p class="filter-hint">Days a candidate's "open to work" status is trusted. After that, we check it again when a recruiter searches.</p>
             </div>
           </div>
+        </div>
+
+        <!-- Presupuesto de AI Search -->
+        <div class="detail-card" style="margin-top:16px;">
+          <div class="detail-card-title">AI Search budget</div>
+          <p class="filter-hint" style="margin:-4px 0 14px;">Recruiters spend real money every time they run an AI Search. When this ceiling runs out, no new searches are accepted — searches already running finish normally.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Budget ceiling</label>
+              <div class="input-money"><span>$</span><input class="form-input param-input" type="number" id="budgetCap" min="0" step="10"></div>
+              <p class="filter-hint">Maximum spend allowed on AI Search per period.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Period</label>
+              <select class="form-select" id="budgetPeriod">
+                <option value="30">Monthly</option>
+                <option value="7">Weekly</option>
+                <option value="90">Quarterly</option>
+              </select>
+              <p class="filter-hint">When the accumulated spend resets.</p>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Max pages per city</label>
+              <input class="form-input param-input" type="number" id="aiMaxPages" value="3" min="1" max="4">
+              <p class="filter-hint">Deepest a recruiter can go per city in one AI Search. Each page is 25 candidates.</p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Broaden below</label>
+              <input class="form-input param-input" type="number" id="aiMinResults" value="8" min="1">
+              <p class="filter-hint">If a search finds fewer than this, it moves to a wider criteria using the pages left over.</p>
+            </div>
+          </div>
+
+          <div class="budget-state">
+            <div class="budget-bar"><span id="budgetFill"></span></div>
+            <div class="budget-legend">
+              <span><b id="budgetSpent"></b> spent</span>
+              <span><b id="budgetLeft"></b> left</span>
+              <span id="budgetPct" class="budget-pct"></span>
+            </div>
+          </div>
+          <div class="ai-warn" id="budgetWarn" style="display:none;"></div>
+        </div>
+
+        <!-- Proyección de costo mensual -->
+        <div class="detail-card" style="margin-top:16px;">
+          <div class="geo-head">
+            <div>
+              <div class="detail-card-title" style="margin:0;">Monthly cost projection</div>
+              <div class="geo-summary">What the automatic search costs with the coverage you have configured.</div>
+            </div>
+            <div class="proj-total">
+              <span class="proj-total-value" id="projTotal">—</span>
+              <span class="proj-total-unit" id="projUnit"></span>
+              <span class="proj-total-delta" id="projDelta"></span>
+            </div>
+          </div>
+
+          <div class="proj-inputs">
+            <div class="proj-input">
+              <label class="filter-label">Active profiles</label>
+              <output id="projProfiles">—</output>
+              <span class="proj-src">from Search profiles</span>
+            </div>
+            <div class="proj-input">
+              <label class="filter-label">Active cities</label>
+              <output id="projCities">—</output>
+              <span class="proj-src">from the table below</span>
+            </div>
+            <div class="proj-input">
+              <label class="filter-label">Every</label>
+              <output id="projFreq">—</output>
+              <span class="proj-src">from Schedule above</span>
+            </div>
+            <div class="proj-input">
+              <label class="filter-label" for="projPages">Pages per combination</label>
+              <input class="form-input sm" type="number" id="projPages" value="1" min="1" max="4">
+              <span class="proj-src">25 candidates each</span>
+            </div>
+          </div>
+
+          <div class="proj-volume" id="projVolume"></div>
+
         </div>
 
         <!-- Cobertura geográfica -->
@@ -190,6 +275,7 @@
     }
 
     function renderGeo(){
+      if (typeof updateProjection === 'function') setTimeout(updateProjection, 0);
       updateSummary();
       const pager = document.getElementById('locPager');
       const total = LOCATIONS.reduce((s,c)=> s + c.locs.length, 0);
@@ -352,7 +438,84 @@
 
     document.getElementById('modalAddLoc').addEventListener('click', function(e){ if (e.target === this) closeModal('modalAddLoc'); });
 
+    /* ---------------- Presupuesto de AI Search ---------------- */
+    function activeCityCount() {
+      return LOCATIONS.reduce((n, c) => n + c.locs.filter(l => l.a).length, 0);
+    }
+
+    function renderBudget() {
+      const cap = BUDGET.cap, spent = BUDGET.spent, left = Math.max(0, cap - spent);
+      const pct = cap ? Math.min(100, spent / cap * 100) : 0;
+      document.getElementById('budgetFill').style.width = pct + '%';
+      document.getElementById('budgetFill').className = pct >= 100 ? 'over' : (pct >= 80 ? 'warn' : '');
+      document.getElementById('budgetSpent').textContent = money(spent);
+      document.getElementById('budgetLeft').textContent = money(left);
+      document.getElementById('budgetPct').textContent = pct.toFixed(0) + '% used';
+      const warn = document.getElementById('budgetWarn');
+      if (pct >= 100) { warn.style.display = 'flex'; warn.textContent = 'Budget exhausted — recruiters cannot start new AI searches until you raise the ceiling.'; }
+      else if (pct >= 80) { warn.style.display = 'flex'; warn.textContent = 'Over 80% of the budget is used. Raise the ceiling if recruiters still need to search this period.'; }
+      else warn.style.display = 'none';
+    }
+
+    document.getElementById('budgetCap').value = BUDGET.cap;
+    document.getElementById('budgetPeriod').value = String(BUDGET.periodDays || 30);
+    document.getElementById('budgetCap').addEventListener('input', e => {
+      BUDGET.cap = Math.max(0, +e.target.value || 0); saveBudget(); renderBudget();
+    });
+    ['aiMaxPages','aiMinResults'].forEach(id =>
+      document.getElementById(id).addEventListener('change', () => showToast('Parameter updated','success')));
+    document.getElementById('budgetPeriod').addEventListener('change', e => {
+      BUDGET.periodDays = +e.target.value; saveBudget(); showToast('Budget period updated','success');
+    });
+
+    /* ---------------- Proyección de costo ---------------- */
+    const PROJ_IDS = ['projPages','paramFreq'];
+    const num = id => +document.getElementById(id).value || 0;
+    let projBaseline = null;
+
+    function updateProjection() {
+      const cities = activeCityCount();
+      const freq = Math.max(1, num('paramFreq'));
+      /* Las tarifas de cada proveedor y los supuestos del modelo viven en
+         COST_MODEL: no son configuración de nadie en la plataforma. */
+      const r = projectCost({
+        profiles: ACTIVE_PROFILES,
+        cities,
+        frequencyDays: freq,
+        pagesPerCombo: Math.max(1, num('projPages')),
+      });
+      if (!projBaseline) projBaseline = r.perMonth;
+
+      document.getElementById('projProfiles').textContent = ACTIVE_PROFILES;
+      document.getElementById('projCities').textContent = cities;
+      document.getElementById('projFreq').textContent = freq + (freq === 1 ? ' day' : ' days');
+      document.getElementById('projTotal').textContent = money(r.perMonth) + ' / month';
+      document.getElementById('projUnit').textContent =
+        r.scraped ? `about ${money4(r.perRun / r.scraped)} per candidate scraped` : '';
+
+      const d = r.perMonth - projBaseline;
+      const dEl = document.getElementById('projDelta');
+      if (Math.abs(d) < 0.005) { dEl.textContent = 'same as your current setup'; dEl.className = 'proj-total-delta'; }
+      else {
+        const pct = projBaseline ? Math.abs(d / projBaseline * 100).toFixed(0) : 0;
+        dEl.textContent = `${d > 0 ? '+' : '−'}${money(Math.abs(d))} (${pct}%) vs your current setup`;
+        dEl.className = 'proj-total-delta ' + (d > 0 ? 'up' : 'down');
+      }
+
+      document.getElementById('projVolume').innerHTML =
+        `<span><b>${r.combos}</b> combinations</span><span><b>${r.pages}</b> pages</span>` +
+        `<span><b>${r.scraped.toLocaleString('en-US')}</b> profiles scraped</span>` +
+        `<span><b>${r.otw.toLocaleString('en-US')}</b> open to work</span>` +
+        `<span><b>${r.unique.toLocaleString('en-US')}</b> unique, enriched</span>` +
+        `<span class="proj-vol-runs">${r.runsPerMonth.toFixed(1)} runs / month · ${money(r.perRun)} each</span>`;
+
+    }
+
+    PROJ_IDS.forEach(id => document.getElementById(id)?.addEventListener('input', updateProjection));
+
+    renderBudget();
     renderGeo();
+    updateProjection();
   </script>
 </body>
 </html>

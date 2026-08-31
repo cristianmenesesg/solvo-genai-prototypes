@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flujo n8n de búsqueda · Solvo Recruiter Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="theme.js"></script>
+  <style>
+    html, body { height: 100%; }
+    body { background: var(--bg-page); overflow: hidden; }
+    .fp { height: 100vh; display: flex; flex-direction: column; }
+    .tb-row { display: flex; align-items: center; gap: var(--spacing-lg); flex-wrap: wrap; }
+    .topbar {
+      flex: 0 0 auto; padding: 14px var(--spacing-lg) 10px;
+      background: var(--bg-surface-raised); border-bottom: 1px solid var(--border-color); z-index: 20;
+      padding: 12px var(--spacing-lg);
+    }
+    .canvas-tools { margin-top: 10px; }
+    .wf-sub { font-size: 11px; color: var(--text-muted); max-width: 34ch; line-height: 1.4; cursor: help; }
+    .fp h1 { font-family: var(--font-heading); font-size: var(--font-size-base); font-weight: 700; color: var(--text-strong); }
+    .fp code { font-family: var(--font-mono, ui-monospace, monospace); font-size: 11px; background: var(--bg-muted); padding: 1px 5px; border-radius: 3px; color: var(--text-primary); word-break: break-word; }
+
+    /* ---- Pestañas de workflow ---- */
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .wf-tab {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+      font-family: var(--font-mono, ui-monospace, monospace); font-size: 11.5px; font-weight: 600;
+      padding: 8px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary);
+    }
+    .wf-tab:hover { border-color: var(--color-secondary); color: var(--text-primary); }
+    .wf-tab.on { background: var(--bg-selected); border-color: var(--color-secondary); color: var(--text-primary); }
+    .wf-num {
+      padding: 1px 6px; border-radius: var(--radius-full); color: #fff;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .02em;
+    }
+
+
+    /* ---- Barra de canvas ---- */
+    .canvas-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .find { position: relative; }
+    .find input { width: 220px; }
+    .find-list {
+      display: none; position: absolute; top: 100%; left: 0; z-index: 40; margin-top: 4px; width: 320px;
+      background: var(--bg-surface-raised); border: 1px solid var(--border-color);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); overflow-y: auto; max-height: 280px;
+    }
+    .find-list.open { display: block; }
+    .find-hit {
+      display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; cursor: pointer;
+      padding: 8px 11px; border: none; background: none; font-size: 11.5px; color: var(--text-primary);
+    }
+    .find-hit:hover { background: var(--bg-hover); }
+    .find-t { margin-left: auto; font-family: var(--font-mono, ui-monospace, monospace); font-size: 9.5px; color: var(--text-muted); }
+    .find-empty { padding: 10px 11px; font-size: 11.5px; color: var(--text-muted); }
+    .zoom { display: flex; align-items: center; gap: 4px; }
+    .zoom > span { font-size: 11px; color: var(--text-muted); min-width: 44px; text-align: center; font-variant-numeric: tabular-nums; }
+    .zbtn {
+      width: 28px; height: 28px; border-radius: var(--radius-sm); cursor: pointer;
+      border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary);
+      font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center;
+    }
+    .zbtn:hover { border-color: var(--color-secondary); color: var(--text-primary); }
+    .zbtn.wide { width: auto; padding: 0 11px; font-size: 11px; }
+    /* ---- Footer fijo de HUs relacionadas ---- */
+    .relbar {
+      flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
+      padding: 9px var(--spacing-lg); background: var(--bg-surface-raised);
+      border-top: 1px solid var(--border-color); z-index: 20; min-height: 50px;
+    }
+    .rel-title {
+      font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em;
+      font-weight: 700; color: var(--text-muted); flex-shrink: 0;
+    }
+    .rel-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .rel-group { display: flex; align-items: center; gap: 6px; }
+    .rel-how {
+      font-size: 9.5px; color: var(--text-muted); font-style: italic;
+      padding-right: 2px; white-space: nowrap;
+    }
+    .rel-chip {
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer; max-width: 300px;
+      padding: 4px 10px; border-radius: var(--radius-full);
+      border: 1px solid var(--border-color); background: var(--bg-card);
+    }
+    .rel-chip:hover { border-color: var(--color-secondary); background: var(--bg-hover); }
+    .rel-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .rel-id { font-family: var(--font-mono, ui-monospace, monospace); font-size: 10px; font-weight: 700; color: var(--text-primary); }
+    .rel-n { font-size: 10.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ---- Canvas + panel, lado a lado ---- */
+    .canvas-area { flex: 1 1 auto; position: relative; min-height: 0; }
+    .canvas-wrap {
+      position: absolute; inset: 0; overflow: hidden;
+      background: var(--bg-card);
+      background-image: radial-gradient(circle, var(--border-color) 1px, transparent 1px);
+      background-size: 18px 18px; cursor: grab; user-select: none;
+    }
+    .canvas-wrap.grabbing { cursor: grabbing; }
+    .n8n-canvas { position: relative; transform-origin: 0 0; will-change: transform; }
+    .n8n-edges { position: absolute; inset: 0; pointer-events: none; color: var(--text-muted); }
+    .edge { fill: none; stroke: var(--text-muted); stroke-width: 1.6; opacity: .5; }
+    .edge.dashed { stroke-dasharray: 4 4; opacity: .3; }
+    .edge.back { stroke: var(--color-secondary); opacity: .75; }
+    .edge.sub { stroke-dasharray: 3 3; opacity: .35; }
+    .edge-label { font-size: 10px; fill: var(--text-muted); font-family: var(--font-mono, ui-monospace, monospace); }
+
+    .n8n-node {
+      position: absolute; display: flex; align-items: center; justify-content: center;
+      background: var(--bg-surface-raised); border: 1.5px solid var(--border-color);
+      border-radius: 10px; cursor: pointer; transition: box-shadow .15s, border-color .15s;
+    }
+    .n8n-node:hover { border-color: var(--nc); }
+    .n8n-node.sel { border-color: var(--nc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--nc) 28%, transparent); }
+    .n8n-node.is-trigger { border-radius: 34px 10px 10px 34px; }
+    .n8n-node.is-sub { border-style: dashed; }
+    .n8n-port {
+      position: absolute; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--bg-card); border: 1.5px solid var(--text-muted); top: 50%; margin-top: -4px;
+    }
+    .n8n-port.in { left: -4px; } .n8n-port.out { right: -4px; }
+    .is-trigger .n8n-port.in { display: none; }
+
+    .n8n-label { position: absolute; text-align: center; cursor: pointer; }
+    .lbl-n { display: block; font-size: 10.5px; line-height: 1.3; color: var(--text-secondary); font-weight: 500; margin-top: 1px; }
+    .n8n-label.sel .lbl-n { color: var(--text-primary); font-weight: 600; }
+
+    /* ---- Panel de detalle, fijo al costado ---- */
+    .detail {
+      position: fixed; top: 0; right: 0; bottom: 0; width: 460px; max-width: 94vw; z-index: 60;
+      background: var(--bg-surface-raised); border-left: 1px solid var(--border-color);
+      box-shadow: -8px 0 32px rgba(0,0,0,.16); overflow-y: auto;
+      transform: translateX(100%); transition: transform .22s ease;
+    }
+    .detail.open { transform: none; }
+    .d-close {
+      margin-left: auto; width: 28px; height: 28px; flex-shrink: 0; cursor: pointer;
+      border: none; background: none; color: var(--text-muted); font-size: 22px; line-height: 1;
+      border-radius: var(--radius-sm);
+    }
+    .d-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .d-notes { margin: 0; padding-left: 18px; }
+    .d-notes li { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.65; margin-bottom: 11px; }
+    .d-head { display: flex; align-items: flex-start; gap: 11px; padding: var(--spacing-md); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--bg-surface-raised); z-index: 2; }
+    .d-icon { display: flex; padding-top: 1px; }
+    .d-titles { min-width: 0; }
+    .d-name { font-size: var(--font-size-sm); font-weight: 700; color: var(--text-primary); line-height: 1.3; }
+    .d-meta { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-mono, ui-monospace, monospace); }
+    .d-meta code { background: none; padding: 0; color: var(--text-muted); }
+    .d-body { padding: var(--spacing-md); }
+    .d-does { font-size: var(--font-size-sm); color: var(--text-primary); line-height: 1.6; margin: 0 0 16px; font-weight: 500; }
+    .d-same { font-size: 11px; color: var(--text-muted); background: var(--bg-muted); border-radius: var(--radius-sm); padding: 8px 10px; margin-bottom: 14px; }
+    .d-row { margin-bottom: 15px; }
+    .d-key { display: block; font-size: 9.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); font-weight: 700; margin-bottom: 5px; }
+    .d-val { font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; }
+    .d-op {
+      font-family: var(--font-mono, ui-monospace, monospace); font-size: 10.5px; line-height: 1.55;
+      background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+      padding: 10px 11px; margin: 0; overflow-x: auto; color: var(--text-primary); white-space: pre;
+    }
+    .d-placeholder { padding: 48px 28px; text-align: center; }
+    .d-ph-icon { display: flex; justify-content: center; margin-bottom: 12px; opacity: .5; }
+    .d-placeholder p { font-size: var(--font-size-sm); color: var(--text-secondary); margin: 0 0 6px; }
+    .d-ph-hint { color: var(--text-muted) !important; font-size: var(--font-size-xs) !important; line-height: 1.6; }
+
+    .legend {
+      position: absolute; left: 12px; bottom: 12px; z-index: 10; pointer-events: none;
+      display: flex; flex-wrap: wrap; gap: 14px; font-size: 10.5px; color: var(--text-muted);
+      background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+      border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 6px 10px;
+    }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 22px; border-top: 1.6px solid currentColor; display: inline-block; }
+    .legend i.dash { border-top-style: dashed; }
+    .legend i.loop { border-color: var(--color-secondary); }
+
+    .notes { margin-top: var(--spacing-lg); padding: var(--spacing-md); background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: var(--radius-md); }
+    .notes h3 { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .notes li { font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.7; margin-bottom: 6px; }
+
+    /* ---- HUs fuera del flujo ---- */
+
+    @media (max-width: 1200px) { .work { grid-template-columns: 1fr; } .detail { height: auto; max-height: 60vh; } }
+  </style>
+</head>
+<body>
+  <div class="fp">
+    <header class="topbar">
+      <div class="tb-row">
+        <h1>Búsqueda de candidatos — un flujo, dos disparadores</h1>
+        <div class="tabs" id="tabs"></div>
+      </div>
+      <div class="canvas-tools">
+        <span class="wf-sub" id="wfSub"></span>
+        <div class="find">
+          <input id="findInput" class="form-input sm" type="text" placeholder="Buscar nodo…" autocomplete="off">
+          <div class="find-list" id="nodeFind"></div>
+        </div>
+        <div class="zoom">
+          <button class="zbtn" id="zOut" title="Alejar">&minus;</button>
+          <span id="zoomPct">100%</span>
+          <button class="zbtn" id="zIn" title="Acercar">+</button>
+          <button class="zbtn wide" id="zFit" title="Encuadrar (Ctrl+0)">Encuadrar</button>
+        </div>
+        <button class="zbtn wide" id="aboutBtn">Sobre este flujo</button>
+        <button class="zbtn wide" id="notesBtn">Decisiones del refactor</button>
+      </div>
+    </header>
+
+    <div class="canvas-area">
+      <div class="canvas-wrap" id="stage"></div>
+      <div class="legend">
+        <span><i></i> ejecución</span>
+        <span><i class="dash"></i> logger o rama de error</span>
+        <span><i class="loop"></i> loop</span>
+      </div>
+    </div>
+
+    <footer class="relbar">
+      <span class="rel-title">HUs relacionadas</span>
+      <div class="rel-wrap" id="related"></div>
+    </footer>
+  </div>
+
+  <aside class="detail" id="detail"></aside>
+
+  <script src="flujo-n8n.js"></script>
+</body>
+</html>
