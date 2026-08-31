@@ -218,10 +218,17 @@ function openConfirmPopup(options) {
 }
 
 /* ----------------- Mock data ----------------- */
+/* Espejo del catálogo de perfiles de búsqueda (perfiles.html). Los inactivos
+   siguen listados: sus candidatos ya persistidos se consultan igual. */
 const PROFILES = [
-  'Customer Service Representative', 'Sales Representative', 'Legal Assistant', 'Recruiter', 'Scheduler',
+  'Litigation Assistant', 'Senior Paralegal', 'Customer Service Representative',
+  'Sales Representative', 'Sales Development Representative', 'Intake Specialist',
+  'Executive Assistant', 'Administrative Assistant', 'Collections Specialist',
+  'Scheduler', 'CAD Designer', 'Legal Assistant', 'Paralegal',
 ];
-const NO_RESULT_PROFILE = 'Legal Assistant'; // expone el estado vacío de forma natural
+/* Perfil recién creado: el pipeline todavía no corrió para él, así que el pool
+   está vacío. Es el caso que justifica AI Search. */
+const NO_RESULT_PROFILE = 'Litigation Assistant';
 
 const CANDIDATES = [
   { id:1, first:'María', last:'Restrepo', loc:'Bogotá, Colombia', verified:true,
@@ -310,7 +317,7 @@ function runSearch() {
     card.style.display = 'none'; note.style.display = 'none'; if (ind) ind.style.display = 'none';
     empty.style.display = 'flex';
     document.getElementById('emptyTitle').textContent = 'No candidates found';
-    document.getElementById('emptyMsg').textContent = 'No one open to work matches “' + profile + '” with those keywords. Try another profile or remove a keyword.';
+    document.getElementById('emptyMsg').innerHTML = 'The pool has no candidates for “' + profile + '” yet — the scheduled search has not run for this profile. Remove a keyword, pick another profile, or use <b>AI Search</b> to go find them now.';
     return;
   }
 
