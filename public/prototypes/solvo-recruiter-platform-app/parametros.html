@@ -36,8 +36,8 @@
             </div>
             <div class="form-group">
               <label class="form-label">How long results stay fresh</label>
-              <input class="form-input param-input" type="number" id="paramValidity" value="2" min="1">
-              <p class="filter-hint">Days a candidate's "open to work" status is trusted. After that, we check it again when a recruiter searches.</p>
+              <input class="form-input param-input" type="number" id="paramValidity" value="4" min="1">
+              <p class="filter-hint">Days a candidate's "open to work" status is trusted. After that, we check it again when a recruiter searches. Must stay below the search frequency, so candidates expire before the next run.</p>
             </div>
           </div>
         </div>
@@ -512,6 +512,30 @@
     }
 
     PROJ_IDS.forEach(id => document.getElementById(id)?.addEventListener('input', updateProjection));
+
+    /* La vigencia tiene que vencer antes de la siguiente ejecución. */
+    function checkValidity() {
+      const f = +document.getElementById('paramFreq').value || 0;
+      const v = +document.getElementById('paramValidity').value || 0;
+      const el = document.getElementById('paramValidity');
+      const mal = v >= f;
+      el.style.borderColor = mal ? 'var(--status-error-fg)' : '';
+      let aviso = document.getElementById('validityWarn');
+      if (mal && !aviso) {
+        aviso = document.createElement('p');
+        aviso.id = 'validityWarn';
+        aviso.className = 'filter-hint';
+        aviso.style.color = 'var(--status-error-fg)';
+        el.parentNode.appendChild(aviso);
+      }
+      if (aviso) {
+        aviso.textContent = mal ? `Freshness (${v}) must be below the search frequency (${f}).` : '';
+        aviso.style.display = mal ? '' : 'none';
+      }
+    }
+    ['paramFreq','paramValidity'].forEach(id =>
+      document.getElementById(id).addEventListener('input', checkValidity));
+    checkValidity();
 
     renderBudget();
     renderGeo();
