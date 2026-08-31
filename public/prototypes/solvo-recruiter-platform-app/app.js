@@ -16,7 +16,13 @@ function getRole() { const u = getCurrentUser(); return u ? u.role : null; }
 function canAccessAdmin() { return getRole() === 'admin'; }
 function initSession() {
   const u = getCurrentUser();
-  if (!u) { window.location.href = 'index.html'; return null; }
+  if (!u) {
+    /* Guarda la página pedida para volver a ella tras el login: es lo que hace
+       que un enlace directo a una vista concreta llegue a destino. */
+    try { sessionStorage.setItem('tps_next', location.pathname.split('/').pop()); } catch (e) {}
+    window.location.href = 'index.html';
+    return null;
+  }
   return u;
 }
 function logout() { localStorage.removeItem('tps_user'); window.location.href = 'index.html'; }

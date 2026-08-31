@@ -62,7 +62,12 @@
       loginBtn.disabled = true;
       setTimeout(() => {
         localStorage.setItem('tps_user', JSON.stringify(DEMO_USERS[selectedRole]));
-        window.location.href = 'candidatos.html';
+        let destino = 'candidatos.html';
+        try {
+          const pedida = sessionStorage.getItem('tps_next');
+          if (pedida) { destino = pedida; sessionStorage.removeItem('tps_next'); }
+        } catch (e) {}
+        window.location.href = destino;
       }, 800);
     });
   </script>
