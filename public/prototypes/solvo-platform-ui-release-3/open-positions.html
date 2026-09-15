@@ -777,20 +777,22 @@
       const range = (state.filters.detected && state.filters.detected.from) ? state.filters.detected : { from: '', to: '' };
       const ids = new Set(vacancies.map(function (v) { return v.companyId; }));
       const relatedCompanies = MOCK_COMPANIES.filter(function (c) { return ids.has(c.id); });
+      const relatedContacts = relatedCompanies.reduce(function (acc, c) { return acc.concat(getContactsForCompany(c.id)); }, []);
+      const contactRows = relatedCompanies.reduce(function (n, c) { return n + Math.max(1, getContactsForCompany(c.id).length); }, 0);
 
       openExportPopup({
         entityLabel: 'positions',
         entityCount: vacancies.length,
         alreadyExported: countAlreadyExported(vacancies),
         companions: [
-          { key: 'prospects', label: 'Include prospects', count: relatedCompanies.length, note: 'the companies behind these positions, one row each' }
+          { key: 'prospects', label: 'Include prospects', count: contactRows, note: 'the decision makers of those companies, one row each' }
         ],
         onExport: function (selected) {
           const files = [{ entity: 'posiciones', rows: buildVacancyExportRows(vacancies), columns: EXPORT_COLUMNS_VACANCIES }];
-          if (selected.indexOf('prospects') !== -1) files.push({ entity: 'prospectos', rows: buildCompanyExportRows(relatedCompanies), columns: EXPORT_COLUMNS_COMPANIES });
+          if (selected.indexOf('prospects') !== -1) files.push({ entity: 'prospectos', rows: buildProspectExportRows(relatedCompanies), columns: EXPORT_COLUMNS_PROSPECTS });
           deliverExport(files, range.from, range.to);
           markExported(vacancies);
-          if (selected.indexOf('prospects') !== -1) markExported(relatedCompanies);
+          if (selected.indexOf('prospects') !== -1) { markExported(relatedCompanies); markExported(relatedContacts); }
           render();
         }
       });

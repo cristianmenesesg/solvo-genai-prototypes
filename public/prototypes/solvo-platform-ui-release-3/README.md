@@ -52,7 +52,7 @@ rbac.js      capa compartida: sesión y roles, datos mock, catálogos del motor,
 - **Actividad**: `getVacancyActivity` / `getCompanyActivity` sobre `states_history`, de lo más reciente a lo más viejo. Los pasos de los flujos quedan sembrados en `MOCK_EXECUTION_LOGS` y consultables con `getVacancyExecutionLogs` / `getCompanyExecutionLogs`, pero no se muestran: el registro de ejecución va a tener su propia página de consulta y filtrado.
 - **Contactos**: `getDecisionMakers` (los analizados, agrupados por rol), `getUnanalyzedContacts` (los anteriores al análisis, que no son decisores) y los vocabularios `CONTACT_DEPARTMENTS` y `CONTACT_SENIORITIES`, que son los que guarda el motor.
 - **Componentes compartidos**: `renderSidebar`, `renderHeaderControls`, `showToast`, `openAssignmentPopup` / `renderAssignmentSection` (Release 2), `openConfirmPopup`, `openExportPopup`, `openScrapePopup` (On-Demand), `renderShellPicker` / `renderShellSearchbox` (selectores de la barra).
-- **Exportación**: `EXPORT_COLUMNS_VACANCIES` y `EXPORT_COLUMNS_COMPANIES`, `buildVacancyExportRows` / `buildCompanyExportRows`, `deliverExport` (CSV UTF-8 con BOM y CRLF; ZIP sin compresión cuando salen los dos), `markExported`, `EXPORT_ROW_LIMIT`. Ver *Exportación* más abajo.
+- **Exportación**: `EXPORT_COLUMNS_VACANCIES` y `EXPORT_COLUMNS_PROSPECTS`, `buildVacancyExportRows` / `buildProspectExportRows`, `deliverExport` (CSV UTF-8 con BOM y CRLF; ZIP sin compresión cuando salen los dos), `markExported`, `EXPORT_ROW_LIMIT`. Ver *Exportación* más abajo.
 - **Tablero**: `MOCK_DAILY_METRICS` y `MOCK_BOOKING_FUNNEL`, series sintéticas deterministas (`seededNoise`); `dailyMetrics(days)`, `bookingFunnel(days)`, `BOOKING_FUNNEL_STAGES`.
 
 ### Motor de criterios de los listados
@@ -75,11 +75,12 @@ Open Positions y Prospects comparten el patrón; cada uno declara su propio `FIL
 
 Dos archivos, y cada uno se basta solo:
 
-| Archivo | Se pide desde | Lleva del otro lado |
-|---|---|---|
-| `posiciones_<fecha>.csv` | Open Positions (recorte del listado) o Prospects (acompañante: todas las posiciones de esas empresas) | `Correos de decisores`: los correos de los decisores de la empresa, separados por `;` |
-| `prospectos_<fecha>.csv` | Prospects (recorte del listado) o Open Positions (acompañante: las empresas de esas posiciones) | `Posiciones detectadas`: los cargos publicados, separados por barra |
+| Archivo | Una fila por | Se pide desde | Lleva del otro lado |
+|---|---|---|---|
+| `posiciones_<fecha>.csv` | aviso | Open Positions (recorte del listado) o Prospects (acompañante: todas las posiciones de esas empresas) | `Correos de decisores`: los correos de los decisores de la empresa, separados por `;` |
+| `prospectos_<fecha>.csv` | contacto | Prospects (recorte del listado) o Open Positions (acompañante: los decisores de esas empresas) | `Posiciones detectadas`: los cargos publicados, separados por barra |
 
+- El de prospectos es la lista de personas —nombre, cargo, rol, nivel de decisión, correo con su verificación, teléfono y LinkedIn— y repite en cada fila las columnas de su empresa, para poder ordenarlo y filtrarlo sin cruzarlo con nada. Una empresa a la que todavía no se le encontró a nadie entrega igual su fila, con las celdas de persona vacías.
 - Cada archivo entrega además lo que dedujo el motor: puntaje ICP y señales en el de prospectos; posición del catálogo, veredicto de viabilidad, confianza e idiomas en el de posiciones.
 - El archivo de la entidad del listado hereda sus filtros; el acompañante no hereda ninguno y entrega todo lo relacionado con ese recorte.
 - Un solo archivo se entrega como CSV; los dos, en `exportacion_<fecha>.zip`.

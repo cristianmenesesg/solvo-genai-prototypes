@@ -1100,6 +1100,7 @@ function openExportPopup(options) {
     entityCount = 0,
     alreadyExported = 0,
     companions = [],
+    note = '',
     onExport = () => {}
   } = options;
 
@@ -1162,6 +1163,7 @@ function openExportPopup(options) {
           <div style="font-size:36px; font-weight:700; color:var(--text-primary);">${entityCount.toLocaleString('en-US')}</div>
           <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} to export</div>
           <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Based on the active filters</div>
+          ${note ? `<div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">${note}</div>` : ''}
         </div>
         ${overlapSection}
         ${companionsSection}
@@ -1571,20 +1573,24 @@ function deliverExport(files, from, to) {
 // El motor rediseñado agrega lo que decide por cada registro —puntaje y señales de la empresa,
 // posición del catálogo y veredicto de viabilidad de la vacante—: sin eso, quien recibe el archivo
 // no ve por qué ese lead está ahí y tiene que volver a la plataforma a mirarlo.
-const EXPORT_COLUMNS_COMPANIES = [
-  'Empresa', 'Posiciones detectadas', 'Puntaje ICP', 'Señales', 'Industria', 'Ubicación', 'Sitio web',
-  'LinkedIn de la empresa', 'Indeed de la empresa',
-  'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Relación', 'Etapa del embudo',
-  'Última vez contactada', 'Detectada', 'Investigada', 'Tamaño', 'ID de empresa', 'Pitch de venta'
+// Una fila por persona, que es con lo que se escribe y se llama: primero a quién, después cómo
+// alcanzarlo, después dónde trabaja y por qué vale la pena, y al final quién lo tiene asignado.
+// Las columnas de la empresa se repiten en cada fila a propósito: ordenar por industria o por
+// etapa tiene que funcionar sobre el archivo, sin cruzarlo con otro.
+const EXPORT_COLUMNS_PROSPECTS = [
+  'Nombre', 'Cargo', 'Rol', 'Nivel de decisión', 'Correo', 'Verificación del correo', 'Teléfono', 'LinkedIn',
+  'Empresa', 'Posiciones detectadas', 'Puntaje ICP', 'Señales', 'Industria', 'Tamaño', 'Ubicación',
+  'Sitio web', 'LinkedIn de la empresa', 'Relación', 'Etapa del embudo', 'Última vez contactada',
+  'Detectado', 'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'ID de empresa'
 ];
 
 const EXPORT_COLUMNS_VACANCIES = [
   'Empresa', 'Cargo', 'Posición del catálogo', 'Correos de decisores', 'Ubicación', 'Modalidad', 'Enlace al aviso',
   'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Estado comercial',
   'Viable en remoto', 'Confianza', 'Última vez contactada', 'Detectada', 'Seniority', 'Departamento',
-  'Skills', 'Idiomas', 'Rango salarial', 'Publicada', 'Fuente', 'Pipeline de origen',
+  'Skills', 'Idiomas', 'Rango salarial', 'Publicada', 'Fuente',
   'Puntaje ICP', 'Industria', 'Tamaño', 'Sitio web',
-  'LinkedIn de la empresa', 'Indeed de la empresa', 'Relación', 'Etapa del embudo', 'ID de empresa'
+  'LinkedIn de la empresa', 'Relación', 'Etapa del embudo', 'ID de empresa'
 ];
 
 // Bloque de contexto de la empresa, compartido por los tres archivos. Una empresa todavía sin
@@ -1618,30 +1624,59 @@ function assignmentCells(record) {
   };
 }
 
-function buildCompanyExportRows(companies) {
-  const rows = companies.map(c => {
+// Una fila por contacto de las empresas del recorte. Una empresa a la que todavía no se le
+// encontró a nadie entrega igual su fila, con las celdas de persona vacías: si desapareciera,
+// el archivo no representaría el recorte que la persona filtró y eso se nota tarde.
+function buildProspectExportRows(companies) {
+  const rows = [];
+  companies.forEach(c => {
     const ctx = companyContextCells(c);
-    return Object.assign({}, assignmentCells(c), {
+    const base = Object.assign({}, assignmentCells(c), {
       'Empresa': c.name,
       'Posiciones detectadas': companyPositionTitles(c.id),
       'Puntaje ICP': ctx['Puntaje ICP'],
       'Señales': ctx['Señales'],
       'Industria': ctx['Industria'],
+      'Tamaño': ctx['Tamaño'],
       'Ubicación': ctx['Ubicación'],
       'Sitio web': ctx['Sitio web'],
       'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
-      'Indeed de la empresa': ctx['Indeed de la empresa'],
       'Relación': ctx['Relación'],
       'Etapa del embudo': ctx['Etapa del embudo'],
       'Última vez contactada': ctx['Última vez contactada'],
-      'Detectada': csvDate(c.createdAt),
-      'Investigada': ctx['Investigada'],
-      'Tamaño': ctx['Tamaño'],
-      'ID de empresa': c.id,
-      'Pitch de venta': ctx['Pitch de venta']
+      'ID de empresa': c.id
+    });
+
+    const contactos = getContactsForCompany(c.id);
+    if (!contactos.length) {
+      rows.push(Object.assign({}, base, { 'Detectado': csvDate(c.createdAt) }));
+      return;
+    }
+    contactos.forEach(ct => {
+      rows.push(Object.assign({}, base, {
+        'Nombre': ct.fullName,
+        // El cargo es el texto crudo del perfil; el rol es la lectura del motor contra su
+        // vocabulario, y el nivel se deriva de ese rol. Un contacto anterior al análisis
+        // tiene cargo pero no rol ni nivel, y la fila lo muestra tal cual.
+        'Cargo': ct.position,
+        'Rol': ct.roleCode ? roleCodeLabel(ct.roleCode) : '',
+        'Nivel de decisión': ct.decisionLevel || '',
+        'Correo': ct.email,
+        'Verificación del correo': emailVerificationShort(ct.emailVerification),
+        'Teléfono': ct.phone,
+        'LinkedIn': ct.linkedinUrl,
+        'Detectado': csvDate(ct.createdAt)
+      }));
     });
   });
-  return sortForExport(rows, 'Detectada', 'Empresa');
+  return sortForExport(rows, 'Detectado', 'Empresa');
+}
+
+// La etiqueta corta del estado de verificación, que es lo que decide si el ciclo de envío
+// le escribe. Un contacto anterior a la verificación deja la celda vacía.
+function emailVerificationShort(value) {
+  const v = EMAIL_VERIFICATION[value];
+  return v ? (v.short || 'Verified') : '';
 }
 
 // Los correos de los decisores de una empresa, en una celda lista para pegar en el cliente de
@@ -1699,13 +1734,11 @@ function buildVacancyExportRows(vacancies) {
       'Rango salarial': salaryLabel(v) || v.salary || '',
       'Publicada': csvDate(v.publishedDate),
       'Fuente': portalLabel(v.sourcePortal),
-      'Pipeline de origen': sourceProjectLabel(v.source),
       'Puntaje ICP': ctx['Puntaje ICP'],
       'Industria': ctx['Industria'],
       'Tamaño': ctx['Tamaño'],
       'Sitio web': ctx['Sitio web'],
       'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
-      'Indeed de la empresa': ctx['Indeed de la empresa'],
       'Relación': ctx['Relación'],
       'Etapa del embudo': ctx['Etapa del embudo'],
       'ID de empresa': v.companyId
