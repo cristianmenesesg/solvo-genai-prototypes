@@ -1104,6 +1104,10 @@ function fillDrawer(c) {
   d.querySelector('[data-d-initials]').textContent = initials(c);
   d.querySelector('[data-d-name]').textContent = `${c.first} ${c.last}`;
   d.querySelector('[data-d-headline]').textContent = c.headline;
+  /* La cabecera acompaña el nombre con la ubicación, que es lo que identifica
+     al candidato sin repetir el titular que el primer bloque ya muestra. */
+  const hl = d.querySelector('[data-d-headloc]');
+  if (hl) hl.textContent = (c.locationParts && [c.locationParts.city, c.locationParts.country].filter(Boolean).join(', ')) || c.loc;
   d.querySelector('[data-d-about]').textContent = c.about;
   /* La ubicación estructurada se lee de un vistazo; el texto que devuelve
      LinkedIn queda debajo porque es el que el reclutador reconoce al buscar. */

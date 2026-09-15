@@ -535,3 +535,4 @@
 .lang-item i { font-style: normal; color: var(--text-muted); font-size: var(--font-size-xs); margin-left: 6px; }
 .loc-parsed { display: block; }
 .loc-raw { display: block; font-size: var(--font-size-xs); color: var(--text-muted); }
+.drawer-headline { font-size: var(--font-size-sm); color: var(--text-primary); line-height: 1.5; }
