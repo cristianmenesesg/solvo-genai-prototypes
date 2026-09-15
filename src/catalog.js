@@ -121,6 +121,15 @@ export const products = [
         notas: 'Rediseño completo de la experiencia sobre los datos del motor de prospección reordenado. Vacantes pasa a Open Positions (grilla de cards) y Empresas a Prospects (listado de filas), las dos con la misma barra de búsqueda, filtros activos y popup de criterios. Los detalles comparten armazón: cabecera, tabs y barra lateral con la empresa, sus decisores y la asignación, y su seguimiento une los pasos del motor con los cambios de estado. KPIs abre con el pipeline comercial del usuario y sigue con el embudo de detección, dos tendencias diarias y el embudo de agendamiento. Configuración administra el catálogo de posiciones y la grilla de ciudades del barrido. Arranca en el login; usá el selector de usuario demo para entrar.',
         versions: [{ label: 'App', file: 'index.html' }],
       },
+      {
+        id: 'platform-design-system',
+        nombre: 'Platform Design System',
+        categoria: 'Design system',
+        bundle: 'solvo-platform-design-system',
+        tokens: 'platform',
+        notas: 'Catálogo del sistema de diseño de las apps internas: tokens de color, tipografía, espaciado, forma, densidad y layout, más cada componente con su marcado al lado. Los valores se leen en vivo del contrato, así que el modo oscuro muestra los suyos. Es la fuente para implementar el sistema en Angular; el paquete descargable trae tokens.css, theme.css, styles.css y theme.js.',
+        versions: [{ label: 'Styleguide', file: 'index.html' }],
+      },
     ],
   },
   {

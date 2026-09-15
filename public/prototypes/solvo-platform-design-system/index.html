@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solvo Platform — Design System</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+  <style>
+    /* Cromo del styleguide. Lleva prefijo sg- para que ninguna demo herede
+       estilos de la página: lo que se ve dentro de cada demo es solo el DS. */
+    body { background: var(--bg-app); }
+
+    .sg-top {
+      position: sticky; top: 0; z-index: 30;
+      display: flex; align-items: center; gap: var(--space-4);
+      height: var(--appbar-h); padding: 0 var(--space-6);
+      background: var(--bg-appbar); border-bottom: 1px solid var(--border-default);
+    }
+    .sg-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .sg-brand img { height: 22px; width: auto; }
+    .sg-brand b { font-family: var(--font-heading); font-size: 15px; color: var(--text-strong); font-weight: 600; white-space: nowrap; }
+    .sg-brand span { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .sg-top .header-controls { margin-left: auto; }
+
+    .sg-shell { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: var(--space-8); max-width: 1220px; margin: 0 auto; padding: var(--space-8) var(--space-6) var(--space-24); }
+    .sg-rail { position: sticky; top: calc(var(--appbar-h) + var(--space-8)); align-self: start; max-height: calc(100vh - var(--appbar-h) - var(--space-12)); overflow: auto; }
+    .sg-rail a {
+      display: block; padding: 7px 10px; border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--text-secondary); text-decoration: none; border-left: 2px solid transparent;
+    }
+    .sg-rail a:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .sg-rail a.is-on { background: var(--bg-selected); color: var(--text-selected); border-left-color: var(--color-secondary); font-weight: 500; }
+    .sg-railtitle { font-size: 11px; text-transform: none; letter-spacing: var(--tracking-wide); color: var(--text-muted); padding: 14px 10px 4px; font-weight: 600; }
+
+    .sg-sec { margin-bottom: var(--space-16); scroll-margin-top: calc(var(--appbar-h) + var(--space-6)); }
+    .sg-sec > h2 { font-family: var(--font-heading); font-size: var(--text-2xl); font-weight: 600; color: var(--text-strong); margin-bottom: 6px; }
+    .sg-sec > p.sg-lead { font-size: 14px; color: var(--text-secondary); max-width: 72ch; line-height: var(--leading-relaxed); margin-bottom: var(--space-6); }
+    .sg-sec h3 { font-family: var(--font-heading); font-size: var(--text-base); font-weight: 600; color: var(--text-strong); margin: var(--space-8) 0 var(--space-3); }
+
+    .sg-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--space-4); align-items: start; padding: var(--space-4) 0; border-top: 1px solid var(--border-default); }
+    .sg-item.is-wide { grid-template-columns: minmax(0, 1fr); }
+    .sg-item:first-of-type { border-top: 0; }
+    .sg-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+    .sg-demo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4); background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-card); }
+    .sg-demo.is-block { display: block; }
+    .sg-code { margin: 0; padding: var(--space-3) var(--space-4); background: var(--bg-muted); border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow-x: auto; }
+    .sg-code code { font-family: var(--font-mono); font-size: 12px; line-height: 1.65; color: var(--text-secondary); white-space: pre; }
+
+    /* Tokens */
+    .sg-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+    .sg-sw { border: 1px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-surface); }
+    .sg-sw-chip { height: 46px; }
+    .sg-sw-meta { padding: 7px 9px; }
+    .sg-sw-name { font-family: var(--font-mono); font-size: 11px; color: var(--text-primary); word-break: break-all; }
+    .sg-sw-val { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .sg-tokentable { width: 100%; border-collapse: collapse; }
+    .sg-tokentable td { padding: 7px 10px; border-bottom: 1px solid var(--border-default); vertical-align: middle; font-size: 13px; }
+    .sg-tokentable td:first-child { width: 34px; }
+    .sg-tokentable code { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); }
+    .sg-tokentable .sg-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); text-align: right; }
+    .sg-dot { display: block; width: 22px; height: 22px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); }
+
+    .sg-type-row { display: flex; align-items: baseline; gap: var(--space-4); padding: 10px 0; border-bottom: 1px solid var(--border-default); }
+    .sg-type-row code { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); width: 110px; flex: none; }
+    .sg-scalebar { height: 14px; background: var(--color-secondary-300); border-radius: 3px; }
+
+    .sg-note { font-size: 13px; color: var(--text-secondary); background: var(--bg-muted); border-left: 3px solid var(--color-secondary); border-radius: 0 var(--radius-md) var(--radius-md) 0; padding: 12px 14px; line-height: var(--leading-relaxed); margin: var(--space-4) 0; }
+    .sg-note b { color: var(--text-strong); font-weight: 600; }
+    .sg-sec ul { margin: 0 0 var(--space-4) 18px; }
+    .sg-sec li { font-size: 14px; color: var(--text-secondary); line-height: var(--leading-relaxed); margin-bottom: 6px; max-width: 76ch; }
+    .sg-sec li code, .sg-sec p code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-muted); border-radius: 3px; padding: 1px 5px; color: var(--text-primary); }
+
+    .sg-modalstage .modal { transform: none; max-width: 100%; }
+    .sg-stage { position: relative; min-height: 96px; }
+
+    @media (max-width: 860px) {
+      .sg-shell { grid-template-columns: minmax(0, 1fr); padding: var(--space-6) var(--space-4) var(--space-16); }
+      .sg-rail { position: static; max-height: none; border-bottom: 1px solid var(--border-default); padding-bottom: var(--space-4); display: flex; flex-wrap: wrap; gap: 4px; }
+      .sg-railtitle { display: none; }
+      .sg-item { grid-template-columns: minmax(0, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sg-top">
+  <div class="sg-brand">
+    <img src="logo.png" alt="Solvo Global">
+    <b>Platform Design System</b>
+    <span>· Solvo Global</span>
+  </div>
+  <div class="header-controls" id="header-controls"></div>
+</div>
+
+<div class="sg-shell">
+  <nav class="sg-rail" id="rail"></nav>
+
+  <main>
+    <section class="sg-sec" id="uso">
+      <h2>Cómo se consume</h2>
+      <p class="sg-lead">Este es el sistema de las aplicaciones internas de Solvo: denso, minimalista y con modo oscuro de primera clase. Todo lo que ves acá está construido con las tres hojas que vienen en el paquete, sin frameworks ni dependencias.</p>
+
+      <ul>
+        <li><code>tokens.css</code> — el contrato. Escalas de marca, tipografía, espaciado, radios, sombras, densidad y layout, más el modo oscuro. Es lo único que define valores; nada más en el sistema escribe un color o un tamaño a mano.</li>
+        <li><code>theme.css</code> — los pares de estado (fondo + texto de cada semántico) y los tintes que el modo oscuro necesita. Va después de <code>tokens.css</code>.</li>
+        <li><code>styles.css</code> — los componentes. Solo consume variables; ningún valor literal de color.</li>
+        <li><code>theme.js</code> — fija <code>data-theme</code> en <code>&lt;html&gt;</code> antes del primer pintado y monta el botón de cambio en <code>#header-controls</code>.</li>
+      </ul>
+
+      <div class="sg-item is-wide">
+        <div>
+          <div class="sg-label">Orden de carga</div>
+          <pre class="sg-code"><code>&lt;link rel="stylesheet" href="tokens.css"&gt;
+&lt;link rel="stylesheet" href="theme.css"&gt;
+&lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;script src="theme.js"&gt;&lt;/script&gt;</code></pre>
+        </div>
+      </div>
+
+      <div class="sg-note">
+        <b>Modo oscuro.</b> No hay una hoja alterna: el atributo <code>data-theme="dark"</code> en <code>&lt;html&gt;</code> redefine los semánticos y todo el sistema responde. Un componente que escriba un color literal se rompe en oscuro — esa es la razón de la regla.
+      </div>
+
+      <div class="sg-note">
+        <b>Tipografía.</b> Poppins para títulos (<code>--font-heading</code>) y Wix Madefor Text para cuerpo e interfaz (<code>--font-body</code>). Las dos se cargan desde Google Fonts en el <code>@import</code> de <code>tokens.css</code>; en la app conviene autohospedarlas y quitar el import.
+      </div>
+    </section>
+
+    <section class="sg-sec" id="color">
+      <h2>Color</h2>
+      <p class="sg-lead">Naranja para la acción primaria, teal para la navegación y el estado activo, semánticos solo para estado. El gradiente de marca es acento puntual, nunca decoración. Las escalas no cambian entre modos; lo que cambia son los semánticos de superficie, texto y borde.</p>
+
+      <h3>Escalas de marca</h3>
+      <div id="ramps"></div>
+
+      <h3>Semánticos de estado</h3>
+      <div class="sg-swatches" id="sem"></div>
+
+      <h3>Superficie, texto y borde</h3>
+      <p class="sg-lead" style="margin-bottom:var(--space-3);">Estos son los que voltean con el tema. Cambiá el tema arriba a la derecha y mirá los valores.</p>
+      <table class="sg-tokentable" id="surfaces"></table>
+    </section>
+
+    <section class="sg-sec" id="tipografia">
+      <h2>Tipografía</h2>
+      <p class="sg-lead">Una escala, dos familias. Los títulos van en Poppins 600; el cuerpo y todos los controles, en Wix Madefor Text. En pantallas densas casi todo vive entre <code>--text-xs</code> y <code>--text-lg</code>: las tallas grandes son para cifras de tablero y portadas.</p>
+      <div id="typescale"></div>
+    </section>
+
+    <section class="sg-sec" id="forma">
+      <h2>Espaciado y forma</h2>
+      <p class="sg-lead">La escala de espaciado es de 4px. Los radios son contenidos: 8px en controles, 12px en tarjetas, 16px en paneles y modales; la forma de píldora queda reservada a insignias y avatares.</p>
+
+      <h3>Espaciado</h3>
+      <div id="spacing"></div>
+
+      <h3>Radios</h3>
+      <div class="sg-demo" id="radii"></div>
+
+      <h3>Sombras</h3>
+      <div class="sg-demo" id="shadows"></div>
+
+      <h3>Foco</h3>
+      <div class="sg-item">
+        <div>
+          <div class="sg-label">Todo control enfocable lleva el mismo anillo</div>
+          <div class="sg-demo"><input class="form-input" style="max-width:220px; box-shadow: var(--focus-ring); border-color: var(--border-focus);" value="Campo enfocado" readonly></div>
+        </div>
+        <div>
+          <div class="sg-label">Tokens</div>
+          <pre class="sg-code"><code>--focus-ring:       0 0 0 3px rgba(0,137,171,.18)
+--focus-ring-error: 0 0 0 3px rgba(220,38,38,.15)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg-sec" id="densidad">
+      <h2>Densidad y layout</h2>
+      <p class="sg-lead">Las alturas de control y de fila son tokens, no decisiones por pantalla. Respetarlas es lo que hace que dos listados hechos por personas distintas se vean del mismo producto.</p>
+      <table class="sg-tokentable" id="density"></table>
+    </section>
+
+    <div id="components"></div>
+
+    <section class="sg-sec" id="angular">
+      <h2>Qué construir en Angular</h2>
+      <p class="sg-lead">El paquete se implementa como una librería de estilos más un conjunto de componentes. Lo que no puede cambiar es el contrato: los nombres de las variables y de las clases que ves en esta página.</p>
+
+      <ul>
+        <li><b>Capa de estilos global</b>: <code>tokens.css</code> y <code>theme.css</code> entran tal cual a los estilos globales de la app. No se traducen a variables de Sass ni a un tema de Material: el contrato son las <i>custom properties</i>, porque son las que el modo oscuro redefine en vivo.</li>
+        <li><b>Componentes de presentación</b>: botón, insignia, campo, selector, interruptor, buscador con sugerencias, pestañas, tarjeta, tabla, paginador, modal, notificación, estado vacío, chip de filtro y tarjeta de KPI. Cada uno recibe su variante por entrada y pinta las clases de esta página.</li>
+        <li><b>Modo oscuro</b>: un servicio que escribe <code>data-theme</code> en <code>&lt;html&gt;</code> y lo persiste. Nada más participa.</li>
+        <li><b>Regla de oro</b>: ningún componente declara un color, un radio, una sombra ni un tamaño de fuente literal. Si algo falta, se agrega al contrato de tokens, no al componente.</li>
+      </ul>
+
+      <div class="sg-note">
+        <b>Qué trae el paquete.</b> Además de esta página, el <code>styles.css</code> completo de la plataforma: los componentes de este catálogo y también las composiciones de pantalla (listados, detalles, tablero, configuración). La librería reproduce el catálogo; las composiciones sirven de referencia al armar cada pantalla.
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   Catálogo de componentes. Cada demo se renderiza desde su propio
+   marcado y ese mismo marcado es el que se muestra al lado: lo que se
+   ve y lo que se copia no pueden separarse.
+   ============================================================ */
+
+const ICON_PLUS = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+
+const SECTIONS = [
+  {
+    id: 'botones', title: 'Botones',
+    lead: 'Una acción primaria por vista. Secundario para lo que acompaña, contorno para filtros y modos, fantasma para cancelar y para acciones dentro de una fila.',
+    items: [
+      { label: 'Primario · la acción de la pantalla', html: '<button class="btn btn-primary">Save changes</button>' },
+      { label: 'Secundario', html: '<button class="btn btn-secondary">Export</button>' },
+      { label: 'Contorno, y su estado activo', html: '<button class="btn btn-outline">Filters</button>\n<button class="btn btn-outline active">Filters · 3</button>' },
+      { label: 'Fantasma', html: '<button class="btn btn-ghost">Cancel</button>' },
+      { label: 'Talla compacta, para barras y filas', html: '<button class="btn btn-primary btn-sm">Apply</button>\n<button class="btn btn-ghost btn-sm">Reset</button>' },
+      { label: 'Con ícono', html: '<button class="btn btn-primary">' + ICON_PLUS + ' New position</button>' },
+      { label: 'Solo ícono', html: '<button class="btn-icon" aria-label="Edit">' + ICON_PLUS + '</button>' },
+      { label: 'Deshabilitado', html: '<button class="btn btn-primary" disabled>Export</button>' }
+    ]
+  },
+  {
+    id: 'insignias', title: 'Insignias',
+    lead: 'Cuatro familias, cada una con su trabajo: estado genérico, etapa del embudo, rol de la persona y relación con la empresa. Nunca comunican por color solo — siempre llevan su texto.',
+    items: [
+      { label: 'Estado', html: '<span class="badge badge-success">Verified</span>\n<span class="badge badge-warning">Pending</span>\n<span class="badge badge-danger">Failed</span>\n<span class="badge badge-info">Running</span>\n<span class="badge badge-neutral">Draft</span>' },
+      { label: 'Etapa del embudo de la empresa', html: '<span class="badge-pipeline badge-pipeline-lead">Lead</span>\n<span class="badge-pipeline badge-pipeline-prospecting">Prospecting</span>\n<span class="badge-pipeline badge-pipeline-engaged">Engaged</span>\n<span class="badge-pipeline badge-pipeline-initial">Initial appointment</span>\n<span class="badge-pipeline badge-pipeline-onboarding">Onboarding</span>\n<span class="badge-pipeline badge-pipeline-client">Client</span>\n<span class="badge-pipeline badge-pipeline-lost">Lost</span>' },
+      { label: 'Estado comercial de una posición', html: '<span class="badge-pipeline badge-pipeline-detected">Detected</span>\n<span class="badge-pipeline badge-pipeline-contacted">Contacted</span>\n<span class="badge-pipeline badge-pipeline-proposal">Proposal</span>\n<span class="badge-pipeline badge-pipeline-won">Won</span>\n<span class="badge-pipeline badge-pipeline-lost">Lost</span>' },
+      { label: 'Rol', html: '<span class="badge-role badge-role-administrador">Administrador</span>\n<span class="badge-role badge-role-supervisor">Supervisor</span>\n<span class="badge-role badge-role-coordinador">Coordinador</span>\n<span class="badge-role badge-role-comercial">Comercial</span>\n<span class="badge-role badge-role-sdr">SDR</span>' },
+      { label: 'Relación con la empresa', html: '<span class="badge-type badge-type-prospecto">Prospect</span>\n<span class="badge-type badge-type-client">Client</span>' }
+    ]
+  },
+  {
+    id: 'formularios', title: 'Formularios',
+    lead: 'Altura de control de 36px, etiqueta siempre visible arriba y ayuda debajo. El error se dice con texto, nunca solo con el borde rojo.',
+    items: [
+      { label: 'Campo', html: '<div class="form-group" style="width:260px;">\n  <label class="form-label">Company name</label>\n  <input type="text" class="form-input" placeholder="Search a company…">\n</div>' },
+      { label: 'Selector', html: '<div class="form-group" style="width:260px;">\n  <label class="form-label">Pipeline stage</label>\n  <select class="form-select">\n    <option>Prospecting</option>\n    <option>Engaged</option>\n  </select>\n</div>' },
+      { label: 'Área de texto', wide: true, html: '<div class="form-group" style="max-width:520px;">\n  <label class="form-label">Sales pitch</label>\n  <textarea class="form-textarea" rows="3" placeholder="What Solvo offers this company…"></textarea>\n</div>' },
+      { label: 'Talla compacta, para barras de filtros', html: '<input type="text" class="form-input sm" style="width:200px;" placeholder="Filter…">\n<select class="form-select sm" style="width:150px;"><option>All states</option></select>' },
+      { label: 'Casilla', html: '<label class="form-check">\n  <input type="checkbox" checked>\n  <span>Remote viable</span>\n</label>' },
+      { label: 'Interruptor', html: '<label class="toggle-switch"><input type="checkbox" checked><span class="toggle-slider"></span></label>' },
+      { label: 'Campo con acción', html: '<div class="input-with-action" style="width:280px;">\n  <input type="text" class="form-input" placeholder="Add a search term…">\n  <button class="input-action-btn">Add</button>\n</div>' },
+      { label: 'Entrada de etiquetas', wide: true, html: '<div class="tags-input" style="max-width:520px;">\n  <span class="tag-chip">accounts payable specialist<button class="tag-chip-remove">&times;</button></span>\n  <span class="tag-chip">bookkeeper<button class="tag-chip-remove">&times;</button></span>\n  <input type="text" placeholder="Type a term and press Enter…">\n</div>' }
+    ]
+  },
+  {
+    id: 'navegacion', title: 'Navegación',
+    lead: 'La posición actual siempre está marcada y siempre con más de un recurso: color de fondo, color de texto y una línea. El teal es el color de “dónde estoy”.',
+    items: [
+      { label: 'Ítem de menú lateral', wide: true, html: '<div class="sidebar-nav" style="background:var(--bg-sidebar); border-radius:var(--radius-card); padding:8px; max-width:260px;">\n  <a class="nav-item active" href="#navegacion">Open Positions</a>\n  <a class="nav-item" href="#navegacion">Prospects</a>\n  <a class="nav-item" href="#navegacion">Settings</a>\n</div>' },
+      { label: 'Pestañas', wide: true, html: '<div class="tabs">\n  <button class="tab-btn active">Info</button>\n  <button class="tab-btn">Positions</button>\n  <button class="tab-btn">Follow-up</button>\n</div>' },
+      { label: 'Pestañas de detalle, a todo el ancho', wide: true, html: '<div class="detail-tabs">\n  <button class="detail-tab-btn active">Info</button>\n  <button class="detail-tab-btn">Follow-up</button>\n</div>' },
+      { label: 'Miga de pan', html: '<nav class="breadcrumb">\n  <a class="breadcrumb-item" href="#navegacion">Prospects</a>\n  <span class="breadcrumb-separator">/</span>\n  <span class="breadcrumb-current">TechCorp Solutions</span>\n</nav>' },
+      { label: 'Paginación', wide: true, html: '<div class="op-pagination">\n  <div class="op-pag-info">Showing 1–12 of 48</div>\n  <div class="op-pag-controls">\n    <button class="op-pag-btn" disabled>Previous</button>\n    <button class="op-pag-btn is-current" aria-current="page">1</button>\n    <button class="op-pag-btn">2</button>\n    <span class="op-pag-gap">…</span>\n    <button class="op-pag-btn">4</button>\n    <button class="op-pag-btn">Next</button>\n  </div>\n</div>' }
+    ]
+  },
+  {
+    id: 'contenedores', title: 'Contenedores',
+    lead: 'La tarjeta agrupa; la sección de detalle ordena pares de dato y valor; la tabla es para comparar filas. Ninguna lleva sombra por defecto: la elevación es para lo que flota.',
+    items: [
+      { label: 'Tarjeta', wide: true, html: '<div class="card" style="max-width:520px;">\n  <div class="card-header">\n    <h3 class="card-title">Detection this week</h3>\n    <button class="btn btn-ghost btn-sm">View all</button>\n  </div>\n  <p class="text-secondary text-sm">312 positions detected across 18 states.</p>\n</div>' },
+      { label: 'Sección de detalle', wide: true, html: '<div class="detail-section" style="max-width:520px;">\n  <h3 class="detail-section-title">Job info</h3>\n  <div class="detail-grid">\n    <div class="detail-item">\n      <span class="detail-label">Modality</span>\n      <span class="detail-value">Remote</span>\n    </div>\n    <div class="detail-item">\n      <span class="detail-label">Seniority</span>\n      <span class="detail-value">Senior</span>\n    </div>\n  </div>\n</div>' },
+      { label: 'Tabla', wide: true, html: '<div class="table-container">\n  <table>\n    <thead>\n      <tr><th>Company</th><th>Stage</th><th>Positions</th></tr>\n    </thead>\n    <tbody>\n      <tr><td>TechCorp Solutions</td><td><span class="badge-pipeline badge-pipeline-engaged">Engaged</span></td><td>4</td></tr>\n      <tr><td>CloudBridge Systems</td><td><span class="badge-pipeline badge-pipeline-prospecting">Prospecting</span></td><td>3</td></tr>\n    </tbody>\n  </table>\n</div>' },
+      { label: 'Modal', wide: true, stage: 'sg-modalstage', html: '<div class="modal" style="max-width:520px;">\n  <div class="modal-header">\n    <h3 class="modal-title">New position</h3>\n    <button class="modal-close">&times;</button>\n  </div>\n  <div class="modal-body">\n    <div class="form-group">\n      <label class="form-label">Name</label>\n      <input type="text" class="form-input" placeholder="Accounting &amp; Finance">\n    </div>\n  </div>\n  <div class="modal-footer">\n    <button class="btn btn-secondary">Cancel</button>\n    <button class="btn btn-primary">Save</button>\n  </div>\n</div>' }
+    ]
+  },
+  {
+    id: 'feedback', title: 'Respuesta del sistema',
+    lead: 'Cada final tiene su forma: la notificación confirma lo que pasó, el estado vacío dice qué hacer y el esqueleto ocupa el lugar de lo que está por llegar.',
+    items: [
+      { label: 'Notificaciones', wide: true, html: '<div class="toast toast-success" style="position:static; max-width:420px;">Exported: posiciones_2026-09-15.csv</div>\n<div class="toast toast-error" style="position:static; max-width:420px; margin-top:8px;">The email could not be saved</div>\n<div class="toast toast-info" style="position:static; max-width:420px; margin-top:8px;">No positions match this search</div>' },
+      { label: 'Estado vacío', wide: true, html: '<div class="empty-state">\n  <div class="empty-state-icon">🔍</div>\n  <div class="empty-state-text">No positions match this search</div>\n  <button class="btn btn-secondary btn-sm">Clear search and filters</button>\n</div>' },
+      { label: 'Esqueleto de carga', html: '<div class="skeleton" style="width:220px; height:14px;"></div>\n<div class="skeleton" style="width:160px; height:14px; margin-top:8px;"></div>' }
+    ]
+  },
+  {
+    id: 'filtros', title: 'Búsqueda y filtros',
+    lead: 'El patrón de los listados: la búsqueda pide clic explícito, los filtros rápidos se aplican solos y todo lo que está recortando se ve como chip, con una salida para limpiarlo.',
+    items: [
+      { label: 'Barra de búsqueda', wide: true, html: '<div class="op-searchshell">\n  <div class="op-searchrow">\n    <input type="text" class="op-searchfield" placeholder="Search by title or description…">\n    <button class="op-searchgo">Search</button>\n  </div>\n</div>' },
+      { label: 'Filtros activos', wide: true, html: '<div class="op-filterbar">\n  <span class="op-chip"><span class="op-chip-key">State:</span> Florida <button class="op-chip-x">&times;</button></span>\n  <span class="op-chip"><span class="op-chip-key">Detected:</span> Last 7 days <button class="op-chip-x">&times;</button></span>\n  <button class="op-clearall">Clear all</button>\n</div>' },
+      { label: 'Opciones en columnas, dentro del popup de criterios', wide: true, html: '<div class="op-options">\n  <label class="op-option is-checked"><input type="checkbox" checked> Chief Executive Officer</label>\n  <label class="op-option"><input type="checkbox"> VP of Sales</label>\n  <label class="op-option"><input type="checkbox"> Head of Talent</label>\n  <label class="op-option"><input type="checkbox"> Operations Manager</label>\n</div>' },
+      { label: 'Buscador con sugerencias y selección removible', wide: true, html: '<div class="op-pickbox" style="max-width:360px;">\n  <input type="text" class="form-input sm" placeholder="Search a sales rep…">\n  <div class="op-picked">\n    <span class="op-pickchip">María García <button class="op-chip-x">&times;</button></span>\n  </div>\n</div>' }
+    ]
+  },
+  {
+    id: 'datos', title: 'Datos y gráficos',
+    lead: 'Las cifras se leen antes que sus etiquetas. Para series, el orden de color es fijo: nunca se recicla ni se reasigna cuando un filtro cambia cuántas series quedan.',
+    items: [
+      { label: 'Cifra de tablero', wide: true, html: '<div class="kp-tile" style="max-width:220px;">\n  <div class="kp-tile-label">Positions detected</div>\n  <div class="kp-tile-value">312</div>\n  <div class="kp-tile-step">+18% vs. previous week</div>\n</div>' },
+      { label: 'Historia con etiquetas', wide: true, html: '<table class="history-table">\n  <tbody>\n    <tr>\n      <td>2026-09-12 09:40</td>\n      <td>Lead &rarr; Prospecting</td>\n      <td><span class="history-note">Company researched and enriched.</span>\n        <span class="history-tags"><span class="history-tag">#research</span></span></td>\n    </tr>\n  </tbody>\n</table>' }
+    ]
+  }
+];
+
+/* ---- Render de componentes ------------------------------------------------ */
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+document.getElementById('components').innerHTML = SECTIONS.map(function (sec) {
+  const items = sec.items.map(function (it) {
+    const demo = '<div class="sg-demo ' + (it.stage || '') + (it.wide ? ' is-block' : '') + '">' + it.html + '</div>';
+    return '<div class="sg-item' + (it.wide ? ' is-wide' : '') + '">' +
+      '<div><div class="sg-label">' + it.label + '</div>' + demo + '</div>' +
+      '<div><div class="sg-label">Marcado</div><pre class="sg-code"><code>' + esc(it.html) + '</code></pre></div>' +
+    '</div>';
+  }).join('');
+  return '<section class="sg-sec" id="' + sec.id + '">' +
+    '<h2>' + sec.title + '</h2><p class="sg-lead">' + sec.lead + '</p>' + items +
+  '</section>';
+}).join('');
+
+/* ---- Rail ----------------------------------------------------------------- */
+const RAIL = [
+  { t: 'Fundamentos' },
+  { id: 'uso', n: 'Cómo se consume' },
+  { id: 'color', n: 'Color' },
+  { id: 'tipografia', n: 'Tipografía' },
+  { id: 'forma', n: 'Espaciado y forma' },
+  { id: 'densidad', n: 'Densidad y layout' },
+  { t: 'Componentes' }
+].concat(SECTIONS.map(function (s) { return { id: s.id, n: s.title }; }))
+ .concat([{ t: 'Implementación' }, { id: 'angular', n: 'Qué construir en Angular' }]);
+
+document.getElementById('rail').innerHTML = RAIL.map(function (r) {
+  return r.t ? '<div class="sg-railtitle">' + r.t + '</div>'
+             : '<a href="#' + r.id + '" data-sec="' + r.id + '">' + r.n + '</a>';
+}).join('');
+
+const links = Array.prototype.slice.call(document.querySelectorAll('#rail a'));
+const spy = new IntersectionObserver(function (entries) {
+  entries.forEach(function (e) {
+    if (!e.isIntersecting) return;
+    links.forEach(function (a) { a.classList.toggle('is-on', a.dataset.sec === e.target.id); });
+  });
+}, { rootMargin: '-80px 0px -70% 0px' });
+document.querySelectorAll('.sg-sec[id]').forEach(function (s) { spy.observe(s); });
+
+/* ---- Tokens en vivo -------------------------------------------------------- */
+// Los valores se leen del documento, no de una tabla aparte: si el contrato
+// cambia, esta página cambia con él — y al voltear el tema, también.
+function val(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+const RAMPS = [
+  { name: 'Primary — acción', vars: ['--color-primary-50', '--color-primary-100', '--color-primary-200', '--color-primary-300', '--color-primary-400', '--color-primary', '--color-primary-600', '--color-primary-700', '--color-primary-800', '--color-primary-900'] },
+  { name: 'Secondary — navegación y estado activo', vars: ['--color-secondary-50', '--color-secondary-100', '--color-secondary-200', '--color-secondary-300', '--color-secondary-400', '--color-secondary', '--color-secondary-600', '--color-secondary-700', '--color-secondary-800', '--color-secondary-900'] },
+  { name: 'Neutrales de marca', vars: ['--color-gray-50', '--color-gray-100', '--color-gray-200', '--color-gray-300', '--color-gray-400', '--color-gray-500', '--color-gray-600', '--color-gray-700', '--color-gray-800', '--color-gray-900'] },
+  { name: 'Soporte', vars: ['--color-cyan-light', '--color-cyan', '--color-cyan-dark', '--color-amber-light', '--color-amber', '--color-amber-hover'] }
+];
+
+const SEMANTIC = ['--color-success', '--color-warning', '--color-error', '--color-info'];
+
+const SURFACES = [
+  '--bg-app', '--bg-surface', '--bg-surface-raised', '--bg-muted', '--bg-sidebar', '--bg-appbar',
+  '--bg-hover', '--bg-selected', '--text-primary', '--text-strong', '--text-secondary', '--text-muted',
+  '--text-link', '--border-default', '--border-strong', '--border-focus'
+];
+
+const DENSITY = ['--control-h-sm', '--control-h', '--control-h-lg', '--table-row-h', '--table-row-h-dense', '--sidebar-w', '--sidebar-w-collapsed', '--appbar-h', '--content-max'];
+
+const TYPE = ['--text-xs', '--text-sm', '--text-base', '--text-lg', '--text-xl', '--text-2xl', '--text-3xl', '--text-4xl'];
+const SPACES = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-8', '--space-10', '--space-12', '--space-16'];
+const RADII = ['--radius-sm', '--radius-md', '--radius-lg', '--radius-xl', '--radius-full'];
+const SHADOWS = ['--shadow-xs', '--shadow-sm', '--shadow-md', '--shadow-lg', '--shadow-xl'];
+
+function swatch(v) {
+  return '<div class="sg-sw"><div class="sg-sw-chip" style="background:var(' + v + ')"></div>' +
+    '<div class="sg-sw-meta"><div class="sg-sw-name">' + v + '</div><div class="sg-sw-val" data-val="' + v + '"></div></div></div>';
+}
+
+function paintTokens() {
+  document.getElementById('ramps').innerHTML = RAMPS.map(function (r) {
+    return '<h3>' + r.name + '</h3><div class="sg-swatches">' + r.vars.map(swatch).join('') + '</div>';
+  }).join('');
+
+  document.getElementById('sem').innerHTML = SEMANTIC.map(swatch).join('');
+
+  document.getElementById('surfaces').innerHTML = SURFACES.map(function (v) {
+    return '<tr><td><span class="sg-dot" style="background:var(' + v + ')"></span></td>' +
+      '<td><code>' + v + '</code></td><td class="sg-val" data-val="' + v + '"></td></tr>';
+  }).join('');
+
+  document.getElementById('density').innerHTML = DENSITY.map(function (v) {
+    return '<tr><td></td><td><code>' + v + '</code></td><td class="sg-val" data-val="' + v + '"></td></tr>';
+  }).join('');
+
+  document.getElementById('typescale').innerHTML = TYPE.map(function (v) {
+    return '<div class="sg-type-row"><code>' + v + '</code>' +
+      '<span style="font-family:var(--font-heading); font-size:var(' + v + '); font-weight:600; color:var(--text-strong);">Open Positions</span>' +
+      '<span style="font-family:var(--font-body); font-size:var(' + v + '); color:var(--text-secondary);">Wix Madefor Text</span>' +
+      '<span class="sg-val" data-val="' + v + '" style="margin-left:auto;"></span></div>';
+  }).join('');
+
+  document.getElementById('spacing').innerHTML = SPACES.map(function (v) {
+    return '<div class="sg-type-row"><code>' + v + '</code>' +
+      '<span class="sg-scalebar" style="width:var(' + v + ')"></span>' +
+      '<span class="sg-val" data-val="' + v + '" style="margin-left:auto;"></span></div>';
+  }).join('');
+
+  document.getElementById('radii').innerHTML = RADII.map(function (v) {
+    return '<div style="text-align:center;"><div style="width:64px; height:44px; background:var(--bg-muted); border:1px solid var(--border-strong); border-radius:var(' + v + ');"></div>' +
+      '<div class="sg-sw-name" style="margin-top:6px;">' + v + '</div></div>';
+  }).join('');
+
+  document.getElementById('shadows').innerHTML = SHADOWS.map(function (v) {
+    return '<div style="text-align:center;"><div style="width:72px; height:48px; background:var(--bg-surface); border-radius:var(--radius-card); box-shadow:var(' + v + ');"></div>' +
+      '<div class="sg-sw-name" style="margin-top:10px;">' + v + '</div></div>';
+  }).join('');
+
+  refreshValues();
+}
+
+function refreshValues() {
+  document.querySelectorAll('[data-val]').forEach(function (el) {
+    el.textContent = val(el.dataset.val);
+  });
+}
+
+paintTokens();
+new MutationObserver(refreshValues).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+
+</body>
+</html>
