@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prospect - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="breadcrumb">
+          <a href="prospects.html" class="breadcrumb-item">Prospects</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current" id="breadcrumbName"></span>
+        </div>
+
+        <div class="vd-layout">
+          <div class="vd-main">
+            <div class="vd-head" id="cdHead"></div>
+
+            <div class="detail-tabs">
+              <button class="detail-tab-btn active" onclick="switchTab('info', this)">Info</button>
+              <button class="detail-tab-btn" onclick="switchTab('positions', this)">Positions</button>
+              <button class="detail-tab-btn" onclick="switchTab('followup', this)">Follow-up</button>
+            </div>
+
+            <div id="tab-info" class="detail-tab-content active">
+              <div class="vd-spec" id="cdSpec"></div>
+
+              <section class="vd-block">
+                <div class="vd-blockhead">
+                  <h3 class="vd-blocktitle">Research</h3>
+                  <button class="op-actionbtn" onclick="openEditResearchModal()">Edit research</button>
+                </div>
+                <div id="cdResearch"></div>
+              </section>
+
+              <section class="vd-block">
+                <h3 class="vd-blocktitle">Analysis</h3>
+                <div id="cdAnalysis"></div>
+              </section>
+            </div>
+
+            <div id="tab-positions" class="detail-tab-content">
+              <section class="vd-block" style="margin-top:0;">
+                <div class="vd-blockhead">
+                  <h3 class="vd-blocktitle" id="cdPositionsTitle">Positions</h3>
+                  <button class="op-actionbtn" onclick="scrapeThisCompany()">Scrape positions</button>
+                </div>
+                <div id="cdPositions"></div>
+              </section>
+            </div>
+
+            <div id="tab-followup" class="detail-tab-content">
+              <section class="vd-block" style="margin-top:0;">
+                <div class="vd-blockhead">
+                  <h3 class="vd-blocktitle">Activity</h3>
+                  <button class="op-actionbtn" onclick="openStateChangeModal()">Change stage</button>
+                </div>
+                <div class="vd-timeline" id="cdTimeline"></div>
+              </section>
+            </div>
+          </div>
+
+          <aside class="vd-side">
+            <section class="vd-card" id="cdDecisionMakers"></section>
+            <section class="vd-card vd-card-plain">
+              <div id="assignmentSection"></div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Company</h2>
+        <button class="modal-close" onclick="closeEditModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="editCompanyForm">
+          <!-- Section 1: Basic Information -->
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Name *</label>
+              <input type="text" class="form-input" id="editName" value="TechCorp Solutions" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Industry</label>
+              <!-- Poblado con el catálogo estándar; admite quedar vacío (empresa sin clasificar) -->
+              <select class="form-select" id="editIndustry"></select>
+            </div>
+
+            <!-- `location` es "City, ST" y `state_code` va aparte: dos campos, no un texto libre. -->
+            <div class="form-row">
+              <div class="form-group" style="flex:2;">
+                <label class="form-label">City *</label>
+                <input type="text" class="form-input" id="editCity" placeholder="E.g.: Miami" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">State *</label>
+                <select class="form-select" id="editState"></select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <div class="input-with-action">
+                <input type="url" class="form-input" id="editWebsite" value="https://techcorp.com" placeholder="https://...">
+                <button type="button" class="btn btn-ghost btn-sm input-action-btn" id="editInvestigateBtn" onclick="investigateFromEdit()" title="Run Research Pipeline (Apollo + Bright Data + AI) — sends name, location and website">
+                  &#128269; Investigate
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Company Details -->
+          <div class="form-section">
+            <h4 class="form-section-title">Company Details</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Number of Employees</label>
+                <input type="number" class="form-input" id="editEmployees" value="750" min="1" placeholder="E.g.: 500">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Annual Revenue (USD)</label>
+                <input type="number" class="form-input" id="editRevenue" value="" min="0" placeholder="Optional">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Year Founded</label>
+              <input type="number" class="form-input" id="editYearFounded" value="2010" min="1800" max="2026" placeholder="E.g.: 2010">
+            </div>
+          </div>
+
+          <!-- Section 3: Classification -->
+          <div class="form-section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+            <h4 class="form-section-title">Classification</h4>
+            <div class="form-group">
+              <label class="form-label">Relationship Type</label>
+              <select class="form-select" id="editRelationType">
+                <option value="prospect">Prospect</option>
+                <option value="client">Client</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              <strong>Note:</strong> Pipeline state is not editable from here. Use the "Change State" button to modify it with a follow-up note.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCompany()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Research Modal -->
+  <div class="modal-overlay" id="editResearchModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Edit Research</h2>
+        <button class="modal-close" onclick="closeEditResearchModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="editResearchForm">
+          <div class="form-group">
+            <label class="form-label">Value Proposition</label>
+            <textarea class="form-textarea" id="editValueProp" maxlength="2000">Innovative technology solutions that transform the way companies operate, increasing operational efficiency by an average of 40%.</textarea>
+            <div class="char-count"><span id="valuePropCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mission</label>
+            <textarea class="form-textarea" id="editMission" maxlength="2000">Empowering organizations with cutting-edge technology to drive their digital transformation.</textarea>
+            <div class="char-count"><span id="missionCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Vision</label>
+            <textarea class="form-textarea" id="editVision" maxlength="2000">To be the global leader in enterprise technology solutions by 2030.</textarea>
+            <div class="char-count"><span id="visionCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Sales Pitch</label>
+            <textarea class="form-textarea" id="editSalesPitch" maxlength="2000">TechCorp offers customized solutions with demonstrable ROI within 6 months. Their team of 500+ engineers guarantees 24/7 support and continuous updates.</textarea>
+            <div class="char-count"><span id="salesPitchCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Strengths &amp; Differentiators</label>
+            <textarea class="form-textarea" id="editStrengths" maxlength="2000">Industry-leading technology with 99.9% uptime SLA. Proprietary AI platform that reduces implementation time by 60%. Strong partnerships with AWS and Google Cloud.</textarea>
+            <div class="char-count"><span id="strengthsCount">0</span>/2000</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Company History</label>
+            <textarea class="form-textarea" id="editHistory" maxlength="2000">Founded in 2010 in Miami by former Google engineers. Started as a consulting firm, pivoted to SaaS in 2015. Series A ($5M) in 2017, Series B ($25M) in 2020.</textarea>
+            <div class="char-count"><span id="historyCount">0</span>/2000</div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditResearchModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveResearch()">Save Research</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Change Modal -->
+  <div class="modal-overlay" id="stateChangeModal">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Pipeline State</h2>
+        <button class="modal-close" onclick="closeStateChangeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="state-change-current">
+          <span class="text-muted">Current state:</span>
+          <span class="pr-stage pr-stage-success" id="currentStateBadge">Onboarding started</span>
+        </div>
+
+        <form id="stateChangeForm">
+          <div class="form-group">
+            <label class="form-label">New State *</label>
+            <select class="form-select" id="newState" required>
+              <option value="">Select state...</option>
+              <option value="lead">Lead</option>
+              <option value="prospecting">Prospecting</option>
+              <option value="engaged">Engaged</option>
+              <option value="initial appointment held">Initial Appointment Held</option>
+              <option value="onboarding started">Onboarding Started</option>
+              <option value="client">Client</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Note * <span class="text-muted">(minimum 10 characters)</span></label>
+            <textarea class="form-textarea" id="stateChangeNote" placeholder="Describe the reason for the state change..." minlength="10" maxlength="500" required></textarea>
+            <div class="char-count"><span id="noteCount">0</span>/500</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags <span class="text-muted">(optional)</span></label>
+            <div class="tags-input" id="tagsInput">
+              <input type="text" placeholder="Type and press Enter..." id="tagInputField">
+            </div>
+            <p class="text-muted text-xs" style="margin-top: 4px;">E.g.: #followup, #meeting, #proposal</p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStateChangeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStateChange()">Confirm Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Contact Modal -->
+  <div class="modal-overlay" id="addContactModal">
+    <div class="modal" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="contactModalTitle">Add contact</h2>
+        <button class="modal-close" onclick="closeAddContactModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addContactForm">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" class="form-input" id="newContactName" placeholder="E.g.: John Smith" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Position</label>
+            <input type="text" class="form-input" id="newContactTitle" placeholder="E.g.: HR Director">
+          </div>
+
+          <div class="form-row">
+            <!-- Mismo vocabulario que guarda el motor (CONTACT_DEPARTMENTS y
+                 CONTACT_SENIORITIES), para que lo cargado a mano sea comparable con lo suyo. -->
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-select" id="newContactDepartment"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Seniority</label>
+              <select class="form-select" id="newContactSeniority"></select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="newContactEmail" placeholder="email@company.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-input" id="newContactPhone" placeholder="+1 (555) 123-4567">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">LinkedIn URL</label>
+            <input type="text" class="form-input" id="newContactLinkedin" placeholder="linkedin.com/in/username">
+          </div>
+
+          <!-- La verificación del correo se carga a mano igual que el resto: el motor la escribe
+               cuando él descubre al contacto, y acá la pone quien lo carga. Es lo que decide si el
+               ciclo de envío le escribe. -->
+          <div class="form-group">
+            <label class="form-label">Email verification</label>
+            <select class="form-select" id="newContactVerification"></select>
+            <p class="text-muted text-xs" style="margin-top:6px;">
+              The send cycle only writes to verified and catch-all addresses. The decision level comes
+              from the job title, with the same rules the engine uses.
+            </p>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAddContactModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNewContact()">Add Contact</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Prospect — detalle de una empresa (?id= y ?tab=).
+       Datos: MOCK_COMPANIES por id (GET /api/companies/:id + company_research),
+       vacantes por company_id (GET /api/companies/:id/vacancies), contactos
+       (company_contacts), historial getCompanyActivity(id)
+       (GET /api/companies/:id/history), asignación (staff_company_assignment).
+       Secciones: cabecera (relación, etapa, excluida, firmografía, enlaces) ·
+       Info: firmografía (company), Research (company_research: propuesta de
+       valor y fortalezas las escribe el motor, el resto una persona) y Analysis
+       (icp_score, lead_signals, exclusion_reason, lead_summary, repeated_posting
+       y size_fit calculados como en HUPEA-1.7, decisores, last_contacted_at) ·
+       Positions: vacantes con posición, modalidad, salario, portal, viabilidad y
+       estado · Follow-up: states_history · barra lateral: decisores y asignación.
+       Acciones: Edit company (PUT /api/companies/:id); Edit research
+       (PUT /api/companies/:id/research; lo editado a mano queda hasta que el motor lo
+       sobreescriba en la investigación siguiente); Change stage
+       (POST /api/companies/:id/state); Scrape positions (ODO con la empresa
+       preseleccionada); Run research, que encola la empresa en el motor
+       (POST /api/companies/:id/research/request);
+       Delete (borrado lógico); contactos Add / Edit / Delete
+       (POST · PUT /api/companies/:companyId/contacts), con el rol derivado del cargo
+       en el cliente y la verificación vacía; Manage assignment.
+       ------------------------------------------------------------------------ */
+    /* ========================================================================
+       Detalle del prospecto.
+       Mismo patrón que el detalle de la posición: la empresa y lo que el motor
+       dedujo de ella en la columna principal, y al costado a quién escribirle y
+       quién la trabaja.
+       ======================================================================== */
+
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('companies');
+    renderHeaderControls();
+
+    const params = new URLSearchParams(window.location.search);
+    const companyId = params.get('id') || 'comp-001';
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === companyId; }) ||
+      MOCK_COMPANIES.find(function (c) { return c.id === 'comp-001'; });
+
+    let coData = {
+      comercialId: company.comercialId, sdrId: company.sdrId, coordinatorId: company.coordinatorId
+    };
+
+    const STATUS_LABELS = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
+
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      return parseStamp(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    function formatWhen(iso) {
+      const d = parseStamp(iso);
+      return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) +
+        ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    }
+
+    const ICON = {
+      external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>',
+      pin: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>',
+      building: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
+      mail: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>',
+      phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"></path></svg>',
+      check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>',
+      cross: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>',
+      edit: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg>',
+      trash: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
+    };
+
+    const STAGE_TONE = {
+      lead: 'neutral', prospecting: 'neutral', engaged: 'info', 'initial appointment held': 'info',
+      'onboarding started': 'success', client: 'success', lost: 'error'
+    };
+
+    function specRow(label, value, title, wide) {
+      if (!value) return '';
+      return '<div class="vd-specrow' + (wide ? ' is-wide' : '') + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' +
+        '<dt>' + esc(label) + '</dt><dd>' + value + '</dd></div>';
+    }
+
+    /* ---- Cabecera ----------------------------------------------------------- */
+    function renderHead() {
+      const pos = companyOpenPositions(company.id);
+      let tags = '';
+      tags += '<span class="op-tag">' + (company.industryCode ? esc(getIndustryLabel(company.industryCode)) : '<em>Unclassified</em>') + '</span>';
+      if (company.sizeEmployees) tags += '<span class="op-tag">' + Number(company.sizeEmployees).toLocaleString('en-US') + ' employees</span>';
+      if (revenueLabel(company)) tags += '<span class="op-tag">' + esc(revenueLabel(company)) + ' revenue</span>';
+      if (company.yearFounded) tags += '<span class="op-tag">Founded ' + company.yearFounded + '</span>';
+      tags += '<span class="op-tag op-tag-position">' + pos.total + ' position' + (pos.total === 1 ? '' : 's') +
+        ' · ' + pos.viable + ' remote viable</span>';
+
+      const links = [
+        company.website ? { href: company.website, label: 'Website' } : null,
+        company.linkedinUrl ? { href: company.linkedinUrl, label: 'LinkedIn' } : null,
+        company.indeedUrl ? { href: company.indeedUrl, label: 'Indeed' } : null
+      ].filter(Boolean);
+
+      document.getElementById('cdHead').innerHTML =
+        '<div class="vd-metaline">' +
+          '<span>' + esc(agoPhrase('Detected', company.createdAt)) + '</span>' +
+          '<span class="op-cbadge">' + esc(RELATIONSHIP_LABELS[company.type] || company.type) + '</span>' +
+          '<span class="pr-stage pr-stage-' + (STAGE_TONE[company.pipelineStage] || 'neutral') + '" id="stageBadge">' +
+            esc(pipelineLabel(company.pipelineStage)) + '</span>' +
+          (company.isExcluded
+            ? '<span class="op-cbadge op-cbadge-excluded" title="Disqualified at qualification: ' +
+              esc(leadSignalLabel(company.exclusionReason)) + '. It never enters the contact or send cycles.">Excluded</span>'
+            : '') +
+        '</div>' +
+        '<h2 class="vd-title" id="companyName">' + esc(company.name) + '</h2>' +
+        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(company.location) + '</span></div>' +
+        '<div class="vd-tags">' + tags + '</div>' +
+        (links.length
+          ? '<div class="vd-links" style="margin-top:var(--space-3);padding-top:0;border-top:0;">' +
+            links.map(function (l) {
+              return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' + esc(l.label) + ICON.external + '</a>';
+            }).join('') + '</div>'
+          : '') +
+        '<div class="vd-actions">' +
+          '<button type="button" class="op-btn-apply" onclick="openEditModal()">Edit company</button>' +
+          '<button type="button" class="op-actionbtn" onclick="openStateChangeModal()">Change stage</button>' +
+          '<button type="button" class="op-actionbtn" onclick="scrapeThisCompany()">Scrape positions</button>' +
+          // Una sola acción: encola la empresa en el motor, que la enriquece y la califica. Sirve
+          // tanto la primera vez como para rehacerla sobre lo que ya hay.
+          '<button type="button" class="op-actionbtn" onclick="openResearchRequestModal()">Run research</button>' +
+          (canDelete() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteCompany()">Delete</button>' : '') +
+        '</div>';
+    }
+
+    /* ---- Info --------------------------------------------------------------- */
+    function renderSpec() {
+      // Una sola sección: la firmografía que consolidó el enriquecimiento, repartida
+      // en dos columnas. La relación y la etapa ya viven como badges en la cabecera,
+      // así que repetirlas acá sería decir lo mismo dos veces.
+      const rows =
+        specRow('Industry', company.industryCode
+          ? esc(getIndustryLabel(company.industryCode)) +
+            (company.industry && company.industry.toLowerCase() !== getIndustryLabel(company.industryCode).toLowerCase()
+              ? ' <span class="vd-raw" title="The label the source used before it was mapped to the catalog">' + esc(company.industry) + '</span>'
+              : '')
+          : '<em>Unclassified</em>', 'Mapped to the standard catalog by the enrichment') +
+        specRow('Employees', company.sizeEmployees
+          ? Number(company.sizeEmployees).toLocaleString('en-US')
+          : '<em>Unknown</em>', 'A range from the source is stored as its midpoint') +
+        specRow('Revenue', revenueLabel(company) ? esc(revenueLabel(company)) + ' / year' : '<em>Unknown</em>') +
+        specRow('Founded', company.yearFounded ? String(company.yearFounded) : '<em>Unknown</em>') +
+        specRow('Location', esc(company.location) + ' · ' + esc(stateName(company.stateCode))) +
+        specRow('Website', company.website
+          ? '<a href="' + esc(company.website) + '" target="_blank" rel="noopener">' + esc(String(company.website).replace(/^https?:\/\//, '')) + '</a>'
+          : '<em>Unknown</em>') +
+        specRow('Detected', esc(formatDate(company.createdAt)), 'The day a sweep first found one of its postings') +
+        specRow('On-demand scraping', company.lastScrapedAt
+          ? 'Last run ' + esc(agoLabel(company.lastScrapedAt)) + ' ago'
+          : '<em>Never run</em>');
+
+      document.getElementById('cdSpec').innerHTML =
+        '<section class="vd-speccol" style="grid-column:1/-1;"><h3 class="vd-blocktitle">Company</h3>' +
+        '<dl class="cd-twocol">' + rows + '</dl></section>';
+    }
+
+    /* ---- Research ------------------------------------------------------------ */
+    // `public.company_research`. El motor nuevo escribe la propuesta de valor y las
+    // fortalezas; el discurso de venta, la misión, la visión y la historia los dejó el
+    // pipeline anterior y hoy solo los llena una persona, así que se muestran cuando
+    // tienen contenido y no como campos vacíos permanentes.
+    function prose(label, text) {
+      return '<section class="cd-prose"><h4 class="cd-proselabel">' + esc(label) + '</h4>' +
+        (text ? '<p>' + esc(text) + '</p>' : '<p class="cd-proseempty">Not filled in yet.</p>') + '</section>';
+    }
+
+    function renderResearch() {
+      const el = document.getElementById('cdResearch');
+      if (!company.isResearched) {
+        el.innerHTML = '<p class="vd-empty">This company has not been researched. The engine researches it when one of its postings is detected, or you can run it now from the header.</p>';
+        return;
+      }
+      if (!company.valueProposition && !company.salesPitch) {
+        el.innerHTML = '<p class="vd-empty">The research ran but no source returned the company, so nothing was stored. It is not qualified either.</p>';
+        return;
+      }
+      // Los seis campos de la investigación, todos editables desde el mismo popup.
+      el.innerHTML =
+        prose('What the company does', company.valueProposition) +
+        prose('Strengths and differentiators', company.strengthsDifferentiators) +
+        prose('Sales pitch', company.salesPitch) +
+        prose('Mission', company.mission) +
+        prose('Vision', company.vision) +
+        prose('Company history', company.companyHistory) +
+        (company.lastResearchAt
+          ? '<p class="cd-researchfoot">Last research ' + esc(formatDate(company.lastResearchAt)) + '</p>'
+          : '');
+    }
+
+    /* ---- Analysis ------------------------------------------------------------- */
+    // Lo que escribió la calificación, y los dos hechos que calculó antes de llamar al
+    // modelo: si la empresa repite posición y si su tamaño cae en el tramo objetivo.
+    function renderAnalysis() {
+      const el = document.getElementById('cdAnalysis');
+      if (!company.qualifiedAt) {
+        el.innerHTML = '<p class="vd-empty">This company has not been qualified, so it has no ICP score, no signals and no lead summary. Qualification runs right after the research.</p>';
+        return;
+      }
+
+      const tier = icpTier(company);
+      const score = company.isExcluded
+        ? '<span class="vd-flag vd-flag-no">' + ICON.cross + 'Disqualified</span>'
+        : '<span class="vd-flag ' + (tier === 'strong' ? 'vd-flag-ok' : tier === 'weak' ? 'vd-flag-none' : '') + '">' +
+          Math.round(company.icpScore) + ' / 100</span>' +
+          '<span class="cd-tier">' + (tier === 'strong' ? 'Strong fit' : tier === 'moderate' ? 'Moderate fit' : 'Weak fit') + '</span>';
+
+      const signals = (company.leadSignals || []);
+      const signalRow = signals.length
+        ? signals.map(function (s) {
+            const dis = (LEAD_SIGNALS.find(function (x) { return x.code === s; }) || {}).disqualifying;
+            return '<span class="op-cbadge' + (dis ? ' op-cbadge-excluded' : ' op-cbadge-signal') + '">' +
+              esc(leadSignalLabel(s)) + '</span>';
+          }).join('')
+        : '<em>None</em>';
+
+      const fit = sizeFit(company);
+      const fitLabel = fit === 'true' ? 'In range (20–300)' : fit === 'false' ? 'Out of range' : 'Unknown';
+
+      el.innerHTML =
+        '<dl class="cd-analysis">' +
+          specRow('ICP score', score, 'Scored 0 to 100 at qualification; 0 when disqualified') +
+          specRow('Signals', signalRow, 'Only signals the qualification could support with the input') +
+          (company.isExcluded
+            ? specRow('Disqualified by', '<strong>' + esc(leadSignalLabel(company.exclusionReason)) + '</strong>. It never enters the contact or send cycles.', null, true)
+            : '') +
+          specRow('Lead summary', esc(company.leadSummary), null, true) +
+          specRow('Repeated posting', repeatedPosting(company.id)
+            ? '<span class="vd-flag vd-flag-ok">' + ICON.check + 'Yes</span>'
+            : '<span class="vd-flag vd-flag-none">No</span>',
+            'Computed before scoring: two or more detected positions share the same catalog position') +
+          specRow('Size fit', '<span class="vd-flag ' + (fit === 'true' ? 'vd-flag-ok' : 'vd-flag-none') + '">' + esc(fitLabel) + '</span>',
+            'Unknown is not the same as out of range: a company whose size could not be found is not penalised as the wrong size') +
+          // Lo que la calificación produjo aguas abajo: a quién se le puede escribir
+          // y si el envío ya lo hizo.
+          specRow('Decision makers', countDecisionMakers(company.id)
+            ? String(countDecisionMakers(company.id)) + ' on record' +
+              (getUnanalyzedContacts(company.id).length
+                ? ' · ' + getUnanalyzedContacts(company.id).length + ' more contact(s) without a role code'
+                : '')
+            : (company.isExcluded
+              ? '<em>Never searched — the company is excluded</em>'
+              : company.contactsSearchedAt
+                ? '<em>None qualified</em>'
+                : '<em>Not searched yet</em>'),
+            'The contact search runs on companies that clear the qualification threshold, in score order; a company above it can still be waiting in the queue') +
+          specRow('Last outreach', company.lastContactedAt
+            ? esc(formatDate(company.lastContactedAt))
+            : '<em>Not emailed yet</em>',
+            'Written only by the cold outreach send. A company with a date never enters the send cycle again.') +
+        '</dl>';
+    }
+
+    /* ---- Positions ------------------------------------------------------------- */
+    function renderPositions() {
+      const rows = companyVacancies(company.id).slice().sort(function (a, b) {
+        return parseStamp(b.detectedAtTs || b.detectedAt) - parseStamp(a.detectedAtTs || a.detectedAt);
+      });
+      const pos = companyOpenPositions(company.id);
+      document.getElementById('cdPositionsTitle').textContent =
+        pos.total + ' position' + (pos.total === 1 ? '' : 's') + ' · ' + pos.viable + ' remote viable';
+
+      const el = document.getElementById('cdPositions');
+      if (!rows.length) {
+        el.innerHTML = '<p class="vd-empty">No positions detected for this company yet.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(function (v) {
+        return '<article class="cd-pos">' +
+          '<div class="cd-pos-main">' +
+            '<a class="cd-pos-title" href="vacancy-detail.html?id=' + esc(v.id) + '">' + esc(v.title) + '</a>' +
+            '<div class="cd-pos-tags">' +
+              (v.positionId ? '<span class="op-tag op-tag-position">' + esc(getPositionName(v.positionId)) + '</span>' : '') +
+              '<span class="op-tag">' + esc(modalityLabel(v.workModality)) + '</span>' +
+              (salaryLabel(v) ? '<span class="op-tag op-tag-salary">' + esc(salaryLabel(v)) + '</span>' : '') +
+              '<span class="op-portal op-portal-' + esc(String(v.sourcePortal || '').toLowerCase()) + '">' + esc(portalLabel(v.sourcePortal)) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="cd-pos-side">' +
+            (v.remoteViable === false
+              ? '<span class="vd-flag vd-flag-no" title="' + esc((v.aiReasons || [])[0] || '') + '">' + ICON.cross + 'Not viable</span>'
+              : '<span class="vd-flag vd-flag-ok">' + ICON.check + 'Viable</span>') +
+            '<span class="badge-pipeline badge-pipeline-' + esc(v.status) + '">' + esc(STATUS_LABELS[v.status] || v.status) + '</span>' +
+            '<span class="op-age" title="Detected ' + esc(v.detectedAt) + '">' + esc(detectedAge(v)) + '</span>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    /* ---- Follow-up -------------------------------------------------------------- */
+
+
+    function renderTimeline() {
+      const rows = getCompanyActivity(company.id);
+      const el = document.getElementById('cdTimeline');
+      if (!rows.length) {
+        el.innerHTML = '<p class="vd-empty">Nothing has happened to this company yet.</p>';
+        return;
+      }
+      el.innerHTML = rows.map(renderActivityEntry).join('');
+    }
+
+    // Una entrada de la actividad: el paso de la empresa de una etapa del embudo a otra, con
+    // quién lo hizo, su nota y sus etiquetas.
+    function renderActivityEntry(a) {
+      function stageBadge(v) {
+        return '<span class="pr-stage pr-stage-' + (STAGE_TONE[v] || 'neutral') + '">' + esc(pipelineLabel(v)) + '</span>';
+      }
+
+      const who = a.by === 'system' ? '<span class="vd-tl-system">System</span>' : esc(a.by);
+      const meta = [who, esc(formatWhen(a.at))].join('<span class="vd-dot">·</span>');
+
+      const headline = a.statusFrom
+        ? stageBadge(a.statusFrom) + '<span class="vd-tl-arrow">&rarr;</span>' + stageBadge(a.statusTo)
+        : stageBadge(a.statusTo);
+      const body = '<p class="vd-tl-note">' + esc(a.note) + '</p>' +
+        (a.tags && a.tags.length
+          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
+          : '');
+
+      return '<article class="vd-tl-item">' +
+        '<span class="vd-tl-dot' + (a.by === 'system' ? ' is-system' : '') + '" aria-hidden="true"></span>' +
+        '<div class="vd-tl-body">' +
+          '<div class="vd-tl-move">' + headline + '</div>' +
+          '<div class="vd-tl-meta">' + meta + '</div>' +
+          body +
+        '</div>' +
+      '</article>';
+    }
+
+    /* ---- Barra lateral: decisores -------------------------------------------- */
+    function renderDecisionMakers() {
+      const people = getContactsForCompany(company.id)
+        .filter(function (c) { return c.roleCode && c.decisionLevel; })
+        .sort(function (a, b) { return a.decisionLevel - b.decisionLevel; });
+
+      const el = document.getElementById('cdDecisionMakers');
+      const head = '<h3 class="vd-cardtitle">Decision makers' +
+        (people.length ? ' <span class="vd-count">' + people.length + '</span>' : '') +
+        '<button type="button" class="cd-addcontact" onclick="openAddContactModal()">Add</button></h3>';
+
+      if (!people.length) {
+        el.innerHTML = head + '<p class="vd-empty">' +
+          (company.isExcluded
+            ? 'The company is excluded, so contacts are never searched for it.'
+            : company.contactsSearchedAt
+              ? 'The contact search ran and nobody qualified as a decision maker.'
+              : 'The contact search has not run for this company yet.') + '</p>' +
+          renderOtherContacts();
+        return;
+      }
+
+      el.innerHTML = head + people.map(function (p) {
+        const ver = EMAIL_VERIFICATION[p.emailVerification] || EMAIL_VERIFICATION.unknown;
+        return '<article class="vd-dm">' +
+          '<div class="vd-dm-head">' +
+            '<span class="vd-dm-role">' + esc(roleCodeLabel(p.roleCode)) + '</span>' +
+            '<span class="vd-dm-level" title="Level ' + p.decisionLevel +
+              (p.decisionLevel === 1 ? ' — signs the purchase' : ' — kept only when there is no level 1') + '">L' + p.decisionLevel + '</span>' +
+            '<button type="button" class="cd-iconbtn" title="Edit" onclick="editContact(\'' + esc(p.id) + '\')">' + ICON.edit + '</button>' +
+            '<button type="button" class="cd-iconbtn" title="Delete" onclick="confirmDeleteContact(\'' + esc(p.id) + '\')">' + ICON.trash + '</button>' +
+          '</div>' +
+          '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
+          (rawPositionAddsInfo(p) ? '<div class="vd-dm-title">' + esc(p.position) + '</div>' : '') +
+          (p.email
+            ? '<a class="vd-dm-line" href="mailto:' + esc(p.email) + '" title="' + esc(ver.note) + '">' +
+              ICON.mail + '<span>' + esc(p.email) + '</span>' +
+              (ver.short ? '<span class="vd-ver vd-ver-' + ver.tone + '">' + esc(ver.short) + '</span>' : '') + '</a>'
+            : '') +
+          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+          (p.linkedinUrl ? '<a class="vd-dm-line" href="' + esc(p.linkedinUrl) + '" target="_blank" rel="noopener">' + ICON.external + '<span>LinkedIn profile</span></a>' : '') +
+          (p.interestSignal
+            ? '<div class="vd-dm-why"><span class="vd-dm-whylabel">Why now</span><p class="vd-dm-signal">' + esc(p.interestSignal) + '</p></div>'
+            : '') +
+        '</article>';
+      }).join('') + renderOtherContacts();
+    }
+
+    // Contactos guardados que no pasaron por el análisis de perfil: los dejó el pipeline anterior
+    // o los cargó una persona. No son decisores —no tienen rol ni nivel— y el ciclo de envío no
+    // los usa, pero siguen siendo un canal y se editan y se borran como cualquier contacto.
+    function renderOtherContacts() {
+      const others = getUnanalyzedContacts(company.id);
+      if (!others.length) return '';
+      return '<section class="cd-others">' +
+        '<h4 class="cd-otherstitle">Other contacts <span class="vd-count">' + others.length + '</span></h4>' +
+        '<p class="cd-othershint">Saved without a role code, so they do not count as decision makers and the send cycle skips them.</p>' +
+        others.map(function (p) {
+          return '<article class="vd-dm is-other">' +
+            '<div class="vd-dm-head">' +
+              '<span class="vd-dm-role">' + esc(p.position || 'No title') + '</span>' +
+              '<button type="button" class="cd-iconbtn" title="Edit" onclick="editContact(\'' + esc(p.id) + '\')">' + ICON.edit + '</button>' +
+              '<button type="button" class="cd-iconbtn" title="Delete" onclick="confirmDeleteContact(\'' + esc(p.id) + '\')">' + ICON.trash + '</button>' +
+            '</div>' +
+            '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
+            (p.email ? '<a class="vd-dm-line" href="mailto:' + esc(p.email) + '">' + ICON.mail + '<span>' + esc(p.email) + '</span></a>' : '') +
+            (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+          '</article>';
+        }).join('') +
+      '</section>';
+    }
+
+    /* ---- Asignación ------------------------------------------------------------ */
+    function renderAssignment() {
+      renderAssignmentSection('assignmentSection', {
+        comercialId: coData.comercialId,
+        sdrId: coData.sdrId,
+        coordinatorId: coData.coordinatorId,
+        showInheritance: false,
+        onManage: function () {
+          openAssignmentPopup({
+            title: company.name,
+            currentComercialId: coData.comercialId,
+            currentSdrId: coData.sdrId,
+            currentCoordinatorId: coData.coordinatorId,
+            showInheritance: false,
+            onSave: function (newComercialId, newSdrId) {
+              coData.comercialId = newComercialId;
+              coData.sdrId = newSdrId;
+              company.comercialId = newComercialId;
+              company.sdrId = newSdrId;
+              renderAssignment();
+            }
+          });
+        }
+      });
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.detail-tab-btn').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.detail-tab-content').forEach(function (c) { c.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    function scrapeThisCompany() { openScrapePopup({ company: company }); }
+
+    function renderAll() {
+      renderHead();
+      renderSpec();
+      renderResearch();
+      renderAnalysis();
+      renderPositions();
+      renderTimeline();
+      renderDecisionMakers();
+      renderAssignment();
+    }
+
+    document.title = company.name + ' - Solvo Platform';
+    document.getElementById('breadcrumbName').textContent = company.name;
+    renderAll();
+
+    // Abre un tab desde ?tab= (lo usa el popup de procesamiento on-demand).
+    (function openTabFromQuery() {
+      const tabParam = params.get('tab');
+      if (!tabParam) return;
+      const btn = Array.prototype.filter.call(document.querySelectorAll('.detail-tab-btn'), function (b) {
+        return (b.getAttribute('onclick') || '').indexOf("'" + tabParam + "'") !== -1;
+      })[0];
+      if (btn) switchTab(tabParam, btn);
+    })();
+  </script>
+
+  <script>
+    /* ---- Edición de la empresa -------------------------------------------------- */
+    function setupIndustryFormField() {
+      const select = document.getElementById('editIndustry');
+      select.innerHTML = '<option value="">Unclassified</option>' +
+        getActiveIndustries().map(function (i) {
+          return '<option value="' + i.code + '"' + (i.code === company.industryCode ? ' selected' : '') + '>' + i.label + '</option>';
+        }).join('');
+      const state = document.getElementById('editState');
+      state.innerHTML = '<option value="">—</option>' +
+        US_STATES.map(function (st) {
+          return '<option value="' + st.code + '"' + (st.code === company.stateCode ? ' selected' : '') + '>' + esc(st.name) + ' (' + st.code + ')</option>';
+        }).join('');
+    }
+
+    function openEditModal() {
+      setupIndustryFormField();
+      document.getElementById('editName').value = company.name;
+      document.getElementById('editWebsite').value = company.website || '';
+      document.getElementById('editEmployees').value = company.sizeEmployees || '';
+      document.getElementById('editRevenue').value = company.revenueUsd || '';
+      document.getElementById('editYearFounded').value = company.yearFounded || '';
+      // `location` llega como "City, ST": el campo de ciudad muestra solo la ciudad.
+      document.getElementById('editCity').value = String(company.location || '').replace(/,\s*[A-Z]{2}$/, '');
+      document.getElementById('editRelationType').value = company.type;
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+    function saveCompany() {
+      const name = document.getElementById('editName').value.trim();
+      if (!name) { showToast('The company needs a name', 'error'); return; }
+      company.name = name;
+      company.website = document.getElementById('editWebsite').value.trim() || null;
+      company.industryCode = document.getElementById('editIndustry').value || null;
+      company.sizeEmployees = Number(document.getElementById('editEmployees').value) || null;
+      company.revenueUsd = Number(document.getElementById('editRevenue').value) || null;
+      company.yearFounded = Number(document.getElementById('editYearFounded').value) || null;
+      const city = document.getElementById('editCity').value.trim();
+      const stateCode = document.getElementById('editState').value;
+      if (!city || !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
+      company.location = city + ', ' + stateCode;
+      company.stateCode = stateCode;
+      company.type = document.getElementById('editRelationType').value;
+
+      document.title = company.name + ' - Solvo Platform';
+      document.getElementById('breadcrumbName').textContent = company.name;
+      closeEditModal();
+      renderAll();
+      showToast('Company updated', 'success');
+    }
+
+    // La investigación se pide al motor; no la escribe la plataforma.
+    function investigateFromEdit() {
+      showToast('Research requested for “' + (document.getElementById('editName').value || company.name) +
+        '”. The engine uses Apollo and falls back to the web; results arrive in a few minutes.', 'info');
+    }
+
+    // Encola la empresa en el motor, que la enriquece y después la califica; si ya estaba
+    // investigada, la rehace sobre lo que hay.
+    function openResearchRequestModal() {
+      openConfirmPopup({
+        title: 'Run research',
+        icon: 'search',
+        message: company.isResearched
+          ? 'The prospect engine will enrich and qualify this company again. The profile, the ICP score, the signals and the lead summary are overwritten with what it finds.'
+          : 'The prospect engine will enrich the company from Apollo, fall back to the web if Apollo does not return it, and qualify it right after.',
+        highlight: company.name,
+        confirmLabel: 'Run research',
+        onConfirm: function () { showToast('Queued for research. Results arrive in a few minutes.', 'success'); }
+      });
+    }
+
+    /* ---- Edición de la investigación --------------------------------------------- */
+    function openEditResearchModal() {
+      document.getElementById('editValueProp').value = company.valueProposition || '';
+      document.getElementById('editStrengths').value = company.strengthsDifferentiators || '';
+      document.getElementById('editSalesPitch').value = company.salesPitch || '';
+      document.getElementById('editMission').value = company.mission || '';
+      document.getElementById('editVision').value = company.vision || '';
+      document.getElementById('editHistory').value = company.companyHistory || '';
+      document.getElementById('editResearchModal').classList.add('active');
+      updateCharCounts();
+    }
+
+    function closeEditResearchModal() { document.getElementById('editResearchModal').classList.remove('active'); }
+
+    function saveResearch() {
+      company.valueProposition = document.getElementById('editValueProp').value.trim() || null;
+      company.strengthsDifferentiators = document.getElementById('editStrengths').value.trim() || null;
+      company.salesPitch = document.getElementById('editSalesPitch').value.trim() || null;
+      company.mission = document.getElementById('editMission').value.trim() || null;
+      company.vision = document.getElementById('editVision').value.trim() || null;
+      company.companyHistory = document.getElementById('editHistory').value.trim() || null;
+      closeEditResearchModal();
+      renderResearch();
+      showToast('Research updated', 'success');
+    }
+
+    function updateCharCounts() {
+      [['editValueProp', 'valuePropCount'], ['editStrengths', 'strengthsCount'], ['editSalesPitch', 'salesPitchCount'],
+       ['editMission', 'missionCount'], ['editVision', 'visionCount'], ['editHistory', 'historyCount']]
+        .forEach(function (pair) {
+          const field = document.getElementById(pair[0]);
+          const counter = document.getElementById(pair[1]);
+          if (!field || !counter) return;
+          counter.textContent = field.value.length;
+          field.oninput = function () { counter.textContent = field.value.length; };
+        });
+    }
+
+    /* ---- Cambio de etapa ---------------------------------------------------------- */
+    let tags = [];
+
+    function openStateChangeModal() {
+      const badge = document.getElementById('currentStateBadge');
+      badge.textContent = pipelineLabel(company.pipelineStage);
+      badge.className = 'pr-stage pr-stage-' + (STAGE_TONE[company.pipelineStage] || 'neutral');
+      document.getElementById('stateChangeModal').classList.add('active');
+    }
+
+    function closeStateChangeModal() {
+      document.getElementById('stateChangeModal').classList.remove('active');
+      tags = [];
+      renderTags();
+    }
+
+    function saveStateChange() {
+      const note = document.getElementById('stateChangeNote').value;
+      if (note.length < 10) { showToast('Note must be at least 10 characters', 'error'); return; }
+      const newStage = document.getElementById('newState').value;
+      if (!newStage) { showToast('Select a stage', 'error'); return; }
+
+      addStateHistory({
+        companyId: company.id, vacancyId: null, changedBy: user.name,
+        statusFrom: company.pipelineStage, statusTo: newStage, note: note, tags: tags.slice()
+      });
+      company.pipelineStage = newStage;
+
+      closeStateChangeModal();
+      document.getElementById('stateChangeNote').value = '';
+      renderHead();
+      renderSpec();
+      renderTimeline();
+      showToast('Stage updated to ' + pipelineLabel(newStage), 'success');
+    }
+
+    function renderTags() {
+      const container = document.getElementById('tagsInput');
+      const input = document.getElementById('tagInputField');
+      if (!container || !input) return;
+      container.innerHTML = '';
+      tags.forEach(function (tag, i) {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = tag + ' <span class="tag-chip-remove" onclick="removeTag(' + i + ')">&times;</span>';
+        container.appendChild(chip);
+      });
+      container.appendChild(input);
+    }
+
+    function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+    document.getElementById('tagInputField').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = this.value.trim();
+        if (v) { tags.push(v.charAt(0) === '#' ? v : '#' + v); this.value = ''; renderTags(); }
+      }
+    });
+
+    document.getElementById('stateChangeNote').addEventListener('input', function () {
+      const el = document.getElementById('noteCount');
+      el.textContent = this.value.length;
+      const parent = el.parentElement;
+      parent.classList.remove('char-count-green', 'char-count-yellow', 'char-count-red');
+      if (this.value.length < 10) parent.classList.add('char-count-red');
+      else if (this.value.length <= 400) parent.classList.add('char-count-green');
+      else if (this.value.length <= 450) parent.classList.add('char-count-yellow');
+      else parent.classList.add('char-count-red');
+    });
+
+    /* ---- Contactos ------------------------------------------------------------------ */
+    // El mismo popup sirve para agregar y para editar: son los mismos campos, y en una
+    // barra de 340px una edición en línea no entra.
+    let editingContactId = null;
+
+    // Los tres desplegables se pueblan una sola vez con el vocabulario de rbac.js.
+    function fillContactCatalogs() {
+      const dep = document.getElementById('newContactDepartment');
+      if (!dep.options.length) {
+        dep.innerHTML = '<option value="">—</option>' +
+          CONTACT_DEPARTMENTS.map(function (d) { return '<option value="' + d.code + '">' + esc(d.label) + '</option>'; }).join('');
+      }
+      const sen = document.getElementById('newContactSeniority');
+      if (!sen.options.length) {
+        sen.innerHTML = '<option value="">—</option>' +
+          CONTACT_SENIORITIES.map(function (x) { return '<option value="' + x.code + '">' + esc(x.label) + '</option>'; }).join('');
+      }
+      const ver = document.getElementById('newContactVerification');
+      if (!ver.options.length) {
+        ver.innerHTML = Object.keys(EMAIL_VERIFICATION)
+          .map(function (k) { return '<option value="' + k + '">' + esc(EMAIL_VERIFICATION[k].label) + '</option>'; }).join('');
+      }
+    }
+
+    function openAddContactModal() {
+      editingContactId = null;
+      document.getElementById('contactModalTitle').textContent = 'Add contact';
+      document.getElementById('addContactForm').reset();
+      fillContactCatalogs();
+      document.getElementById('newContactVerification').value = 'unknown';
+      document.getElementById('addContactModal').classList.add('active');
+    }
+
+    function editContact(id) {
+      const c = MOCK_CONTACTS.find(function (x) { return x.id === id; });
+      if (!c) return;
+      editingContactId = id;
+      fillContactCatalogs();
+      document.getElementById('contactModalTitle').textContent = 'Edit contact';
+      document.getElementById('newContactName').value = c.fullName || '';
+      document.getElementById('newContactTitle').value = c.position || '';
+      document.getElementById('newContactEmail').value = c.email || '';
+      document.getElementById('newContactPhone').value = c.phone || '';
+      document.getElementById('newContactLinkedin').value = c.linkedinUrl || '';
+      document.getElementById('newContactDepartment').value = c.department || '';
+      document.getElementById('newContactSeniority').value = c.seniorityLevel || '';
+      document.getElementById('newContactVerification').value = c.emailVerification || 'unknown';
+      document.getElementById('addContactModal').classList.add('active');
+    }
+
+    function closeAddContactModal() {
+      document.getElementById('addContactModal').classList.remove('active');
+      editingContactId = null;
+    }
+
+    function isValidEmail(email) { return !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+    function saveNewContact() {
+      const name = document.getElementById('newContactName').value.trim();
+      const title = document.getElementById('newContactTitle').value.trim();
+      const email = document.getElementById('newContactEmail').value.trim();
+      if (!name) { showToast('The contact needs a name', 'error'); return; }
+      if (!isValidEmail(email)) { showToast('That email address is not valid', 'error'); return; }
+
+      const fields = {
+        fullName: name,
+        position: title,
+        email: email || null,
+        // El teléfono es lo que se tipeó. La regla de "teléfono solo para nivel 1" gobierna qué
+        // revela el motor en Apollo, que es donde se gasta el crédito, no lo que carga una persona.
+        phone: document.getElementById('newContactPhone').value.trim() || null,
+        linkedinUrl: document.getElementById('newContactLinkedin').value.trim() || null,
+        department: document.getElementById('newContactDepartment').value.trim() || null,
+        seniorityLevel: document.getElementById('newContactSeniority').value || null,
+        emailVerification: document.getElementById('newContactVerification').value || 'unknown'
+      };
+
+      // El rol se deriva del cargo con las mismas reglas del análisis de perfil. Un cargo que no
+      // mapea deja el contacto sin rol ni nivel: se guarda igual y vive en "Other contacts".
+      if (editingContactId) {
+        const c = MOCK_CONTACTS.find(function (x) { return x.id === editingContactId; });
+        Object.assign(c, fields);
+        c.roleCode = normalizeRoleCode(c.position);
+        c.decisionLevel = decisionLevelFor(c.roleCode, company);
+        showToast('Contact updated', 'success');
+      } else {
+        const roleCode = normalizeRoleCode(title);
+        const level = decisionLevelFor(roleCode, company);
+        MOCK_CONTACTS.push(Object.assign({
+          id: 'ct-new-' + Date.now().toString(36),
+          companyId: company.id,
+          roleCode: roleCode,
+          decisionLevel: level,
+          interestSignal: null,
+          analyzedAt: null,
+          createdAt: formatStamp(new Date()),
+          lastExportedBy: null, lastExportedAt: null, exportCount: 0
+        }, fields));
+        showToast(level
+          ? 'Contact added as a level ' + level + ' decision maker.'
+          : 'Contact added. The title does not map to a decision-maker role, so it is saved under Other contacts.', 'success');
+      }
+
+      company.contactsCount = getContactsForCompany(company.id).length;
+      closeAddContactModal();
+      renderDecisionMakers();
+      renderSpec();
+    }
+
+    function confirmDeleteContact(contactId) {
+      const c = MOCK_CONTACTS.find(function (x) { return x.id === contactId; });
+      if (!c) return;
+      openConfirmPopup({
+        title: 'Delete contact',
+        icon: 'trash',
+        message: 'Delete <strong>' + c.fullName + '</strong> from ' + company.name + '?',
+        confirmLabel: 'Delete',
+        onConfirm: function () {
+          const idx = MOCK_CONTACTS.findIndex(function (x) { return x.id === contactId; });
+          if (idx >= 0) MOCK_CONTACTS.splice(idx, 1);
+          company.contactsCount = getContactsForCompany(company.id).length;
+          renderDecisionMakers();
+          renderSpec();
+          showToast('Contact deleted', 'success');
+        }
+      });
+    }
+
+    function confirmDeleteCompany() {
+      openConfirmPopup({
+        title: 'Delete company',
+        message: 'Deleting <strong>' + company.name + '</strong> hides it and its positions from the listings. ' +
+          'The records keep their history and an administrator can restore them.',
+        confirmLabel: 'Delete',
+        onConfirm: function () {
+          const idx = MOCK_COMPANIES.findIndex(function (c) { return c.id === company.id; });
+          if (idx >= 0) MOCK_COMPANIES.splice(idx, 1);
+          showToast('Company deleted', 'success');
+          setTimeout(function () { window.location.href = 'prospects.html'; }, 600);
+        }
+      });
+    }
+
+    ['editModal', 'editResearchModal', 'stateChangeModal', 'addContactModal'].forEach(function (id) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      node.addEventListener('click', function (e) {
+        if (e.target !== this) return;
+        if (id === 'editModal') closeEditModal();
+        else if (id === 'editResearchModal') closeEditResearchModal();
+        else if (id === 'stateChangeModal') closeStateChangeModal();
+        else closeAddContactModal();
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      closeEditModal(); closeEditResearchModal(); closeStateChangeModal(); closeAddContactModal();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Positions - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <h2 class="page-title">Open Positions</h2>
+
+        <!-- Búsqueda: nada se consulta hasta que se pulsa el botón -->
+        <div class="op-searchrow">
+          <!-- Buscar exige el botón; los filtros de al lado se aplican al elegir -->
+          <div class="op-searchshell">
+            <div class="op-searchfield">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="searchInput" placeholder="Job title or description" aria-label="Search open positions by title or description" autocomplete="off">
+            </div>
+            <button type="button" class="op-searchgo" id="searchBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+              </svg>
+              Search
+            </button>
+          </div>
+
+          <div class="op-quickfilters">
+            <div id="pickCompany"></div>
+            <div id="pickPosition"></div>
+            <div id="pickState"></div>
+          </div>
+        </div>
+
+        <!-- Filtros activos -->
+        <div class="op-filterbar" id="filterBar"></div>
+
+        <!-- Resultados -->
+        <div class="op-resultbar">
+          <div class="op-count" id="resultCount"></div>
+          <div class="op-sort">
+            <button type="button" class="op-actionbtn" onclick="openScrapePopup({})">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
+              </svg>
+              Scrape positions
+            </button>
+            <button type="button" class="op-actionbtn" id="exportBtn" style="display:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line>
+              </svg>
+              Export
+            </button>
+            <label for="sortSelect">Sort by</label>
+            <select id="sortSelect">
+              <option value="detected_desc">Newest detected</option>
+              <option value="detected_asc">Oldest detected</option>
+              <option value="icp_desc">ICP score</option>
+              <option value="salary_desc">Salary</option>
+              <option value="company_asc">Company A–Z</option>
+              <option value="title_asc">Title A–Z</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="op-grid" id="resultGrid"></div>
+
+        <div class="op-pagination" id="pagination"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Popup de filtros -->
+  <div class="op-modal" id="filterModal" role="dialog" aria-modal="true" aria-label="Filters">
+    <div class="op-modal-box" tabindex="-1">
+      <div class="op-modal-head">
+        <div class="op-modal-heading">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="4" x2="20" y1="6" y2="6"></line><line x1="7" x2="17" y1="12" y2="12"></line><line x1="10" x2="14" y1="18" y2="18"></line>
+          </svg>
+          <h2 class="op-modal-title">Filters</h2>
+        </div>
+        <button type="button" class="op-modal-close" id="modalClose" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+      <div class="op-modal-body">
+        <div class="op-modal-rail" id="modalRail"></div>
+        <div class="op-modal-panel" id="modalPanel"></div>
+      </div>
+      <div class="op-modal-foot">
+        <div class="op-foot-chips" id="modalChips"></div>
+        <div class="op-foot-actions">
+          <button type="button" class="op-btn-text" id="modalClearAll">Clear all</button>
+          <button type="button" class="op-btn-apply" id="modalApply">Show results</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Open Positions — listado de vacantes (antes "Vacancies").
+       Datos: getVisibleVacancies() (visibilidad por rol) + company(v) por
+       company_id + getDecisionMakers(company_id). El recorte es client-side; en
+       la plataforma cada criterio de FILTERS es un parámetro de GET /api/vacancies
+       (y de /export y /export/count) y `state.q` busca por job_title y
+       description_text.
+       Estructura
+         FILTERS     declaración de criterios: key, group, label, type (single |
+                     multi | text | daterange | search | dm), options, def (valor
+                     inicial; puede recortar), neutral (valor que no recorta),
+                     gated (visibilidad por rol), chip (texto), test (predicado).
+                     Sumar un criterio = agregar una entrada.
+         state       lo aplicado · draft: lo que edita el popup hasta "Show results".
+         Barra       búsqueda por texto (espera al botón) + selectores rápidos de
+                     empresa, posición y estado (aplican al instante y escriben el
+                     mismo criterio que el popup).
+         renderCard  una card por vacante: posición del catálogo, salario anual,
+                     seniority, idioma, viabilidad, empresa con ICP / tamaño /
+                     industria / señales, decisores agrupados por rol.
+       Acciones: abrir detalle; Scrape positions (popup on-demand, ODO); Export
+       (roles de coordinación): archivo de vacantes + acompañantes —empresas y
+       decisores— según FSPL-2; markExported() simula la marca por registro.
+       Defaults que recortan: viabilidad = viables y decisores = con decisores. El estado
+       de exportación no recorta por defecto.
+       ------------------------------------------------------------------------ */
+    /* ========================================================================
+       Open Positions — listado de vacantes detectadas y calificadas.
+       Los criterios se declaran como datos en FILTERS: el rail del popup, su
+       panel, los chips de la barra y el recorte del listado salen todos de esa
+       lista, así que sumar un criterio es agregarle una entrada.
+       ======================================================================== */
+
+    const PAGE_SIZE = 12;
+
+    // --- Estado aplicado (lo que el listado está mostrando) ------------------
+    const state = { q: '', sort: 'detected_desc', page: 1, filters: {} };
+
+    // Borrador del popup: se copia al estado solo al pulsar "Show results".
+    let draft = {};
+    let activeCategory = null;
+
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function company(v) {
+      return MOCK_COMPANIES.find(function (c) { return c.id === v.companyId; }) || null;
+    }
+
+    // --- Declaración de los criterios ---------------------------------------
+    // `type`: single (radio) · multi (casillas) · text · daterange.
+    // `test(vacancy, value)` decide si el registro pasa; sin valor, el criterio no filtra.
+    const DATE_PRESETS = [
+      { value: 'all', label: 'All time' },
+      { value: '1', label: 'Past 24 hours' },
+      { value: '3', label: '3 days' },
+      { value: '7', label: '1 week' },
+      { value: '14', label: '2 weeks' },
+      { value: '30', label: '1 month' },
+      { value: '90', label: '3 months' },
+      { value: '180', label: '6 months' }
+    ];
+
+    const FILTERS = [
+      // ---- Result filters ----
+      {
+        key: 'viability', group: 'Result filters', label: 'Remote viability', type: 'single', cols: 1, neutral: 'all',
+        hint: 'The classifier reads each posting and decides whether the work can be done from outside the US.',
+        def: 'viable',
+        options: [
+          { value: 'viable', label: 'Remote viable only', note: 'Default' },
+          { value: 'not_viable', label: 'Not viable' },
+          { value: 'all', label: 'Both' }
+        ],
+        chip: function (v) { return v === 'not_viable' ? 'Not remote viable' : 'Remote viable only'; },
+        test: function (vac, v) {
+          if (v === 'viable') return vac.remoteViable === true;
+          if (v === 'not_viable') return vac.remoteViable === false;
+          return true;
+        }
+      },
+      {
+        key: 'detected', group: 'Result filters', label: 'Detected', type: 'daterange', def: 'all',
+        hint: 'When Solvo first saw the posting, which is not the date the company published it.',
+        options: DATE_PRESETS,
+        chip: function (v) {
+          if (v && v.from) return 'Detected: ' + v.from + (v.to ? ' → ' + v.to : ' →');
+          const p = DATE_PRESETS.find(function (x) { return x.value === v; });
+          return p ? 'Detected: ' + p.label : '';
+        },
+        test: function (vac, v) {
+          const ts = new Date(vac.detectedAtTs || vac.detectedAt).getTime();
+          if (v && v.from) {
+            if (new Date(v.from).getTime() > ts) return false;
+            if (v.to && new Date(v.to).getTime() + 86400000 < ts) return false;
+            return true;
+          }
+          if (!v || v === 'all') return true;
+          return ts >= Date.now() - Number(v) * 86400000;
+        }
+      },
+      {
+        key: 'exportStatus', group: 'Result filters', label: 'Export status', type: 'single', cols: 1,
+        hint: 'Whether the position already went out in an export file, and who took it.',
+        gated: function () { return canFilterByExportStatus(); }, def: '', neutral: '',
+        options: [
+          { value: '', label: 'All' },
+          { value: 'not_exported', label: 'Not exported yet' },
+          { value: 'exported_by_me', label: 'Exported by me' },
+          { value: 'exported_by_others', label: 'Exported by others' }
+        ],
+        chip: function (v) {
+          return { not_exported: 'Not exported yet', exported_by_me: 'Exported by me', exported_by_others: 'Exported by others' }[v] || v;
+        },
+        test: function (vac, v) { return getExportStatus(vac) === v; }
+      },
+
+      // ---- Position ----
+      {
+        key: 'position', group: 'Position', label: 'Catalog position', type: 'multi', cols: 1, def: [],
+        hint: 'The ICP position the sweep was searching when it found the posting. A posting detected by another pipeline, or before the position sweep existed, has none.',
+        options: POSITIONS_CATALOG.map(function (p) { return { value: p.id, label: p.name, note: p.terms.length + ' terms' }; })
+          .concat([{ value: 'none', label: 'No catalog position', note: 'Another pipeline, or before the position sweep' }]),
+        chip: function (v) { return 'Position: ' + (v.length === 1 ? (v[0] === 'none' ? 'none' : getPositionName(v[0])) : v.length); },
+        test: function (vac, v) { return v.indexOf(vac.positionId || 'none') !== -1; }
+      },
+      {
+        key: 'status', group: 'Position', label: 'Pipeline status', type: 'multi', def: [],
+        hint: 'Where the position stands in the sales cycle.',
+        options: [
+          { value: 'detected', label: 'Detected' }, { value: 'contacted', label: 'Contacted' },
+          { value: 'proposal', label: 'Proposal' }, { value: 'won', label: 'Won' }, { value: 'lost', label: 'Lost' }
+        ],
+        chip: function (v) { return 'Status: ' + (v.length === 1 ? v[0] : v.length); },
+        test: function (vac, v) { return v.indexOf(vac.status) !== -1; }
+      },
+      {
+        key: 'source', group: 'Position', label: 'Detected by', type: 'multi', def: [],
+        hint: 'Which pipeline brought the posting in. The position sweep is the one the redesigned engine runs; the others keep feeding the same table.',
+        options: Object.keys(SOURCE_PROJECT_LABELS).map(function (code) { return { value: code, label: SOURCE_PROJECT_LABELS[code] }; }),
+        chip: function (v) { return 'Detected by: ' + (v.length === 1 ? sourceProjectLabel(v[0]) : v.length); },
+        test: function (vac, v) { return v.indexOf(vac.source) !== -1; }
+      },
+      {
+        key: 'portal', group: 'Position', label: 'Job portal', type: 'multi', def: [],
+        hint: 'The job board the posting was published on.',
+        options: [{ value: 'linkedin', label: 'LinkedIn' }, { value: 'indeed', label: 'Indeed' }],
+        chip: function (v) { return 'Portal: ' + v.map(portalLabel).join(', '); },
+        test: function (vac, v) { return v.indexOf(vac.sourcePortal) !== -1; }
+      },
+      {
+        key: 'state', group: 'Position', label: 'State', type: 'multi', def: [],
+        hint: 'The US state the posting is located in. It is the state, not the city, because the sweep is organised by state.',
+        options: US_STATES.map(function (st) { return { value: st.code, label: st.name, note: st.code }; }),
+        chip: function (v) { return 'State: ' + (v.length <= 3 ? v.join(', ') : v.length); },
+        test: function (vac, v) { return v.indexOf(vac.stateCode) !== -1; }
+      },
+      {
+        key: 'modality', group: 'Position', label: 'Work modality', type: 'multi', def: [],
+        hint: 'How the company posted the role. An on-site role that is remote viable is the opportunity Solvo sells.',
+        options: [
+          { value: 'onsite', label: 'On-site' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'remote', label: 'Remote' },
+          { value: 'unknown', label: 'Not stated', note: 'The posting does not say' }
+        ],
+        chip: function (v) { return 'Modality: ' + v.map(modalityLabel).join(', '); },
+        test: function (vac, v) { return v.indexOf(String(vac.workModality || '').toLowerCase().replace('-', '')) !== -1; }
+      },
+      {
+        key: 'seniority', group: 'Position', label: 'Seniority', type: 'multi', def: [],
+        hint: 'The level the posting asks for, as the classifier read it.',
+        options: SENIORITY_LEVELS.slice(),
+        chip: function (v) { return 'Seniority: ' + (v.length === 1 ? seniorityLabel(v[0]) : v.length); },
+        test: function (vac, v) { return v.indexOf(String(vac.seniorityLevel || '').toLowerCase()) !== -1; }
+      },
+      {
+        key: 'salary', group: 'Position', label: 'Annual salary (USD)', type: 'multi', def: [],
+        hint: 'Annual pay in US dollars, converted from whatever the posting stated. Many postings state nothing.',
+        options: [
+          { value: '0-50', label: 'Under $50K' }, { value: '50-75', label: '$50K – $75K' },
+          { value: '75-100', label: '$75K – $100K' }, { value: '100+', label: '$100K and up' },
+          { value: 'unknown', label: 'Not stated', note: 'The posting gives no salary' }
+        ],
+        chip: function (v) { return 'Salary: ' + v.length; },
+        test: function (vac, v) {
+          const max = vac.salaryMaxUsd || vac.salaryMinUsd;
+          if (!max) return v.indexOf('unknown') !== -1;
+          const bucket = max < 50000 ? '0-50' : max < 75000 ? '50-75' : max < 100000 ? '75-100' : '100+';
+          return v.indexOf(bucket) !== -1;
+        }
+      },
+      {
+        key: 'languages', group: 'Position', label: 'Languages', type: 'multi', def: [],
+        hint: 'Languages the posting requires or values. Choosing two asks for postings that need both.',
+        options: [{ value: 'English', label: 'English' }, { value: 'Spanish', label: 'Spanish' }],
+        chip: function (v) { return 'Language: ' + v.join(', '); },
+        test: function (vac, v) {
+          const langs = vac.languages || [];
+          return v.every(function (l) { return langs.indexOf(l) !== -1; });
+        }
+      },
+      {
+        key: 'postingSignals', group: 'Position', label: 'Posting signals', type: 'multi', def: [],
+        hint: 'What the classifier found in the description itself: urgency, volume, whether the role talks to customers, and the conditions that rule people out. Any one of the selected signals is enough.',
+        options: VACANCY_SIGNALS.map(function (x) { return { value: x.code, label: x.label }; }),
+        chip: function (v) { return 'Posting: ' + (v.length === 1 ? vacancySignalLabel(v[0]) : v.length + ' signals'); },
+        test: function (vac, v) {
+          const sig = vac.aiSignals || [];
+          return v.some(function (x) { return sig.indexOf(x) !== -1; });
+        }
+      },
+      {
+        key: 'description', group: 'Position', label: 'Description contains', type: 'text', def: '',
+        hint: 'Searches inside the job description, for wording the title does not carry.',
+        placeholder: 'Word or phrase in the job description',
+        chip: function (v) { return 'Description: “' + v + '”'; },
+        test: function (vac, v) { return String(vac.description || '').toLowerCase().indexOf(v.toLowerCase()) !== -1; }
+      },
+
+      // ---- Company ----
+      {
+        key: 'company', group: 'Company', label: 'Company', type: 'search', single: true, def: [],
+        hint: 'One company at a time, by name. The same searchbox lives in the search bar, and both write the same choice.',
+        placeholder: 'Search company',
+        options: function () {
+          return MOCK_COMPANIES.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
+            .map(function (c) { return { value: c.id, label: c.name, note: c.location }; });
+        },
+        chip: function (v) {
+          if (v.length === 1) { const c = MOCK_COMPANIES.find(function (x) { return x.id === v[0]; }); return 'Company: ' + (c ? c.name : v[0]); }
+          return 'Company: ' + v.length;
+        },
+        test: function (vac, v) { return v.indexOf(vac.companyId) !== -1; }
+      },
+      {
+        key: 'icp', group: 'Company', label: 'ICP score', type: 'multi', cols: 1, def: [],
+        hint: 'How well the company fits Solvo as a client, scored 0 to 100 when it was qualified.',
+        options: [
+          { value: 'strong', label: 'Strong fit', note: '67 – 100' },
+          { value: 'moderate', label: 'Moderate fit', note: '34 – 66' },
+          { value: 'weak', label: 'Weak fit', note: '0 – 33' },
+          { value: 'pending', label: 'Not qualified yet', note: 'The company has not been researched' }
+        ],
+        chip: function (v) { return 'ICP: ' + v.join(', '); },
+        test: function (vac, v) { return v.indexOf(icpTier(company(vac))) !== -1; }
+      },
+      {
+        key: 'signals', group: 'Company', label: 'Lead signals', type: 'multi', def: [],
+        hint: 'What the qualification found that makes the company worth approaching now. Any one of the selected signals is enough.',
+        options: LEAD_SIGNALS.filter(function (s) { return !s.disqualifying; })
+          .map(function (s) { return { value: s.code, label: s.label }; }),
+        chip: function (v) { return 'Signals: ' + v.length; },
+        test: function (vac, v) {
+          const sig = (company(vac) || {}).leadSignals || [];
+          return v.some(function (s) { return sig.indexOf(s) !== -1; });
+        }
+      },
+      {
+        key: 'industry', group: 'Company', label: 'Industry', type: 'multi', def: [],
+        hint: 'The company sector, from the standard catalog of 23. Companies that were never researched are unclassified.',
+        options: getActiveIndustries().map(function (i) { return { value: i.code, label: i.label }; })
+          .concat([{ value: 'unclassified', label: 'Unclassified', note: 'No industry on record' }]),
+        chip: function (v) { return 'Industry: ' + (v.length === 1 ? (v[0] === 'unclassified' ? 'unclassified' : getIndustryLabel(v[0])) : v.length); },
+        test: function (vac, v) { return v.indexOf((company(vac) || {}).industryCode || 'unclassified') !== -1; }
+      },
+      {
+        key: 'size', group: 'Company', label: 'Company size', type: 'multi', def: [],
+        hint: 'Headcount on record. It only arrives with company research, so a wide slice of the universe has no size.',
+        options: COMPANY_SIZE_RANGES.map(function (r) { return { value: r.value, label: r.label + ' employees' }; })
+          .concat([{ value: 'unknown', label: 'Size unknown' }]),
+        chip: function (v) { return 'Size: ' + v.length; },
+        test: function (vac, v) { return v.indexOf(companySizeBucket(company(vac))) !== -1; }
+      },
+      {
+        key: 'dmRole', group: 'Company', label: 'Decision makers', type: 'dm',
+        hint: 'Whether the company has anybody to write to. The list starts on the positions whose company does, because one without a contact cannot be worked. Choosing “with” opens the list of roles, and leaving every role unchecked accepts any of them.',
+        def: { mode: 'with', roles: [] }, neutral: { mode: 'all', roles: [] },
+        modes: [
+          { value: 'all', label: 'All companies' },
+          { value: 'with', label: 'With decision makers', note: 'Default' },
+          { value: 'without', label: 'Without decision makers', note: 'Nobody to write to yet' }
+        ],
+        options: ROLE_CODES.map(function (r) { return { value: r.code, label: r.label }; }),
+        chip: function (v) {
+          if (v.mode === 'without') return 'No decision makers';
+          if (!v.roles.length) return 'Has decision makers';
+          return 'DM: ' + (v.roles.length === 1 ? roleCodeLabel(v.roles[0]) : v.roles.length + ' roles');
+        },
+        test: function (vac, v) {
+          const dms = getDecisionMakers(vac.companyId);
+          if (v.mode === 'without') return dms.length === 0;
+          // En "todas" la presencia no importa; solo el rol, si se eligió alguno.
+          if (v.mode === 'all') return v.roles.length ? dms.some(function (d) { return v.roles.indexOf(d.roleCode) !== -1; }) : true;
+          if (!dms.length) return false;
+          if (!v.roles.length) return true;
+          return dms.some(function (d) { return v.roles.indexOf(d.roleCode) !== -1; });
+        }
+      },
+      {
+        key: 'dmLevel', group: 'Company', label: 'Decision level', type: 'multi', cols: 1, def: [],
+        hint: 'Level 1 signs the purchase. Level 2 is kept only when the company has no level 1 at all.',
+        options: [
+          { value: '1', label: 'Level 1', note: 'CEO, President, Chairman, CFO, CRO, VP Sales' },
+          { value: '2', label: 'Level 2', note: 'The fallback when there is no level 1' }
+        ],
+        chip: function (v) { return 'Decision level: ' + v.join(' and '); },
+        test: function (vac, v) {
+          return getDecisionMakers(vac.companyId).some(function (d) { return v.indexOf(String(d.level)) !== -1; });
+        }
+      },
+      {
+        key: 'excluded', group: 'Company', label: 'Excluded companies', type: 'single', cols: 1, def: 'include', neutral: 'include',
+        hint: 'Qualification disqualifies staffing agencies, which compete with Solvo, and government entities. A disqualified company is never searched for contacts, so the decision-maker filter already leaves it out; this is here to audit whether the classifier excluded somebody it should not have.',
+        options: [
+          { value: 'include', label: 'Included' },
+          { value: 'hide', label: 'Hidden' },
+          { value: 'only', label: 'Only excluded' }
+        ],
+        chip: function (v) { return v === 'only' ? 'Only excluded companies' : 'Excluded companies hidden'; },
+        test: function (vac, v) {
+          const excluded = !!(company(vac) || {}).isExcluded;
+          if (v === 'hide') return !excluded;
+          if (v === 'only') return excluded;
+          return true;
+        }
+      },
+      {
+        key: 'companyType', group: 'Company', label: 'Relationship', type: 'multi', def: [],
+        hint: 'Whether Solvo already bills the company, is still prospecting it, or has set it aside.',
+        options: [
+          { value: 'client', label: 'Client' }, { value: 'prospect', label: 'Prospect' }, { value: 'inactive', label: 'Inactive' }
+        ],
+        chip: function (v) { return 'Relationship: ' + v.length; },
+        test: function (vac, v) { return v.indexOf((company(vac) || {}).type) !== -1; }
+      },
+
+      // ---- Assignment ----
+      {
+        key: 'salesRep', group: 'Assignment', label: 'Sales Rep', type: 'search', def: [],
+        hint: 'The Sales Rep working the position, inherited from the company or set on the position itself.',
+        placeholder: 'Search by name or email',
+        gated: function () { return canViewAll(); },
+        options: function () {
+          return [{ value: 'unassigned', label: 'Unassigned', note: 'No Sales Rep on the position' }].concat(
+            getActiveCommercials().map(function (m) { return { value: m.id, label: m.name, note: m.email }; }));
+        },
+        chip: function (v) { return 'Sales Rep: ' + v.length; },
+        test: function (vac, v) { return v.indexOf(vac.comercialId || 'unassigned') !== -1; }
+      },
+      {
+        key: 'sdr', group: 'Assignment', label: 'SDR', type: 'search', def: [],
+        hint: 'The SDR working the position, inherited from the company or set on the position itself.',
+        placeholder: 'Search by name or email',
+        gated: function () { return canViewAll(); },
+        options: function () {
+          return [{ value: 'unassigned', label: 'Unassigned', note: 'No SDR on the position' }].concat(
+            getActiveSDRs().map(function (m) { return { value: m.id, label: m.name, note: m.email }; }));
+        },
+        chip: function (v) { return 'SDR: ' + v.length; },
+        test: function (vac, v) { return v.indexOf(vac.sdrId || 'unassigned') !== -1; }
+      },
+      {
+        key: 'assignType', group: 'Assignment', label: 'Assignment type', type: 'single', cols: 1, def: '',
+        hint: 'A position inherits the company assignment until somebody sets one on the position, which then wins.',
+        gated: function () { return canViewAll(); },
+        options: [
+          { value: '', label: 'All' },
+          { value: 'inherited', label: 'Inherited from the company' },
+          { value: 'direct', label: 'Set on the position' }
+        ],
+        chip: function (v) { return 'Assignment: ' + v; },
+        test: function (vac, v) { return vac.comercialType === v || vac.sdrType === v; }
+      }
+    ];
+
+    function visibleFilters() {
+      return FILTERS.filter(function (f) { return !f.gated || f.gated(); });
+    }
+
+    function filterOptions(f) {
+      return typeof f.options === 'function' ? f.options() : (f.options || []);
+    }
+
+    function defaultFor(f) {
+      if (Array.isArray(f.def)) return [];
+      // Un default que es objeto se clona: compartir la referencia haría que limpiar
+      // un criterio escribiera sobre el default de la declaración.
+      if (f.def && typeof f.def === 'object') return { mode: f.def.mode, roles: [] };
+      return f.def;
+    }
+
+
+    function resetFilters(target) {
+      visibleFilters().forEach(function (f) { target[f.key] = defaultFor(f); });
+    }
+
+    // Un valor es neutro cuando no recorta nada. Es lo único que exime a un criterio
+    // de evaluarse: que además coincida con su valor por defecto es irrelevante, porque
+    // hay defaults que recortan a propósito.
+    // El valor con que un criterio deja de recortar. Es a donde va "limpiar":
+    // no al valor por defecto, que en varios criterios sí recorta.
+    function neutralFor(f) {
+      if (f.neutral !== undefined) {
+        return (f.neutral && typeof f.neutral === 'object') ? { mode: f.neutral.mode, roles: [] } : f.neutral;
+      }
+      if (Array.isArray(f.def)) return [];
+      if (f.type === 'dm') return { mode: 'all', roles: [] };
+      if (f.type === 'daterange') return 'all';
+      return '';
+    }
+
+    function clearFilters(target) { visibleFilters().forEach(function (f) { target[f.key] = neutralFor(f); }); }
+
+    function isNeutral(f, v) {
+      if (f.type === 'multi' || f.type === 'search') return !v || !v.length;
+      if (f.type === 'text') return !v;
+      if (f.type === 'daterange') return !v || v === 'all';
+      if (f.type === 'dm') return !v || (v.mode === 'all' && !(v.roles || []).length);
+      // En los radios "All" es el valor vacío, salvo donde el criterio lo expresa con
+      // un valor propio —`all` en viabilidad, `include` en empresas excluidas—.
+      return v === '' || v === undefined || (f.neutral !== undefined && v === f.neutral);
+    }
+
+    // --- Recorte del listado -------------------------------------------------
+    function matches(vac) {
+      if (state.q) {
+        // El campo de texto busca en el aviso: su título y su descripción. La empresa,
+        // la posición del catálogo y el estado tienen su propio selector.
+        const hay = [vac.title, vac.description].join(' ').toLowerCase();
+        if (hay.indexOf(state.q.toLowerCase()) === -1) return false;
+      }
+      return visibleFilters().every(function (f) {
+        const value = state.filters[f.key];
+        return isNeutral(f, value) ? true : f.test(vac, value);
+      });
+    }
+
+    function sortResults(list) {
+      const by = state.sort;
+      return list.slice().sort(function (a, b) {
+        if (by === 'detected_desc' || by === 'detected_asc') {
+          const d = new Date(a.detectedAtTs || a.detectedAt) - new Date(b.detectedAtTs || b.detectedAt);
+          return by === 'detected_desc' ? -d : d;
+        }
+        if (by === 'icp_desc') {
+          const sa = (company(a) || {}).icpScore, sb = (company(b) || {}).icpScore;
+          return (sb === null || sb === undefined ? -1 : sb) - (sa === null || sa === undefined ? -1 : sa);
+        }
+        if (by === 'salary_desc') return (b.salaryMaxUsd || 0) - (a.salaryMaxUsd || 0);
+        if (by === 'company_asc') return ((company(a) || {}).name || '').localeCompare((company(b) || {}).name || '');
+        return a.title.localeCompare(b.title);
+      });
+    }
+
+    // --- Card ----------------------------------------------------------------
+    const ICON_BUILDING = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>';
+    const ICON_PIN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+
+    function icpBadge(c) {
+      const tier = icpTier(c);
+      if (tier === 'excluded') {
+        return '<span class="op-cbadge op-cbadge-excluded" title="Disqualified: ' +
+          esc(leadSignalLabel(c.exclusionReason)) + '">Excluded</span>';
+      }
+      if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
+      const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
+      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
+    }
+
+    function renderCard(vac) {
+      const c = company(vac) || {};
+      const dms = getDecisionMakers(vac.companyId);
+      const salary = salaryLabel(vac);
+      const speaksSpanish = (vac.languages || []).indexOf('Spanish') !== -1;
+
+      let tags = '';
+      if (vac.positionId) tags += '<span class="op-tag op-tag-position" title="Catalog position — found with “' + esc(vac.searchText) + '”">' + esc(getPositionName(vac.positionId)) + '</span>';
+      if (salary) tags += '<span class="op-tag op-tag-salary">' + esc(salary) + '</span>';
+      if (vac.seniorityLevel) tags += '<span class="op-tag">' + esc(seniorityLabel(vac.seniorityLevel)) + '</span>';
+      if (speaksSpanish) tags += '<span class="op-tag op-tag-lang">Spanish</span>';
+
+      // Señales del aviso: las que cambian la urgencia van primero y el resto se cuenta.
+      const posted = (vac.aiSignals || []);
+      const leadSignalsOfPosting = posted.filter(function (x) { return vacancySignalTone(x) !== 'plain'; });
+      const shownSignals = (leadSignalsOfPosting.length ? leadSignalsOfPosting : posted).slice(0, 2);
+      shownSignals.forEach(function (x) {
+        tags += '<span class="op-tag op-tag-signal is-' + vacancySignalTone(x) + '">' + esc(vacancySignalLabel(x)) + '</span>';
+      });
+      if (posted.length > shownSignals.length) {
+        tags += '<span class="op-tag" title="' + esc(posted.filter(function (x) { return shownSignals.indexOf(x) === -1; }).map(vacancySignalLabel).join(', ')) +
+          '">+' + (posted.length - shownSignals.length) + '</span>';
+      }
+
+      // Señales: la primera y el resto contado. Son el "por qué ahora" de la empresa,
+      // pero la card se lee de un vistazo: el detalle completo vive en su ficha.
+      const signals = (c.leadSignals || []).filter(function (s) {
+        return !(LEAD_SIGNALS.find(function (x) { return x.code === s; }) || {}).disqualifying;
+      });
+      let signalBadges = signals.slice(0, 1).map(function (s) {
+        return '<span class="op-cbadge op-cbadge-signal">' + esc(leadSignalLabel(s)) + '</span>';
+      }).join('');
+      if (signals.length > 1) {
+        signalBadges += '<span class="op-cbadge op-cbadge-signal" title="' + esc(signals.slice(1).map(leadSignalLabel).join(', ')) + '">+' + (signals.length - 1) + ' more</span>';
+      }
+
+      // Sin decisores hay tres situaciones distintas y conviene no confundirlas: la empresa
+      // quedó descalificada, la búsqueda corrió y nadie calificó, o todavía no corrió. Por qué
+      // no corrió —puntaje bajo o item en cola— no se dice: no cambia lo que el usuario hace.
+      const otherContacts = getUnanalyzedContacts(c.id).length;
+      let dmRow;
+      if (!dms.length) {
+        const why = c.isExcluded
+          ? 'Excluded company — contacts are never searched'
+          : c.contactsSearchedAt
+            ? 'No qualifying decision makers found'
+            : 'Decision makers not searched yet';
+        dmRow = '<span class="op-dm-none">' + why + '</span>' +
+          (otherContacts ? '<span class="op-dm-badge" title="Contacts saved before the profile analysis; they have no role or decision level.">' +
+            otherContacts + ' other contact' + (otherContacts === 1 ? '' : 's') + '</span>' : '');
+      } else {
+        dmRow = '<span class="op-dm-label">Decision makers <strong>' + dms.reduce(function (n, d) { return n + d.people.length; }, 0) +
+          '</strong></span><span class="op-dm-badges">' +
+          dms.slice(0, 3).map(function (d) {
+            const who = d.people.map(function (p) {
+              const ver = EMAIL_VERIFICATION[p.emailVerification] || EMAIL_VERIFICATION.unknown;
+              return p.fullName + ' — ' + ver.label.toLowerCase();
+            }).join(' · ');
+            return '<span class="op-dm-badge' + (d.level === 1 ? ' is-level1' : '') + '" title="Level ' + d.level + ' · ' + esc(who) + '">' + esc(d.label) + '</span>';
+          }).join('') +
+          (dms.length > 3 ? '<span class="op-dm-badge" title="' + esc(dms.slice(3).map(function (d) { return d.label; }).join(', ')) + '">+' + (dms.length - 3) + '</span>' : '') +
+          (otherContacts ? '<span class="op-dm-badge" title="Contacts saved before the profile analysis; they have no role or decision level.">' +
+            otherContacts + ' other</span>' : '') +
+          '</span>';
+      }
+
+      const viability = vac.remoteViable === false
+        ? '<span class="op-tag op-tag-notviable" title="' + esc((vac.aiReasons || [])[0] || '') + '">Not remote viable</span>'
+        : '';
+
+      return '<article class="op-card' + (c.isExcluded ? ' is-excluded' : '') + '">' +
+        '<div class="op-card-head">' +
+          '<a class="op-card-title" href="vacancy-detail.html?id=' + esc(vac.id) + '">' + esc(vac.title) + '</a>' +
+          '<span class="op-age" title="Detected ' + esc(vac.detectedAt) + '">' + esc(detectedAge(vac)) + '</span>' +
+        '</div>' +
+        '<div class="op-card-loc">' + ICON_PIN +
+          '<span>' + esc(vac.location) + ' · ' + esc(modalityLabel(vac.workModality)) + '</span>' +
+          '<span class="op-portal op-portal-' + esc(String(vac.sourcePortal || '').toLowerCase()) + '" title="Published on ' + esc(portalLabel(vac.sourcePortal)) + '">' + esc(portalLabel(vac.sourcePortal)) + '</span>' +
+        '</div>' +
+        '<div class="op-tagrow">' + tags + viability + '</div>' +
+        '<p class="op-card-desc">' + esc(vac.description) + '</p>' +
+        '<div class="op-company">' +
+          '<span class="op-cicon' + (c.type === 'client' ? ' is-client' : '') + '" aria-hidden="true">' + ICON_BUILDING + '</span>' +
+          '<div class="op-cbody">' +
+            '<div class="op-crow">' +
+              '<a class="op-cname" href="company-detail.html?id=' + esc(c.id) + '" title="' + esc(c.name) + '">' + esc(c.name) + '</a>' +
+              icpBadge(c) +
+            '</div>' +
+            '<div class="op-cbadges">' +
+              (c.sizeEmployees ? '<span class="op-cbadge">' + Number(c.sizeEmployees).toLocaleString('en-US') + ' employees</span>' : '<span class="op-cbadge">Size unknown</span>') +
+              (c.industryCode ? '<span class="op-cbadge">' + esc(getIndustryLabel(c.industryCode)) + '</span>' : '') +
+              signalBadges +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="op-dm">' + dmRow + '</div>' +
+      '</article>';
+    }
+
+    // --- Render del listado ---------------------------------------------------
+    function render() {
+      const all = sortResults(getVisibleVacancies().filter(matches));
+      const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      if (state.page > pages) state.page = pages;
+      const slice = all.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+      const companies = new Set(all.map(function (v) { return v.companyId; }));
+
+      document.getElementById('resultCount').innerHTML =
+        '<strong>' + all.length + '</strong> ' + (all.length === 1 ? 'position' : 'positions') +
+        ' · <strong>' + companies.size + '</strong> ' + (companies.size === 1 ? 'company' : 'companies');
+
+      const grid = document.getElementById('resultGrid');
+      grid.innerHTML = slice.length
+        ? slice.map(renderCard).join('')
+        : '<div class="op-empty"><h3>No positions match this search</h3>' +
+          '<p>' + emptyStateHint() + '</p>' +
+          '<button class="btn btn-secondary" onclick="clearEverything()">Clear search and filters</button></div>';
+
+      const exportBtn = document.getElementById('exportBtn');
+      exportBtn.style.display = canExport() ? '' : 'none';
+      exportBtn.onclick = function () { handleExport(all); };
+
+      renderPagination(all.length, pages);
+      renderFilterBar();
+    }
+
+
+    // Varios criterios arrancan recortando —viables, no exportados, con decisores—, así que un
+    // listado vacío suele ser un default y no una búsqueda sin resultados. El vacío los nombra.
+    function emptyStateHint() {
+      const active = visibleFilters()
+        .filter(function (f) { return !isNeutral(f, state.filters[f.key]) && !isNeutral(f, defaultFor(f)); })
+        .map(function (f) { return f.chip(state.filters[f.key]); });
+      return active.length
+        ? 'These filters are on by default: ' + active.join(' · ') + '. Clear them, widen the date range, or search another title.'
+        : 'Widen the date range, clear a filter, or search another title.';
+    }
+
+    function renderPagination(total, pages) {
+      const el = document.getElementById('pagination');
+      if (!total) { el.innerHTML = ''; return; }
+      const from = (state.page - 1) * PAGE_SIZE + 1;
+      const to = Math.min(state.page * PAGE_SIZE, total);
+
+      // Ventana de páginas alrededor de la actual, con la primera y la última siempre a la vista.
+      const nums = [];
+      for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i - state.page) <= 1) nums.push(i);
+        else if (nums[nums.length - 1] !== '…') nums.push('…');
+      }
+
+      el.innerHTML =
+        '<div class="op-pag-info">Showing ' + from + '–' + to + ' of ' + total + '</div>' +
+        '<div class="op-pag-controls">' +
+          '<button class="op-pag-btn" ' + (state.page === 1 ? 'disabled' : '') + ' onclick="goPage(' + (state.page - 1) + ')">Previous</button>' +
+          nums.map(function (n) {
+            return n === '…'
+              ? '<span class="op-pag-gap">…</span>'
+              : '<button class="op-pag-btn' + (n === state.page ? ' is-current' : '') + '" ' +
+                (n === state.page ? 'aria-current="page"' : '') + ' onclick="goPage(' + n + ')">' + n + '</button>';
+          }).join('') +
+          '<button class="op-pag-btn" ' + (state.page === pages ? 'disabled' : '') + ' onclick="goPage(' + (state.page + 1) + ')">Next</button>' +
+        '</div>';
+    }
+
+    function goPage(n) {
+      state.page = n;
+      render();
+      document.querySelector('.page-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- Exportación ------------------------------------------------------------
+    // El archivo de posiciones hereda el recorte del listado y ya lleva los correos de los
+    // decisores de cada empresa, así que se puede trabajar solo. El acompañante agrega la
+    // ficha de esas empresas, para quien además quiere el contexto del prospecto.
+    function handleExport(vacancies) {
+      const range = (state.filters.detected && state.filters.detected.from) ? state.filters.detected : { from: '', to: '' };
+      const ids = new Set(vacancies.map(function (v) { return v.companyId; }));
+      const relatedCompanies = MOCK_COMPANIES.filter(function (c) { return ids.has(c.id); });
+
+      openExportPopup({
+        entityLabel: 'positions',
+        entityCount: vacancies.length,
+        alreadyExported: countAlreadyExported(vacancies),
+        companions: [
+          { key: 'prospects', label: 'Include prospects', count: relatedCompanies.length, note: 'the companies behind these positions, one row each' }
+        ],
+        onExport: function (selected) {
+          const files = [{ entity: 'posiciones', rows: buildVacancyExportRows(vacancies), columns: EXPORT_COLUMNS_VACANCIES }];
+          if (selected.indexOf('prospects') !== -1) files.push({ entity: 'prospectos', rows: buildCompanyExportRows(relatedCompanies), columns: EXPORT_COLUMNS_COMPANIES });
+          deliverExport(files, range.from, range.to);
+          markExported(vacancies);
+          if (selected.indexOf('prospects') !== -1) markExported(relatedCompanies);
+          render();
+        }
+      });
+    }
+
+    // --- Barra de filtros activos --------------------------------------------
+    function activeChips() {
+      const chips = [];
+      if (state.q) chips.push({ key: '__q', text: '“' + state.q + '”' });
+      visibleFilters().forEach(function (f) {
+        const v = state.filters[f.key];
+        if (isNeutral(f, v)) return;
+        if ((f.type === 'multi' || f.type === 'search') && (!v || !v.length)) return;
+        if (f.type === 'text' && !v) return;
+        const text = f.chip(v);
+        if (text) chips.push({ key: f.key, text: text });
+      });
+      return chips;
+    }
+
+    function renderFilterBar() {
+      const chips = activeChips();
+      const filterCount = chips.filter(function (c) { return c.key.indexOf('__') !== 0; }).length;
+      document.getElementById('filterBar').innerHTML =
+        '<button type="button" class="op-filters-open" id="openFilters">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="7" x2="17" y1="12" y2="12"></line><line x1="10" x2="14" y1="18" y2="18"></line></svg>' +
+          'Filters' + (filterCount ? '<span class="op-filters-count">' + filterCount + '</span>' : '') +
+        '</button>' +
+        chips.map(function (c) {
+          return '<span class="op-chip"><span>' + esc(c.text) + '</span>' +
+            '<button class="op-chip-x" aria-label="Remove filter" data-clear="' + esc(c.key) + '">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></span>';
+        }).join('') +
+        (chips.length ? '<button type="button" class="op-clearall" onclick="clearEverything()">Clear all</button>' : '');
+
+      document.getElementById('openFilters').onclick = openFilterModal;
+      document.querySelectorAll('[data-clear]').forEach(function (btn) {
+        btn.onclick = function () { clearOne(btn.dataset.clear); };
+      });
+    }
+
+    function clearOne(key) {
+      if (key === '__q') { state.q = ''; document.getElementById('searchInput').value = ''; }
+      else {
+        const f = FILTERS.find(function (x) { return x.key === key; });
+        state.filters[key] = neutralFor(f);
+        syncShellPickers();
+      }
+      state.page = 1;
+      render();
+    }
+
+    function clearEverything() {
+      state.q = '';
+      state.page = 1;
+      clearFilters(state.filters);
+      document.getElementById('searchInput').value = '';
+      syncShellPickers();
+      render();
+    }
+
+    // --- Selectores de la barra de búsqueda ---------------------------------
+    // Empresa y posición del catálogo. Los dos escriben el mismo criterio que sus
+    // entradas del popup, así que elegir en un lado se ve en el otro.
+    let shellPickers = {};
+
+    // El campo de texto es lo único que espera al botón: buscar en el aviso puede ser
+    // caro y se dispara cuando la persona terminó de escribir.
+    function commitSearch() {
+      state.q = document.getElementById('searchInput').value.trim();
+      state.page = 1;
+      render();
+    }
+
+    // Los tres filtros de al lado se aplican al elegir.
+    function applyQuick(key, value) {
+      state.filters[key] = value;
+      state.page = 1;
+      render();
+    }
+
+    function mountShellPickers() {
+      shellPickers.company = renderShellSearchbox('pickCompany', {
+        icon: SHELL_ICONS.company,
+        placeholder: 'Company',
+        items: MOCK_COMPANIES.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
+          .map(function (c) { return { value: c.id, label: c.name, note: c.location }; }),
+        value: state.filters.company,
+        onChange: function (v) { applyQuick('company', v); }
+      });
+
+      shellPickers.position = renderShellPicker('pickPosition', {
+        icon: SHELL_ICONS.position,
+        allLabel: 'All positions',
+        plural: 'positions',
+        search: false,
+        items: POSITIONS_CATALOG.map(function (x) { return { value: x.id, label: x.name }; })
+          .concat([{ value: 'none', label: 'No catalog position' }]),
+        value: state.filters.position,
+        onChange: function (v) { applyQuick('position', v); }
+      });
+
+      shellPickers.state = renderShellPicker('pickState', {
+        icon: SHELL_ICONS.location,
+        allLabel: 'All states',
+        plural: 'states',
+        searchPlaceholder: 'Search state or code',
+        items: US_STATES.map(function (x) { return { value: x.code, label: x.name, note: x.code }; }),
+        value: state.filters.state,
+        onChange: function (v) { applyQuick('state', v); }
+      });
+    }
+
+    function syncShellPickers() {
+      ['company', 'position', 'state'].forEach(function (k) {
+        if (shellPickers[k]) shellPickers[k].setValue(state.filters[k]);
+      });
+    }
+
+    // --- Popup de filtros ------------------------------------------------------
+    function openFilterModal(key) {
+      draft = {};
+      visibleFilters().forEach(function (f) {
+        const v = state.filters[f.key];
+        draft[f.key] = Array.isArray(v) ? v.slice()
+          : (v && typeof v === 'object' ? Object.assign({}, v, v.roles ? { roles: v.roles.slice() } : {}) : v);
+      });
+      activeCategory = typeof key === 'string' ? key : (activeCategory || visibleFilters()[0].key);
+      Object.keys(pickQuery).forEach(function (k) { delete pickQuery[k]; });
+      pickFocus = null;
+      document.getElementById('filterModal').classList.add('open');
+      renderModal();
+      document.querySelector('.op-modal-box').focus();
+    }
+
+    function closeFilterModal() {
+      document.getElementById('filterModal').classList.remove('open');
+    }
+
+    function draftCount(f) {
+      const v = draft[f.key];
+      if (isNeutral(f, v)) return 0;
+      if (Array.isArray(v)) return v.length;
+      if (f.type === 'dm') return 1 + (v.roles || []).length;
+      return 1;
+    }
+
+    function renderModal() {
+      const list = visibleFilters();
+      if (!list.some(function (f) { return f.key === activeCategory; })) activeCategory = list[0].key;
+
+      // Rail agrupado
+      let rail = '', group = null;
+      list.forEach(function (f) {
+        if (f.group !== group) { group = f.group; rail += '<div class="op-rail-group">' + esc(group) + '</div>'; }
+        const n = draftCount(f);
+        rail += '<button type="button" class="op-rail-item' + (f.key === activeCategory ? ' is-active' : '') + '" data-cat="' + f.key + '">' +
+          esc(f.label) + (n ? '<span class="op-rail-badge">' + n + '</span>' : '') + '</button>';
+      });
+      document.getElementById('modalRail').innerHTML = rail;
+      document.querySelectorAll('[data-cat]').forEach(function (b) {
+        b.onclick = function () { activeCategory = b.dataset.cat; renderModal(); };
+      });
+
+      renderPanel(list.find(function (f) { return f.key === activeCategory; }));
+      renderModalChips();
+    }
+
+    // Lo que se escribió en el buscador de cada criterio de tipo `search`, para que
+    // re-pintar el popup al agregar o quitar a alguien no borre la consulta.
+    const pickQuery = {};
+    // Criterio cuyo buscador debe recuperar el cursor después de re-pintar el popup.
+    let pickFocus = null;
+
+    const ICON_X = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+
+    function renderPanel(f) {
+      const panel = document.getElementById('modalPanel');
+      if (!f) { panel.innerHTML = ''; return; }
+      const v = draft[f.key];
+      const opts = filterOptions(f);
+
+      let body = '';
+      if (f.type === 'text') {
+        body = '<input type="text" class="op-states-search" id="panelText" placeholder="' + esc(f.placeholder || '') +
+          '" value="' + esc(v || '') + '" style="max-width:420px;">';
+      } else if (f.type === 'dm') {
+        const val = v || defaultFor(f);
+        body = '<div class="op-options one-col">' + f.modes.map(function (m) {
+          return '<label class="op-option' + (val.mode === m.value ? ' is-checked' : '') + '">' +
+            '<input type="radio" name="dm-mode" value="' + m.value + '"' + (val.mode === m.value ? ' checked' : '') + '>' +
+            '<span>' + esc(m.label) + '</span>' +
+            (m.note ? '<span class="op-option-note">' + esc(m.note) + '</span>' : '') +
+            '</label>';
+        }).join('') + '</div>';
+
+        // Los roles solo tienen sentido cuando se pidieron empresas con decisores.
+        if (val.mode === 'with') {
+          body += '<div class="op-subrow">' +
+              '<span class="op-subhead">Roles on record</span>' +
+              '<span class="op-panel-actions">' +
+                (val.roles.length === opts.length ? '' : '<button type="button" class="op-panel-clear" id="dmAll">Select all</button>') +
+                (val.roles.length ? '<button type="button" class="op-panel-clear" id="dmNone">Clear</button>' : '') +
+              '</span>' +
+            '</div>' +
+            '<div class="op-options">' + opts.map(function (o) {
+              const on = val.roles.indexOf(o.value) !== -1;
+              return '<label class="op-option' + (on ? ' is-checked' : '') + '">' +
+                '<input type="checkbox" class="dm-role" value="' + esc(o.value) + '"' + (on ? ' checked' : '') + '>' +
+                '<span>' + esc(o.label) + '</span></label>';
+            }).join('') + '</div>' +
+            '<div class="op-hint">With no role checked, any decision maker counts.</div>';
+        }
+      } else if (f.type === 'search') {
+        // Se busca y se agrega: sin listado permanente, que no escala a un equipo grande.
+        body = '<div class="op-pickbox">' +
+            '<input type="text" class="op-states-search" id="panelSearch" autocomplete="off" placeholder="' +
+              esc(f.placeholder || 'Search') + '" value="' + esc(pickQuery[f.key] || '') + '">' +
+            '<div class="op-picksuggest" id="panelResults"></div>' +
+          '</div>' +
+          '<div class="op-subhead">Selected</div>' +
+          '<div class="op-picked" id="panelPicked"></div>';
+      } else if (f.type === 'daterange') {
+        const preset = (v && typeof v === 'object') ? null : (v || 'all');
+        body = '<div class="op-options">' + opts.map(function (o) {
+          return '<label class="op-option' + (preset === o.value ? ' is-checked' : '') + '">' +
+            '<input type="radio" name="preset" value="' + o.value + '"' + (preset === o.value ? ' checked' : '') + '>' +
+            '<span>' + esc(o.label) + '</span></label>';
+        }).join('') + '</div>' +
+        '<div class="op-subhead">Custom range</div>' +
+        '<div class="op-daterange">' +
+          '<div><label for="dateFrom">From</label><input type="date" id="dateFrom" value="' + esc((v && v.from) || '') + '"></div>' +
+          '<div><label for="dateTo">To</label><input type="date" id="dateTo" value="' + esc((v && v.to) || '') + '"></div>' +
+        '</div>' +
+        '<div class="op-hint">A custom range replaces the preset above. Leave “To” empty to reach today.</div>';
+      } else {
+        const isMulti = f.type === 'multi';
+        body = '<div class="op-options' + (f.cols === 1 ? ' one-col' : '') + '">' + opts.map(function (o) {
+          const checked = isMulti ? (v || []).indexOf(o.value) !== -1 : v === o.value;
+          return '<label class="op-option' + (checked ? ' is-checked' : '') + '">' +
+            '<input type="' + (isMulti ? 'checkbox' : 'radio') + '" name="opt-' + f.key + '" value="' + esc(o.value) + '"' + (checked ? ' checked' : '') + '>' +
+            '<span>' + esc(o.label) + '</span>' +
+            (o.note ? '<span class="op-option-note">' + esc(o.note) + '</span>' : '') +
+            '</label>';
+        }).join('') + '</div>';
+      }
+
+      const canSelectAll = f.type === 'multi' && opts.length > 2 && (!v || v.length < opts.length);
+      panel.innerHTML =
+        '<div class="op-panel-head">' +
+          '<div class="op-panel-heading">' +
+            '<h3 class="op-panel-title">' + esc(f.label) + '</h3>' +
+            (f.hint ? '<p class="op-panel-hint">' + esc(f.hint) + '</p>' : '') +
+          '</div>' +
+          '<div class="op-panel-actions">' +
+            (canSelectAll ? '<button type="button" class="op-panel-clear" id="panelAll">Select all</button>' : '') +
+            (draftCount(f) ? '<button type="button" class="op-panel-clear" id="panelClear">Clear</button>' : '') +
+          '</div>' +
+        '</div>' + body;
+
+      const clear = document.getElementById('panelClear');
+      if (clear) clear.onclick = function () { draft[f.key] = neutralFor(f); renderModal(); };
+
+      const all = document.getElementById('panelAll');
+      if (all) all.onclick = function () { draft[f.key] = opts.map(function (o) { return o.value; }); renderModal(); };
+
+      const dmAll = document.getElementById('dmAll');
+      if (dmAll) dmAll.onclick = function () {
+        draft[f.key] = { mode: 'with', roles: opts.map(function (o) { return o.value; }) };
+        renderModal();
+      };
+      const dmNone = document.getElementById('dmNone');
+      if (dmNone) dmNone.onclick = function () { draft[f.key] = { mode: 'with', roles: [] }; renderModal(); };
+
+      panel.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(function (input) {
+        input.onchange = function () {
+          if (f.type === 'multi') {
+            draft[f.key] = Array.prototype.slice.call(panel.querySelectorAll('input:checked')).map(function (i) { return i.value; });
+          } else if (f.type === 'dm') {
+            const cur = draft[f.key] || defaultFor(f);
+            if (input.className.indexOf('dm-role') !== -1) {
+              cur.roles = Array.prototype.slice.call(panel.querySelectorAll('.dm-role:checked')).map(function (i) { return i.value; });
+            } else {
+              cur.mode = input.value;
+              // Salir de "with" descarta los roles: fuera de ahí no significan nada.
+              if (cur.mode !== 'with') cur.roles = [];
+            }
+            draft[f.key] = cur;
+          } else {
+            draft[f.key] = input.value;
+          }
+          renderModal();
+        };
+      });
+
+      const text = document.getElementById('panelText');
+      if (text) text.oninput = function () { draft[f.key] = text.value; renderModalChips(); };
+
+      if (f.type === 'search') wirePicker(f, opts);
+
+      const from = document.getElementById('dateFrom'), to = document.getElementById('dateTo');
+      if (from && to) {
+        const syncRange = function () {
+          to.min = from.value || '';
+          from.max = to.value || '';
+          draft[f.key] = (from.value || to.value) ? { from: from.value, to: to.value } : 'all';
+          renderModal();
+        };
+        from.onchange = syncRange;
+        to.onchange = syncRange;
+      }
+    }
+
+    // Buscador de personas: se escribe, aparecen las coincidencias, y elegir una la suma
+    // abajo. Sin listado permanente — la lista puede crecer y no tiene por qué caber.
+    function wirePicker(f, opts) {
+      const input = document.getElementById('panelSearch');
+      const results = document.getElementById('panelResults');
+      const pickedBox = document.getElementById('panelPicked');
+      const picked = draft[f.key] || [];
+      const query = (pickQuery[f.key] || '').trim().toLowerCase();
+
+      // Sin consulta no hay sugerencias; lo ya elegido tampoco se vuelve a ofrecer.
+      if (!query) {
+        results.innerHTML = '';
+        results.classList.remove('open');
+      } else {
+        const list = opts.filter(function (o) {
+          if (picked.indexOf(o.value) !== -1) return false;
+          return o.label.toLowerCase().indexOf(query) !== -1 ||
+            String(o.note || '').toLowerCase().indexOf(query) !== -1;
+        });
+        results.innerHTML = list.length
+          ? list.map(function (o) {
+              return '<button type="button" class="op-pickitem" data-pick="' + esc(o.value) + '">' +
+                '<span class="op-pickitem-label">' + esc(o.label) + '</span>' +
+                (o.note ? '<span class="op-option-note">' + esc(o.note) + '</span>' : '') +
+                '</button>';
+            }).join('')
+          : '<div class="op-hint" style="padding:var(--space-3);">Nobody else matches &ldquo;' + esc(pickQuery[f.key]) + '&rdquo;.</div>';
+        results.classList.add('open');
+      }
+
+      pickedBox.innerHTML = picked.length
+        ? picked.map(function (val) {
+            const o = opts.find(function (x) { return x.value === val; }) || { label: val };
+            return '<span class="op-pickchip">' + esc(o.label) +
+              '<button class="op-chip-x" data-unpick="' + esc(val) + '" aria-label="Remove ' + esc(o.label) + '">' + ICON_X + '</button></span>';
+          }).join('')
+        : '<span class="op-hint">Nothing selected. Every ' + esc(f.label) + ' is included.</span>';
+
+      // Elegir a alguien limpia la consulta: cierra las sugerencias y deja listo el campo
+      // para el nombre siguiente.
+      results.querySelectorAll('[data-pick]').forEach(function (b) {
+        b.onclick = function () {
+          draft[f.key] = f.single ? [b.dataset.pick] : (draft[f.key] || []).concat([b.dataset.pick]);
+          pickQuery[f.key] = '';
+          pickFocus = f.key;
+          renderModal();
+        };
+      });
+      pickedBox.querySelectorAll('[data-unpick]').forEach(function (b) {
+        b.onclick = function () {
+          draft[f.key] = (draft[f.key] || []).filter(function (x) { return x !== b.dataset.unpick; });
+          pickFocus = f.key;
+          renderModal();
+        };
+      });
+
+      input.oninput = function () { pickQuery[f.key] = input.value; pickFocus = f.key; renderModal(); };
+
+      if (pickFocus === f.key) {
+        pickFocus = null;
+        input.focus();
+        if (input.setSelectionRange) input.setSelectionRange(input.value.length, input.value.length);
+      }
+    }
+
+    function renderModalChips() {
+      const chips = visibleFilters().filter(function (f) { return draftCount(f); }).map(function (f) {
+        return '<span class="op-foot-chip">' + esc(f.chip(draft[f.key])) +
+          '<button class="op-chip-x" data-dchip="' + f.key + '" aria-label="Remove">' + ICON_X + '</button></span>';
+      });
+      document.getElementById('modalChips').innerHTML = chips.join('');
+      document.querySelectorAll('[data-dchip]').forEach(function (b) {
+        b.onclick = function () {
+          const f = FILTERS.find(function (x) { return x.key === b.dataset.dchip; });
+          draft[f.key] = neutralFor(f);
+          renderModal();
+        };
+      });
+    }
+
+    // --- Arranque --------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', function () {
+      if (!initSession()) return;
+      renderHeaderControls();
+      renderSidebar('vacancies');
+      resetFilters(state.filters);
+
+      const input = document.getElementById('searchInput');
+
+      mountShellPickers();
+
+      document.getElementById('searchBtn').onclick = commitSearch;
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') commitSearch(); });
+
+      document.getElementById('sortSelect').onchange = function (e) {
+        state.sort = e.target.value;
+        state.page = 1;
+        render();
+      };
+
+      document.getElementById('modalClose').onclick = closeFilterModal;
+      document.getElementById('modalClearAll').onclick = function () { clearFilters(draft); renderModal(); };
+      document.getElementById('modalApply').onclick = function () {
+        Object.keys(draft).forEach(function (k) { state.filters[k] = draft[k]; });
+        state.page = 1;
+        closeFilterModal();
+        syncShellPickers();
+        render();
+      };
+      document.getElementById('filterModal').onclick = function (e) {
+        if (e.target.id === 'filterModal') closeFilterModal();
+      };
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeFilterModal();
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

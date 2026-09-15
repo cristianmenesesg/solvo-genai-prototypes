@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Position - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="breadcrumb">
+          <a href="open-positions.html" class="breadcrumb-item">Open Positions</a>
+          <span class="breadcrumb-separator">&rsaquo;</span>
+          <span class="breadcrumb-current" id="breadcrumbName"></span>
+        </div>
+
+        <div class="vd-layout">
+          <div class="vd-main">
+            <!-- Cabecera del aviso -->
+            <div class="vd-head" id="vdHead"></div>
+
+            <div class="detail-tabs">
+              <button class="detail-tab-btn active" onclick="switchTab('info', this)">Info</button>
+              <button class="detail-tab-btn" onclick="switchTab('followup', this)">Follow-up</button>
+            </div>
+
+            <div id="tab-info" class="detail-tab-content active">
+              <div class="vd-spec" id="vdSpec"></div>
+
+              <section class="vd-block">
+                <h3 class="vd-blocktitle">Job description</h3>
+                <div class="vd-desc" id="vdDescription"></div>
+              </section>
+            </div>
+
+            <div id="tab-followup" class="detail-tab-content">
+              <section class="vd-block">
+                <div class="vd-blockhead">
+                  <h3 class="vd-blocktitle">Activity</h3>
+                  <button class="op-actionbtn" onclick="openStateChangeModal()">Change status</button>
+                </div>
+                <div class="vd-timeline" id="vdTimeline"></div>
+              </section>
+            </div>
+          </div>
+
+          <aside class="vd-side">
+            <section class="vd-card" id="vdCompany"></section>
+            <section class="vd-card" id="vdDecisionMakers"></section>
+            <section class="vd-card vd-card-plain">
+              <div id="assignmentSection"></div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width: 600px; max-height: 90vh;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h2 class="modal-title">Edit position</h2>
+          <span class="modified-counter" id="modifiedCounter" style="display: none;">0 fields modified</span>
+        </div>
+        <button class="modal-close" onclick="closeEditModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 140px);">
+        <form id="editVacancyForm">
+          <div class="form-section">
+            <h4 class="form-section-title">Basic Information</h4>
+            <div class="form-group">
+              <label class="form-label">Job Title *</label>
+              <input type="text" class="form-input" id="editTitle" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <textarea class="form-textarea" id="editDescription" rows="4"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="editSalaryMin">Annual salary from (USD)</label>
+                <input type="number" class="form-input" id="editSalaryMin" placeholder="45760" min="0" step="100">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="editSalaryMax">Annual salary to (USD)</label>
+                <input type="number" class="form-input" id="editSalaryMax" placeholder="56160" min="0" step="100">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="editState">State code</label>
+                <input type="text" class="form-input" id="editState" placeholder="FL" maxlength="2">
+              </div>
+              <div class="form-group">
+                <label class="form-check" style="margin-top:26px;">
+                  <input type="checkbox" id="editRemoteViable">
+                  <span>Remote viable</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 8px;">
+            <p class="text-muted text-sm" style="margin: 0;">
+              <strong>Note:</strong> Status changes use the "Change status" button.
+            </p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveVacancyBtn" onclick="saveVacancy()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State Change Modal -->
+  <div class="modal-overlay" id="stateChangeModal">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Change Status</h2>
+        <button class="modal-close" onclick="closeStateChangeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="state-change-current">
+          <span class="text-muted">Current status:</span>
+          <span class="badge-pipeline" id="currentStateBadge">Detected</span>
+        </div>
+        <form id="stateChangeForm">
+          <div class="form-group">
+            <label class="form-label">New Status *</label>
+            <select class="form-select" id="newState" required>
+              <option value="">Select status...</option>
+              <option value="detected">Detected</option>
+              <option value="contacted">Contacted</option>
+              <option value="proposal">Proposal</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Note * <span class="text-muted">(min 10 chars)</span></label>
+            <textarea class="form-textarea" id="stateChangeNote" placeholder="Describe the reason..." minlength="10" maxlength="500" required></textarea>
+            <div class="char-count"><span id="noteCount">0</span>/500</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags <span class="text-muted">(optional)</span></label>
+            <div class="tags-input" id="tagsInput">
+              <input type="text" placeholder="Type and press Enter..." id="tagInputField">
+            </div>
+            <p class="text-muted text-xs" style="margin-top: 4px;">E.g.: #call, #email, #proposal</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeStateChangeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStateChange()">Confirm Change</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Open Position — detalle de una vacante (?id=).
+       Datos: MOCK_VACANCIES por id (GET /api/vacancies/:id), su empresa por
+       company_id, decisores de la empresa (company_contacts con role_code),
+       actividad getVacancyActivity(id) sobre states_history (GET /api/vacancies/:id/history),
+       asignación por slot (staff_vacancy_assignment).
+       Secciones: cabecera (posición, salario anual, seniority, idiomas, portal,
+       estado comercial) · Info: Job info (lo que dice el aviso) y Analysis (lo
+       que decidió el motor: veredicto, confianza, razón, señales del aviso, posición,
+       origen, detección) · Follow-up: el recorrido por el embudo · barra lateral: empresa,
+       decisores y contactos sin analizar, asignación.
+       Acciones: Open original posting (job_url); Edit (PUT /api/vacancies/:id:
+       título, descripción, salario anual, state_code y viabilidad); Change status
+       (POST /api/vacancies/:id/state: nota ≥ 10 caracteres + tags → states_history);
+       Delete, borrado lógico para Administrador y Coordinador; Manage assignment
+       (PUT /api/vacancies/:id/assignment, herencia / override).
+       ------------------------------------------------------------------------ */
+    /* ========================================================================
+       Detalle de la posición abierta.
+       El aviso y lo que el motor decidió sobre él ocupan la columna principal;
+       la empresa, sus decisores y la asignación viven en la barra lateral, que
+       es el contexto con que se decide si vale la pena trabajarlo.
+       ======================================================================== */
+
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('vacancies');
+    renderHeaderControls();
+
+    const params = new URLSearchParams(window.location.search);
+    const vacancyId = params.get('id') || 'vac-011';
+    const vacancy = MOCK_VACANCIES.find(function (v) { return v.id === vacancyId; }) ||
+      MOCK_VACANCIES.find(function (v) { return v.id === 'vac-011'; });
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === vacancy.companyId; });
+
+    // Copia local de la asignación: el popup la escribe acá.
+    let vacData = {
+      comercialId: vacancy.comercialId, comercialType: vacancy.comercialType,
+      sdrId: vacancy.sdrId, sdrType: vacancy.sdrType
+    };
+
+    const STATUS_LABELS = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
+
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Las marcas sembradas están en UTC; se leen y se muestran en ese mismo marco.
+    function formatDate(iso) {
+      if (!iso) return '';
+      return parseStamp(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    function formatWhen(iso) {
+      const d = parseStamp(iso);
+      return d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }) +
+        ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    }
+
+    const ICON = {
+      external: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>',
+      pin: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>',
+      building: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
+      mail: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>',
+      phone: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"></path></svg>',
+      check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>',
+      cross: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>'
+    };
+
+    /* ---- Cabecera ----------------------------------------------------------- */
+    function renderHead() {
+      const salary = salaryLabel(vacancy);
+      const langs = (vacancy.languages || []).join(' · ');
+
+      let tags = '';
+      if (vacancy.positionId) {
+        tags += '<span class="op-tag op-tag-position" title="Catalog position — found with the term “' + esc(vacancy.searchText) + '”">' +
+          esc(getPositionName(vacancy.positionId)) + '</span>';
+      }
+      if (salary) tags += '<span class="op-tag op-tag-salary">' + esc(salary) + '</span>';
+      if (vacancy.seniorityLevel) tags += '<span class="op-tag">' + esc(seniorityLabel(vacancy.seniorityLevel)) + '</span>';
+      if (langs) tags += '<span class="op-tag op-tag-lang">' + esc(langs) + '</span>';
+
+      document.getElementById('vdHead').innerHTML =
+        '<div class="vd-metaline">' +
+          '<span>' + esc(agoPhrase('Detected', vacancy.detectedAtTs || vacancy.detectedAt)) + '</span>' +
+          '<span class="op-portal op-portal-' + esc(String(vacancy.sourcePortal || '').toLowerCase()) + '">' + esc(portalLabel(vacancy.sourcePortal)) + '</span>' +
+          '<span class="badge-pipeline badge-pipeline-' + esc(vacancy.status) + '" id="pipelineBadge">' + esc(STATUS_LABELS[vacancy.status] || vacancy.status) + '</span>' +
+        '</div>' +
+        '<h2 class="vd-title" id="vacancyTitle">' + esc(vacancy.title) + '</h2>' +
+        '<div class="vd-company">' +
+          '<a href="company-detail.html?id=' + esc(company.id) + '">' + esc(company.name) + '</a>' +
+        '</div>' +
+        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(vacancy.location) + ' · ' + esc(modalityLabel(vacancy.workModality)) + '</span></div>' +
+        '<div class="vd-tags">' + tags + '</div>' +
+        '<div class="vd-actions">' +
+          '<a class="op-btn-apply" href="' + esc(vacancy.jobUrl) + '" target="_blank" rel="noopener">Open original posting' + ICON.external + '</a>' +
+          '<button type="button" class="op-actionbtn" onclick="openEditModal()">Edit</button>' +
+          '<button type="button" class="op-actionbtn" onclick="openStateChangeModal()">Change status</button>' +
+          // El borrado es lógico y solo para Administrador y Coordinador, como en el listado
+          // de empresas; el registro conserva su historial y se puede restaurar.
+          (canDelete() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteVacancy()">Delete</button>' : '') +
+        '</div>';
+    }
+
+    /* ---- Tab Info ------------------------------------------------------------ */
+    function specRow(label, value, title, wide) {
+      if (!value) return '';
+      return '<div class="vd-specrow' + (wide ? ' is-wide' : '') + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' +
+        '<dt>' + esc(label) + '</dt><dd>' + value + '</dd></div>';
+    }
+
+    // El veredicto del análisis, como filas de la sección que lo explica.
+    function verdictRows() {
+      if (vacancy.aiConfidence === null || vacancy.aiConfidence === undefined) {
+        return specRow('Remote viability', '<span class="vd-flag vd-flag-none">Not classified</span>') +
+          specRow('Why', 'This posting was detected before the classifier existed, so there is no verdict for it.', null, true);
+      }
+      const ok = vacancy.remoteViable === true;
+      return specRow('Remote viability',
+          '<span class="vd-flag ' + (ok ? 'vd-flag-ok' : 'vd-flag-no') + '">' +
+          (ok ? ICON.check : ICON.cross) + (ok ? 'Remote viable' : 'Not remote viable') + '</span>',
+          'Whether Solvo can cover the role from outside the US') +
+        specRow('Confidence', Math.round(vacancy.aiConfidence * 100) + '%',
+          'How sure the classifier is of the verdict') +
+        specRow('Why', esc((vacancy.aiReasons || [])[0] || ''), null, true);
+    }
+
+    function renderSpec() {
+      const skills = String(vacancy.skills || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+
+      // Lo que el aviso dice de sí mismo.
+      const jobInfo =
+        specRow('Seniority', esc(seniorityLabel(vacancy.seniorityLevel))) +
+        specRow('Work modality', esc(modalityLabel(vacancy.workModality)), 'How the company posted the role, not how Solvo would cover it') +
+        specRow('Department', esc(vacancy.department)) +
+        specRow('Annual salary', esc(salaryLabel(vacancy)) || '<em>Not stated</em>', 'Converted to annual USD from whatever the posting stated') +
+        specRow('Languages', (vacancy.languages || []).length
+          ? (vacancy.languages || []).map(function (l) { return '<span class="op-tag">' + esc(l) + '</span>'; }).join(' ')
+          : '<em>None stated</em>') +
+        specRow('Skills', skills.length
+          ? skills.map(function (s) { return '<span class="op-tag">' + esc(s) + '</span>'; }).join(' ')
+          : '<em>None extracted</em>') +
+        specRow('Location', esc(vacancy.location) + ' · ' + esc(stateName(vacancy.stateCode))) +
+        specRow('Job portal', '<span class="op-portal op-portal-' + esc(String(vacancy.sourcePortal || '').toLowerCase()) + '">' + esc(portalLabel(vacancy.sourcePortal)) + '</span>') +
+        specRow('Published', esc(formatDate(vacancy.publishedDate)) || '<em>Not stated</em>', 'The date the company published the posting');
+
+      // Señales que el análisis etiquetó sobre la descripción (vacancies.ai_signals).
+      const signals = (vacancy.aiSignals || []).map(function (x) {
+        return '<span class="op-tag op-tag-signal is-' + vacancySignalTone(x) + '">' + esc(vacancySignalLabel(x)) + '</span>';
+      }).join(' ');
+
+      // Lo que dedujo el motor de prospección.
+      const analysis =
+        verdictRows() +
+        specRow('Posting signals', signals || '<em>None</em>',
+          'What the classifier found in the description: urgency, volume, customer contact and the conditions that rule people out') +
+        specRow('Catalog position', vacancy.positionId
+          ? esc(getPositionName(vacancy.positionId))
+          : '<em>None — detected by the earlier geography sweep</em>', 'The ICP position the sweep was searching when it found this posting') +
+        specRow('Detected by', esc(sourceProjectLabel(vacancy.source)), 'The pipeline that brought the posting in') +
+        specRow('Detected', esc(formatDate(vacancy.detectedAt)), 'The date Solvo first saw it');
+
+      document.getElementById('vdSpec').innerHTML =
+        '<section class="vd-speccol"><h3 class="vd-blocktitle">Job info</h3><dl>' + jobInfo + '</dl></section>' +
+        '<section class="vd-speccol"><h3 class="vd-blocktitle">Analysis</h3><dl>' + analysis + '</dl></section>';
+
+      document.getElementById('vdDescription').textContent = vacancy.description || '';
+    }
+
+    /* ---- Tab Follow-up -------------------------------------------------------- */
+    // El seguimiento reúne tres fuentes: lo que dejaron los flujos al traer la vacante
+    // (`execution_logs`), los cambios de estado (`states_history`) y las marcas de
+    // exportación. Cada una se muestra distinto, pero todas van en la misma línea.
+
+
+    function renderTimeline() {
+      const rows = getVacancyActivity(vacancy.id);
+      const el = document.getElementById('vdTimeline');
+      if (!rows.length) {
+        el.innerHTML = '<p class="vd-empty">Nothing has happened to this position yet.</p>';
+        return;
+      }
+
+      el.innerHTML = rows.map(renderActivityEntry).join('');
+    }
+
+    // Una entrada de la actividad: el paso de la vacante de un estado comercial a otro, con
+    // quién lo hizo, su nota y sus etiquetas.
+    function renderActivityEntry(a) {
+      function stageBadge(v) {
+        return '<span class="badge-pipeline badge-pipeline-' + esc(v) + '">' + esc(STATUS_LABELS[v] || v) + '</span>';
+      }
+
+      const who = a.by === 'system' ? '<span class="vd-tl-system">System</span>' : esc(a.by);
+      const meta = [who, esc(formatWhen(a.at))].join('<span class="vd-dot">·</span>');
+
+      const headline = a.statusFrom
+        ? stageBadge(a.statusFrom) + '<span class="vd-tl-arrow">&rarr;</span>' + stageBadge(a.statusTo)
+        : stageBadge(a.statusTo);
+      const body = '<p class="vd-tl-note">' + esc(a.note) + '</p>' +
+        (a.tags && a.tags.length
+          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
+          : '');
+
+      return '<article class="vd-tl-item">' +
+        '<span class="vd-tl-dot' + (a.by === 'system' ? ' is-system' : '') + '" aria-hidden="true"></span>' +
+        '<div class="vd-tl-body">' +
+          '<div class="vd-tl-move">' + headline + '</div>' +
+          '<div class="vd-tl-meta">' + meta + '</div>' +
+          body +
+        '</div>' +
+      '</article>';
+    }
+
+    /* ---- Barra lateral -------------------------------------------------------- */
+    function icpBadge(c) {
+      const tier = icpTier(c);
+      if (tier === 'excluded') return '<span class="op-cbadge op-cbadge-excluded" title="Disqualified: ' + esc(leadSignalLabel(c.exclusionReason)) + '">Excluded</span>';
+      if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
+      const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
+      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
+    }
+
+    function renderCompanyCard() {
+      const pos = companyOpenPositions(company.id);
+      const signals = (company.leadSignals || []).filter(function (s) {
+        return !(LEAD_SIGNALS.find(function (x) { return x.code === s; }) || {}).disqualifying;
+      });
+
+      const links = [
+        company.website ? { href: company.website, label: 'Website' } : null,
+        company.linkedinUrl ? { href: company.linkedinUrl, label: 'LinkedIn' } : null,
+        company.indeedUrl ? { href: company.indeedUrl, label: 'Indeed' } : null
+      ].filter(Boolean);
+
+      document.getElementById('vdCompany').innerHTML =
+        '<h3 class="vd-cardtitle">Company</h3>' +
+        '<div class="vd-co">' +
+          '<span class="op-cicon' + (company.type === 'client' ? ' is-client' : '') + '" aria-hidden="true">' + ICON.building + '</span>' +
+          '<div class="vd-co-body">' +
+            '<a class="vd-co-name" href="company-detail.html?id=' + esc(company.id) + '">' + esc(company.name) + '</a>' +
+            '<div class="vd-co-badges">' +
+              '<span class="op-cbadge">' + esc(RELATIONSHIP_LABELS[company.type] || company.type) + '</span>' +
+              icpBadge(company) +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<dl class="vd-colist">' +
+          specRow('Industry', company.industryCode ? esc(getIndustryLabel(company.industryCode)) : '<em>Unclassified</em>') +
+          specRow('Employees', company.sizeEmployees ? Number(company.sizeEmployees).toLocaleString('en-US') : '<em>Unknown</em>') +
+          specRow('Location', esc(company.location)) +
+          specRow('Pipeline', '<span class="pr-stage pr-stage-neutral">' + esc(pipelineLabel(company.pipelineStage)) + '</span>') +
+          specRow('Open positions', '<strong>' + pos.total + '</strong> detected · <strong>' + pos.viable + '</strong> remote viable') +
+        '</dl>' +
+        (company.leadSummary ? '<p class="vd-co-summary">' + esc(company.leadSummary) + '</p>' : '') +
+        (signals.length ? '<div class="vd-co-signals">' + signals.map(function (s) {
+          return '<span class="op-cbadge op-cbadge-signal">' + esc(leadSignalLabel(s)) + '</span>';
+        }).join('') + '</div>' : '') +
+        (links.length ? '<div class="vd-links">' + links.map(function (l) {
+          return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' + esc(l.label) + ICON.external + '</a>';
+        }).join('') + '</div>' : '');
+    }
+
+    function renderDecisionMakers() {
+      const people = getContactsForCompany(company.id)
+        .filter(function (c) { return c.roleCode && c.decisionLevel; })
+        .sort(function (a, b) { return a.decisionLevel - b.decisionLevel; });
+
+      const el = document.getElementById('vdDecisionMakers');
+      const head = '<h3 class="vd-cardtitle">Decision makers' +
+        (people.length ? ' <span class="vd-count">' + people.length + '</span>' : '') + '</h3>';
+
+      if (!people.length) {
+        const others = getUnanalyzedContacts(company.id);
+        el.innerHTML = head + '<p class="vd-empty">' +
+          (company.isExcluded
+            ? 'The company is excluded, so contacts are never searched for it.'
+            : company.contactsSearchedAt
+              ? 'The contact search ran and nobody qualified as a decision maker.'
+              : 'The contact search has not run for this company yet.') +
+          '</p>' +
+          (others.length
+            ? '<p class="vd-dm-others" title="' + esc(others.map(function (o) { return o.fullName + ' — ' + o.position; }).join(' · ')) + '">' +
+              others.length + ' contact' + (others.length === 1 ? '' : 's') + ' on record without a role code.</p>'
+            : '');
+        return;
+      }
+
+      const others = getUnanalyzedContacts(company.id);
+      const othersNote = others.length
+        ? '<p class="vd-dm-others" title="' + esc(others.map(function (o) { return o.fullName + ' — ' + o.position; }).join(' · ')) + '">' +
+          others.length + ' more contact' + (others.length === 1 ? '' : 's') + ' on record without a role code, so they do not count as decision makers.</p>'
+        : '';
+
+      el.innerHTML = head + people.map(function (p) {
+        const ver = EMAIL_VERIFICATION[p.emailVerification] || EMAIL_VERIFICATION.unknown;
+        return '<article class="vd-dm">' +
+          '<div class="vd-dm-head">' +
+            '<span class="vd-dm-role">' + esc(roleCodeLabel(p.roleCode)) + '</span>' +
+            '<span class="vd-dm-level" title="Level ' + p.decisionLevel +
+              (p.decisionLevel === 1 ? ' — signs the purchase' : ' — kept only when there is no level 1') + '">L' + p.decisionLevel + '</span>' +
+          '</div>' +
+          '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
+          // El cargo crudo solo cuando no es la expansión literal del rol normalizado.
+          (rawPositionAddsInfo(p) ? '<div class="vd-dm-title">' + esc(p.position) + '</div>' : '') +
+          (p.email
+            ? '<a class="vd-dm-line" href="mailto:' + esc(p.email) + '" title="' + esc(ver.note) + '">' +
+              ICON.mail + '<span>' + esc(p.email) + '</span>' +
+              (ver.short ? '<span class="vd-ver vd-ver-' + ver.tone + '">' + esc(ver.short) + '</span>' : '') +
+              '</a>'
+            : '') +
+          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+          (p.linkedinUrl ? '<a class="vd-dm-line" href="' + esc(p.linkedinUrl) + '" target="_blank" rel="noopener">' + ICON.external + '<span>LinkedIn profile</span></a>' : '') +
+          (p.interestSignal
+            ? '<div class="vd-dm-why"><span class="vd-dm-whylabel">Why now</span>' +
+              '<p class="vd-dm-signal">' + esc(p.interestSignal) + '</p></div>'
+            : '') +
+        '</article>';
+      }).join('') + othersNote;
+    }
+
+    /* ---- Asignación ------------------------------------------------------------ */
+    function renderAssignment() {
+      renderAssignmentSection('assignmentSection', {
+        comercialId: vacData.comercialId,
+        sdrId: vacData.sdrId,
+        coordinatorId: company ? company.coordinatorId : null,
+        comercialType: vacData.comercialType,
+        sdrType: vacData.sdrType,
+        companyName: company ? company.name : null,
+        showInheritance: true,
+        updatedAt: vacancy.assignmentUpdatedAt || null,
+        onManage: function () {
+          openAssignmentPopup({
+            title: vacancy.title,
+            currentComercialId: vacData.comercialId,
+            currentSdrId: vacData.sdrId,
+            currentCoordinatorId: company ? company.coordinatorId : null,
+            comercialType: vacData.comercialType,
+            sdrType: vacData.sdrType,
+            showInheritance: true,
+            inheritedComercialId: company ? company.comercialId : null,
+            inheritedSdrId: company ? company.sdrId : null,
+            onSave: function (newComercialId, newSdrId) {
+              if (newComercialId !== vacData.comercialId) {
+                vacData.comercialId = newComercialId;
+                vacData.comercialType = (company && newComercialId === company.comercialId) ? 'inherited' : (newComercialId ? 'direct' : null);
+              }
+              if (newSdrId !== vacData.sdrId) {
+                vacData.sdrId = newSdrId;
+                vacData.sdrType = (company && newSdrId === company.sdrId) ? 'inherited' : (newSdrId ? 'direct' : null);
+              }
+              renderAssignment();
+            }
+          });
+        }
+      });
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.detail-tab-btn').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.detail-tab-content').forEach(function (c) { c.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    /* ---- Arranque --------------------------------------------------------------- */
+    document.title = vacancy.title + ' - Solvo Platform';
+    document.getElementById('breadcrumbName').textContent = vacancy.title;
+    renderHead();
+    renderSpec();
+    renderTimeline();
+    renderCompanyCard();
+    renderDecisionMakers();
+    renderAssignment();
+  </script>
+
+  <script>
+    /* ---- Popup de edición ------------------------------------------------------ */
+    // Solo lo no estructural: la vacante entra por los flujos de detección y su
+    // clasificación no se edita a mano.
+    // El popup deja cambiar is_remote_viable, que el envío y el tablero consumen como
+    // veredicto del clasificador: lo que se edita a mano vale hasta que el motor lo rehaga.
+    const originals = {};
+    const EDIT_FIELDS = ['editTitle', 'editDescription', 'editSalaryMin', 'editSalaryMax', 'editState'];
+
+    function openEditModal() {
+      document.getElementById('editTitle').value = vacancy.title;
+      document.getElementById('editDescription').value = vacancy.description || '';
+      document.getElementById('editSalaryMin').value = vacancy.salaryMinUsd || '';
+      document.getElementById('editSalaryMax').value = vacancy.salaryMaxUsd || '';
+      document.getElementById('editState').value = vacancy.stateCode || '';
+      document.getElementById('editRemoteViable').checked = !!vacancy.remoteViable;
+      EDIT_FIELDS.forEach(function (id) { originals[id] = document.getElementById(id).value; });
+      originals.remote = !!vacancy.remoteViable;
+      document.getElementById('editModal').classList.add('active');
+      updateModifiedCounter();
+    }
+
+    function closeEditModal() {
+      if (countModified() > 0 && !confirm('Discard changes?')) return;
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    function countModified() {
+      let c = EDIT_FIELDS.filter(function (id) { return document.getElementById(id).value !== originals[id]; }).length;
+      if (document.getElementById('editRemoteViable').checked !== originals.remote) c++;
+      return c;
+    }
+
+    function updateModifiedCounter() {
+      const count = countModified();
+      const counter = document.getElementById('modifiedCounter');
+      const btn = document.getElementById('saveVacancyBtn');
+      if (count > 0) {
+        counter.style.display = 'inline-block';
+        counter.textContent = count + ' field' + (count > 1 ? 's' : '') + ' modified';
+        btn.disabled = false; btn.style.opacity = '1';
+      } else {
+        counter.style.display = 'none';
+        btn.disabled = true; btn.style.opacity = '0.5';
+      }
+    }
+
+    EDIT_FIELDS.forEach(function (id) {
+      document.getElementById(id).addEventListener('input', updateModifiedCounter);
+    });
+    document.getElementById('editRemoteViable').addEventListener('change', updateModifiedCounter);
+
+    function saveVacancy() {
+      vacancy.title = document.getElementById('editTitle').value.trim() || vacancy.title;
+      vacancy.description = document.getElementById('editDescription').value;
+      vacancy.salaryMinUsd = Number(document.getElementById('editSalaryMin').value) || null;
+      vacancy.salaryMaxUsd = Number(document.getElementById('editSalaryMax').value) || null;
+      vacancy.stateCode = document.getElementById('editState').value.trim().toUpperCase();
+      // Lo editado a mano queda así hasta que algo lo sobreescriba, que es como se comporta
+      // el resto de los campos que también escribe el motor.
+      vacancy.remoteViable = document.getElementById('editRemoteViable').checked;
+
+      document.title = vacancy.title + ' - Solvo Platform';
+      document.getElementById('breadcrumbName').textContent = vacancy.title;
+      renderHead();
+        renderSpec();
+
+      document.getElementById('editModal').classList.remove('active');
+      document.getElementById('modifiedCounter').style.display = 'none';
+      showToast('Position updated', 'success');
+    }
+
+    /* ---- Borrado lógico de la posición ------------------------------------------ */
+    function confirmDeleteVacancy() {
+      openConfirmPopup({
+        title: 'Delete position',
+        message: 'Deleting <strong>' + vacancy.title + '</strong> hides it from the listings and keeps its history. An administrator can restore it.',
+        confirmLabel: 'Delete',
+        onConfirm: function () {
+          const idx = MOCK_VACANCIES.findIndex(function (v) { return v.id === vacancy.id; });
+          if (idx >= 0) MOCK_VACANCIES.splice(idx, 1);
+          showToast('Position deleted', 'success');
+          setTimeout(function () { window.location.href = 'open-positions.html'; }, 600);
+        }
+      });
+    }
+
+    /* ---- Popup de cambio de estado --------------------------------------------- */
+    let tags = [];
+
+    function openStateChangeModal() {
+      const badge = document.getElementById('currentStateBadge');
+      badge.textContent = STATUS_LABELS[vacancy.status] || vacancy.status;
+      badge.className = 'badge-pipeline badge-pipeline-' + vacancy.status;
+      document.getElementById('stateChangeModal').classList.add('active');
+    }
+
+    function closeStateChangeModal() {
+      document.getElementById('stateChangeModal').classList.remove('active');
+      tags = [];
+      renderTags();
+    }
+
+    function saveStateChange() {
+      const note = document.getElementById('stateChangeNote').value;
+      if (note.length < 10) { showToast('Note must be at least 10 characters', 'error'); return; }
+      const newStatus = document.getElementById('newState').value;
+      if (!newStatus) { showToast('Select a status', 'error'); return; }
+
+      // El cambio entra al historial compartido, que es lo que lee el tab de seguimiento.
+      addStateHistory({
+        vacancyId: vacancy.id, companyId: vacancy.companyId, changedBy: user.name,
+        statusFrom: vacancy.status, statusTo: newStatus, note: note, tags: tags.slice()
+      });
+      vacancy.status = newStatus;
+
+      renderHead();
+      renderTimeline();
+      closeStateChangeModal();
+      document.getElementById('stateChangeNote').value = '';
+      showToast('Status updated to ' + STATUS_LABELS[newStatus], 'success');
+    }
+
+    /* ---- Etiquetas de la nota ---------------------------------------------------- */
+    function renderTags() {
+      const container = document.getElementById('tagsInput');
+      const input = document.getElementById('tagInputField');
+      container.innerHTML = '';
+      tags.forEach(function (tag, i) {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = tag + ' <span class="tag-chip-remove" onclick="removeTag(' + i + ')">&times;</span>';
+        container.appendChild(chip);
+      });
+      container.appendChild(input);
+    }
+
+    function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+    document.getElementById('tagInputField').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = this.value.trim();
+        if (v) { tags.push(v.charAt(0) === '#' ? v : '#' + v); this.value = ''; renderTags(); }
+      }
+    });
+
+    document.getElementById('stateChangeNote').addEventListener('input', function () {
+      const count = this.value.length;
+      const el = document.getElementById('noteCount');
+      el.textContent = count;
+      const parent = el.parentElement;
+      parent.classList.remove('char-count-green', 'char-count-yellow', 'char-count-red');
+      if (count < 10) parent.classList.add('char-count-red');
+      else if (count <= 400) parent.classList.add('char-count-green');
+      else if (count <= 450) parent.classList.add('char-count-yellow');
+      else parent.classList.add('char-count-red');
+    });
+
+    ['editModal', 'stateChangeModal'].forEach(function (id) {
+      document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target !== this) return;
+        if (id === 'editModal') closeEditModal(); else closeStateChangeModal();
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { closeEditModal(); closeStateChangeModal(); }
+    });
+  </script>
+</body>
+</html>

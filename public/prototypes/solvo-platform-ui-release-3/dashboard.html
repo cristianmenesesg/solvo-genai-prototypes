@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KPIs - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="kp-head">
+          <h2 class="page-title" style="margin:0;">KPIs</h2>
+          <div class="kp-window" role="group" aria-label="Time range">
+            <button type="button" data-days="7">Last 7 days</button>
+            <button type="button" data-days="30" class="is-on">Last 30 days</button>
+          </div>
+        </div>
+
+        <!-- Embudo de detección: de lo que el barrido trae a lo que se puede trabajar -->
+        <div class="kp-funnelstrip" id="kpFunnel"></div>
+
+        <div class="kp-grid">
+          <div class="kp-col">
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Positions detected and remote viable</h3>
+                <button type="button" class="kp-toggle" data-table="positions">Table view</button>
+              </div>
+              <p class="kp-panel-sub" id="positionsSub"></p>
+              <div class="kp-legend" id="positionsLegend"></div>
+              <div class="kp-chart" id="positionsChart"></div>
+              <div id="positionsTable" hidden></div>
+            </section>
+
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Companies and decision makers</h3>
+                <button type="button" class="kp-toggle" data-table="prospects">Table view</button>
+              </div>
+              <p class="kp-panel-sub" id="prospectsSub"></p>
+              <div class="kp-legend" id="prospectsLegend"></div>
+              <div class="kp-chart" id="prospectsChart"></div>
+              <div id="prospectsTable" hidden></div>
+            </section>
+          </div>
+
+          <div class="kp-col">
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Booking funnel</h3>
+              </div>
+              <p class="kp-panel-sub">From the email sent to the meeting confirmed on the calendar.</p>
+              <div id="bookingFunnel"></div>
+            </section>
+
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Booking record</h3>
+              </div>
+              <p class="kp-panel-sub">Every day of the range, stage by stage.</p>
+              <div class="kp-tablewrap" id="bookingRecord"></div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       KPIs — tablero del motor de prospección. Reemplaza los KPIs comerciales por rol del
+       MVP: lo que muestra es volumen del motor y del embudo de agendamiento, igual para
+       todos los roles.
+       Datos: MOCK_DAILY_METRICS y MOCK_BOOKING_FUNNEL (rbac.js), sintéticos y
+       deterministas. Fuentes reales a fijar en la HU:
+         positions          vacancies.created_at por día
+         viablePositions    vacancies.is_remote_viable = true
+         companies          company.created_at por día
+         viableCompanies    empresas con al menos una vacante viable
+         companiesWithDm    contacts_searched_at no nulo y ≥1 contacto con decision_level
+         decisionMakers     company_contacts con decision_level, por analyzed_at
+         booking funnel     public.funnel_events por event_type / occurred_at:
+                            email_delivered → email_opened → email_click →
+                            landing_view → slot_selected → booking_confirmed
+                            (availability_shown y visible_error se registran aparte;
+                            solo interacción humana cuando FSPL-8 se entregue)
+       Acciones: ventana 7 / 30 días y vista de tabla por gráfico (client-side).
+       Contrato: sin definir; hoy existe GET /api/dashboard/kpis/{vacancies,companies}.
+       ------------------------------------------------------------------------ */
+    /* ========================================================================
+       Tablero de KPIs.
+       Arriba el embudo de detección: de lo que el barrido trae a lo que se puede
+       trabajar. Debajo, cómo evoluciona día a día, y al costado qué pasa cuando
+       ese material sale como correo.
+
+       Los colores salen del verificador del design system, no del ojo. Las dos
+       series son categóricas —identidad, no magnitud— y el embudo usa una rampa
+       ordinal de un solo tono. Ninguna gráfica tiene dos ejes.
+       ======================================================================== */
+
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('dashboard');
+    renderHeaderControls();
+
+    let days = 30;
+
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function num(n) { return Number(n).toLocaleString('en-US'); }
+    function pct(part, whole) { return whole ? Math.round(part / whole * 100) + '%' : '—'; }
+
+    function dayLabel(iso) {
+      return parseStamp(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    }
+
+    /* ---- Embudo de detección ------------------------------------------------ */
+    // Cinco pasos, cada uno un subconjunto del anterior. Van como fichas y no como
+    // gráfico: son cinco números, y un gráfico de cinco barras no diría más.
+    function renderFunnelStrip() {
+      const rows = dailyMetrics(days);
+      // `chain: false` abre una cadena nueva. Las empresas no son un subconjunto de las
+      // posiciones —una empresa aparece en varias—, así que una proporción entre las dos
+      // no significaría nada: la cadena de posiciones termina en las viables y la de
+      // empresas empieza de cero.
+      const steps = [
+        { label: 'Positions detected', value: sumMetric(rows, 'positions'), chain: false,
+          note: 'Everything the sweep brought in' },
+        { label: 'Remote viable', value: sumMetric(rows, 'viablePositions'), chain: true,
+          note: 'The classifier judged the role coverable from outside the US' },
+        { label: 'Companies', value: sumMetric(rows, 'companies'), chain: false,
+          note: 'Distinct companies behind those positions' },
+        { label: 'Viable companies', value: sumMetric(rows, 'viableCompanies'), chain: true,
+          note: 'With at least one remote viable position' },
+        { label: 'With decision makers', value: sumMetric(rows, 'companiesWithDm'), chain: true,
+          note: 'Somebody to write to' }
+      ];
+
+      document.getElementById('kpFunnel').innerHTML = steps.map(function (s, i) {
+        return '<article class="kp-tile' + (s.chain ? '' : ' starts-chain') + '" title="' + esc(s.note) + '">' +
+          '<div class="kp-tile-label">' + esc(s.label) + '</div>' +
+          '<div class="kp-tile-value">' + num(s.value) + '</div>' +
+          '<div class="kp-tile-step">' +
+            (s.chain
+              ? '<strong>' + pct(s.value, steps[i - 1].value) + '</strong> of the step before'
+              : 'in the last ' + days + ' days') +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    /* ---- Gráfico de líneas ---------------------------------------------------- */
+    // Dos series por gráfico, un solo eje. Marcas finas, rejilla apenas visible,
+    // etiqueta directa solo en el último punto, y crosshair con tooltip al pasar.
+    const CHART = { w: 720, h: 230, padL: 44, padR: 56, padT: 12, padB: 26 };
+
+    function niceCeil(v) {
+      if (v <= 0) return 10;
+      const mag = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+      return Math.ceil(v / (mag / 2)) * (mag / 2);
+    }
+
+    function lineChart(mount, rows, series, tableMount, tableCaption) {
+      const max = niceCeil(Math.max.apply(null, rows.map(function (r) {
+        return Math.max.apply(null, series.map(function (s) { return r[s.key]; }));
+      })));
+      const innerW = CHART.w - CHART.padL - CHART.padR;
+      const innerH = CHART.h - CHART.padT - CHART.padB;
+      const x = function (i) { return CHART.padL + (rows.length === 1 ? innerW / 2 : innerW * i / (rows.length - 1)); };
+      const y = function (v) { return CHART.padT + innerH - (v / max) * innerH; };
+
+      const ticks = [0, max / 4, max / 2, max * 0.75, max];
+      let svg = '<svg viewBox="0 0 ' + CHART.w + ' ' + CHART.h + '" role="img" aria-label="' + esc(tableCaption) + '">';
+
+      ticks.forEach(function (t) {
+        svg += '<line class="kp-grid-line" x1="' + CHART.padL + '" x2="' + (CHART.w - CHART.padR) + '" y1="' + y(t) + '" y2="' + y(t) + '"></line>' +
+          '<text class="kp-axis-text" x="' + (CHART.padL - 8) + '" y="' + (y(t) + 3.5) + '" text-anchor="end">' + num(Math.round(t)) + '</text>';
+      });
+
+      // Fechas: la primera, la del medio y la última. Una por día sería ilegible.
+      [0, Math.floor(rows.length / 2), rows.length - 1].forEach(function (i, n) {
+        svg += '<text class="kp-axis-text" x="' + x(i) + '" y="' + (CHART.h - 8) + '" text-anchor="' +
+          (n === 0 ? 'start' : n === 2 ? 'end' : 'middle') + '">' + esc(dayLabel(rows[i].date)) + '</text>';
+      });
+
+      series.forEach(function (s) {
+        const pts = rows.map(function (r, i) { return x(i) + ',' + y(r[s.key]); }).join(' ');
+        svg += '<polyline class="kp-line" points="' + pts + '" stroke="var(' + s.token + ')"></polyline>';
+      });
+
+      // Marcador y etiqueta solo al final de cada serie: una etiqueta por punto es ruido.
+      series.forEach(function (s) {
+        const last = rows[rows.length - 1];
+        svg += '<circle class="kp-marker" cx="' + x(rows.length - 1) + '" cy="' + y(last[s.key]) +
+          '" r="4.5" fill="var(' + s.token + ')"></circle>' +
+          '<text class="kp-endlabel" x="' + (CHART.w - CHART.padR + 8) + '" y="' + (y(last[s.key]) + 4) + '">' +
+          num(last[s.key]) + '</text>';
+      });
+
+      svg += '<line class="kp-crosshair" id="' + mount.id + '-cross" x1="0" x2="0" y1="' + CHART.padT +
+        '" y2="' + (CHART.padT + innerH) + '" style="display:none"></line>';
+      svg += '<rect id="' + mount.id + '-hit" x="' + CHART.padL + '" y="' + CHART.padT + '" width="' + innerW +
+        '" height="' + innerH + '" fill="transparent" style="cursor:crosshair"></rect>';
+      svg += '</svg><div class="kp-tip" id="' + mount.id + '-tip"></div>';
+
+      mount.innerHTML = svg;
+
+      // Capa de interacción: el punto más cercano gana, con un blanco de todo el alto.
+      const hit = document.getElementById(mount.id + '-hit');
+      const cross = document.getElementById(mount.id + '-cross');
+      const tip = document.getElementById(mount.id + '-tip');
+
+      function at(clientX) {
+        const box = mount.getBoundingClientRect();
+        const rel = (clientX - box.left) / box.width * CHART.w;
+        let best = 0, bestD = Infinity;
+        rows.forEach(function (r, i) {
+          const d = Math.abs(x(i) - rel);
+          if (d < bestD) { bestD = d; best = i; }
+        });
+        return best;
+      }
+
+      function show(e) {
+        const i = at(e.clientX);
+        const r = rows[i];
+        cross.setAttribute('x1', x(i));
+        cross.setAttribute('x2', x(i));
+        cross.style.display = '';
+        tip.innerHTML = '<div class="kp-tip-date">' + esc(dayLabel(r.date)) + (r.weekend ? ' · weekend' : '') + '</div>' +
+          series.map(function (s) {
+            return '<div class="kp-tip-row"><span class="kp-tip-key" style="background:var(' + s.token + ')"></span>' +
+              esc(s.name) + '<span class="kp-tip-val">' + num(r[s.key]) + '</span></div>';
+          }).join('');
+        tip.classList.add('is-on');
+        const box = mount.getBoundingClientRect();
+        const px = x(i) / CHART.w * box.width;
+        tip.style.left = Math.min(Math.max(px - 66, 0), Math.max(0, box.width - 150)) + 'px';
+        tip.style.top = '4px';
+      }
+
+      hit.addEventListener('mousemove', show);
+      hit.addEventListener('mouseleave', function () { cross.style.display = 'none'; tip.classList.remove('is-on'); });
+
+      // Vista de tabla: obligatoria acá, porque el naranja no llega a 3:1 sobre blanco.
+      tableMount.innerHTML = '<div class="kp-tablewrap"><table class="kp-table"><caption class="sr-only">' +
+        esc(tableCaption) + '</caption><thead><tr><th>Day</th>' +
+        series.map(function (s) { return '<th>' + esc(s.name) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        rows.slice().reverse().map(function (r) {
+          return '<tr><td>' + esc(dayLabel(r.date)) + '</td>' +
+            series.map(function (s) { return '<td>' + num(r[s.key]) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+
+    function legend(mount, series) {
+      mount.innerHTML = series.map(function (s) {
+        return '<span class="kp-legend-item"><span class="kp-legend-key" style="background:var(' + s.token + ')"></span>' +
+          esc(s.name) + '</span>';
+      }).join('');
+    }
+
+    const POSITION_SERIES = [
+      { name: 'Detected', key: 'positions', token: '--chart-s1' },
+      { name: 'Remote viable', key: 'viablePositions', token: '--chart-s2' }
+    ];
+
+    const PROSPECT_SERIES = [
+      { name: 'Companies', key: 'companies', token: '--chart-s1' },
+      { name: 'Decision makers', key: 'decisionMakers', token: '--chart-s2' }
+    ];
+
+    function renderTrends() {
+      const rows = dailyMetrics(days);
+
+      document.getElementById('positionsSub').textContent =
+        num(sumMetric(rows, 'positions')) + ' detected, ' + num(sumMetric(rows, 'viablePositions')) +
+        ' of them remote viable (' + pct(sumMetric(rows, 'viablePositions'), sumMetric(rows, 'positions')) + ').';
+      legend(document.getElementById('positionsLegend'), POSITION_SERIES);
+      lineChart(document.getElementById('positionsChart'), rows, POSITION_SERIES,
+        document.getElementById('positionsTable'), 'Positions detected and remote viable, by day');
+
+      document.getElementById('prospectsSub').textContent =
+        num(sumMetric(rows, 'companies')) + ' companies behind those positions, and ' +
+        num(sumMetric(rows, 'decisionMakers')) + ' decision makers found at them.';
+      legend(document.getElementById('prospectsLegend'), PROSPECT_SERIES);
+      lineChart(document.getElementById('prospectsChart'), rows, PROSPECT_SERIES,
+        document.getElementById('prospectsTable'), 'Companies and decision makers, by day');
+    }
+
+    /* ---- Embudo de agendamiento ------------------------------------------------- */
+    function renderBooking() {
+      const rows = bookingFunnel(days);
+      const totals = BOOKING_FUNNEL_STAGES.map(function (s, i) {
+        return { label: s.label, note: s.note, value: sumMetric(rows, s.key), token: '--funnel-' + (i + 1) };
+      });
+      const top = totals[0].value || 1;
+
+      document.getElementById('bookingFunnel').innerHTML = totals.map(function (t, i) {
+        const prev = i ? totals[i - 1].value : null;
+        const width = Math.max(t.value / top * 100, t.value ? 1.5 : 0);
+        return '<div class="kp-fstage" title="' + esc(t.note) + '">' +
+          '<div class="kp-fstage-head">' +
+            '<span class="kp-fstage-label">' + esc(t.label) + '</span>' +
+            '<span class="kp-fstage-count">' + num(t.value) + '</span>' +
+            '<span class="kp-fstage-rate">' + (prev === null ? '' : pct(t.value, prev)) + '</span>' +
+          '</div>' +
+          '<div class="kp-fbar"><span style="width:' + width + '%;background:var(' + t.token + ')"></span></div>' +
+        '</div>';
+      }).join('');
+
+      document.getElementById('bookingRecord').innerHTML =
+        '<table class="kp-table"><thead><tr><th>Day</th><th>Deliv.</th><th>Open</th><th>Click</th>' +
+        '<th>Landing</th><th>Slot</th><th>Booked</th></tr></thead><tbody>' +
+        rows.slice().reverse().map(function (r) {
+          return '<tr><td>' + esc(dayLabel(r.date)) + '</td><td>' + num(r.email_delivered) + '</td><td>' +
+            num(r.email_opened) + '</td><td>' + num(r.email_click) + '</td><td>' + num(r.landing_view) +
+            '</td><td>' + num(r.slot_selected) + '</td><td>' + num(r.booking_confirmed) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    }
+
+    /* ---- Ventana y vista de tabla ------------------------------------------------- */
+    function renderAll() {
+      renderFunnelStrip();
+      renderTrends();
+      renderBooking();
+    }
+
+    document.querySelectorAll('.kp-window button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        days = Number(b.dataset.days);
+        document.querySelectorAll('.kp-window button').forEach(function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll('[data-table]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const key = b.dataset.table;
+        const table = document.getElementById(key + 'Table');
+        const chart = document.getElementById(key + 'Chart');
+        const showing = table.hidden;
+        table.hidden = !showing;
+        chart.hidden = showing;
+        b.textContent = showing ? 'Chart view' : 'Table view';
+      });
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

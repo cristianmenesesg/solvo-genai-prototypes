@@ -111,6 +111,16 @@ export const products = [
         notas: 'Arranca en el login; usá el selector de usuario demo para entrar.',
         versions: [{ label: 'App', file: 'index.html' }],
       },
+      {
+        id: 'platform-ui-release-3',
+        nombre: 'Platform UI — Release 3',
+        categoria: 'App',
+        bundle: 'solvo-platform-ui-release-3',
+        tokens: 'platform',
+        multipage: true,
+        notas: 'Rediseño completo de la experiencia sobre los datos del motor de prospección reordenado. Vacantes pasa a Open Positions (grilla de cards) y Empresas a Prospects (listado de filas), las dos con la misma barra de búsqueda, filtros activos y popup de criterios. Los detalles comparten armazón: cabecera, tabs y barra lateral con la empresa, sus decisores y la asignación, y su seguimiento une los pasos del motor con los cambios de estado. KPIs abre con el pipeline comercial del usuario y sigue con el embudo de detección, dos tendencias diarias y el embudo de agendamiento. Configuración administra el catálogo de posiciones y la grilla de ciudades del barrido. Arranca en el login; usá el selector de usuario demo para entrar.',
+        versions: [{ label: 'App', file: 'index.html' }],
+      },
     ],
   },
   {
