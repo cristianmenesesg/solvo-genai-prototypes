@@ -641,6 +641,12 @@ function renderHeaderControls() {
   wrap.id = 'header-controls';
   wrap.className = 'header-controls';
   header.appendChild(wrap);
+
+  /* theme.js monta el toggle apenas el DOM está listo. Una página que llama a esta
+     función desde su propio DOMContentLoaded llega tarde y el botón ya quedó flotando
+     sobre el body: se reubica en el header en vez de dejarlo suelto. */
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) wrap.appendChild(toggle);
 }
 
 function renderSidebar(activePage) {
