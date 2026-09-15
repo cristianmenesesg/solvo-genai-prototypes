@@ -1192,18 +1192,23 @@ function confirmOutreach() {
 
 /* ----------------- Catálogo y constantes ----------------- */
 /* Ciudades activas (espejo de las marcadas a:true en parametros.html). */
-const ACTIVE_CITIES = [
-  { city:'Bogotá', country:'Colombia' },
-  { city:'Medellín', country:'Colombia' },
-  { city:'Medellín Area Metropolitana', country:'Colombia' },
-  { city:'Barranquilla', country:'Colombia' },
-  { city:'Buenos Aires', country:'Argentina' },
-  { city:'Córdoba, Argentina', country:'Argentina' },
-  { city:'Chihuahua', country:'México' },
-  { city:'Mérida', country:'México' },
-  { city:'Lima', country:'Perú' },
-  { city:'Nairobi', country:'Kenia' },
+const LOCATIONS = [
+      { country:'Argentina', locs:[ {n:'Buenos Aires',a:true}, {n:'Córdoba, Argentina',a:true}, {n:'La Plata',a:false}, {n:'Mendoza',a:false}, {n:'Rosario',a:false} ] },
+      { country:'Belice',    locs:[ {n:'Belmopan',a:false}, {n:'Belize City',a:false}, {n:'Corozal District',a:false}, {n:'Orange Walk Town',a:false}, {n:'San Ignacio',a:false} ] },
+      { country:'Colombia',  locs:[ {n:'Bogotá',a:true}, {n:'Medellín',a:true}, {n:'Medellín Area Metropolitana',a:true}, {n:'Barranquilla',a:true}, {n:'Cali',a:false}, {n:'Armenia',a:false}, {n:'Bucaramanga',a:false}, {n:'Ibagué',a:false} ] },
+      { country:'Guatemala', locs:[ {n:'Guatemala City',a:false}, {n:'Escuintla',a:false}, {n:'Mixco',a:false}, {n:'Quetzaltenango',a:false}, {n:'Villa Nueva',a:false} ] },
+      { country:'Honduras',  locs:[ {n:'San Pedro Sula',a:false}, {n:'Choloma',a:false}, {n:'El Progreso',a:false}, {n:'La Ceiba',a:false}, {n:'Tegucigalpa',a:false} ] },
+      { country:'Kenia',     locs:[ {n:'Nairobi',a:true} ] },
+      { country:'México',    locs:[ {n:'Chihuahua',a:true}, {n:'Mérida',a:true}, {n:'Mexico City',a:false}, {n:'Aguascalientes',a:false}, {n:'Yucatán',a:false} ] },
+      { country:'Perú',      locs:[ {n:'Lima',a:true}, {n:'Arequipa',a:false}, {n:'Chiclayo',a:false}, {n:'Piura',a:false}, {n:'Trujillo',a:false} ] },
 ];
+
+/* La cobertura del pipeline programado son las ciudades marcadas activas.
+   La búsqueda asistida no se acota a esa marca: puede ir a cualquiera del
+   catálogo, porque su razón de ser es buscar donde el cron todavía no va. */
+const ALL_CITIES = LOCATIONS.flatMap(c => c.locs.map(l => ({ city: l.n, country: c.country })));
+const ACTIVE_CITIES = LOCATIONS.flatMap(c => c.locs.filter(l => l.a).map(l => ({ city: l.n, country: c.country })));
+
 
 const REQUIRED_LANGS = ['English', 'Spanish', 'Portuguese', 'French'];
 
@@ -1591,18 +1596,67 @@ function openAiSearch() {
 function renderAiCities() {
   const wrap = document.getElementById('aiCities');
   if (!wrap) return;
-  wrap.innerHTML = ACTIVE_CITIES.map(c => {
-    const on = AI_FORM.cities.has(c.city);
-    return `<button type="button" class="city-chip${on ? ' on' : ''}" data-city="${c.city}">
-        ${c.city}<span class="city-country">${c.country}</span></button>`;
-  }).join('');
+  const elegidas = [...AI_FORM.cities];
+  wrap.innerHTML = elegidas.length
+    ? elegidas.map(city => {
+        const c = ALL_CITIES.find(x => x.city === city);
+        const fuera = c && !ACTIVE_CITIES.some(a => a.city === city);
+        return `<span class="city-chip on" data-city="${city}">${city}<span class="city-country">${c ? c.country : ''}</span>` +
+               `${fuera ? '<span class="city-off" title="Not covered by the scheduled search">off-schedule</span>' : ''}` +
+               `<button type="button" class="city-chip-x" data-remove="${city}" aria-label="Remove ${city}">&times;</button></span>`;
+      }).join('')
+    : '<p class="tl-empty">No cities yet. Add at least one to run the search.</p>';
   wrap.onclick = e => {
-    const b = e.target.closest('.city-chip'); if (!b) return;
-    const city = b.dataset.city;
-    AI_FORM.cities.has(city) ? AI_FORM.cities.delete(city) : AI_FORM.cities.add(city);
+    const x = e.target.closest('[data-remove]'); if (!x) return;
+    AI_FORM.cities.delete(x.dataset.remove);
     renderAiCities(); updateAiEstimate();
   };
 }
+
+/* Comparación tolerante a acentos y mayúsculas, para los buscadores. */
+const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+/* Buscador de ciudades: el catálogo crece, así que se agrega escribiendo
+   en vez de recorrer una grilla. */
+function initAiCityPicker() {
+  const input = document.getElementById('aiCityInput');
+  const sug = document.getElementById('aiCitySuggest');
+  if (!input || !sug) return;
+  function render() {
+    const q = norm(input.value.trim());
+    if (!q) { sug.innerHTML = ''; sug.classList.remove('open'); return; }
+    const hits = ALL_CITIES
+      .filter(c => !AI_FORM.cities.has(c.city))
+      .filter(c => norm(c.city).includes(q) || norm(c.country).includes(q))
+      .slice(0, 8);
+    sug.innerHTML = hits.length
+      ? hits.map(c => {
+          const activa = ACTIVE_CITIES.some(a => a.city === c.city);
+          return `<button type="button" class="city-suggest-item" data-city="${c.city}">${c.city}` +
+                 `<span class="city-country">${c.country}</span>` +
+                 `${activa ? '<span class="city-on">on schedule</span>' : ''}</button>`;
+        }).join('')
+      : '<div class="city-suggest-empty">No city matches that</div>';
+    sug.classList.add('open');
+  }
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); sug.querySelector('.city-suggest-item')?.click(); }
+    if (e.key === 'Escape') { sug.classList.remove('open'); }
+  });
+  sug.addEventListener('mousedown', e => {
+    const b = e.target.closest('.city-suggest-item'); if (!b) return;
+    e.preventDefault();
+    AI_FORM.cities.add(b.dataset.city);
+    input.value = ''; sug.innerHTML = ''; sug.classList.remove('open');
+    renderAiCities(); updateAiEstimate();
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.city-picker')) sug.classList.remove('open');
+  });
+}
+
 
 function updateAiEstimate() {
   const pages = +(document.getElementById('aiPages')?.value || AI_FORM.pages);

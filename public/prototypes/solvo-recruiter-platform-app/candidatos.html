@@ -268,9 +268,13 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Cities to search</label>
+          <label class="form-label" for="aiCityInput">Cities to search</label>
+          <div class="city-picker">
+            <input id="aiCityInput" class="form-input sm" type="text" placeholder="Type a city or country to add…" autocomplete="off">
+            <div class="city-suggest" id="aiCitySuggest"></div>
+          </div>
           <div class="city-chips" id="aiCities"></div>
-          <p class="filter-hint">The pages you pick are searched <b>in each city you select</b>, so both the result and the cost multiply.</p>
+          <p class="filter-hint">Any city in the catalog is available here, not only the ones the scheduled search covers. The pages you pick are searched <b>in each city you select</b>, so both the result and the cost multiply.</p>
         </div>
 
         <div class="ai-estimate">
@@ -302,6 +306,7 @@
     initProfileCombo();
     initFilters();
     initDrawerTabs();
+    initAiCityPicker();
   </script>
 </body>
 </html>

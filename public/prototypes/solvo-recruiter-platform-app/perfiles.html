@@ -122,7 +122,6 @@
 
     /* ---------------- Utilidades ---------------- */
     function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
     /* Fuzzy: subsecuencia tolerante (estilo fzf), ignora espacios; -1 si no matchea */
     function fuzzyScore(qn, text){

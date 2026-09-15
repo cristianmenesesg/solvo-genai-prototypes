@@ -219,16 +219,8 @@
     renderSidebar('parametros');
 
     /* ---------------- Datos de cobertura ---------------- */
-    const LOCATIONS = [
-      { country:'Argentina', locs:[ {n:'Buenos Aires',a:true}, {n:'Córdoba, Argentina',a:true}, {n:'La Plata',a:false}, {n:'Mendoza',a:false}, {n:'Rosario',a:false} ] },
-      { country:'Belice',    locs:[ {n:'Belmopan',a:false}, {n:'Belize City',a:false}, {n:'Corozal District',a:false}, {n:'Orange Walk Town',a:false}, {n:'San Ignacio',a:false} ] },
-      { country:'Colombia',  locs:[ {n:'Bogotá',a:true}, {n:'Medellín',a:true}, {n:'Medellín Area Metropolitana',a:true}, {n:'Barranquilla',a:true}, {n:'Cali',a:false}, {n:'Armenia',a:false}, {n:'Bucaramanga',a:false}, {n:'Ibagué',a:false} ] },
-      { country:'Guatemala', locs:[ {n:'Guatemala City',a:false}, {n:'Escuintla',a:false}, {n:'Mixco',a:false}, {n:'Quetzaltenango',a:false}, {n:'Villa Nueva',a:false} ] },
-      { country:'Honduras',  locs:[ {n:'San Pedro Sula',a:false}, {n:'Choloma',a:false}, {n:'El Progreso',a:false}, {n:'La Ceiba',a:false}, {n:'Tegucigalpa',a:false} ] },
-      { country:'Kenia',     locs:[ {n:'Nairobi',a:true} ] },
-      { country:'México',    locs:[ {n:'Chihuahua',a:true}, {n:'Mérida',a:true}, {n:'Mexico City',a:false}, {n:'Aguascalientes',a:false}, {n:'Yucatán',a:false} ] },
-      { country:'Perú',      locs:[ {n:'Lima',a:true}, {n:'Arequipa',a:false}, {n:'Chiclayo',a:false}, {n:'Piura',a:false}, {n:'Trujillo',a:false} ] },
-    ];
+    /* El catálogo de ciudades vive en app.js: lo comparten esta página y la
+       búsqueda asistida, que ofrece todas aunque el pipeline solo recorra las activas. */
 
     const COUNTRY_CATALOG = ['Argentina','Belice','Brasil','Chile','Colombia','Ecuador','Filipinas','Guatemala','Honduras','India','Kenia','México','Perú','Sudáfrica','Uruguay'];
 
@@ -239,7 +231,6 @@
 
     /* ---------------- Utilidades ---------------- */
     function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function norm(s){ return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
     function countryWord(n){ return n === 1 ? 'country' : 'countries'; }
     function cityWord(n){ return n === 1 ? 'city' : 'cities'; }
     function allCountries(){
