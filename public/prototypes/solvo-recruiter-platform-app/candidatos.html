@@ -168,37 +168,60 @@
       </div>
       <button class="drawer-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
     </div>
+    <div class="drawer-tabs" role="tablist">
+      <button class="drawer-tab active" role="tab" data-tab="profile">Profile</button>
+      <button class="drawer-tab" role="tab" data-tab="history">Experience</button>
+      <button class="drawer-tab" role="tab" data-tab="notes">Notes <span class="drawer-tab-count" data-d-notecount></span></button>
+    </div>
     <div class="drawer-body">
-      <div class="drawer-section">
-        <span class="detail-label">Status</span>
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <span class="badge badge-success">Open to work</span>
-          <span data-d-status></span>
+      <section data-panel="profile">
+        <div class="drawer-section">
+          <span class="detail-label">Status</span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="badge badge-success">Open to work</span>
+            <span data-d-status></span>
+          </div>
+          <div class="drawer-kv" style="margin-top:10px;"><b>Exported</b><span data-d-export>—</span></div>
         </div>
-        <div class="drawer-kv" style="margin-top:10px;"><b>Exported</b><span data-d-export>—</span></div>
-      </div>
-      <div class="drawer-section">
-        <span class="detail-label">Details</span>
-        <div class="drawer-kv"><b>Location</b><span data-d-loc>—</span></div>
-        <div class="drawer-kv"><b>Languages</b><span data-d-langs>—</span></div>
-        <div class="drawer-kv"><b>Email</b><span data-d-email>—</span></div>
-      </div>
-      <div class="drawer-section">
-        <span class="detail-label">About</span>
-        <p data-d-about>—</p>
-      </div>
-      <div class="drawer-section">
-        <span class="detail-label">Skills</span>
-        <div data-d-skills></div>
-      </div>
-      <div class="drawer-section">
-        <span class="detail-label">Notes</span>
-        <div id="notesThread" class="notes-thread"></div>
-        <div class="note-compose">
-          <textarea id="noteInput" class="form-input" rows="2" placeholder="Add a note for the team…"></textarea>
-          <button class="btn btn-secondary btn-sm" onclick="addNote()">Add note</button>
+        <div class="drawer-section">
+          <span class="detail-label">Details</span>
+          <div class="drawer-kv"><b>Location</b><span data-d-loc>—</span></div>
+          <div class="drawer-kv"><b>Email</b><span data-d-email>—</span></div>
+          <div class="drawer-kv"><b>Languages</b><span data-d-langs>—</span></div>
         </div>
-      </div>
+        <div class="drawer-section">
+          <span class="detail-label">About</span>
+          <p data-d-about>—</p>
+        </div>
+        <div class="drawer-section">
+          <span class="detail-label">Skills</span>
+          <div class="top-skills" data-d-topskills></div>
+          <div data-d-skills></div>
+        </div>
+      </section>
+
+      <section data-panel="history" hidden>
+        <div class="drawer-section">
+          <span class="detail-label">Experience <span class="detail-count" data-d-expcount></span></span>
+          <div data-d-experience></div>
+        </div>
+        <div class="drawer-section">
+          <span class="detail-label">Education <span class="detail-count" data-d-educount></span></span>
+          <div data-d-education></div>
+        </div>
+      </section>
+
+      <section data-panel="notes" hidden>
+        <div class="drawer-section">
+          <span class="detail-label">Notes</span>
+          <div id="notesThread" class="notes-thread"></div>
+          <div class="note-compose">
+            <textarea id="noteInput" class="form-input" rows="2" placeholder="Add a note for the team…"></textarea>
+            <button class="btn btn-secondary btn-sm" onclick="addNote()">Add note</button>
+          </div>
+        </div>
+      </section>
+
       <div class="drawer-action">
         <a class="btn btn-secondary" href="#" target="_blank" rel="noopener" style="width:100%; justify-content:center;">View LinkedIn profile ↗</a>
       </div>
@@ -274,6 +297,7 @@
     initTags();
     initProfileCombo();
     initFilters();
+    initDrawerTabs();
   </script>
 </body>
 </html>

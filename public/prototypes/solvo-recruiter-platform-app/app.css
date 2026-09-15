@@ -474,3 +474,62 @@
 .crit-discarded { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -6px 0 14px; }
 .crit-chip.out { opacity: .5; text-decoration: line-through; }
 .ai-status { font-weight: 700; }
+
+/* ---------- Historial del candidato (experiencia y educación) ---------- */
+.tl-item {
+  position: relative; padding: 0 0 var(--spacing-md) 16px;
+  border-left: 2px solid var(--border-color);
+}
+.tl-item:last-child { padding-bottom: 0; border-left-color: transparent; }
+.tl-item::before {
+  content: ''; position: absolute; left: -5px; top: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg-card); box-shadow: 0 0 0 2px var(--border-color);
+}
+.tl-item--current::before { background: var(--color-secondary); box-shadow: 0 0 0 2px var(--color-secondary); }
+.tl-title {
+  font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.tl-now {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  background: var(--status-success-bg); color: var(--status-success-fg);
+  padding: 1px 6px; border-radius: var(--radius-full);
+}
+.tl-sub  { font-size: var(--font-size-sm); color: var(--text-secondary); }
+.tl-meta { font-size: var(--font-size-xs); color: var(--text-muted); }
+.tl-dates{ font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px; }
+.tl-empty{ font-size: var(--font-size-sm); color: var(--text-muted); font-style: italic; }
+
+/* Habilidades destacadas, antes de la lista completa */
+.top-skills { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.top-skills:empty { display: none; }
+.top-skills-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--text-muted);
+}
+.top-skills .cand-chip { background: var(--color-secondary-100); color: var(--color-secondary-700); border-color: transparent; }
+
+/* ---------- Pestañas del panel de detalle ---------- */
+.drawer-tabs {
+  display: flex; gap: 2px; padding: 0 var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color); flex-shrink: 0;
+}
+.drawer-tab {
+  background: none; border: none; cursor: pointer;
+  padding: 10px 12px; margin-bottom: -1px;
+  font-family: var(--font-family); font-size: var(--font-size-sm); font-weight: 500;
+  color: var(--text-secondary); border-bottom: 2px solid transparent;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.drawer-tab:hover { color: var(--text-primary); }
+.drawer-tab.active { color: var(--color-primary-700); border-bottom-color: var(--color-primary); font-weight: 600; }
+.drawer-tab-count, .detail-count { color: var(--text-muted); font-weight: 500; font-size: var(--font-size-xs); }
+.drawer-tab-count:empty, .detail-count:empty { display: none; }
+
+/* Idiomas con su nivel */
+.lang-item { display: block; }
+.lang-item b { font-weight: 500; color: var(--text-primary); }
+.lang-item i { font-style: normal; color: var(--text-muted); font-size: var(--font-size-xs); margin-left: 6px; }
+.loc-parsed { display: block; }
+.loc-raw { display: block; font-size: var(--font-size-xs); color: var(--text-muted); }

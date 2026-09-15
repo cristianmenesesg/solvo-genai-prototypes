@@ -237,46 +237,656 @@ const PROFILES = [
 const NO_RESULT_PROFILE = 'Litigation Assistant';
 
 const CANDIDATES = [
-  { id:1, first:'María', last:'Restrepo', loc:'Bogotá, Colombia', verified:true,
-    headline:'Bilingual Customer Service Representative | English C1',
-    skills:['Customer Service','Bilingual English','Zendesk'], languages:['Español','Inglés'], email:'maria.restrepo@gmail.com',
-    about:'Asesora de servicio al cliente con 4 años en BPO atendiendo cuentas en EE. UU. Inglés C1. #OpenToWork buscando rol remoto.' },
-  { id:2, first:'Juan', last:'Pérez', loc:'Medellín, Colombia', verified:false,
-    headline:'Customer Support Specialist | Call Center',
-    skills:['Call Center','CRM','Customer Support'], languages:['Español','Inglés'], email:'juanperez88@outlook.com',
-    about:'Especialista en soporte con experiencia en call center inbound/outbound. Abierto a nuevas oportunidades remotas.' },
-  { id:3, first:'Andrea', last:'Gómez', loc:'Ciudad de México, México', verified:true,
-    headline:'Customer Experience Associate | SaaS',
-    skills:['CX','SaaS','Bilingual English'], languages:['Español','Inglés'], email:null,
-    about:'Asociada de experiencia de cliente en SaaS. Inglés avanzado. Disponible de inmediato.' },
-  { id:4, first:'Carlos', last:'Villanueva', loc:'Manila, Filipinas', verified:true,
-    headline:'Customer Service Representative | E-commerce',
-    skills:['E-commerce','Customer Service','Shopify'], languages:['Inglés','Tagalo'], email:'carlos.v@proton.me',
-    about:'CSR with 5 years in e-commerce support for US brands. Open to work, remote-first.' },
-  { id:5, first:'Sofía', last:'Hernández', loc:'Buenos Aires, Argentina', verified:false,
-    headline:'Bilingual Support Agent | Fintech',
-    skills:['Fintech','Bilingual English','Support'], languages:['Español','Inglés'], email:null,
-    about:'Agente de soporte bilingüe en fintech. Buscando crecer en un equipo internacional.' },
-  { id:6, first:'Daniel', last:'Mokoena', loc:'Johannesburg, Sudáfrica', verified:true,
-    headline:'Customer Care Representative | Telecom',
-    skills:['Telecom','Customer Care','English'], languages:['Inglés'], email:'d.mokoena@gmail.com',
-    about:'Customer care rep in telecom. Native English. Actively looking for remote roles.' },
-  { id:7, first:'Valentina', last:'Cruz', loc:'Cali, Colombia', verified:false,
-    headline:'Inbound Support Representative | Bilingual',
-    skills:['Inbound','Bilingual English','Zendesk'], languages:['Español','Inglés'], email:null,
-    about:'Representante de soporte inbound con inglés C1. Open to work.' },
-  { id:8, first:'Miguel', last:'Santos', loc:'Cebú, Filipinas', verified:true,
-    headline:'Technical Support Representative | B2B SaaS',
-    skills:['Technical Support','SaaS','Troubleshooting'], languages:['Inglés','Tagalo'], email:'miguel.santos@gmail.com',
-    about:'Technical support rep for B2B SaaS, 6 years. Open to new remote opportunities.' },
-  { id:9, first:'Laura', last:'Jiménez', loc:'Guadalajara, México', verified:false,
-    headline:'Customer Service Agent | Logistics',
-    skills:['Logistics','Customer Service','Bilingual English'], languages:['Español','Inglés'], email:null,
-    about:'Agente de servicio al cliente en logística. Inglés avanzado, disponible para roles remotos.' },
+  {
+    "id": 1,
+    "first": "María",
+    "last": "Restrepo",
+    "loc": "Bogota, D.C., Capital District, Colombia",
+    "verified": true,
+    "headline": "Bilingual Customer Service Representative | English C1 | Zendesk & Salesforce | Open to remote roles with US teams",
+    "email": "maria.restrepo@gmail.com",
+    "about": "Asesora de servicio al cliente con 4 años en BPO atendiendo cuentas en EE. UU. Inglés C1. #OpenToWork buscando rol remoto.",
+    "locationParts": {
+      "city": "Bogotá",
+      "state": "Bogotá D.C.",
+      "country": "Colombia"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Professional working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Zendesk",
+      "De-escalation",
+      "Bilingual English"
+    ],
+    "skills": [
+      "Zendesk",
+      "De-escalation",
+      "Bilingual English",
+      "Customer Service",
+      "Salesforce Service Cloud",
+      "Live chat support",
+      "SLA management",
+      "Order management",
+      "Quality assurance",
+      "Conflict resolution",
+      "Active listening",
+      "Microsoft Office",
+      "CRM ticketing"
+    ],
+    "experience": [
+      {
+        "position": "Customer Service Representative",
+        "companyName": "Teleperformance",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "2 yrs 7 mos",
+        "startDate": "Feb 2023",
+        "endDate": "Present"
+      },
+      {
+        "position": "Bilingual Agent",
+        "companyName": "Atento",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "1 yr 5 mos",
+        "startDate": "Sep 2021",
+        "endDate": "Jan 2023"
+      },
+      {
+        "position": "Asesora de Retención",
+        "companyName": "Emtelco",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "11 mos",
+        "startDate": "Oct 2020",
+        "endDate": "Aug 2021"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Profesional",
+        "fieldOfStudy": "Lenguas Modernas",
+        "schoolName": "Universidad Nacional de Colombia",
+        "period": "Jan 2017 - Nov 2021"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "first": "Juan",
+    "last": "Pérez",
+    "loc": "Medellín, Antioquia, Colombia",
+    "verified": false,
+    "headline": "Customer Support Specialist | Call Center",
+    "email": "juanperez88@outlook.com",
+    "about": "Especialista en soporte con experiencia en call center inbound/outbound. Abierto a nuevas oportunidades remotas.",
+    "locationParts": {
+      "city": "Medellín",
+      "state": "Antioquia",
+      "country": "Colombia"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Limited working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Call Center",
+      "CRM",
+      "Inbound Support"
+    ],
+    "skills": [
+      "Call Center",
+      "CRM",
+      "Inbound Support",
+      "Customer Support",
+      "Cobranzas",
+      "Ventas telefónicas"
+    ],
+    "experience": [
+      {
+        "position": "Customer Support Specialist",
+        "companyName": "Sutherland",
+        "employmentType": "Full-time",
+        "location": "Medellín, Colombia",
+        "duration": "3 yrs 2 mos",
+        "startDate": "Jul 2022",
+        "endDate": "Present"
+      },
+      {
+        "position": "Agente de Cobranzas",
+        "companyName": "Konecta",
+        "employmentType": "Full-time",
+        "location": "Medellín, Colombia",
+        "duration": "1 yr 8 mos",
+        "startDate": "Nov 2020",
+        "endDate": "Jun 2022"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Tecnólogo",
+        "fieldOfStudy": "Gestión Administrativa",
+        "schoolName": "Politécnico Jaime Isaza Cadavid",
+        "period": "Jan 2018 - Dec 2020"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "first": "Andrea",
+    "last": "Gómez",
+    "loc": "Bogota, D.C., Capital District, Colombia",
+    "verified": true,
+    "headline": "Abogada | Asistente Legal Corporativa | Derecho Administrativo y Conciliación | Disponible de inmediato",
+    "email": null,
+    "about": "Abogada con experiencia en asistencia jurídica corporativa y administrativa. He acompañado procesos de revisión documental, redacción técnica y atención a requerimientos en entidades públicas y privadas. Actualmente en búsqueda de oportunidades remotas con equipos de Estados Unidos, donde pueda aportar rigurosidad, manejo de confidencialidad y capacidad de trabajo bajo presión.",
+    "locationParts": {
+      "city": "Bogotá",
+      "state": "Bogotá D.C.",
+      "country": "Colombia"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Professional working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Revisión de documentos",
+      "Redacción técnica",
+      "Análisis jurídico"
+    ],
+    "skills": [
+      "Revisión de documentos",
+      "Redacción técnica",
+      "Análisis jurídico",
+      "Finanzas corporativas",
+      "Atención al detalle",
+      "Rendimiento bajo presión",
+      "Pensamiento crítico",
+      "Confidencialidad",
+      "Derecho administrativo",
+      "Conciliación",
+      "Resolución de conflictos",
+      "Microsoft Office",
+      "Gestión documental",
+      "Atención al cliente",
+      "Derecho laboral",
+      "Contratación estatal",
+      "Oratoria",
+      "Trabajo en equipo",
+      "Organización",
+      "Adaptabilidad"
+    ],
+    "experience": [
+      {
+        "position": "Attorney General's Office of Colombia",
+        "companyName": "Fiscalía General de la Nación",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "2 mos",
+        "startDate": "Oct 2025",
+        "endDate": "Nov 2025"
+      },
+      {
+        "position": "Customer Service & Financial Advisor",
+        "companyName": "BRM S.A.S",
+        "employmentType": "Part-time",
+        "location": "Bogotá, Colombia",
+        "duration": "7 mos",
+        "startDate": "Jul 2024",
+        "endDate": "Jan 2025"
+      },
+      {
+        "position": "Administrative Assistant",
+        "companyName": "Human Service S.A.S",
+        "employmentType": null,
+        "location": "Bogotá, Colombia",
+        "duration": "4 mos",
+        "startDate": "Mar 2024",
+        "endDate": "Jun 2024"
+      },
+      {
+        "position": "Corporate Administrative Assistant",
+        "companyName": "Soluciones Inmediatas S.A.S",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "2 yrs 1 mo",
+        "startDate": "Feb 2022",
+        "endDate": "Feb 2024"
+      },
+      {
+        "position": "Legal Assistant",
+        "companyName": "Mauricio Caballero Law Office",
+        "employmentType": "Full-time",
+        "location": "Bogotá, Colombia",
+        "duration": "1 yr 11 mos",
+        "startDate": "Mar 2020",
+        "endDate": "Jan 2022"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Doctor en Derecho",
+        "fieldOfStudy": "Bachelor of laws",
+        "schoolName": "Universidad Antonio Nariño",
+        "period": "Aug 2021 - Dec 2025"
+      },
+      {
+        "degree": "Diplomatura",
+        "fieldOfStudy": "Conciliation and Conflict Resolution",
+        "schoolName": "Politécnico Superior de Colombia",
+        "period": "Jul 2025"
+      },
+      {
+        "degree": "Diplomatura",
+        "fieldOfStudy": "Public Administration",
+        "schoolName": "Politécnico Superior de Colombia",
+        "period": "Jul 2025"
+      },
+      {
+        "degree": "Diplomatura",
+        "fieldOfStudy": "International Humanitarian Law",
+        "schoolName": "Politécnico Superior de Colombia",
+        "period": "Jul 2025"
+      },
+      {
+        "degree": "Diplomatura",
+        "fieldOfStudy": "Finance for Non-Financial Professionals",
+        "schoolName": "Politécnico Superior de Colombia",
+        "period": "Jul 2025"
+      },
+      {
+        "degree": "Diplomatura",
+        "fieldOfStudy": "Inter-American Human Rights System",
+        "schoolName": "Inter-American Commission on Human Rights (IACHR)",
+        "period": "Aug 2024"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "first": "Carlos",
+    "last": "Villanueva",
+    "loc": "Manila, Metro Manila, Philippines",
+    "verified": true,
+    "headline": "Customer Service Representative | E-commerce | Shopify",
+    "email": "carlos.v@proton.me",
+    "about": "CSR con foco en e-commerce. Manejo de Shopify, devoluciones y soporte por chat.",
+    "locationParts": {
+      "city": "Manila",
+      "state": "Metro Manila",
+      "country": "Filipinas"
+    },
+    "languages": [
+      {
+        "name": "Inglés",
+        "proficiency": "Full professional proficiency"
+      },
+      {
+        "name": "Tagalo",
+        "proficiency": "Native or bilingual proficiency"
+      }
+    ],
+    "topSkills": [
+      "E-commerce",
+      "Shopify",
+      "Customer Service"
+    ],
+    "skills": [
+      "E-commerce",
+      "Shopify",
+      "Customer Service",
+      "Returns handling",
+      "Live chat",
+      "Gorgias"
+    ],
+    "experience": [
+      {
+        "position": "Customer Service Representative",
+        "companyName": "Concentrix",
+        "employmentType": "Full-time",
+        "location": "Manila, Filipinas",
+        "duration": "4 yrs 1 mo",
+        "startDate": "Aug 2021",
+        "endDate": "Present"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor",
+        "fieldOfStudy": "Communication Arts",
+        "schoolName": "University of Santo Tomas",
+        "period": "Jun 2016 - May 2020"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "first": "Sofía",
+    "last": "Hernández",
+    "loc": "Buenos Aires, Buenos Aires Province, Argentina",
+    "verified": false,
+    "headline": "Bilingual Support Agent | Fintech",
+    "email": null,
+    "about": "Agente bilingüe con experiencia en fintech, atención por chat y resolución de disputas.",
+    "locationParts": {
+      "city": "Buenos Aires",
+      "state": "Buenos Aires",
+      "country": "Argentina"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Professional working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Fintech",
+      "Bilingual English",
+      "Support"
+    ],
+    "skills": [
+      "Fintech",
+      "Bilingual English",
+      "Support",
+      "Disputas",
+      "Zendesk",
+      "KYC"
+    ],
+    "experience": [
+      {
+        "position": "Bilingual Support Agent",
+        "companyName": "Ualá",
+        "employmentType": "Full-time",
+        "location": "Buenos Aires, Argentina",
+        "duration": "1 yr 11 mos",
+        "startDate": "Nov 2023",
+        "endDate": "Sep 2025"
+      },
+      {
+        "position": "Analista de Atención",
+        "companyName": "Naranja X",
+        "employmentType": "Full-time",
+        "location": "Córdoba, Argentina",
+        "duration": "2 yrs 4 mos",
+        "startDate": "Jul 2021",
+        "endDate": "Oct 2023"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Licenciatura",
+        "fieldOfStudy": "Relaciones del Trabajo",
+        "schoolName": "Universidad de Buenos Aires",
+        "period": "Mar 2016 - Dec 2021"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "first": "Valentina",
+    "last": "Cruz",
+    "loc": "Cali, Valle del Cauca, Colombia",
+    "verified": false,
+    "headline": "Inbound Support Representative | Zendesk",
+    "email": null,
+    "about": "Representante de soporte inbound. Inglés B2. Buscando rol remoto.",
+    "locationParts": {
+      "city": "Cali",
+      "state": "Valle del Cauca",
+      "country": "Colombia"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      }
+    ],
+    "topSkills": [],
+    "skills": [
+      "Inbound",
+      "Bilingual English",
+      "Zendesk"
+    ],
+    "experience": [],
+    "education": []
+  },
+  {
+    "id": 7,
+    "first": "Miguel",
+    "last": "Santos",
+    "loc": "Cebu, Central Visayas, Philippines",
+    "verified": true,
+    "headline": "Technical Support Representative | B2B SaaS",
+    "email": "miguel.santos@gmail.com",
+    "about": "Soporte técnico para SaaS B2B. Troubleshooting de integraciones y APIs.",
+    "locationParts": {
+      "city": "Cebú",
+      "state": "Central Visayas",
+      "country": "Filipinas"
+    },
+    "languages": [
+      {
+        "name": "Inglés",
+        "proficiency": "Full professional proficiency"
+      },
+      {
+        "name": "Tagalo",
+        "proficiency": "Native or bilingual proficiency"
+      }
+    ],
+    "topSkills": [
+      "Technical Support",
+      "SaaS",
+      "Troubleshooting"
+    ],
+    "skills": [
+      "Technical Support",
+      "SaaS",
+      "Troubleshooting",
+      "APIs",
+      "Jira",
+      "Intercom",
+      "SQL básico"
+    ],
+    "experience": [
+      {
+        "position": "Technical Support Representative",
+        "companyName": "TaskUs",
+        "employmentType": "Full-time",
+        "location": "Cebú, Filipinas",
+        "duration": "3 yrs 6 mos",
+        "startDate": "Apr 2022",
+        "endDate": "Present"
+      },
+      {
+        "position": "IT Helpdesk Assistant",
+        "companyName": "Accenture",
+        "employmentType": "Full-time",
+        "location": "Cebú, Filipinas",
+        "duration": "1 yr 2 mos",
+        "startDate": "Feb 2021",
+        "endDate": "Mar 2022"
+      }
+    ],
+    "education": [
+      {
+        "degree": "Bachelor",
+        "fieldOfStudy": "Information Technology",
+        "schoolName": "Cebu Institute of Technology",
+        "period": "Jun 2016 - Apr 2020"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "first": "Lucía",
+    "last": "Fernández",
+    "loc": "Lima, Lima, Peru",
+    "verified": false,
+    "headline": "Especialista en Retención | CRM",
+    "email": "lucia.fernandez@gmail.com",
+    "about": "Especialista en retención de clientes con manejo de CRM y campañas de recuperación.",
+    "locationParts": {
+      "city": "Lima",
+      "state": "Lima",
+      "country": "Perú"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Limited working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Retención",
+      "CRM",
+      "Ventas"
+    ],
+    "skills": [
+      "Retención",
+      "CRM",
+      "Ventas",
+      "HubSpot",
+      "Campañas"
+    ],
+    "experience": [],
+    "education": [
+      {
+        "degree": "Bachiller",
+        "fieldOfStudy": "Comunicaciones",
+        "schoolName": "Universidad de Lima",
+        "period": "Mar 2017 - Dec 2021"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "first": "Diego",
+    "last": "Morales",
+    "loc": "San Salvador, San Salvador, El Salvador",
+    "verified": true,
+    "headline": "Billing Support Specialist | Excel",
+    "email": "diego.morales@outlook.com",
+    "about": "Soporte de facturación con manejo avanzado de Excel y conciliaciones.",
+    "locationParts": {
+      "city": "San Salvador",
+      "state": "San Salvador",
+      "country": "El Salvador"
+    },
+    "languages": [
+      {
+        "name": "Español",
+        "proficiency": "Native or bilingual proficiency"
+      },
+      {
+        "name": "Inglés",
+        "proficiency": "Professional working proficiency"
+      }
+    ],
+    "topSkills": [
+      "Billing",
+      "Excel",
+      "Customer Service"
+    ],
+    "skills": [
+      "Billing",
+      "Excel",
+      "Customer Service",
+      "Conciliaciones",
+      "QuickBooks"
+    ],
+    "experience": [
+      {
+        "position": "Billing Support Specialist",
+        "companyName": "Sykes",
+        "employmentType": "Full-time",
+        "location": "San Salvador, El Salvador",
+        "duration": "2 yrs 2 mos",
+        "startDate": "Aug 2023",
+        "endDate": "Present"
+      }
+    ],
+    "education": []
+  }
 ];
 // El email ya viene capturado por el pipeline (FTPS-1); true = el pipeline lo capturó, false = quedó sin email.
 const EMAIL_RESOLUTION = { 1:true,2:true,3:false,4:true,5:false,6:true,7:false,8:true,9:false };
 const initials = c => (c.first[0] + c.last[0]).toUpperCase();
+/* Bloque de historial: una entrada por fila, con su vigencia marcada.
+   Vale para experiencia y para educación, que comparten forma. */
+/* LinkedIn devuelve el nivel en su forma larga; en una celda angosta sobra. */
+/* El pool guarda los idiomas como objetos; el listado solo necesita el nombre. */
+const langNames = c => (c.languages || []).map(l => (l && l.name) || l).filter(Boolean);
+
+const PROFICIENCY = {
+  'Native or bilingual proficiency': 'Native',
+  'Full professional proficiency': 'Full professional',
+  'Professional working proficiency': 'Professional',
+  'Limited working proficiency': 'Limited',
+  'Elementary proficiency': 'Elementary',
+};
+const shortProficiency = t => PROFICIENCY[t] || t;
+function setCount(root, sel, n) {
+  const el = root.querySelector(sel); if (el) el.textContent = n ? `(${n})` : '';
+}
+
+/* Pestañas del panel de detalle. */
+function initDrawerTabs() {
+  const d = document.getElementById('drawer'); if (!d) return;
+  d.querySelectorAll('.drawer-tab').forEach(btn => btn.addEventListener('click', () => {
+    d.querySelectorAll('.drawer-tab').forEach(b => b.classList.toggle('active', b === btn));
+    d.querySelectorAll('[data-panel]').forEach(sec => { sec.hidden = sec.dataset.panel !== btn.dataset.tab; });
+    d.querySelector('.drawer-body').scrollTop = 0;
+  }));
+}
+function resetDrawerTabs() {
+  const d = document.getElementById('drawer'); if (!d) return;
+  d.querySelectorAll('.drawer-tab').forEach((b, i) => b.classList.toggle('active', i === 0));
+  d.querySelectorAll('[data-panel]').forEach(sec => { sec.hidden = sec.dataset.panel !== 'profile'; });
+  d.querySelector('.drawer-body').scrollTop = 0;
+}
+
+function timeline(items, campos, vacio) {
+  if (!items || !items.length) return `<p class="tl-empty">${vacio}</p>`;
+  return items.map(it => {
+    const [titulo, sub, meta, fechas] = campos(it);
+    const vigente = /present/i.test(fechas || '');
+    return `<div class="tl-item${vigente ? ' tl-item--current' : ''}">
+      <div class="tl-title">${titulo}${vigente ? '<span class="tl-now">Current</span>' : ''}</div>
+      <div class="tl-sub">${sub || ''}</div>
+      ${meta ? `<div class="tl-meta">${meta}</div>` : ''}
+      <div class="tl-dates">${fechas || ''}</div>
+    </div>`;
+  }).join('');
+}
 const chips = arr => `<div class="cand-chips">${arr.map(s => `<span class="cand-chip">${s}</span>`).join('')}</div>`;
 /* En la tabla la celda se acota para que la fila mantenga su altura;
    la lista completa está en el panel de detalle. */
@@ -371,7 +981,7 @@ function populateFilterOptions() {
   const langSel = document.getElementById('fltLang');
   const locSel = document.getElementById('fltLoc');
   if (langSel) {
-    const langs = [...new Set(ALL_CANDS().flatMap(c => c.languages))].sort();
+    const langs = [...new Set(ALL_CANDS().flatMap(c => langNames(c)))].sort();
     langSel.innerHTML = '<option value="">All languages</option>' + langs.map(l => `<option>${l}</option>`).join('');
   }
   if (locSel) {
@@ -485,10 +1095,34 @@ function fillDrawer(c) {
   d.querySelector('[data-d-name]').textContent = `${c.first} ${c.last}`;
   d.querySelector('[data-d-headline]').textContent = c.headline;
   d.querySelector('[data-d-about]').textContent = c.about;
-  d.querySelector('[data-d-loc]').textContent = c.loc;
-  const langEl = d.querySelector('[data-d-langs]'); if (langEl) langEl.textContent = c.languages.join(', ');
+  /* La ubicación estructurada se lee de un vistazo; el texto que devuelve
+     LinkedIn queda debajo porque es el que el reclutador reconoce al buscar. */
+  const lp = c.locationParts;
+  d.querySelector('[data-d-loc]').innerHTML = lp
+    ? `<span class="loc-parsed">${[lp.city, lp.country].filter(Boolean).join(', ')}</span><span class="loc-raw">${c.loc}</span>`
+    : c.loc;
+  const langEl = d.querySelector('[data-d-langs]');
+  /* languages llega de la fuente como objetos {name, proficiency}: el nivel
+     es la mitad del dato y sin él no se puede decidir a quién presentar. */
+  if (langEl) langEl.innerHTML = (c.languages || []).length
+    ? c.languages.map(l => `<span class="lang-item"><b>${l.name}</b>${l.proficiency ? `<i>${shortProficiency(l.proficiency)}</i>` : ''}</span>`).join('')
+    : '<span class="text-muted">Not stated</span>';
   d.querySelector('[data-d-email]').textContent = hasEmailFor(c.id) ? c.email : 'no email';
-  d.querySelector('[data-d-skills]').innerHTML = chips(c.skills);
+  d.querySelector('[data-d-experience]').innerHTML = timeline(c.experience, e =>
+    [e.position, e.companyName, [e.employmentType, e.location].filter(Boolean).join(' · '),
+     `${e.startDate} – ${e.endDate}${e.duration ? ` · ${e.duration}` : ''}`],
+    'No work history on the profile');
+  d.querySelector('[data-d-education]').innerHTML = timeline(c.education, e =>
+    [[e.degree, e.fieldOfStudy].filter(Boolean).join(', '), e.schoolName, '', e.period],
+    'No education on the profile');
+  setCount(d, '[data-d-expcount]', (c.experience || []).length);
+  setCount(d, '[data-d-educount]', (c.education || []).length);
+  const top = c.topSkills || [];
+  const topEl = d.querySelector('[data-d-topskills]');
+  if (topEl) topEl.innerHTML = top.length ? `<span class="top-skills-label">Top</span>${chips(top)}` : '';
+  /* La lista completa no repite las destacadas: muestra lo que queda. */
+  const resto = c.skills.filter(sk => !top.includes(sk));
+  d.querySelector('[data-d-skills]').innerHTML = resto.length ? chips(resto) : '';
   DRAWER_ID = c.id;
   const st = candState(c.id);
   const stEl = d.querySelector('[data-d-status]'); if (stEl) stEl.innerHTML = statusBadge(st.status);
@@ -497,6 +1131,8 @@ function fillDrawer(c) {
     ? `${shortName(st.exp.by)} · ${shortDate(st.exp.at)}${st.exp.times > 1 ? ` · ${st.exp.times} times` : ''}`
     : 'Never exported';
   renderNotes();
+  setCount(d, '[data-d-notecount]', candState(c.id).notes.length);
+  resetDrawerTabs();
 }
 
 /* ----------------- Outreach ----------------- */
@@ -632,7 +1268,7 @@ function buildCandRow(c) {
   tr.style.cursor = 'pointer';
   tr.dataset.id = c.id;
   tr.dataset.text = (c.headline + ' ' + c.about + ' ' + c.skills.join(' ')).toLowerCase();
-  tr.dataset.langs = c.languages.join('|');
+  tr.dataset.langs = langNames(c).join('|');
   tr.dataset.country = candCountry(c);
   tr.dataset.email = hasEmail ? '1' : '0';
   tr.dataset.status = st.status;
@@ -643,7 +1279,7 @@ function buildCandRow(c) {
         <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
     <td class="cand-headline">${c.headline}</td>
     <td>${chipsCapped(c.skills, 5)}</td>
-    <td>${chipsCapped(c.languages, 2)}</td>
+    <td>${chipsCapped(langNames(c), 2)}</td>
     <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
     <td data-cell="status">${statusBadge(st.status)}</td>
     <td data-cell="export">${exportCell(st.exp)}</td>
