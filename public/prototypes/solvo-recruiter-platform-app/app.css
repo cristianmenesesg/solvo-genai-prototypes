@@ -66,12 +66,14 @@
   font-size: 11px; font-weight: 600;
 }
 .cand-loc { font-size: var(--font-size-xs); }
-.cand-headline {
-  max-width: 280px;
+/* El recorte va en un div interno: aplicar -webkit-box sobre el <td> le quita
+   su comportamiento de celda y desalinea los bordes de la columna. */
+.cand-headline { max-width: 230px; }
+.cand-headline > span {
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   overflow: hidden;
 }
-.cand-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 320px; }
+.cand-chips { display: flex; flex-wrap: wrap; gap: 4px; max-width: 250px; }
 .cand-chip {
   background: var(--bg-tertiary); color: var(--text-secondary);
   border: 1px solid var(--border-color); font-size: 11px;
@@ -81,7 +83,7 @@
 .cand-chip--more { background: transparent; color: var(--text-muted); border-style: dashed; }
 .email-cell { font-size: var(--font-size-sm); color: var(--text-primary); }
 .email-cell.email-none { color: var(--text-muted); font-style: italic; }
-.cand-li { color: var(--text-link); font-size: var(--font-size-xs); font-weight: 500; }
+.cand-li { color: var(--text-link); font-size: var(--font-size-xs); font-weight: 500; white-space: nowrap; }
 
 /* ---------- Bulk action bar ---------- */
 .bulk-bar {
@@ -258,7 +260,7 @@
 .page-content { min-width: 0; }
 
 .table-container { overflow-x: auto; }
-.table-container table { min-width: 1180px; }
+.table-container table { min-width: 1040px; }
 
 /* ---------- Botón AI Search ---------- */
 .btn-ai {

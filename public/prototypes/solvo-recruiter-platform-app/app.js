@@ -232,9 +232,6 @@ const PROFILES = [
   'Executive Assistant', 'Administrative Assistant', 'Collections Specialist',
   'Scheduler', 'CAD Designer', 'Legal Assistant', 'Paralegal',
 ];
-/* Perfil recién creado: el pipeline todavía no corrió para él, así que el pool
-   está vacío. Es el caso que justifica AI Search. */
-const NO_RESULT_PROFILE = 'Litigation Assistant';
 
 const CANDIDATES = [
   {
@@ -245,7 +242,7 @@ const CANDIDATES = [
     "verified": true,
     "headline": "Bilingual Customer Service Representative | English C1 | Zendesk & Salesforce | Open to remote roles with US teams",
     "email": "maria.restrepo@gmail.com",
-    "about": "Asesora de servicio al cliente con 4 años en BPO atendiendo cuentas en EE. UU. Inglés C1. #OpenToWork buscando rol remoto.",
+    "about": "Asesora bilingüe de servicio al cliente con cuatro años atendiendo cuentas de Estados Unidos desde Bogotá. He trabajado colas de alto volumen en retail y suscripciones, resolviendo en el primer contacto siempre que la política lo permite y escalando con contexto cuando no.\n\nManejo diario de Zendesk y Salesforce Service Cloud, con macros, SLA y tableros de calidad. Sostengo satisfacción por encima del 95% y tiempos de primera respuesta en chat por debajo de tres minutos. Soy buena en desescalar: llevo a un cliente molesto hasta la solución sin pasarle el problema a un supervisor.\n\nTrabajo desde casa con espacio dedicado y conexión de respaldo, cómoda con turnos rotativos y temporadas altas. Inglés C1 con acento neutro en llamadas y escritura limpia. Busco un rol remoto de tiempo completo con un equipo de Estados Unidos.",
     "locationParts": {
       "city": "Bogotá",
       "state": "Bogotá D.C.",
@@ -317,7 +314,8 @@ const CANDIDATES = [
         "schoolName": "Universidad Nacional de Colombia",
         "period": "Jan 2017 - Nov 2021"
       }
-    ]
+    ],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 2,
@@ -327,7 +325,7 @@ const CANDIDATES = [
     "verified": false,
     "headline": "Customer Support Specialist | Call Center",
     "email": "juanperez88@outlook.com",
-    "about": "Especialista en soporte con experiencia en call center inbound/outbound. Abierto a nuevas oportunidades remotas.",
+    "about": "Especialista en soporte al cliente con más de cuatro años en call center inbound y outbound, en operaciones de telecomunicaciones y cobranzas. Conozco el ciclo completo: recepción, tipificación, seguimiento y cierre, con la disciplina de dejar el CRM en condiciones para quien tome el caso después.\n\nHe manejado carteras de cobranza temprana negociando acuerdos de pago sin romper la relación con el cliente, y campañas de retención donde la métrica era la permanencia y no la llamada. Trabajo con indicadores a la vista y sé leer un reporte de gestión como una lista de prioridades.\n\nInglés en nivel intermedio, en mejora activa. Disponibilidad para turnos y para trabajo remoto con equipo propio. Busco una operación donde el soporte sea parte del producto y no un costo a recortar.",
     "locationParts": {
       "city": "Medellín",
       "state": "Antioquia",
@@ -383,7 +381,8 @@ const CANDIDATES = [
         "schoolName": "Politécnico Jaime Isaza Cadavid",
         "period": "Jan 2018 - Dec 2020"
       }
-    ]
+    ],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 3,
@@ -393,7 +392,7 @@ const CANDIDATES = [
     "verified": true,
     "headline": "Abogada | Asistente Legal Corporativa | Derecho Administrativo y Conciliación | Disponible de inmediato",
     "email": null,
-    "about": "Abogada con experiencia en asistencia jurídica corporativa y administrativa. He acompañado procesos de revisión documental, redacción técnica y atención a requerimientos en entidades públicas y privadas. Actualmente en búsqueda de oportunidades remotas con equipos de Estados Unidos, donde pueda aportar rigurosidad, manejo de confidencialidad y capacidad de trabajo bajo presión.",
+    "about": "Abogada con experiencia en asistencia jurídica corporativa y administrativa, tanto en firma privada como en entidad pública. He acompañado procesos de revisión documental, redacción técnica de memoriales y respuestas, y atención a requerimientos con términos perentorios.\n\nEn la Fiscalía trabajé bajo volumen y confidencialidad estricta; antes, en asistencia corporativa, llevé la gestión documental, la contratación menor y el seguimiento a proveedores de una compañía mediana. Estoy acostumbrada a que un error de forma cueste un término, así que reviso dos veces.\n\nComplementé el grado con diplomaturas en conciliación, derecho administrativo y sistema interamericano de derechos humanos. Inglés profesional, suficiente para documentación y correo con equipos de Estados Unidos.\n\nBusco un rol remoto de asistente legal donde la rigurosidad y el manejo de información sensible sean el centro del trabajo.",
     "locationParts": {
       "city": "Bogotá",
       "state": "Bogotá D.C.",
@@ -520,7 +519,8 @@ const CANDIDATES = [
         "schoolName": "Inter-American Commission on Human Rights (IACHR)",
         "period": "Aug 2024"
       }
-    ]
+    ],
+    "profile": "Legal Assistant"
   },
   {
     "id": 4,
@@ -530,7 +530,7 @@ const CANDIDATES = [
     "verified": true,
     "headline": "Customer Service Representative | E-commerce | Shopify",
     "email": "carlos.v@proton.me",
-    "about": "CSR con foco en e-commerce. Manejo de Shopify, devoluciones y soporte por chat.",
+    "about": "Customer service representative with four years supporting US e-commerce brands from Manila. I handle the full post-purchase cycle: order issues, returns and refunds, shipping exceptions and the escalations that come with peak season.\n\nDay to day I work in Shopify and Gorgias, with live chat as the main channel and email for anything that needs a paper trail. I am comfortable owning a queue without supervision and keeping response times inside SLA when volume triples in November.\n\nI write clean, professional English and keep a neutral tone with frustrated customers. Home office with fiber and backup connection, and full availability for US business hours including early shifts. Looking for a long-term remote role with a team that treats support as part of the product.",
     "locationParts": {
       "city": "Manila",
       "state": "Metro Manila",
@@ -577,7 +577,8 @@ const CANDIDATES = [
         "schoolName": "University of Santo Tomas",
         "period": "Jun 2016 - May 2020"
       }
-    ]
+    ],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 5,
@@ -587,7 +588,7 @@ const CANDIDATES = [
     "verified": false,
     "headline": "Bilingual Support Agent | Fintech",
     "email": null,
-    "about": "Agente bilingüe con experiencia en fintech, atención por chat y resolución de disputas.",
+    "about": "Agente bilingüe de soporte con cuatro años en fintech argentina, atendiendo consultas de producto, disputas y verificación de identidad. Vengo de operaciones donde el error tiene consecuencia económica directa, así que trabajo con procedimiento y dejo traza de cada decisión.\n\nManejo Zendesk y herramientas internas de KYC, con experiencia en el flujo completo de una disputa: recepción, evidencia, resolución y comunicación al cliente. También acompañé la puesta en marcha de una base de conocimiento que bajó las consultas repetidas de manera medible.\n\nInglés profesional, cómodo en llamadas y en escritura. Disponibilidad completa para horario de Estados Unidos desde un espacio de trabajo propio. Busco un rol remoto en fintech o SaaS donde el soporte tenga acceso al producto y no solo al guion.",
     "locationParts": {
       "city": "Buenos Aires",
       "state": "Buenos Aires",
@@ -643,7 +644,8 @@ const CANDIDATES = [
         "schoolName": "Universidad de Buenos Aires",
         "period": "Mar 2016 - Dec 2021"
       }
-    ]
+    ],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 6,
@@ -653,7 +655,7 @@ const CANDIDATES = [
     "verified": false,
     "headline": "Inbound Support Representative | Zendesk",
     "email": null,
-    "about": "Representante de soporte inbound. Inglés B2. Buscando rol remoto.",
+    "about": "Representante de soporte inbound con casi tres años en operación de telecomunicaciones, atendiendo consultas de facturación, servicio técnico de primer nivel y gestión de reclamos.\n\nTrabajo con Zendesk y con los procedimientos de la cuenta, cumpliendo tiempos de atención y tipificación. Me manejo bien con clientes molestos y con casos que requieren seguimiento en varios contactos.\n\nInglés B2, en formación para certificar C1. Busco mi primera oportunidad remota con un equipo de Estados Unidos, con disponibilidad completa e interés en crecer dentro del área de soporte.",
     "locationParts": {
       "city": "Cali",
       "state": "Valle del Cauca",
@@ -672,7 +674,8 @@ const CANDIDATES = [
       "Zendesk"
     ],
     "experience": [],
-    "education": []
+    "education": [],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 7,
@@ -682,7 +685,7 @@ const CANDIDATES = [
     "verified": true,
     "headline": "Technical Support Representative | B2B SaaS",
     "email": "miguel.santos@gmail.com",
-    "about": "Soporte técnico para SaaS B2B. Troubleshooting de integraciones y APIs.",
+    "about": "Technical support representative with four and a half years supporting B2B SaaS products from Cebu. I work tier one and tier two: integration issues, API errors, authentication problems and the escalations that need a reproducible case before they reach engineering.\n\nI am comfortable reading logs, writing basic SQL to confirm a hypothesis, and documenting a bug so the developer does not have to ask me three follow-up questions. Daily tools are Jira, Intercom and the product's own admin console.\n\nStrong written English, which matters more than accent in this role: most of my work is async with customers in different time zones. Home setup built for the job, and availability across US business hours. Looking for a remote role with a product team I can learn deeply.",
     "locationParts": {
       "city": "Cebú",
       "state": "Central Visayas",
@@ -739,7 +742,8 @@ const CANDIDATES = [
         "schoolName": "Cebu Institute of Technology",
         "period": "Jun 2016 - Apr 2020"
       }
-    ]
+    ],
+    "profile": "Customer Service Representative"
   },
   {
     "id": 8,
@@ -749,7 +753,7 @@ const CANDIDATES = [
     "verified": false,
     "headline": "Especialista en Retención | CRM",
     "email": "lucia.fernandez@gmail.com",
-    "about": "Especialista en retención de clientes con manejo de CRM y campañas de recuperación.",
+    "about": "Especialista en retención y recuperación de clientes con cuatro años en suscripciones y servicios financieros. Mi trabajo es la conversación que ocurre cuando el cliente ya decidió irse: entender el motivo real, ofrecer lo que corresponde y cerrar el acuerdo en la misma llamada.\n\nManejo HubSpot y campañas de recuperación con segmentación por motivo de baja, y tengo indicadores propios de tasa de retención y valor recuperado que puedo sustentar. También armé los guiones de objeción que hoy usa el equipo.\n\nInglés intermedio en mejora. Busco un rol remoto comercial o de retención con un equipo de Estados Unidos, donde la métrica sea el resultado y no la cantidad de llamadas.",
     "locationParts": {
       "city": "Lima",
       "state": "Lima",
@@ -785,7 +789,8 @@ const CANDIDATES = [
         "schoolName": "Universidad de Lima",
         "period": "Mar 2017 - Dec 2021"
       }
-    ]
+    ],
+    "profile": "Sales Representative"
   },
   {
     "id": 9,
@@ -795,7 +800,7 @@ const CANDIDATES = [
     "verified": true,
     "headline": "Billing Support Specialist | Excel",
     "email": "diego.morales@outlook.com",
-    "about": "Soporte de facturación con manejo avanzado de Excel y conciliaciones.",
+    "about": "Especialista en soporte de facturación con dos años en operación de servicios, atendiendo consultas de cobro, conciliaciones y ajustes. Trabajo con volumen alto de casos donde la precisión importa más que la velocidad.\n\nManejo avanzado de Excel —tablas dinámicas, búsquedas y validaciones— y experiencia con QuickBooks para conciliar contra el sistema de facturación. Me tocó depurar bases con inconsistencias históricas y dejar el proceso documentado para que no se repita.\n\nInglés profesional, cómodo en correo y en llamadas con clientes de Estados Unidos. Busco un rol remoto en facturación, cuentas por cobrar o soporte administrativo con un equipo estadounidense.",
     "locationParts": {
       "city": "San Salvador",
       "state": "San Salvador",
@@ -834,7 +839,8 @@ const CANDIDATES = [
         "endDate": "Present"
       }
     ],
-    "education": []
+    "education": [],
+    "profile": "Sales Representative"
   }
 ];
 // El email ya viene capturado por el pipeline (FTPS-1); true = el pipeline lo capturó, false = quedó sin email.
@@ -937,7 +943,7 @@ function runSearch() {
   if (!profile) { showToast('Pick a search profile to start', 'info'); return; }
 
   // estado sin resultados
-  if (profile === NO_RESULT_PROFILE) {
+  if (!CANDIDATES.some(c => c.profile === profile)) {
     card.style.display = 'none'; note.style.display = 'none'; if (ind) ind.style.display = 'none';
     empty.style.display = 'flex';
     document.getElementById('emptyTitle').textContent = 'No candidates found';
@@ -954,9 +960,11 @@ function runSearch() {
   clearFilters();          // arranca sin filtros aplicados y en la página 1
   populateFilterOptions(); // idioma y localización según el conjunto de resultados
 
-  /* El pool se resuelve contra la base: el listado llega completo de una vez. */
+  /* El pool se resuelve contra la base: el listado llega completo de una vez.
+     Cada candidato quedó asociado al perfil que lo detectó. */
+  const delPerfil = CANDIDATES.filter(c => c.profile === profile);
   setTimeout(() => {
-    CANDIDATES.forEach(c => tbody.appendChild(buildCandRow(c)));
+    delPerfil.forEach(c => tbody.appendChild(buildCandRow(c)));
     applyFilters();
     if (ind) ind.style.display = 'none';
   }, 300);
@@ -1080,7 +1088,9 @@ function initProfileCombo() {
     input.value = opt.dataset.p; combo.classList.remove('open');
   });
   document.addEventListener('click', e => { if (!e.target.closest('#profileCombo')) combo.classList.remove('open'); });
-  input.value = PROFILES[0]; // preselección para la demo
+  /* Preselección: el primer perfil que tiene pool, para que la pantalla abra
+     con algo que buscar en vez del que se dejó vacío a propósito. */
+  input.value = PROFILES.find(pr => CANDIDATES.some(c => c.profile === pr)) || PROFILES[0];
 }
 function updateBulk() {
   const bar = document.getElementById('bulkBar'); if (!bar) return;
@@ -1277,8 +1287,8 @@ function buildCandRow(c) {
     <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
     <td><div class="cand-name"><span class="cand-avatar">${initials(c)}</span>
         <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
-    <td class="cand-headline">${c.headline}</td>
-    <td>${chipsCapped(c.skills, 5)}</td>
+    <td class="cand-headline"><span>${c.headline}</span></td>
+    <td>${chipsCapped(c.skills, 3)}</td>
     <td>${chipsCapped(langNames(c), 2)}</td>
     <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
     <td data-cell="status">${statusBadge(st.status)}</td>
