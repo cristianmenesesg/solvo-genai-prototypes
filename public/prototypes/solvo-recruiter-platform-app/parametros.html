@@ -28,7 +28,7 @@
         <!-- Cadencia y vigencia -->
         <div class="detail-card">
           <div class="detail-card-title">Schedule and freshness</div>
-          <div class="form-row">
+          <div class="form-row" style="margin-bottom:-14px;">
             <div class="form-group">
               <label class="form-label">How often we search</label>
               <input class="form-input param-input" type="number" id="paramFreq" value="7" min="1">
@@ -37,7 +37,7 @@
             <div class="form-group">
               <label class="form-label">How long results stay fresh</label>
               <input class="form-input param-input" type="number" id="paramValidity" value="4" min="1">
-              <p class="filter-hint">Days a candidate's "open to work" status is trusted. After that, we check it again when a recruiter searches. Must stay below the search frequency, so candidates expire before the next run.</p>
+              <p class="filter-hint">Days a candidate's "open to work" status is trusted. Expired candidates are checked again when the scheduled search closes. Must stay below the search frequency, so candidates expire before the next run.</p>
             </div>
           </div>
         </div>

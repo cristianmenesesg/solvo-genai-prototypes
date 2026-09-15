@@ -39,7 +39,7 @@
 
 .filter-hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; max-width: 520px; }
 
-/* ---------- Loading note (re-validación open-to-work en segundo plano) ---------- */
+/* ---------- Loading note (llegada progresiva de la búsqueda asistida) ---------- */
 .load-note {
   display: none; align-items: center; gap: 10px;
   background: var(--bg-tertiary); border: 1px solid var(--border-color);
@@ -252,6 +252,11 @@
    ======================================================================== */
 
 /* La tabla creció a 9 columnas: scrollea en su propio contenedor. */
+/* El contenido principal es un flex item: sin min-width:0 no puede encogerse
+   por debajo del ancho de sus tablas y empuja el scroll horizontal a la página. */
+.main-content { min-width: 0; }
+.page-content { min-width: 0; }
+
 .table-container { overflow-x: auto; }
 .table-container table { min-width: 1180px; }
 
