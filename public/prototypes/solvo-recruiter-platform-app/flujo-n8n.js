@@ -31,8 +31,8 @@ const HU_INFO = {
     d:'Perfil, descripción, idioma, ciudades y páginas, con el alcance y el costo recalculando en vivo.' },
   'HUSRP-2.8-FE':{ g:'Plataforma', c:'#6366f1', n:'Listado reactivo de la búsqueda',
     d:'La tabla se llena a medida que llegan los candidatos y refleja la respuesta del flujo: terminada, ampliada, vacía o parcial.' },
-  'HUSRP-2.11-BE':{ g:'Plataforma', c:'#6366f1', n:'Búsqueda sobre el pool con despacho acotado',
-    d:'Devuelve el pool del perfil con la marca de disponibilidad de cada candidato, y despacha a re-validación <b>solo los vencidos que están marcados open-to-work</b>.' },
+  'HUSRP-2.11-BE':{ g:'Plataforma', c:'#6366f1', n:'Búsqueda sobre el pool con marca de disponibilidad',
+    d:'Devuelve el pool del perfil con la marca de disponibilidad y la fecha de análisis de cada candidato, resueltas contra la base.' },
   'HUSRP-2.12-FE':{ g:'Plataforma', c:'#6366f1', n:'Filtro de disponibilidad en el listado',
     d:'El control de disponibilidad sobre la tabla de candidatos —arranca en disponibles— y la marca por fila.' },
   'HUSRP-2.9':   { g:'Plataforma', c:'#6366f1', n:'Despliegue a Producción',
@@ -297,7 +297,7 @@ const AI = {
   "language": "English",
   "cities": ["Bogotá","Medellín","Lima","Buenos Aires"],
   "pages_per_city": 2 }`,
-          api:'Autenticado con header compartido, mismo esquema que el webhook de re-validación.',
+          api:'Autenticado con header compartido, mismo esquema que el resto de los webhooks del dominio.',
           note:'El backend ya validó el presupuesto y creó la fila en <code>ai_searches</code> antes de llamar. Acá no se vuelve a validar saldo.' } },
 
     { id:'set', n:'Set Execution\nTrace Variables', t:'set', x:190, y:250,
@@ -423,13 +423,12 @@ metadata = { cost_estimated, cost_real, level_reached,
 const REVAL = {
   key:'reval', name:'TS_REVALIDATE_CANDIDATES', hu:'HUSRP-2.10',
   huName:'Re-validación de disponibilidad como flujo único, activo e invocado',
-  rel:[ { id:'HUSRP-2.11-BE', how:'lo llama' },
-        { id:'HUSRP-2.12-FE', how:'muestra su resultado' } ],
-  sub:'Refactor del flujo existente · recibe los candidatos a re-validar en vez de resolverlos por perfil',
-  intro:'El flujo está construido pero no opera: viene duplicado en dos archivos con el mismo nombre interno, los dos inactivos, ninguno invocado y ninguno deja traza. Además resuelve la vigencia de todos los candidatos de un perfil de búsqueda, no de los que el reclutador tiene en pantalla — con el pool guardando también a los no disponibles, eso multiplicaría el re-scraping. El refactor deja una sola instancia activa que recibe el conjunto a re-validar y devuelve el resultado por candidato.',
+  rel:[ { id:'HUSRP-2.2', how:'lo encadena al cerrar la ejecución' } ],
+  sub:'Instancia única y activa · el pipeline programado le pasa los candidatos vencidos al cerrar su ejecución',
+  intro:'Mantiene fresca la señal de disponibilidad del pool sin que el reclutador espere por ella. El disparo programado, terminado el recorrido de su cola, selecciona los candidatos cuya fecha de análisis quedó fuera de la ventana de vigencia y se los pasa a este flujo, que los vuelve a consultar en la fuente y persiste el resultado por candidato. La búsqueda del reclutador lee lo que este flujo dejó escrito.',
   nodes: [
     { id:'trg', n:'Receive Revalidation\nRequest Trigger', t:'trigger', x:0, y:230, trigger:true,
-      d:{ does:'Punto de entrada del flujo. Lo invoca el servicio de búsqueda de la plataforma con los candidatos vencidos que hay que refrescar.',
+      d:{ does:'Punto de entrada del flujo. Lo invoca el disparo programado con los candidatos vencidos que hay que refrescar.',
           in:'El conjunto de candidatos a re-validar, con la ejecución que los pidió.',
           op:`{
   "execution_id": "610394",
@@ -437,7 +436,7 @@ const REVAL = {
     { "id": "uuid", "linkedin_url": "https://www.linkedin.com/in/..." }
   ]
 }`,
-          note:'<b>Cambio central del refactor.</b> Hoy el flujo recibe un <code>search_profile_id</code> y resuelve él mismo la vigencia de todo el perfil; pasa a recibir el recorte ya decidido por quien lo llama. Los dos archivos entregados —<code>TS_REVALIDATE_CANDIDATES</code> y <code>TL_REVALIDATE_CANDIDATES</code>, mismo <code>name</code> e ids distintos— se consolidan en esta única instancia, activa.' } },
+          note:'Recibe el recorte ya decidido por quien lo llama, no un <code>search_profile_id</code> cuya vigencia tenga que resolver él mismo. Existe una sola instancia del flujo, con nombre único y activa.' } },
 
     { id:'val', n:'Validate Candidate\nBatch Code', t:'code', x:190, y:230,
       d:{ does:'Valida el lote antes de gastar scraping: descarta entradas sin <code>linkedin_url</code> y corta si el conjunto viene vacío.',
@@ -451,7 +450,7 @@ const REVAL = {
     { id:'scrape', n:'Fetch Profile\nApify', t:'http', x:570, y:230,
       d:{ does:'Vuelve a consultar el perfil del candidato en la fuente para leer su señal de disponibilidad actual.',
           api:'Actor de Apify <code>M2FMdjRVeF1HPGFcc</code> (<code>harvestapi/linkedin-profile-search</code>), el mismo que usa el scraping del pipeline, con el <code>linkedin_url</code> del candidato.',
-          note:'Es el único paso que cuesta dinero del flujo: una página por candidato. Por eso quien llama despacha solo a los vencidos que están marcados open-to-work, y no a todo el pool del perfil.' } },
+          note:'Es el único paso que cuesta dinero del flujo: una página por candidato. Por eso el disparo programado despacha solo a los vencidos que están marcados open-to-work, y no a todo el pool.' } },
 
     { id:'eval', n:'Resolve Availability\nCode', t:'code', x:760, y:230,
       d:{ does:'Resuelve la disponibilidad con la misma regla que el pipeline, para que un candidato no quede marcado distinto según por dónde pasó.',
@@ -497,7 +496,7 @@ WHERE id = $1;`,
 usage_type = 'requests'   usage_unit = 'count'
 usage_amount = <candidatos re-consultados>
 metadata = { revalidated, no_longer_available, not_verifiable }`,
-          note:'Hoy la re-validación es el único flujo del dominio que no logea: sin esto, su consumo no aparece en la proyección de costo ni en el techo de presupuesto.' } },
+          note:'Sin esta traza el consumo de la re-validación no aparece en la proyección de costo ni en el techo de presupuesto.' } },
   ],
   links: [
     ['trg','val'],['val','batch'],['batch','scrape'],['scrape','eval'],['eval','sw'],
@@ -676,8 +675,8 @@ function openNotes() {
       <li><b>APIs</b>: actor Apify <code>M2FMdjRVeF1HPGFcc</code> para la búsqueda, <code>LpVuK3Zozwuipa5bp</code> vía <code>TS_EMAIL_FINDER</code> para el correo, OpenAI <code>gpt-5-mini</code> para la interpretación. Las tres cuentas ya existen.</li>
       <li><b>La cuota del actor es por hora y compartida</b> entre los dos disparadores. <code>startPage</code> permite retomar sin repagar páginas ya traídas.</li>
       <li><b>El pool guarda todas las detecciones.</b> Nada se descarta por disponibilidad: el candidato se persiste con su <code>open_to_work</code> resuelto y el reclutador filtra por ese campo. Por eso la compra de correo deja de filtrar por disponibilidad y alcanza a todo candidato sin <code>email</code>.</li>
-      <li><b>La re-validación se refactoriza, no se construye.</b> El flujo ya existe, duplicado en dos archivos con el mismo <code>name</code>, los dos inactivos y sin invocador. Queda una sola instancia activa, que recibe el conjunto de candidatos en vez de resolverlo por perfil, y que por fin logea su consumo.</li>
-      <li><b>Solo se re-valida al disponible vencido.</b> Con el pool guardando también a los no disponibles, despachar todos los vencidos del perfil multiplicaría el gasto de cada búsqueda del reclutador.</li>
+      <li><b>La re-validación cuelga del disparo programado.</b> Una sola instancia activa, invocada al cerrar la ejecución del pipeline con el conjunto de candidatos ya decidido. La búsqueda del reclutador no la dispara: resuelve contra lo que el flujo dejó escrito, y por eso responde sin esperar a la fuente.</li>
+      <li><b>Solo se re-valida al disponible vencido.</b> Con el pool guardando también a los no disponibles, despachar todos los vencidos multiplicaría el gasto de cada ejecución.</li>
       <li><b>Prefijo <code>AS_</code></b> propuesto para el disparador de la búsqueda asistida, distinguiéndolo de <code>TS_</code>, <code>AU_</code> y <code>ENRICH_</code>. Decisión de nomenclatura a confirmar.</li>
     </ul></div>`;
   document.getElementById('detail').classList.add('open');

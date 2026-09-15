@@ -278,6 +278,14 @@ const CANDIDATES = [
 const EMAIL_RESOLUTION = { 1:true,2:true,3:false,4:true,5:false,6:true,7:false,8:true,9:false };
 const initials = c => (c.first[0] + c.last[0]).toUpperCase();
 const chips = arr => `<div class="cand-chips">${arr.map(s => `<span class="cand-chip">${s}</span>`).join('')}</div>`;
+/* En la tabla la celda se acota para que la fila mantenga su altura;
+   la lista completa está en el panel de detalle. */
+const chipsCapped = (arr, max) => {
+  const shown = arr.slice(0, max);
+  const rest = arr.length - shown.length;
+  return `<div class="cand-chips">${shown.map(s => `<span class="cand-chip">${s}</span>`).join('')}` +
+    (rest ? `<span class="cand-chip cand-chip--more">+${rest}</span>` : '') + '</div>';
+};
 const candCountry = c => c.loc.split(',').pop().trim();
 
 /* ----------------- Búsqueda: tag input (máx 3) ----------------- */
@@ -331,19 +339,17 @@ function runSearch() {
   card.style.display = 'block';
   const aip = document.getElementById('aiPanel'); if (aip) aip.style.display = 'none';
   if (ind) ind.style.display = 'flex';
-  note.style.display = 'flex';
-  document.querySelector('[data-note]').textContent = 'Checking which candidates are still open to work — more may appear as we go…';
+  note.style.display = 'none';
   tbody.innerHTML = '';
   clearFilters();          // arranca sin filtros aplicados y en la página 1
   populateFilterOptions(); // idioma y localización según el conjunto de resultados
 
-  CANDIDATES.forEach((c, idx) => {
-    setTimeout(() => {
-      tbody.appendChild(buildCandRow(c));
-      applyFilters(); // aplica los filtros activos también a las filas que van llegando
-      if (idx === CANDIDATES.length - 1) { note.style.display = 'none'; if (ind) ind.style.display = 'none'; }
-    }, 300 + idx * 240);
-  });
+  /* El pool se resuelve contra la base: el listado llega completo de una vez. */
+  setTimeout(() => {
+    CANDIDATES.forEach(c => tbody.appendChild(buildCandRow(c)));
+    applyFilters();
+    if (ind) ind.style.display = 'none';
+  }, 300);
 
   bindRowSelection(tbody);
 }
@@ -551,8 +557,6 @@ const ACTIVE_CITIES = [
 
 const REQUIRED_LANGS = ['English', 'Spanish', 'Portuguese', 'French'];
 
-/* Tarifa vigente de la fuente — en operación la mantiene el admin en Parameters. */
-const RATE = { perPage: 0.10, perProfile: 0.004, perEmail: 0.01, profilesPerPage: 25, otwYield: 0.28 };
 /* Techo de presupuesto y consumo acumulado del período.
    Se persiste para que Parameters y AI Search vean el mismo saldo. */
 function loadBudget() {
@@ -637,9 +641,9 @@ function buildCandRow(c) {
     <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
     <td><div class="cand-name"><span class="cand-avatar">${initials(c)}</span>
         <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
-    <td>${c.headline}</td>
-    <td>${chips(c.skills)}</td>
-    <td>${chips(c.languages)}</td>
+    <td class="cand-headline">${c.headline}</td>
+    <td>${chipsCapped(c.skills, 5)}</td>
+    <td>${chipsCapped(c.languages, 2)}</td>
     <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
     <td data-cell="status">${statusBadge(st.status)}</td>
     <td data-cell="export">${exportCell(st.exp)}</td>
@@ -793,14 +797,17 @@ function descartes(raw, usados) {
   return uniq.map(x => x.charAt(0).toUpperCase() + x.slice(1));
 }
 
-/* ----------------- Estimación de alcance y costo ----------------- */
+/* ----------------- Estimación de alcance y costo -----------------
+   Mismas tarifas y supuestos que la proyección mensual: COST_MODEL. */
 function estimate(pages, cityCount) {
+  const m = COST_MODEL;
   const totalPages = pages * cityCount;
-  const maxCands = totalPages * RATE.profilesPerPage;
-  const expected = Math.round(maxCands * RATE.otwYield);
-  const searchCost = totalPages * (RATE.perPage + RATE.profilesPerPage * RATE.perProfile);
-  const emailCost = expected * RATE.perEmail;
-  return { totalPages, maxCands, expected, searchCost, emailCost, total: searchCost + emailCost };
+  const maxCands = totalPages * m.profilesPerPage;
+  const persisted = Math.round(maxCands * m.uniqueRate);
+  const expected = Math.round(persisted * m.otwYield);
+  const searchCost = totalPages * (m.rateSearchPage + m.profilesPerPage * m.rateProfile);
+  const emailCost = persisted * m.rateEmail;
+  return { totalPages, maxCands, persisted, expected, searchCost, emailCost, total: searchCost + emailCost };
 }
 const budgetLeft = () => BUDGET.cap - BUDGET.spent;
 
@@ -958,10 +965,10 @@ function updateAiEstimate() {
   set('aiMath', cities
     ? `<b>${pages}</b> page${pages === 1 ? '' : 's'} × <b>${cities}</b> cit${cities === 1 ? 'y' : 'ies'} = <b>${est.totalPages}</b> pages`
     : 'Pick at least one city');
-  set('aiCands', cities ? `up to <b>${est.maxCands}</b> candidates · <b>~${est.expected}</b> expected available` : '—');
+  set('aiCands', cities ? `up to <b>${est.maxCands}</b> candidates · <b>~${est.persisted}</b> new to your pool · <b>~${est.expected}</b> expected available` : '—');
   set('aiCost', cities ? `<b>${money(est.total)}</b>` : '—');
   set('aiCostBreak', cities
-    ? `search ${money(est.searchCost)} (capped by your pages) + email ~${money(est.emailCost)} (only for available ones)`
+    ? `search ${money(est.searchCost)} (capped by your pages) + email ~${money(est.emailCost)} (every candidate we keep)`
     : '');
   set('aiBudget', `${money(left)} left of ${money(BUDGET.cap)} this period`);
 
@@ -1020,7 +1027,7 @@ function runAiSearch(desc, langHint) {
   const spent = { pages: 0, profiles: 0, emails: 0 };
   const delivered = [];
 
-  const scrapedFor = p => Math.round(p * RATE.profilesPerPage * 0.85);
+  const scrapedFor = p => Math.round(p * COST_MODEL.profilesPerPage * COST_MODEL.uniqueRate);
 
   function deliver(list, from, done) {
     list.forEach((c, i) => {
@@ -1049,7 +1056,7 @@ function runAiSearch(desc, langHint) {
   function finish() {
     note.style.display = 'none';
     if (ind) ind.style.display = 'none';
-    const real = spent.pages * RATE.perPage + spent.profiles * RATE.perProfile + spent.emails * RATE.perEmail;
+    const real = spent.pages * COST_MODEL.rateSearchPage + spent.profiles * COST_MODEL.rateProfile + spent.emails * COST_MODEL.rateEmail;
     const est = estimate(AI_FORM.pages, cities);
     BUDGET.spent += real;
     saveBudget();
@@ -1128,15 +1135,16 @@ function renderAiSpend(spent, real, est, status = 'done') {
                  (instrucción + perfil completo pretty-printed → salida JSON).
 
    Se calcula con valores máximos: páginas llenas de 25 perfiles y email
-   siempre cobrado. La deduplicación es un factor único sobre los candidatos
-   disponibles, porque la búsqueda se paga en bruto pero el email y la IA
-   corren sobre filas ya deduplicadas en la base.
+   siempre cobrado. La búsqueda se paga en bruto sobre todo lo que devuelve
+   la fuente; el email corre sobre los candidatos únicos que quedan
+   persistidos en la base, y el enriquecimiento y la IA sobre los que de
+   esos resultan disponibles.
    ======================================================================== */
 const COST_MODEL = {
   profilesPerPage: 25,     // máximo que entrega una página de la fuente
   pagesPerCombo: 1,        // hoy fijo en el pipeline; no es parámetro todavía
   otwYield: 0.28,          // rendimiento open-to-work observado (7 de 25)
-  uniqueRate: 0.85,        // deduplicación básica entre combinaciones
+  uniqueRate: 0.50,        // candidatos netos nuevos que una ejecución suma al pool
   rateSearchPage: 0.10,
   rateProfile: 0.004,
   rateEmail: 0.010,
@@ -1146,8 +1154,8 @@ const COST_MODEL = {
   aiInPer1M: 0.25,
   aiOutPer1M: 2.00,
 };
-/* Espejo del catálogo de perfiles de búsqueda (perfiles.html): 12 de 13 activos. */
-const ACTIVE_PROFILES = 12;
+/* Espejo del catálogo de perfiles de búsqueda (perfiles.html): 11 de 14 activos. */
+const ACTIVE_PROFILES = 11;
 const DAYS_PER_MONTH = 30.44;
 
 function projectCost(o) {
@@ -1155,19 +1163,19 @@ function projectCost(o) {
   const combos = m.profiles * m.cities;
   const pages = combos * m.pagesPerCombo;
   const scraped = pages * m.profilesPerPage;
-  const otw = scraped * m.otwYield;
-  const unique = otw * m.uniqueRate;
+  const persisted = scraped * m.uniqueRate;
+  const otw = persisted * m.otwYield;
 
   const search = pages * (m.rateSearchPage + m.profilesPerPage * m.rateProfile);
-  const email = unique * m.rateEmail;
-  const brightData = unique * m.rateBrightData;
-  const ai = unique * (m.aiInTokens * m.aiInPer1M / 1e6 + m.aiOutTokens * m.aiOutPer1M / 1e6);
+  const email = persisted * m.rateEmail;
+  const brightData = otw * m.rateBrightData;
+  const ai = otw * (m.aiInTokens * m.aiInPer1M / 1e6 + m.aiOutTokens * m.aiOutPer1M / 1e6);
 
   const perRun = search + email + brightData + ai;
   const runsPerMonth = DAYS_PER_MONTH / m.frequencyDays;
   return {
     combos, pages, scraped,
-    otw: Math.round(otw), unique: Math.round(unique),
+    persisted: Math.round(persisted), otw: Math.round(otw),
     runsPerMonth,
     lines: [
       { key: 'search',     label: 'Candidate search',   vendor: 'Apify',       run: search },
@@ -1177,6 +1185,6 @@ function projectCost(o) {
     ],
     perRun,
     perMonth: perRun * runsPerMonth,
-    aiTokensPerMonth: unique * (m.aiInTokens + m.aiOutTokens) * runsPerMonth,
+    aiTokensPerMonth: otw * (m.aiInTokens + m.aiOutTokens) * runsPerMonth,
   };
 }

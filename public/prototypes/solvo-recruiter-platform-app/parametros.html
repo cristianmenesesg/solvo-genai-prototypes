@@ -42,6 +42,51 @@
           </div>
         </div>
 
+        <!-- Cobertura geográfica -->
+        <div class="detail-card" style="margin-top:16px;">
+          <div class="geo-head">
+            <div>
+              <div class="detail-card-title" style="margin:0;">Geographic coverage</div>
+              <div class="geo-summary" id="geoSummary"></div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Add city</button>
+          </div>
+
+          <div class="geo-toolbar">
+            <div class="geo-search">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input id="geoSearch" class="geo-search-input" type="text" placeholder="Search country or city…" autocomplete="off">
+            </div>
+            <div class="geo-filter" id="statusFilter">
+              <button class="btn btn-sm btn-outline active" type="button" data-status="all">All</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="active">Active</button>
+              <button class="btn btn-sm btn-outline" type="button" data-status="inactive">Inactive</button>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="loc-table">
+              <thead>
+                <tr>
+                  <th>City</th>
+                  <th style="width:30%;">Country</th>
+                  <th class="loc-toggle">Active</th>
+                  <th class="loc-action"></th>
+                </tr>
+              </thead>
+              <tbody id="locBody"></tbody>
+            </table>
+            <div class="table-pagination" id="locPager" style="display:none;">
+              <span class="pagination-info" id="pagerInfo"></span>
+              <div class="pagination-controls">
+                <button class="pagination-btn" id="pagerPrev" type="button">‹ Previous</button>
+                <span class="pagination-info" id="pagerPages"></span>
+                <button class="pagination-btn" id="pagerNext" type="button">Next ›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Presupuesto de AI Search -->
         <div class="detail-card" style="margin-top:16px;">
           <div class="detail-card-title">AI Search budget</div>
@@ -109,7 +154,7 @@
             <div class="proj-input">
               <label class="filter-label">Active cities</label>
               <output id="projCities">—</output>
-              <span class="proj-src">from the table below</span>
+              <span class="proj-src">from the coverage above</span>
             </div>
             <div class="proj-input">
               <label class="filter-label">Every</label>
@@ -125,51 +170,6 @@
 
           <div class="proj-volume" id="projVolume"></div>
 
-        </div>
-
-        <!-- Cobertura geográfica -->
-        <div class="detail-card" style="margin-top:16px;">
-          <div class="geo-head">
-            <div>
-              <div class="detail-card-title" style="margin:0;">Geographic coverage</div>
-              <div class="geo-summary" id="geoSummary"></div>
-            </div>
-            <button class="btn btn-secondary btn-sm" onclick="openAddLoc()">+ Add city</button>
-          </div>
-
-          <div class="geo-toolbar">
-            <div class="geo-search">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-              <input id="geoSearch" class="geo-search-input" type="text" placeholder="Search country or city…" autocomplete="off">
-            </div>
-            <div class="geo-filter" id="statusFilter">
-              <button class="btn btn-sm btn-outline active" type="button" data-status="all">All</button>
-              <button class="btn btn-sm btn-outline" type="button" data-status="active">Active</button>
-              <button class="btn btn-sm btn-outline" type="button" data-status="inactive">Inactive</button>
-            </div>
-          </div>
-
-          <div class="table-container">
-            <table class="loc-table">
-              <thead>
-                <tr>
-                  <th>City</th>
-                  <th style="width:30%;">Country</th>
-                  <th class="loc-toggle">Active</th>
-                  <th class="loc-action"></th>
-                </tr>
-              </thead>
-              <tbody id="locBody"></tbody>
-            </table>
-            <div class="table-pagination" id="locPager" style="display:none;">
-              <span class="pagination-info" id="pagerInfo"></span>
-              <div class="pagination-controls">
-                <button class="pagination-btn" id="pagerPrev" type="button">‹ Previous</button>
-                <span class="pagination-info" id="pagerPages"></span>
-                <button class="pagination-btn" id="pagerNext" type="button">Next ›</button>
-              </div>
-            </div>
-          </div>
         </div>
 
         <p class="autosave-note">
@@ -490,8 +490,9 @@
       document.getElementById('projCities').textContent = cities;
       document.getElementById('projFreq').textContent = freq + (freq === 1 ? ' day' : ' days');
       document.getElementById('projTotal').textContent = money(r.perMonth) + ' / month';
-      document.getElementById('projUnit').textContent =
-        r.scraped ? `about ${money4(r.perRun / r.scraped)} per candidate scraped` : '';
+      document.getElementById('projUnit').textContent = r.persisted
+        ? `about ${money4(r.perRun / r.persisted)} per candidate kept · ${money4(r.perRun / r.otw)} per available one`
+        : '';
 
       const d = r.perMonth - projBaseline;
       const dEl = document.getElementById('projDelta');
@@ -505,8 +506,8 @@
       document.getElementById('projVolume').innerHTML =
         `<span><b>${r.combos}</b> combinations</span><span><b>${r.pages}</b> pages</span>` +
         `<span><b>${r.scraped.toLocaleString('en-US')}</b> profiles scraped</span>` +
+        `<span><b>${r.persisted.toLocaleString('en-US')}</b> new to the pool</span>` +
         `<span><b>${r.otw.toLocaleString('en-US')}</b> open to work</span>` +
-        `<span><b>${r.unique.toLocaleString('en-US')}</b> unique, enriched</span>` +
         `<span class="proj-vol-runs">${r.runsPerMonth.toFixed(1)} runs / month · ${money(r.perRun)} each</span>`;
 
     }
