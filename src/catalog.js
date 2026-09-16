@@ -53,8 +53,10 @@ export const products = [
         categoria: 'Email',
         bundle: 'email-cold-outreach-cold-email',
         versions: [
-          { label: 'Preview', file: 'sales-cold-email-preview.html' },
-          { label: 'Email (Brevo)', file: 'sales-cold-email.html' },
+          { label: 'Preview A · maquetada', file: 'sales-cold-email-preview.html' },
+          { label: 'Email A (Brevo)', file: 'sales-cold-email.html' },
+          { label: 'Preview B · texto plano', file: 'sales-cold-email-plain-preview.html' },
+          { label: 'Email B (Brevo)', file: 'sales-cold-email-plain.html' },
         ],
       },
       {

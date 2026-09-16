@@ -1,0 +1,18 @@
+<!--
+  Template Brevo — variante B: texto plano, como un mensaje escrito desde un cliente de correo.
+  Params: first_name, copy_1, copy_2, copy_3, sender_name, sender_title, landing_url.
+  Un <div> por línea y un <div><br></div> entre bloques: es lo que produce un cliente de correo
+  al dar Enter, y no depende de que el proveedor conserve los saltos de línea del parámetro.
+  Sin logo, sin imágenes, sin botón, sin estilos: lo demás lo pone el cliente del destinatario.
+-->
+<div>Hi {{params.first_name}},</div>
+<div><br></div>
+<div>{{params.copy_1}}</div>
+<div><br></div>
+<div>{{params.copy_2}}</div>
+<div><br></div>
+<div>{{params.copy_3}}</div>
+<div><br></div>
+<div>{{params.sender_name}}</div>
+<div>{{params.sender_title}}, Solvo Global</div>
+<div><a href="{{params.landing_url}}">{{params.landing_url}}</a></div>
