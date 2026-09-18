@@ -3352,3 +3352,76 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   flex-shrink: 0;
   margin-top: 1px;
 }
+
+/* Entidades relacionadas que se pueden sumar al paquete de exportacion. Una casilla por entidad,
+   con el conteo del recorte a la vista antes de descargar. */
+.export-companions {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+}
+
+.export-companions-title {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.export-companion {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 6px 0;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.export-companion + .export-companion {
+  border-top: 1px solid var(--border-color);
+}
+
+.export-companion input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-secondary);
+  cursor: pointer;
+}
+
+.export-companion-count {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.export-companion-note {
+  grid-column: 2 / -1;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.export-companion.is-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.export-companion.is-over-limit .export-companion-count,
+.export-companion.is-over-limit .export-companion-note {
+  color: var(--status-warning-fg);
+}
+
+/* Motivo por el que la descarga queda bloqueada: un archivo del paquete supera el tope de filas. */
+.export-limit-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--status-error-bg);
+  color: var(--status-error-fg);
+  font-size: 13px;
+  line-height: 1.45;
+}

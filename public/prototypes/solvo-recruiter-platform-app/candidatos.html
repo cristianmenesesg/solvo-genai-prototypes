@@ -79,6 +79,14 @@
               <input type="text" class="form-input sm" id="fltText" placeholder="Headline, summary or skill…" style="min-width:190px;">
             </div>
             <div class="filter-group">
+              <label class="filter-label">Availability</label>
+              <select class="form-select sm" id="fltAvail" style="min-width:150px;">
+                <option value="yes" selected>Open to work</option>
+                <option value="no">Not available</option>
+                <option value="all">All</option>
+              </select>
+            </div>
+            <div class="filter-group">
               <label class="filter-label">Language</label>
               <select class="form-select sm" id="fltLang" style="min-width:150px;"><option value="">All languages</option></select>
             </div>
@@ -197,7 +205,7 @@
         <div class="drawer-section">
           <span class="detail-label">Status</span>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span class="badge badge-success">Open to work</span>
+            <span data-d-otw></span>
             <span data-d-status></span>
           </div>
           <div class="drawer-kv" style="margin-top:10px;"><b>Exported</b><span data-d-export>—</span></div>

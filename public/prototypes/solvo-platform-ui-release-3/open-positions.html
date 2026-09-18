@@ -771,8 +771,9 @@
 
     // --- Exportación ------------------------------------------------------------
     // El archivo de posiciones hereda el recorte del listado y ya lleva los correos de los
-    // decisores de cada empresa, así que se puede trabajar solo. El acompañante agrega la
-    // ficha de esas empresas, para quien además quiere el contexto del prospecto.
+    // decisores de cada empresa, así que se puede trabajar solo. El acompañante agrega las
+    // personas de esas empresas: una fila por contacto, y una con las celdas de persona
+    // vacías por cada empresa a la que todavía no se le encontró ninguno.
     function handleExport(vacancies) {
       const range = (state.filters.detected && state.filters.detected.from) ? state.filters.detected : { from: '', to: '' };
       const ids = new Set(vacancies.map(function (v) { return v.companyId; }));
@@ -785,7 +786,7 @@
         entityCount: vacancies.length,
         alreadyExported: countAlreadyExported(vacancies),
         companions: [
-          { key: 'prospects', label: 'Include prospects', count: contactRows, note: 'the decision makers of those companies, one row each' }
+          { key: 'prospects', label: 'Include prospects', count: contactRows, note: 'one row per contact of those companies, plus one for each company with no contacts yet' }
         ],
         onExport: function (selected) {
           const files = [{ entity: 'posiciones', rows: buildVacancyExportRows(vacancies), columns: EXPORT_COLUMNS_VACANCIES }];

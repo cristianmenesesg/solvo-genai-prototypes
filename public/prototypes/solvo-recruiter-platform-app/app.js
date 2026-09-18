@@ -240,6 +240,7 @@ const CANDIDATES = [
     "last": "Restrepo",
     "loc": "Bogota, D.C., Capital District, Colombia",
     "verified": true,
+    "otw": true,
     "headline": "Bilingual Customer Service Representative | English C1 | Zendesk & Salesforce | Open to remote roles with US teams",
     "email": "maria.restrepo@gmail.com",
     "about": "Asesora bilingüe de servicio al cliente con cuatro años atendiendo cuentas de Estados Unidos desde Bogotá. He trabajado colas de alto volumen en retail y suscripciones, resolviendo en el primer contacto siempre que la política lo permite y escalando con contexto cuando no.\n\nManejo diario de Zendesk y Salesforce Service Cloud, con macros, SLA y tableros de calidad. Sostengo satisfacción por encima del 95% y tiempos de primera respuesta en chat por debajo de tres minutos. Soy buena en desescalar: llevo a un cliente molesto hasta la solución sin pasarle el problema a un supervisor.\n\nTrabajo desde casa con espacio dedicado y conexión de respaldo, cómoda con turnos rotativos y temporadas altas. Inglés C1 con acento neutro en llamadas y escritura limpia. Busco un rol remoto de tiempo completo con un equipo de Estados Unidos.",
@@ -323,6 +324,7 @@ const CANDIDATES = [
     "last": "Pérez",
     "loc": "Medellín, Antioquia, Colombia",
     "verified": false,
+    "otw": true,
     "headline": "Customer Support Specialist | Call Center",
     "email": "juanperez88@outlook.com",
     "about": "Especialista en soporte al cliente con más de cuatro años en call center inbound y outbound, en operaciones de telecomunicaciones y cobranzas. Conozco el ciclo completo: recepción, tipificación, seguimiento y cierre, con la disciplina de dejar el CRM en condiciones para quien tome el caso después.\n\nHe manejado carteras de cobranza temprana negociando acuerdos de pago sin romper la relación con el cliente, y campañas de retención donde la métrica era la permanencia y no la llamada. Trabajo con indicadores a la vista y sé leer un reporte de gestión como una lista de prioridades.\n\nInglés en nivel intermedio, en mejora activa. Disponibilidad para turnos y para trabajo remoto con equipo propio. Busco una operación donde el soporte sea parte del producto y no un costo a recortar.",
@@ -390,6 +392,7 @@ const CANDIDATES = [
     "last": "Gómez",
     "loc": "Bogota, D.C., Capital District, Colombia",
     "verified": true,
+    "otw": false,
     "headline": "Abogada | Asistente Legal Corporativa | Derecho Administrativo y Conciliación | Disponible de inmediato",
     "email": null,
     "about": "Abogada con experiencia en asistencia jurídica corporativa y administrativa, tanto en firma privada como en entidad pública. He acompañado procesos de revisión documental, redacción técnica de memoriales y respuestas, y atención a requerimientos con términos perentorios.\n\nEn la Fiscalía trabajé bajo volumen y confidencialidad estricta; antes, en asistencia corporativa, llevé la gestión documental, la contratación menor y el seguimiento a proveedores de una compañía mediana. Estoy acostumbrada a que un error de forma cueste un término, así que reviso dos veces.\n\nComplementé el grado con diplomaturas en conciliación, derecho administrativo y sistema interamericano de derechos humanos. Inglés profesional, suficiente para documentación y correo con equipos de Estados Unidos.\n\nBusco un rol remoto de asistente legal donde la rigurosidad y el manejo de información sensible sean el centro del trabajo.",
@@ -528,6 +531,7 @@ const CANDIDATES = [
     "last": "Villanueva",
     "loc": "Manila, Metro Manila, Philippines",
     "verified": true,
+    "otw": true,
     "headline": "Customer Service Representative | E-commerce | Shopify",
     "email": "carlos.v@proton.me",
     "about": "Customer service representative with four years supporting US e-commerce brands from Manila. I handle the full post-purchase cycle: order issues, returns and refunds, shipping exceptions and the escalations that come with peak season.\n\nDay to day I work in Shopify and Gorgias, with live chat as the main channel and email for anything that needs a paper trail. I am comfortable owning a queue without supervision and keeping response times inside SLA when volume triples in November.\n\nI write clean, professional English and keep a neutral tone with frustrated customers. Home office with fiber and backup connection, and full availability for US business hours including early shifts. Looking for a long-term remote role with a team that treats support as part of the product.",
@@ -586,6 +590,7 @@ const CANDIDATES = [
     "last": "Hernández",
     "loc": "Buenos Aires, Buenos Aires Province, Argentina",
     "verified": false,
+    "otw": true,
     "headline": "Bilingual Support Agent | Fintech",
     "email": null,
     "about": "Agente bilingüe de soporte con cuatro años en fintech argentina, atendiendo consultas de producto, disputas y verificación de identidad. Vengo de operaciones donde el error tiene consecuencia económica directa, así que trabajo con procedimiento y dejo traza de cada decisión.\n\nManejo Zendesk y herramientas internas de KYC, con experiencia en el flujo completo de una disputa: recepción, evidencia, resolución y comunicación al cliente. También acompañé la puesta en marcha de una base de conocimiento que bajó las consultas repetidas de manera medible.\n\nInglés profesional, cómodo en llamadas y en escritura. Disponibilidad completa para horario de Estados Unidos desde un espacio de trabajo propio. Busco un rol remoto en fintech o SaaS donde el soporte tenga acceso al producto y no solo al guion.",
@@ -653,6 +658,7 @@ const CANDIDATES = [
     "last": "Cruz",
     "loc": "Cali, Valle del Cauca, Colombia",
     "verified": false,
+    "otw": null,
     "headline": "Inbound Support Representative | Zendesk",
     "email": null,
     "about": "Representante de soporte inbound con casi tres años en operación de telecomunicaciones, atendiendo consultas de facturación, servicio técnico de primer nivel y gestión de reclamos.\n\nTrabajo con Zendesk y con los procedimientos de la cuenta, cumpliendo tiempos de atención y tipificación. Me manejo bien con clientes molestos y con casos que requieren seguimiento en varios contactos.\n\nInglés B2, en formación para certificar C1. Busco mi primera oportunidad remota con un equipo de Estados Unidos, con disponibilidad completa e interés en crecer dentro del área de soporte.",
@@ -683,6 +689,7 @@ const CANDIDATES = [
     "last": "Santos",
     "loc": "Cebu, Central Visayas, Philippines",
     "verified": true,
+    "otw": true,
     "headline": "Technical Support Representative | B2B SaaS",
     "email": "miguel.santos@gmail.com",
     "about": "Technical support representative with four and a half years supporting B2B SaaS products from Cebu. I work tier one and tier two: integration issues, API errors, authentication problems and the escalations that need a reproducible case before they reach engineering.\n\nI am comfortable reading logs, writing basic SQL to confirm a hypothesis, and documenting a bug so the developer does not have to ask me three follow-up questions. Daily tools are Jira, Intercom and the product's own admin console.\n\nStrong written English, which matters more than accent in this role: most of my work is async with customers in different time zones. Home setup built for the job, and availability across US business hours. Looking for a remote role with a product team I can learn deeply.",
@@ -751,6 +758,7 @@ const CANDIDATES = [
     "last": "Fernández",
     "loc": "Lima, Lima, Peru",
     "verified": false,
+    "otw": false,
     "headline": "Especialista en Retención | CRM",
     "email": "lucia.fernandez@gmail.com",
     "about": "Especialista en retención y recuperación de clientes con cuatro años en suscripciones y servicios financieros. Mi trabajo es la conversación que ocurre cuando el cliente ya decidió irse: entender el motivo real, ofrecer lo que corresponde y cerrar el acuerdo en la misma llamada.\n\nManejo HubSpot y campañas de recuperación con segmentación por motivo de baja, y tengo indicadores propios de tasa de retención y valor recuperado que puedo sustentar. También armé los guiones de objeción que hoy usa el equipo.\n\nInglés intermedio en mejora. Busco un rol remoto comercial o de retención con un equipo de Estados Unidos, donde la métrica sea el resultado y no la cantidad de llamadas.",
@@ -798,6 +806,7 @@ const CANDIDATES = [
     "last": "Morales",
     "loc": "San Salvador, San Salvador, El Salvador",
     "verified": true,
+    "otw": true,
     "headline": "Billing Support Specialist | Excel",
     "email": "diego.morales@outlook.com",
     "about": "Especialista en soporte de facturación con dos años en operación de servicios, atendiendo consultas de cobro, conciliaciones y ajustes. Trabajo con volumen alto de casos donde la precisión importa más que la velocidad.\n\nManejo avanzado de Excel —tablas dinámicas, búsquedas y validaciones— y experiencia con QuickBooks para conciliar contra el sistema de facturación. Me tocó depurar bases con inconsistencias históricas y dejar el proceso documentado para que no se repita.\n\nInglés profesional, cómodo en correo y en llamadas con clientes de Estados Unidos. Busco un rol remoto en facturación, cuentas por cobrar o soporte administrativo con un equipo estadounidense.",
@@ -1011,6 +1020,7 @@ function applyFilters() {
   const loc = document.getElementById('fltLoc')?.value || '';
   const onlyEmail = document.getElementById('fltEmail')?.checked;
   const status = document.getElementById('fltStatus')?.value || '';
+  const avail = document.getElementById('fltAvail')?.value || 'yes';
   const expF = document.getElementById('fltExport')?.value || 'none';
 
   const matches = rows.filter(tr => {
@@ -1018,6 +1028,7 @@ function applyFilters() {
     if (lang && !tr.dataset.langs.split('|').includes(lang)) return false;
     if (loc && tr.dataset.country !== loc) return false;
     if (onlyEmail && tr.dataset.email !== '1') return false;
+    if (avail !== 'all' && tr.dataset.otw !== avail) return false;
     if (status && tr.dataset.status !== status) return false;
     if (expF !== 'all' && tr.dataset.exp !== expF) return false;
     return true;
@@ -1051,6 +1062,7 @@ function clearFilters() {
   const o = document.getElementById('fltLoc'); if (o) o.value = '';
   const e = document.getElementById('fltEmail'); if (e) e.checked = false;
   const st = document.getElementById('fltStatus'); if (st) st.value = '';
+  const av = document.getElementById('fltAvail'); if (av) av.value = 'yes';
   const ex = document.getElementById('fltExport'); if (ex) ex.value = 'none';
   candPage = 0;
   applyFilters();
@@ -1062,6 +1074,7 @@ function initFilters() {
   document.getElementById('fltLoc')?.addEventListener('change', refilter);
   document.getElementById('fltEmail')?.addEventListener('change', refilter);
   document.getElementById('fltStatus')?.addEventListener('change', refilter);
+  document.getElementById('fltAvail')?.addEventListener('change', refilter);
   document.getElementById('fltExport')?.addEventListener('change', refilter);
   document.getElementById('candPrev')?.addEventListener('click', () => { if (candPage > 0) { candPage--; applyFilters(); } });
   document.getElementById('candNext')?.addEventListener('click', () => { candPage++; applyFilters(); });
@@ -1139,6 +1152,7 @@ function fillDrawer(c) {
   d.querySelector('[data-d-skills]').innerHTML = resto.length ? chips(resto) : '';
   DRAWER_ID = c.id;
   const st = candState(c.id);
+  const otwEl = d.querySelector('[data-d-otw]'); if (otwEl) otwEl.innerHTML = otwBadge(c);
   const stEl = d.querySelector('[data-d-status]'); if (stEl) stEl.innerHTML = statusBadge(st.status);
   const expEl = d.querySelector('[data-d-export]');
   if (expEl) expEl.innerHTML = st.exp
@@ -1256,6 +1270,15 @@ function candState(id) {
 })();
 
 /* ----------------- Celdas derivadas del estado ----------------- */
+/* Disponibilidad del candidato: la escribe el pipeline, y puede no estar escrita todavía. */
+const OTW_LABEL = { yes: 'Open to work', no: 'Not available' };
+function otwKey(c) { return c.otw === true ? 'yes' : c.otw === false ? 'no' : 'unknown'; }
+function otwBadge(c) {
+  const k = otwKey(c);
+  /* Sin señal escrita no es lo mismo que no disponible: para decidir a quién contactar son cosas distintas. */
+  if (k === 'unknown') return '<span class="otw-none">No signal</span>';
+  return `<span class="badge badge-${k === 'yes' ? 'success' : 'neutral'}">${OTW_LABEL[k]}</span>`;
+}
 function statusBadge(status) {
   const cls = status === 'contacted' ? 'contacted' : 'detected';
   return `<span class="badge-pipeline badge-pipeline-${cls}" style="cursor:default;">${STATUS_LABEL[status]}</span>`;
@@ -1291,6 +1314,7 @@ function buildCandRow(c) {
   tr.dataset.country = candCountry(c);
   tr.dataset.email = hasEmail ? '1' : '0';
   tr.dataset.status = st.status;
+  tr.dataset.otw = otwKey(c);
   tr.dataset.exp = expOwner(st.exp);
   tr.innerHTML = `
     <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
@@ -1300,7 +1324,7 @@ function buildCandRow(c) {
     <td>${chipsCapped(c.skills, 3)}</td>
     <td>${chipsCapped(langNames(c), 2)}</td>
     <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
-    <td data-cell="status">${statusBadge(st.status)}</td>
+    <td data-cell="status"><div class="cand-status">${otwBadge(c)}<span data-cell="mgmt">${statusBadge(st.status)}</span></div></td>
     <td data-cell="export">${exportCell(st.exp)}</td>
     <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
   tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
@@ -1314,7 +1338,7 @@ function refreshRowState(id) {
   const st = candState(id);
   tr.dataset.status = st.status;
   tr.dataset.exp = expOwner(st.exp);
-  tr.querySelector('[data-cell="status"]').innerHTML = statusBadge(st.status);
+  tr.querySelector('[data-cell="mgmt"]').innerHTML = statusBadge(st.status);
   tr.querySelector('[data-cell="export"]').innerHTML = exportCell(st.exp);
   const nameCell = tr.querySelector('.cand-name .font-medium');
   const dot = tr.querySelector('.note-dot');

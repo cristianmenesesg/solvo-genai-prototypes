@@ -78,14 +78,14 @@ Dos archivos, y cada uno se basta solo:
 | Archivo | Una fila por | Se pide desde | Lleva del otro lado |
 |---|---|---|---|
 | `posiciones_<fecha>.csv` | aviso | Open Positions (recorte del listado) o Prospects (acompañante: todas las posiciones de esas empresas) | `Correos de decisores`: los correos de los decisores de la empresa, separados por `;` |
-| `prospectos_<fecha>.csv` | contacto | Prospects (recorte del listado) o Open Positions (acompañante: los decisores de esas empresas) | `Posiciones detectadas`: los cargos publicados, separados por barra |
+| `prospectos_<fecha>.csv` | contacto | Prospects (recorte del listado) o Open Positions (acompañante: los contactos de esas empresas) | `Posiciones detectadas`: los cargos publicados, separados por barra |
 
 - El de prospectos es la lista de personas —nombre, cargo, rol, nivel de decisión, correo con su verificación, teléfono y LinkedIn— y repite en cada fila las columnas de su empresa, para poder ordenarlo y filtrarlo sin cruzarlo con nada. Una empresa a la que todavía no se le encontró a nadie entrega igual su fila, con las celdas de persona vacías.
 - Cada archivo entrega además lo que dedujo el motor: puntaje ICP y señales en el de prospectos; posición del catálogo, veredicto de viabilidad, confianza e idiomas en el de posiciones.
 - El archivo de la entidad del listado hereda sus filtros; el acompañante no hereda ninguno y entrega todo lo relacionado con ese recorte.
 - Un solo archivo se entrega como CSV; los dos, en `exportacion_<fecha>.zip`.
 - UTF-8 con BOM, CRLF, celda vacía cuando no hay dato, orden por fecha de detección descendente y empresa ascendente. Encabezados en español, que son contrato.
-- Modalidad, seniority, portal, pipeline de origen e industria se entregan con su etiqueta; relación y etapa del embudo, con el valor crudo de la base.
+- Modalidad, seniority, portal e industria se entregan con su etiqueta; relación y etapa del embudo, con el valor crudo de la base.
 - El tope de 10.000 filas se evalúa por archivo: marcar un acompañante que lo supera deshabilita la descarga con el motivo a la vista.
 - Todo registro entregado queda marcado con quién lo exportó y cuándo, también los del acompañante.
 

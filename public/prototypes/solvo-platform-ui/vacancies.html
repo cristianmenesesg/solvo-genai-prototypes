@@ -98,6 +98,22 @@
             <div id="industryFilter"></div>
           </div>
 
+          <!-- Contactos: mismo criterio que ya ofrece Empresas, resuelto por la empresa asociada -->
+          <div class="filter-group">
+            <label class="filter-label">Contacts</label>
+            <select class="form-select sm" id="contactsFilter">
+              <option value="">All</option>
+              <option value="with">With contacts</option>
+              <option value="without">Without contacts</option>
+            </select>
+          </div>
+
+          <!-- Tamano de la empresa asociada; `vacancies` no lleva columna de tamano -->
+          <div class="filter-group">
+            <label class="filter-label">Employees</label>
+            <div id="companySizeFilter"></div>
+          </div>
+
           <div class="filter-group">
             <label class="filter-label">Status</label>
             <select class="form-select sm" id="statusFilter">
@@ -484,11 +500,21 @@
     // === FILTROS NUEVOS DE LA ÉPICA DE MANTENIMIENTO ===
     let detectedRangeFilter = null;
     let industryFilter = null;
+    let companySizeFilter = null;
 
     function setupIndustryFilter() {
       const items = getActiveIndustries().map(i => ({ value: i.code, label: i.label }));
       items.unshift({ value: 'unclassified', label: 'Unclassified', special: true });
       industryFilter = renderMultiSelect('industryFilter', items, {
+        placeholder: 'All',
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    function setupCompanySizeFilter() {
+      const items = COMPANY_SIZE_RANGES.map(r => ({ value: r.value, label: r.label }));
+      items.push({ value: 'unknown', label: 'Unknown', special: true });
+      companySizeFilter = renderMultiSelect('companySizeFilter', items, {
         placeholder: 'All',
         onChange: () => applyFilters(true)
       });
@@ -529,8 +555,12 @@
 
     // Industria de una vacante: la de la empresa a la que pertenece (vacancies.company_id).
     // `public.vacancies` no incorpora ningún campo de industria.
+    function getVacancyCompany(vacancy) {
+      return MOCK_COMPANIES.find(c => c.id === vacancy.companyId) || null;
+    }
+
     function getVacancyIndustryCode(vacancy) {
-      const company = MOCK_COMPANIES.find(c => c.id === vacancy.companyId);
+      const company = getVacancyCompany(vacancy);
       return company ? company.industryCode : null;
     }
 
@@ -672,10 +702,14 @@
       const assignType = isAdmin ? document.getElementById('assignTypeFilter').value : '';
       const industryCodes = industryFilter ? industryFilter.getValue() : [];
       const detected = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
+      const contactsFilter = document.getElementById('contactsFilter').value;
+      const sizeRanges = companySizeFilter ? companySizeFilter.getValue() : [];
 
       // El rango de detección y el estado de exportación se combinan con los demás filtros con lógica AND
       let baseData = filterByExportStatus(getVisibleVacancies(), getExportStatusValue());
       baseData = filterByDetectedRange(baseData, detected.from, detected.to);
+      // Tamano de la empresa asociada. Una vacante sin empresa vigente cae bajo `unknown`.
+      baseData = filterByCompanySize(baseData, sizeRanges, getVacancyCompany);
 
       return baseData.filter(v => {
         if (search && !v.title.toLowerCase().includes(search)) return false;
@@ -690,6 +724,14 @@
           const code = getVacancyIndustryCode(v);
           const matches = industryCodes.some(c => c === 'unclassified' ? !code : code === c);
           if (!matches) return false;
+        }
+
+        // Contactos de la empresa asociada. Una vacante cuya empresa no esta vigente se
+        // devuelve como sin contactos, y no se omite del listado.
+        if (contactsFilter) {
+          const has = companyHasContacts(getVacancyCompany(v));
+          if (contactsFilter === 'with' && !has) return false;
+          if (contactsFilter === 'without' && has) return false;
         }
 
         // Salary bucket filter
@@ -749,6 +791,8 @@
       if (sdrFilterSB) sdrFilterSB.reset();
       if (isAdmin) document.getElementById('assignTypeFilter').value = '';
       if (industryFilter) industryFilter.reset();
+      if (companySizeFilter) companySizeFilter.reset();
+      document.getElementById('contactsFilter').value = '';
       if (detectedRangeFilter) detectedRangeFilter.reset();
       // "Clear" devuelve el estado de exportación a su valor por defecto, no a "Todos"
       if (canFilterByExportStatus()) document.getElementById('exportStatusFilter').value = 'not_exported';
@@ -787,6 +831,7 @@
     document.getElementById('searchInput').addEventListener('input', handleSearchInput);
     document.getElementById('descriptionFilter').addEventListener('input', handleDescriptionInput);
     document.getElementById('statusFilter').addEventListener('change', () => applyFilters(true));
+    document.getElementById('contactsFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('sourceFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('salaryFilter').addEventListener('change', () => applyFilters(true));
     document.getElementById('remoteViableFilter').addEventListener('change', function() {
@@ -798,23 +843,38 @@
     }
 
     // === EXPORT CSV ===
-    // El archivo hereda los filtros activos del listado —incluidos el rango de fecha de detección,
-    // el estado de exportación y lo que el toggle de viabilidad remota esté dejando ver— y toma
-    // del rango el nombre del archivo.
+    // El archivo de vacantes hereda los filtros activos del listado —incluidos el rango de fecha de
+    // detección, el estado de exportación y lo que el toggle de viabilidad remota esté dejando ver— y
+    // toma del rango el nombre del archivo. Los archivos acompañantes —empresas y contactos— no
+    // heredan ninguno de esos filtros: entregan todo lo relacionado con el recorte de vacantes.
     function handleExportCSV() {
       const data = filterVacancies();
       const range = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
 
+      const companyIds = new Set(data.map(v => v.companyId));
+      const relatedCompanies = MOCK_COMPANIES.filter(c => companyIds.has(c.id));
+      const relatedContacts = relatedCompanies.flatMap(c => getContactsForCompany(c.id));
+
       openExportPopup({
         entityLabel: 'vacancies',
         entityCount: data.length,
-        showContactsOption: false,
         alreadyExported: countAlreadyExported(data),
-        onExport: () => {
-          // El archivo se compone antes de tocar nada: lo que se entrega no depende del marcado.
-          const rows = buildVacancyExportRows(data);
-          exportToCSV(rows, exportFilename('vacantes', range.from, range.to), EXPORT_COLUMNS_VACANCIES);
+        companions: [
+          { key: 'companies', label: 'Include companies', count: relatedCompanies.length, note: `the companies behind the ${data.length} vacancies` },
+          { key: 'contacts', label: 'Include contacts', count: relatedContacts.length, note: `all contacts of those ${relatedCompanies.length} companies` }
+        ],
+        onExport: (selected) => {
+          // Los archivos se componen antes de tocar nada: lo que se entrega no depende del marcado.
+          const files = [{ entity: 'vacantes', rows: buildVacancyExportRows(data), columns: EXPORT_COLUMNS_VACANCIES }];
+          if (selected.includes('companies')) files.push({ entity: 'empresas', rows: buildCompanyExportRows(relatedCompanies), columns: EXPORT_COLUMNS_COMPANIES });
+          if (selected.includes('contacts')) files.push({ entity: 'contactos', rows: buildContactExportRows(relatedCompanies), columns: EXPORT_COLUMNS_CONTACTS });
+
+          deliverExport(files, range.from, range.to);
+
+          // El marcado alcanza a cada entidad entregada, sea en el archivo del listado o en uno acompañante.
           markExported(data);
+          if (selected.includes('companies')) markExported(relatedCompanies);
+          if (selected.includes('contacts')) markExported(relatedContacts);
           applyFilters(false);
         }
       });
@@ -872,6 +932,7 @@
     setupDetectedFilter();
     setupExportStatusFilter();
     setupIndustryFilter();
+    setupCompanySizeFilter();
     setupPersonalEmptyState();
     renderSkeletonTable();
     setTimeout(() => {

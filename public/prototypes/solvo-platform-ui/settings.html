@@ -20,11 +20,67 @@
     .settings-nav-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
     .settings-nav-item.active { background: var(--bg-selected); color: var(--text-selected); font-weight: 600; }
     .settings-nav-item svg { flex-shrink: 0; }
-    .settings-content { flex: 1; min-width: 320px; max-width: 640px; }
+    .settings-content { flex: 1; min-width: 320px; max-width: 760px; }
     .settings-section { display: none; }
     .settings-section.active { display: block; }
-    .settings-soon { margin-top: 16px; font-size: 12px; color: var(--text-muted); font-style: italic; }
 
+    /* ── Search Positions ── */
+    .pos-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+    .pos-toolbar .form-input { max-width: 260px; }
+    .pos-toolbar .form-select { max-width: 150px; }
+    .pos-toolbar .spacer { flex: 1; }
+    .pos-summary { display: flex; gap: 18px; margin-top: 10px; font-size: 13px; color: var(--text-muted); }
+    .pos-summary b { color: var(--text-primary); font-weight: 600; }
+    .pos-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+    .pos-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 12px 14px; border: 1px solid var(--border-color);
+      border-radius: var(--radius-md, 8px); background: var(--bg-surface, var(--bg-secondary));
+      transition: opacity .15s, border-color .15s;
+    }
+    .pos-row:hover { border-color: var(--border-light); }
+    .pos-row.off { opacity: .55; }
+    .pos-main { flex: 1; min-width: 0; }
+    .pos-head { display: flex; align-items: center; gap: 10px; }
+    .pos-name { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+    .pos-count { font-size: 12px; color: var(--text-muted); }
+    .pos-terms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .term-chip {
+      display: inline-flex; align-items: center; padding: 4px 9px;
+      border-radius: var(--radius-sm); font-size: 12px; line-height: 1.2;
+      border: 1px solid var(--color-secondary); color: var(--text-primary);
+      background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+    }
+    .pos-row.off .term-chip { border-color: var(--border-light); background: var(--bg-hover); color: var(--text-secondary); }
+    .pos-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+    .pos-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    /* modal: tags editor */
+    .tags-input { cursor: text; }
+    .tags-input .tag-chip { font-size: 12px; padding: 5px 9px; gap: 6px;
+      background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+      border-color: var(--color-secondary); color: var(--text-primary); }
+    .tags-input .tag-chip-remove { font-size: 13px; line-height: 1; padding-left: 2px; }
+    .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .field-error { display: none; color: var(--color-error); font-size: 13px; margin-top: 4px; }
+    .modal-row { display: flex; align-items: center; gap: 10px; }
+
+    /* ── Search Cities ── */
+    .city-cap { display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13px; color: var(--text-secondary); }
+    .city-cap .form-input { width: 84px; }
+    .city-row { padding: 9px 14px; align-items: center; }
+    .city-row .pos-head { flex-wrap: wrap; }
+    .state-badge { display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600;
+      background: var(--bg-tertiary); color: var(--text-secondary); border:1px solid var(--border-color); }
+    .state-badge .code { font-weight:700; color: var(--text-primary); }
+    .day-badge { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600;
+      background: color-mix(in srgb, var(--color-secondary) 12%, transparent); color: var(--text-primary); border:1px solid var(--color-secondary); }
+    .rank-badge { font-size:11px; color: var(--text-muted); }
+    .rank-badge b { color: var(--text-primary); }
+    .rank-badge.beyond { color: var(--color-warning-dark, var(--text-muted)); }
+    .measured { font-size:11px; color: var(--text-muted); }
+    .pos-toolbar .form-select.wide { max-width: 170px; }
+    #citySearch { max-width: 210px; }
   </style>
   <script src="theme.js"></script>
 </head>
@@ -51,15 +107,11 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <!-- Header -->
       <header class="header">
         <h1 class="header-title">Solvo Sales Platform</h1>
       </header>
 
-      <!-- Page Content -->
       <div class="page-content">
-
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header-left">
             <h2 class="page-header-title">Settings</h2>
@@ -70,7 +122,6 @@
         </div>
 
         <div class="settings-layout">
-          <!-- Section navigation (global; extensible) -->
           <aside class="settings-nav" id="settingsNav">
             <button class="settings-nav-item active" data-section="ondemand" onclick="showSection('ondemand', this)">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -78,10 +129,20 @@
               </svg>
               Scraping On-Demand
             </button>
-            <!-- Future global settings sections go here -->
+            <button class="settings-nav-item" data-section="positions" onclick="showSection('positions', this)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+              </svg>
+              Search Positions
+            </button>
+            <button class="settings-nav-item" data-section="cities" onclick="showSection('cities', this)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              Search Cities
+            </button>
           </aside>
 
-          <!-- Section content -->
           <div class="settings-content">
             <!-- Section: Scraping On-Demand -->
             <div class="settings-section active" id="section-ondemand">
@@ -90,7 +151,6 @@
                 <p class="text-muted text-sm" style="margin-top: 4px;">
                   Governs the window for on-demand vacancy scraping.
                 </p>
-
                 <div class="form-group" style="margin-top: 16px;">
                   <label class="form-label">Window (days)</label>
                   <input type="number" class="form-input" id="windowDays" min="1" style="max-width: 160px;">
@@ -99,21 +159,205 @@
                   </p>
                   <div class="form-error" id="windowError" style="display:none; color:var(--color-error); font-size:13px; margin-top:4px;"></div>
                 </div>
-
                 <div style="display:flex; gap:10px; margin-top:24px;">
                   <button class="btn btn-primary" onclick="saveOndemandConfig()">Save changes</button>
                   <button class="btn btn-secondary" onclick="loadOndemandConfig()">Reset</button>
                 </div>
               </div>
             </div>
-            <!-- Other sections (placeholder for future) -->
+
+            <!-- Section: Search Positions -->
+            <div class="settings-section" id="section-positions">
+              <div class="detail-card">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+                  <div>
+                    <div class="detail-card-title">Search Positions</div>
+                    <p class="text-muted text-sm" style="margin-top: 4px;">
+                      The positions and search terms the prospecting engine sweeps every day. Pause a position to stop searching all of its terms.
+                    </p>
+                  </div>
+                  <button class="btn btn-primary" onclick="openPositionModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    New position
+                  </button>
+                </div>
+
+                <div class="pos-summary" id="posSummary"></div>
+
+                <div class="pos-toolbar">
+                  <input type="search" class="form-input" id="posSearch" placeholder="Search position or term…" oninput="renderPositions()">
+                  <select class="form-select" id="posFilter" onchange="renderPositions()">
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <span class="spacer"></span>
+                  <button class="btn btn-ghost btn-sm" onclick="resetPositions()" title="Restore the initial catalog">Reset to seed</button>
+                </div>
+
+                <div class="pos-list" id="posList"></div>
+                              </div>
+            </div>
+
+            
+            <!-- Section: Search Cities -->
+            <div class="settings-section" id="section-cities">
+              <div class="detail-card">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+                  <div>
+                    <div class="detail-card-title">Search Cities</div>
+                    <p class="text-muted text-sm" style="margin-top: 4px;">
+                      The cities the prospecting engine sweeps. Each state is swept on its weekday, city by city in priority order, up to the daily cap.
+                    </p>
+                  </div>
+                  <button class="btn btn-primary" onclick="openCityModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                    New city
+                  </button>
+                </div>
+                <div class="city-cap">
+                  <label class="form-label" style="margin:0;">Cities per state, per day</label>
+                  <input type="number" class="form-input" id="cityCap" min="1" max="20" onchange="saveCityCap()">
+                  <span class="text-muted text-sm">Active cities beyond the cap stay listed but are not searched.</span>
+                </div>
+                <div class="pos-summary" id="citySummary"></div>
+                <div class="pos-toolbar">
+                  <input type="search" class="form-input" id="citySearch" placeholder="Search city or state…" oninput="renderCities()">
+                  <select class="form-select wide" id="cityState" onchange="renderCities()"><option value="all">All states</option></select>
+                  <select class="form-select" id="cityDay" onchange="renderCities()">
+                    <option value="all">All days</option>
+                    <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>
+                  </select>
+                  <select class="form-select" id="cityFilter" onchange="renderCities()">
+                    <option value="all">All</option><option value="active">Active</option><option value="inactive">Inactive</option>
+                  </select>
+                  <span class="spacer"></span>
+                  <button class="btn btn-ghost btn-sm" onclick="resetCities()" title="Restore the initial grid">Reset to seed</button>
+                </div>
+                <div class="pos-list" id="cityList"></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </main>
   </div>
 
-  <!-- Toast Container -->
+  <!-- Modal: create / edit position -->
+  <div class="modal-overlay" id="positionModal">
+    <div class="modal" style="max-width: 520px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="positionModalTitle">New position</h2>
+        <button class="modal-close" onclick="closePositionModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Position name</label>
+          <input type="text" class="form-input" id="posNameInput" placeholder="e.g. Accounting & Finance" maxlength="80">
+          <div class="field-error" id="posNameError"></div>
+        </div>
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label">Search terms</label>
+          <div class="tags-input" id="termsEditor" onclick="document.getElementById('termInput').focus()">
+            <input type="text" id="termInput" placeholder="Type a term and press Enter…" autocomplete="off">
+          </div>
+          <div class="field-hint">Enter or comma adds a term; × removes it. All terms of an active position are searched.</div>
+          <div class="field-error" id="posTermsError"></div>
+        </div>
+        <div class="form-group modal-row" style="margin-top: 14px;">
+          <label class="toggle-switch"><input type="checkbox" id="posActiveInput" checked><span class="toggle-slider"></span></label>
+          <span class="text-sm" style="color: var(--text-secondary);">Position active</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePositionModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="savePosition()" id="posSaveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: create / edit city -->
+  <div class="modal-overlay" id="cityModal">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="cityModalTitle">New city</h2>
+        <button class="modal-close" onclick="closeCityModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <select class="form-select" id="cityStateInput" onchange="suggestPriority()"></select>
+          <div class="field-hint" id="cityDayHint"></div>
+        </div>
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" id="cityNameInput" placeholder="e.g. Dallas" maxlength="60">
+          <div class="field-hint">Sent to the source as "City, ST".</div>
+          <div class="field-error" id="cityNameError"></div>
+        </div>
+        <div class="form-row" style="display:flex; gap:14px; align-items:flex-end; margin-top: 14px;">
+          <div class="form-group" style="width: 140px;">
+            <label class="form-label">Priority in state</label>
+            <input type="number" class="form-input" id="cityPriorityInput" min="1">
+            <div class="field-hint">1 is searched first.</div>
+          </div>
+          <div class="form-group modal-row" style="padding-bottom: 26px;">
+            <label class="toggle-switch"><input type="checkbox" id="cityActiveInput" checked><span class="toggle-slider"></span></label>
+            <span class="text-sm" style="color: var(--text-secondary);">City active</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCityModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCity()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: delete city -->
+  <div class="modal-overlay" id="cityDeleteModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Delete city</h2>
+        <button class="modal-close" onclick="closeCityDeleteModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="cityDeleteText" style="color: var(--text-primary);"></p>
+        <p class="text-muted text-sm" style="margin-top: 8px;">Vacancies already detected there are kept. The next sweep will not search this city.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCityDeleteModal()">Cancel</button>
+        <button class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error);" onclick="confirmDeleteCity()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: delete confirmation -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Delete position</h2>
+        <button class="modal-close" onclick="closeDeleteModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteText" style="color: var(--text-primary);"></p>
+        <p class="text-muted text-sm" style="margin-top: 8px;">Vacancies already detected with these terms keep their association. The next sweep will not search them.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error);" onclick="confirmDeletePosition()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="rbac.js"></script>
@@ -124,13 +368,13 @@
     if (!requireAdmin()) throw new Error('Access denied');
     renderSidebar('settings');
 
-    // === Section navigation (global config page) ===
     function showSection(sectionId, btn) {
       document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
       const section = document.getElementById('section-' + sectionId);
       if (section) section.classList.add('active');
       if (btn) btn.classList.add('active');
+      if (location.hash !== '#' + sectionId) history.replaceState(null, '', '#' + sectionId);
     }
 
     // === Section: On-Demand scraping config ===
@@ -140,29 +384,335 @@
       document.getElementById('minWindow').textContent = cfg.minWindowDays;
       document.getElementById('windowError').style.display = 'none';
     }
-
     function showFieldError(id, msg) {
       const el = document.getElementById(id);
       el.textContent = msg;
       el.style.display = 'block';
     }
-
     function saveOndemandConfig() {
       const cfg = getOdConfig();
       const windowDays = parseInt(document.getElementById('windowDays').value, 10);
       document.getElementById('windowError').style.display = 'none';
-
       if (isNaN(windowDays) || windowDays < cfg.minWindowDays) {
         showFieldError('windowError', 'Debe ser un número ≥ ' + cfg.minWindowDays + ' día(s).');
         return;
       }
-
       setOdConfig({ windowDays: windowDays });
       showToast('Settings saved', 'success');
     }
 
+    // === Section: Search Positions ===
+    const POSITIONS_SEED = [{"id":"pos-01","name":"Accounting & Finance","active":true,"terms":["staff accountant","bookkeeper","accounts payable specialist"]},{"id":"pos-02","name":"Insurance & Benefits Operations","active":true,"terms":["insurance account manager","policy processor","claims processor"]},{"id":"pos-03","name":"Legal Support","active":true,"terms":["paralegal","legal intake specialist"]},{"id":"pos-04","name":"Medical Billing & RCM","active":true,"terms":["medical biller","prior authorization specialist"]},{"id":"pos-05","name":"Healthcare Administrative Support","active":true,"terms":["scheduling coordinator","staffing coordinator"]},{"id":"pos-06","name":"Customer Service & Intake","active":true,"terms":["bilingual customer service representative","collections specialist"]},{"id":"pos-07","name":"Logistics & Supply Chain Support","active":true,"terms":["dispatcher"]},{"id":"pos-08","name":"Inside Sales & Business Development","active":true,"terms":["appointment setter"]},{"id":"pos-09","name":"HR & Recruiting","active":true,"terms":["payroll specialist"]},{"id":"pos-10","name":"Mortgage Processing","active":true,"terms":["mortgage loan processor"]},{"id":"pos-11","name":"Property Management Coordination","active":true,"terms":["leasing coordinator"]},{"id":"pos-12","name":"E-commerce Support","active":true,"terms":["ecommerce customer support"]},{"id":"pos-13","name":"Administrative & Executive Assistant","active":true,"terms":["executive assistant"]},{"id":"pos-14","name":"Project Management & PMO","active":true,"terms":["project coordinator"]},{"id":"pos-15","name":"Marketing & Content","active":true,"terms":["marketing coordinator"]},{"id":"pos-16","name":"Data & Analytics","active":true,"terms":["data analyst"]},{"id":"pos-17","name":"Software Development","active":true,"terms":["qa engineer"]},{"id":"pos-18","name":"IT Support","active":true,"terms":["it support specialist"]},{"id":"pos-19","name":"Construction Estimating & Support","active":true,"terms":["estimator"]},{"id":"pos-20","name":"Engineering & Technical Design","active":true,"terms":["drafter"]},{"id":"pos-21","name":"Data Entry & Back Office","active":false,"terms":["data entry clerk"]}];
+    const POS_KEY = 'positionsCatalog';
+
+    function loadPositions() {
+      try { const s = JSON.parse(localStorage.getItem(POS_KEY)); if (Array.isArray(s) && s.length) return s; } catch (e) {}
+      return JSON.parse(JSON.stringify(POSITIONS_SEED));
+    }
+    function savePositions(list) { localStorage.setItem(POS_KEY, JSON.stringify(list)); }
+    let positions = loadPositions();
+
+    function resetPositions() {
+      positions = JSON.parse(JSON.stringify(POSITIONS_SEED));
+      savePositions(positions); renderPositions();
+      showToast('Catalog restored to seed', 'success');
+    }
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function renderSummary() {
+      const total = positions.reduce((n, p) => n + p.terms.length, 0);
+      const running = positions.reduce((n, p) => n + (p.active ? p.terms.length : 0), 0);
+      const activePos = positions.filter(p => p.active).length;
+      document.getElementById('posSummary').innerHTML =
+        `<span><b>${positions.length}</b> positions · <b>${activePos}</b> active</span>` +
+        `<span><b>${running}</b> of <b>${total}</b> terms searched</span>`;
+    }
+
+    function renderPositions() {
+      renderSummary();
+      const q = document.getElementById('posSearch').value.trim().toLowerCase();
+      const f = document.getElementById('posFilter').value;
+      const list = document.getElementById('posList');
+      const rows = positions.filter(p => {
+        if (f === 'active' && !p.active) return false;
+        if (f === 'inactive' && p.active) return false;
+        if (!q) return true;
+        return p.name.toLowerCase().includes(q) || p.terms.some(t => t.includes(q));
+      });
+      if (!rows.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-state-text">${positions.length ? 'No positions match.' : 'No positions yet. Create the first one.'}</div></div>`;
+        return;
+      }
+      list.innerHTML = rows.map(p => {
+        const chips = p.terms.map(t => `<span class="term-chip">${esc(t)}</span>`).join('');
+        return `<div class="pos-row ${p.active ? '' : 'off'}" data-id="${p.id}">
+          <div class="pos-main">
+            <div class="pos-head">
+              <label class="toggle-switch" title="${p.active ? 'Position active' : 'Position paused'}"><input type="checkbox" ${p.active ? 'checked' : ''} onchange="togglePosition('${p.id}', this.checked)"><span class="toggle-slider"></span></label>
+              <span class="pos-name">${esc(p.name)}</span>
+              <span class="pos-count">${p.terms.length} term${p.terms.length === 1 ? '' : 's'}</span>
+            </div>
+            <div class="pos-terms">${chips || '<span class="pos-count">No terms</span>'}</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openPositionModal('${p.id}')">Edit</button>
+            <button class="table-action-delete" title="Delete position" onclick="openDeleteModal('${p.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function togglePosition(id, on) {
+      const p = positions.find(x => x.id === id); if (!p) return;
+      p.active = on; savePositions(positions); renderPositions();
+      showToast(`${p.name} ${on ? 'activated' : 'paused'}`, 'success');
+    }
+
+    // --- modal create / edit ---
+    let editingId = null, draftTerms = [];
+    const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
+
+    function openPositionModal(id) {
+      editingId = id || null;
+      const p = id ? positions.find(x => x.id === id) : null;
+      document.getElementById('positionModalTitle').textContent = p ? 'Edit position' : 'New position';
+      document.getElementById('posNameInput').value = p ? p.name : '';
+      document.getElementById('posActiveInput').checked = p ? p.active : true;
+      draftTerms = p ? p.terms.slice() : [];
+      ['posNameError', 'posTermsError'].forEach(i => document.getElementById(i).style.display = 'none');
+      renderDraftTerms();
+      document.getElementById('positionModal').classList.add('active');
+      setTimeout(() => document.getElementById(p ? 'termInput' : 'posNameInput').focus(), 50);
+    }
+    function closePositionModal() { document.getElementById('positionModal').classList.remove('active'); }
+
+    function renderDraftTerms() {
+      const editor = document.getElementById('termsEditor');
+      const input = document.getElementById('termInput');
+      editor.querySelectorAll('.tag-chip').forEach(c => c.remove());
+      draftTerms.forEach((t, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `${esc(t)}<span class="tag-chip-remove" title="Remove">×</span>`;
+        chip.querySelector('.tag-chip-remove').onclick = e => { e.stopPropagation(); draftTerms.splice(i, 1); renderDraftTerms(); };
+        editor.insertBefore(chip, input);
+      });
+    }
+    function addDraftTerm(raw) {
+      const text = norm(raw);
+      if (!text) return;
+      if (draftTerms.includes(text)) { showToast(`"${text}" is already in the list`, 'error'); return; }
+      draftTerms.push(text);
+      renderDraftTerms();
+      document.getElementById('posTermsError').style.display = 'none';
+    }
+    document.getElementById('termInput').addEventListener('keydown', e => {
+      const input = e.target;
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault(); addDraftTerm(input.value); input.value = '';
+      } else if (e.key === 'Backspace' && !input.value && draftTerms.length) {
+        draftTerms.pop(); renderDraftTerms();
+      }
+    });
+    document.getElementById('termInput').addEventListener('blur', e => { if (e.target.value.trim()) { addDraftTerm(e.target.value); e.target.value = ''; } });
+
+    function savePosition() {
+      const name = document.getElementById('posNameInput').value.trim();
+      const active = document.getElementById('posActiveInput').checked;
+      let ok = true;
+      ['posNameError', 'posTermsError'].forEach(i => document.getElementById(i).style.display = 'none');
+      if (!name) { showFieldError('posNameError', 'Position name is required.'); ok = false; }
+      else if (positions.some(p => p.id !== editingId && p.name.toLowerCase() === name.toLowerCase())) { showFieldError('posNameError', 'A position with this name already exists.'); ok = false; }
+      if (!draftTerms.length) { showFieldError('posTermsError', 'Add at least one search term.'); ok = false; }
+      if (!ok) return;
+      if (editingId) {
+        const p = positions.find(x => x.id === editingId);
+        p.name = name; p.active = active; p.terms = draftTerms;
+        showToast('Position updated', 'success');
+      } else {
+        positions.push({ id: 'pos-' + Date.now().toString(36), name, active, terms: draftTerms });
+        showToast('Position created', 'success');
+      }
+      savePositions(positions); closePositionModal(); renderPositions();
+    }
+
+    // --- modal delete ---
+    let deletingId = null;
+    function openDeleteModal(id) {
+      const p = positions.find(x => x.id === id); if (!p) return;
+      deletingId = id;
+      document.getElementById('deleteText').innerHTML = `Delete <strong>${esc(p.name)}</strong> and its ${p.terms.length} search term${p.terms.length === 1 ? '' : 's'}?`;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('active'); deletingId = null; }
+    function confirmDeletePosition() {
+      const p = positions.find(x => x.id === deletingId);
+      positions = positions.filter(x => x.id !== deletingId);
+      savePositions(positions); closeDeleteModal(); renderPositions();
+      showToast(`${p ? p.name : 'Position'} deleted`, 'success');
+    }
+
+    // close modals with Escape / overlay click
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePositionModal(); closeDeleteModal(); } });
+    ['positionModal', 'deleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closePositionModal(); closeDeleteModal(); } }));
+
+
+
+    // === Section: Search Cities ===
+    const CITIES_SEED = {"states":[{"code":"AK","name":"Alaska","day":5},{"code":"AL","name":"Alabama","day":3},{"code":"AR","name":"Arkansas","day":4},{"code":"AZ","name":"Arizona","day":2},{"code":"CA","name":"California","day":1},{"code":"CO","name":"Colorado","day":3},{"code":"CT","name":"Connecticut","day":3},{"code":"DE","name":"Delaware","day":5},{"code":"FL","name":"Florida","day":1},{"code":"GA","name":"Georgia","day":1},{"code":"HI","name":"Hawaii","day":4},{"code":"IA","name":"Iowa","day":4},{"code":"ID","name":"Idaho","day":4},{"code":"IL","name":"Illinois","day":1},{"code":"IN","name":"Indiana","day":2},{"code":"KS","name":"Kansas","day":4},{"code":"KY","name":"Kentucky","day":3},{"code":"LA","name":"Louisiana","day":3},{"code":"MA","name":"Massachusetts","day":2},{"code":"MD","name":"Maryland","day":2},{"code":"ME","name":"Maine","day":5},{"code":"MI","name":"Michigan","day":1},{"code":"MN","name":"Minnesota","day":3},{"code":"MO","name":"Missouri","day":2},{"code":"MS","name":"Mississippi","day":4},{"code":"MT","name":"Montana","day":5},{"code":"NC","name":"North Carolina","day":1},{"code":"ND","name":"North Dakota","day":5},{"code":"NE","name":"Nebraska","day":4},{"code":"NH","name":"New Hampshire","day":5},{"code":"NJ","name":"New Jersey","day":2},{"code":"NM","name":"New Mexico","day":4},{"code":"NV","name":"Nevada","day":4},{"code":"NY","name":"New York","day":1},{"code":"OH","name":"Ohio","day":1},{"code":"OK","name":"Oklahoma","day":3},{"code":"OR","name":"Oregon","day":3},{"code":"PA","name":"Pennsylvania","day":1},{"code":"RI","name":"Rhode Island","day":5},{"code":"SC","name":"South Carolina","day":3},{"code":"SD","name":"South Dakota","day":5},{"code":"TN","name":"Tennessee","day":2},{"code":"TX","name":"Texas","day":1},{"code":"UT","name":"Utah","day":3},{"code":"VA","name":"Virginia","day":2},{"code":"VT","name":"Vermont","day":5},{"code":"WA","name":"Washington","day":2},{"code":"WI","name":"Wisconsin","day":2},{"code":"WV","name":"West Virginia","day":4},{"code":"WY","name":"Wyoming","day":5}],"cities":[{"id":"city-anchorage-ak","name":"Anchorage, AK","state":"AK","priority":1,"active":true},{"id":"city-fairbanks-ak","name":"Fairbanks, AK","state":"AK","priority":2,"active":true},{"id":"city-juneau-ak","name":"Juneau, AK","state":"AK","priority":3,"active":true},{"id":"city-birmingham-al","name":"Birmingham, AL","state":"AL","priority":1,"active":true},{"id":"city-huntsville-al","name":"Huntsville, AL","state":"AL","priority":2,"active":true},{"id":"city-montgomery-al","name":"Montgomery, AL","state":"AL","priority":3,"active":true},{"id":"city-little-rock-ar","name":"Little Rock, AR","state":"AR","priority":1,"active":true},{"id":"city-fayetteville-ar","name":"Fayetteville, AR","state":"AR","priority":2,"active":true},{"id":"city-fort-smith-ar","name":"Fort Smith, AR","state":"AR","priority":3,"active":true},{"id":"city-phoenix-az","name":"Phoenix, AZ","state":"AZ","priority":1,"active":true},{"id":"city-tucson-az","name":"Tucson, AZ","state":"AZ","priority":2,"active":true},{"id":"city-mesa-az","name":"Mesa, AZ","state":"AZ","priority":3,"active":true},{"id":"city-los-angeles-ca","name":"Los Angeles, CA","state":"CA","priority":1,"active":true},{"id":"city-san-diego-ca","name":"San Diego, CA","state":"CA","priority":2,"active":true},{"id":"city-san-jose-ca","name":"San Jose, CA","state":"CA","priority":3,"active":true},{"id":"city-denver-co","name":"Denver, CO","state":"CO","priority":1,"active":true},{"id":"city-colorado-springs-co","name":"Colorado Springs, CO","state":"CO","priority":2,"active":true},{"id":"city-aurora-co","name":"Aurora, CO","state":"CO","priority":3,"active":true},{"id":"city-bridgeport-ct","name":"Bridgeport, CT","state":"CT","priority":1,"active":true},{"id":"city-new-haven-ct","name":"New Haven, CT","state":"CT","priority":2,"active":true},{"id":"city-hartford-ct","name":"Hartford, CT","state":"CT","priority":3,"active":true},{"id":"city-wilmington-de","name":"Wilmington, DE","state":"DE","priority":1,"active":true},{"id":"city-dover-de","name":"Dover, DE","state":"DE","priority":2,"active":true},{"id":"city-newark-de","name":"Newark, DE","state":"DE","priority":3,"active":true},{"id":"city-miami-fl","name":"Miami, FL","state":"FL","priority":1,"active":true,"measured":8},{"id":"city-jacksonville-fl","name":"Jacksonville, FL","state":"FL","priority":2,"active":true,"measured":8},{"id":"city-tampa-fl","name":"Tampa, FL","state":"FL","priority":3,"active":true,"measured":7},{"id":"city-orlando-fl","name":"Orlando, FL","state":"FL","priority":4,"active":true,"measured":1},{"id":"city-atlanta-ga","name":"Atlanta, GA","state":"GA","priority":1,"active":true},{"id":"city-augusta-ga","name":"Augusta, GA","state":"GA","priority":2,"active":true},{"id":"city-savannah-ga","name":"Savannah, GA","state":"GA","priority":3,"active":true},{"id":"city-honolulu-hi","name":"Honolulu, HI","state":"HI","priority":1,"active":true},{"id":"city-hilo-hi","name":"Hilo, HI","state":"HI","priority":2,"active":true},{"id":"city-kailua-hi","name":"Kailua, HI","state":"HI","priority":3,"active":true},{"id":"city-des-moines-ia","name":"Des Moines, IA","state":"IA","priority":1,"active":true},{"id":"city-cedar-rapids-ia","name":"Cedar Rapids, IA","state":"IA","priority":2,"active":true},{"id":"city-davenport-ia","name":"Davenport, IA","state":"IA","priority":3,"active":true},{"id":"city-boise-id","name":"Boise, ID","state":"ID","priority":1,"active":true},{"id":"city-meridian-id","name":"Meridian, ID","state":"ID","priority":2,"active":true},{"id":"city-idaho-falls-id","name":"Idaho Falls, ID","state":"ID","priority":3,"active":true},{"id":"city-chicago-il","name":"Chicago, IL","state":"IL","priority":1,"active":true},{"id":"city-aurora-il","name":"Aurora, IL","state":"IL","priority":2,"active":true},{"id":"city-naperville-il","name":"Naperville, IL","state":"IL","priority":3,"active":true},{"id":"city-indianapolis-in","name":"Indianapolis, IN","state":"IN","priority":1,"active":true},{"id":"city-fort-wayne-in","name":"Fort Wayne, IN","state":"IN","priority":2,"active":true},{"id":"city-evansville-in","name":"Evansville, IN","state":"IN","priority":3,"active":true},{"id":"city-wichita-ks","name":"Wichita, KS","state":"KS","priority":1,"active":true},{"id":"city-overland-park-ks","name":"Overland Park, KS","state":"KS","priority":2,"active":true},{"id":"city-kansas-city-ks","name":"Kansas City, KS","state":"KS","priority":3,"active":true},{"id":"city-louisville-ky","name":"Louisville, KY","state":"KY","priority":1,"active":true},{"id":"city-lexington-ky","name":"Lexington, KY","state":"KY","priority":2,"active":true},{"id":"city-bowling-green-ky","name":"Bowling Green, KY","state":"KY","priority":3,"active":true},{"id":"city-new-orleans-la","name":"New Orleans, LA","state":"LA","priority":1,"active":true},{"id":"city-baton-rouge-la","name":"Baton Rouge, LA","state":"LA","priority":2,"active":true},{"id":"city-shreveport-la","name":"Shreveport, LA","state":"LA","priority":3,"active":true},{"id":"city-boston-ma","name":"Boston, MA","state":"MA","priority":1,"active":true},{"id":"city-worcester-ma","name":"Worcester, MA","state":"MA","priority":2,"active":true},{"id":"city-springfield-ma","name":"Springfield, MA","state":"MA","priority":3,"active":true},{"id":"city-baltimore-md","name":"Baltimore, MD","state":"MD","priority":1,"active":true},{"id":"city-columbia-md","name":"Columbia, MD","state":"MD","priority":2,"active":true},{"id":"city-silver-spring-md","name":"Silver Spring, MD","state":"MD","priority":3,"active":true},{"id":"city-portland-me","name":"Portland, ME","state":"ME","priority":1,"active":true},{"id":"city-lewiston-me","name":"Lewiston, ME","state":"ME","priority":2,"active":true},{"id":"city-bangor-me","name":"Bangor, ME","state":"ME","priority":3,"active":true},{"id":"city-detroit-mi","name":"Detroit, MI","state":"MI","priority":1,"active":true},{"id":"city-grand-rapids-mi","name":"Grand Rapids, MI","state":"MI","priority":2,"active":true},{"id":"city-ann-arbor-mi","name":"Ann Arbor, MI","state":"MI","priority":3,"active":true},{"id":"city-minneapolis-mn","name":"Minneapolis, MN","state":"MN","priority":1,"active":true},{"id":"city-saint-paul-mn","name":"Saint Paul, MN","state":"MN","priority":2,"active":true},{"id":"city-rochester-mn","name":"Rochester, MN","state":"MN","priority":3,"active":true},{"id":"city-kansas-city-mo","name":"Kansas City, MO","state":"MO","priority":1,"active":true},{"id":"city-st.-louis-mo","name":"St. Louis, MO","state":"MO","priority":2,"active":true},{"id":"city-springfield-mo","name":"Springfield, MO","state":"MO","priority":3,"active":true},{"id":"city-jackson-ms","name":"Jackson, MS","state":"MS","priority":1,"active":true},{"id":"city-gulfport-ms","name":"Gulfport, MS","state":"MS","priority":2,"active":true},{"id":"city-southaven-ms","name":"Southaven, MS","state":"MS","priority":3,"active":true},{"id":"city-billings-mt","name":"Billings, MT","state":"MT","priority":1,"active":true},{"id":"city-missoula-mt","name":"Missoula, MT","state":"MT","priority":2,"active":true},{"id":"city-bozeman-mt","name":"Bozeman, MT","state":"MT","priority":3,"active":true},{"id":"city-charlotte-nc","name":"Charlotte, NC","state":"NC","priority":1,"active":true},{"id":"city-raleigh-nc","name":"Raleigh, NC","state":"NC","priority":2,"active":true},{"id":"city-greensboro-nc","name":"Greensboro, NC","state":"NC","priority":3,"active":true},{"id":"city-fargo-nd","name":"Fargo, ND","state":"ND","priority":1,"active":true},{"id":"city-bismarck-nd","name":"Bismarck, ND","state":"ND","priority":2,"active":true},{"id":"city-grand-forks-nd","name":"Grand Forks, ND","state":"ND","priority":3,"active":true},{"id":"city-omaha-ne","name":"Omaha, NE","state":"NE","priority":1,"active":true},{"id":"city-lincoln-ne","name":"Lincoln, NE","state":"NE","priority":2,"active":true},{"id":"city-bellevue-ne","name":"Bellevue, NE","state":"NE","priority":3,"active":true},{"id":"city-manchester-nh","name":"Manchester, NH","state":"NH","priority":1,"active":true},{"id":"city-nashua-nh","name":"Nashua, NH","state":"NH","priority":2,"active":true},{"id":"city-concord-nh","name":"Concord, NH","state":"NH","priority":3,"active":true},{"id":"city-newark-nj","name":"Newark, NJ","state":"NJ","priority":1,"active":true},{"id":"city-jersey-city-nj","name":"Jersey City, NJ","state":"NJ","priority":2,"active":true},{"id":"city-paterson-nj","name":"Paterson, NJ","state":"NJ","priority":3,"active":true},{"id":"city-albuquerque-nm","name":"Albuquerque, NM","state":"NM","priority":1,"active":true},{"id":"city-las-cruces-nm","name":"Las Cruces, NM","state":"NM","priority":2,"active":true},{"id":"city-santa-fe-nm","name":"Santa Fe, NM","state":"NM","priority":3,"active":true},{"id":"city-las-vegas-nv","name":"Las Vegas, NV","state":"NV","priority":1,"active":true},{"id":"city-henderson-nv","name":"Henderson, NV","state":"NV","priority":2,"active":true},{"id":"city-reno-nv","name":"Reno, NV","state":"NV","priority":3,"active":true},{"id":"city-new-york-ny","name":"New York, NY","state":"NY","priority":1,"active":true},{"id":"city-buffalo-ny","name":"Buffalo, NY","state":"NY","priority":2,"active":true},{"id":"city-rochester-ny","name":"Rochester, NY","state":"NY","priority":3,"active":true},{"id":"city-columbus-oh","name":"Columbus, OH","state":"OH","priority":1,"active":true},{"id":"city-cleveland-oh","name":"Cleveland, OH","state":"OH","priority":2,"active":true},{"id":"city-cincinnati-oh","name":"Cincinnati, OH","state":"OH","priority":3,"active":true},{"id":"city-oklahoma-city-ok","name":"Oklahoma City, OK","state":"OK","priority":1,"active":true},{"id":"city-tulsa-ok","name":"Tulsa, OK","state":"OK","priority":2,"active":true},{"id":"city-norman-ok","name":"Norman, OK","state":"OK","priority":3,"active":true},{"id":"city-portland-or","name":"Portland, OR","state":"OR","priority":1,"active":true},{"id":"city-salem-or","name":"Salem, OR","state":"OR","priority":2,"active":true},{"id":"city-eugene-or","name":"Eugene, OR","state":"OR","priority":3,"active":true},{"id":"city-philadelphia-pa","name":"Philadelphia, PA","state":"PA","priority":1,"active":true},{"id":"city-pittsburgh-pa","name":"Pittsburgh, PA","state":"PA","priority":2,"active":true},{"id":"city-allentown-pa","name":"Allentown, PA","state":"PA","priority":3,"active":true},{"id":"city-providence-ri","name":"Providence, RI","state":"RI","priority":1,"active":true},{"id":"city-warwick-ri","name":"Warwick, RI","state":"RI","priority":2,"active":true},{"id":"city-cranston-ri","name":"Cranston, RI","state":"RI","priority":3,"active":true},{"id":"city-charleston-sc","name":"Charleston, SC","state":"SC","priority":1,"active":true},{"id":"city-columbia-sc","name":"Columbia, SC","state":"SC","priority":2,"active":true},{"id":"city-greenville-sc","name":"Greenville, SC","state":"SC","priority":3,"active":true},{"id":"city-sioux-falls-sd","name":"Sioux Falls, SD","state":"SD","priority":1,"active":true},{"id":"city-rapid-city-sd","name":"Rapid City, SD","state":"SD","priority":2,"active":true},{"id":"city-aberdeen-sd","name":"Aberdeen, SD","state":"SD","priority":3,"active":true},{"id":"city-nashville-tn","name":"Nashville, TN","state":"TN","priority":1,"active":true},{"id":"city-memphis-tn","name":"Memphis, TN","state":"TN","priority":2,"active":true},{"id":"city-knoxville-tn","name":"Knoxville, TN","state":"TN","priority":3,"active":true},{"id":"city-dallas-tx","name":"Dallas, TX","state":"TX","priority":1,"active":true,"measured":13},{"id":"city-houston-tx","name":"Houston, TX","state":"TX","priority":2,"active":true,"measured":7},{"id":"city-san-antonio-tx","name":"San Antonio, TX","state":"TX","priority":3,"active":true,"measured":3},{"id":"city-austin-tx","name":"Austin, TX","state":"TX","priority":4,"active":true,"measured":2},{"id":"city-salt-lake-city-ut","name":"Salt Lake City, UT","state":"UT","priority":1,"active":true},{"id":"city-west-valley-city-ut","name":"West Valley City, UT","state":"UT","priority":2,"active":true},{"id":"city-provo-ut","name":"Provo, UT","state":"UT","priority":3,"active":true},{"id":"city-virginia-beach-va","name":"Virginia Beach, VA","state":"VA","priority":1,"active":true},{"id":"city-richmond-va","name":"Richmond, VA","state":"VA","priority":2,"active":true},{"id":"city-arlington-va","name":"Arlington, VA","state":"VA","priority":3,"active":true},{"id":"city-burlington-vt","name":"Burlington, VT","state":"VT","priority":1,"active":true},{"id":"city-south-burlington-vt","name":"South Burlington, VT","state":"VT","priority":2,"active":true},{"id":"city-rutland-vt","name":"Rutland, VT","state":"VT","priority":3,"active":true},{"id":"city-seattle-wa","name":"Seattle, WA","state":"WA","priority":1,"active":true},{"id":"city-spokane-wa","name":"Spokane, WA","state":"WA","priority":2,"active":true},{"id":"city-tacoma-wa","name":"Tacoma, WA","state":"WA","priority":3,"active":true},{"id":"city-milwaukee-wi","name":"Milwaukee, WI","state":"WI","priority":1,"active":true},{"id":"city-madison-wi","name":"Madison, WI","state":"WI","priority":2,"active":true},{"id":"city-green-bay-wi","name":"Green Bay, WI","state":"WI","priority":3,"active":true},{"id":"city-charleston-wv","name":"Charleston, WV","state":"WV","priority":1,"active":true},{"id":"city-huntington-wv","name":"Huntington, WV","state":"WV","priority":2,"active":true},{"id":"city-morgantown-wv","name":"Morgantown, WV","state":"WV","priority":3,"active":true},{"id":"city-cheyenne-wy","name":"Cheyenne, WY","state":"WY","priority":1,"active":true},{"id":"city-casper-wy","name":"Casper, WY","state":"WY","priority":2,"active":true},{"id":"city-laramie-wy","name":"Laramie, WY","state":"WY","priority":3,"active":true}]};
+    const CITY_KEY = 'citiesGrid', CAP_KEY = 'citiesCap';
+    const DAYS = {1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri'}, DAYS_LONG = {1:'Monday',2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday'};
+    const STATES = CITIES_SEED.states; const stateOf = code => STATES.find(s => s.code === code);
+    function loadCities() {
+      try { const s = JSON.parse(localStorage.getItem(CITY_KEY)); if (Array.isArray(s) && s.length) return s; } catch (e) {}
+      return JSON.parse(JSON.stringify(CITIES_SEED.cities));
+    }
+    function saveCities(list) { localStorage.setItem(CITY_KEY, JSON.stringify(list)); }
+    let cities = loadCities();
+    function getCap() { const v = parseInt(localStorage.getItem(CAP_KEY), 10); return isNaN(v) || v < 1 ? 3 : v; }
+    function saveCityCap() {
+      const v = parseInt(document.getElementById('cityCap').value, 10);
+      if (isNaN(v) || v < 1) { document.getElementById('cityCap').value = getCap(); return; }
+      localStorage.setItem(CAP_KEY, String(v)); renderCities(); showToast('Daily cap saved', 'success');
+    }
+    function resetCities() {
+      cities = JSON.parse(JSON.stringify(CITIES_SEED.cities)); saveCities(cities);
+      localStorage.removeItem(CAP_KEY); renderCities(); showToast('Grid restored to seed', 'success');
+    }
+    // rank of each active city within its state, by priority; searched = rank ≤ cap
+    function rankMap() {
+      const cap = getCap(), m = {};
+      STATES.forEach(s => {
+        cities.filter(c => c.state === s.code && c.active).sort((a, b) => a.priority - b.priority)
+          .forEach((c, i) => { m[c.id] = { rank: i + 1, searched: i < cap }; });
+      });
+      return m;
+    }
+    function fillStateSelects() {
+      const opts = STATES.map(s => `<option value="${s.code}">${esc(s.name)} (${s.code})</option>`).join('');
+      document.getElementById('cityState').innerHTML = '<option value="all">All states</option>' + opts;
+      document.getElementById('cityStateInput').innerHTML = opts;
+    }
+    function renderCitySummary(rm) {
+      const active = cities.filter(c => c.active).length;
+      const searched = Object.values(rm).filter(r => r.searched).length;
+      document.getElementById('citySummary').innerHTML =
+        `<span><b>${cities.length}</b> cities in <b>${new Set(cities.map(c => c.state)).size}</b> states</span>` +
+        `<span><b>${active}</b> active · <b>${searched}</b> searched each week</span>`;
+    }
+    function renderCities() {
+      document.getElementById('cityCap').value = getCap();
+      const rm = rankMap(); renderCitySummary(rm);
+      const q = document.getElementById('citySearch').value.trim().toLowerCase();
+      const st = document.getElementById('cityState').value, d = document.getElementById('cityDay').value, f = document.getElementById('cityFilter').value;
+      const rows = cities.filter(c => {
+        const s = stateOf(c.state);
+        if (st !== 'all' && c.state !== st) return false;
+        if (d !== 'all' && String(s.day) !== d) return false;
+        if (f === 'active' && !c.active) return false;
+        if (f === 'inactive' && c.active) return false;
+        if (!q) return true;
+        return c.name.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || c.state.toLowerCase() === q;
+      }).sort((a, b) => a.state.localeCompare(b.state) || a.priority - b.priority || a.name.localeCompare(b.name));
+      const list = document.getElementById('cityList');
+      if (!rows.length) { list.innerHTML = `<div class="empty-state"><div class="empty-state-text">${cities.length ? 'No cities match.' : 'No cities yet. Create the first one.'}</div></div>`; return; }
+      list.innerHTML = rows.map(c => {
+        const s = stateOf(c.state), r = rm[c.id];
+        const rank = c.active
+          ? `<span class="rank-badge ${r.searched ? '' : 'beyond'}"><b>#${r.rank}</b> in ${c.state}${r.searched ? '' : ' · beyond cap'}</span>`
+          : `<span class="rank-badge">paused</span>`;
+        return `<div class="pos-row city-row ${c.active ? '' : 'off'}" data-id="${c.id}">
+          <div class="pos-main">
+            <div class="pos-head">
+              <label class="toggle-switch" title="${c.active ? 'City active' : 'City paused'}"><input type="checkbox" ${c.active ? 'checked' : ''} onchange="toggleCity('${c.id}', this.checked)"><span class="toggle-slider"></span></label>
+              <span class="pos-name">${esc(c.name)}</span>
+              <span class="state-badge"><span class="code">${c.state}</span>${esc(s.name)}</span>
+              <span class="day-badge">${DAYS[s.day]}</span>
+              ${rank}
+              ${c.measured != null ? `<span class="measured">${c.measured} useful in test</span>` : ''}
+            </div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openCityModal('${c.id}')">Edit</button>
+            <button class="table-action-delete" title="Delete city" onclick="openCityDeleteModal('${c.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    function toggleCity(id, on) {
+      const c = cities.find(x => x.id === id); if (!c) return;
+      c.active = on; saveCities(cities); renderCities();
+      showToast(`${c.name} ${on ? 'activated' : 'paused'}`, 'success');
+    }
+    // --- modal create / edit city ---
+    let editingCityId = null;
+    function suggestPriority() {
+      const code = document.getElementById('cityStateInput').value;
+      const s = stateOf(code); document.getElementById('cityDayHint').textContent = s ? `Swept on ${DAYS_LONG[s.day]}.` : '';
+      if (!editingCityId) {
+        const max = cities.filter(c => c.state === code).reduce((m, c) => Math.max(m, c.priority), 0);
+        document.getElementById('cityPriorityInput').value = max + 1;
+      }
+    }
+    function openCityModal(id) {
+      editingCityId = id || null;
+      const c = id ? cities.find(x => x.id === id) : null;
+      document.getElementById('cityModalTitle').textContent = c ? 'Edit city' : 'New city';
+      document.getElementById('cityStateInput').value = c ? c.state : 'TX';
+      document.getElementById('cityNameInput').value = c ? c.name.replace(/,\s*[A-Z]{2}$/, '') : '';
+      document.getElementById('cityActiveInput').checked = c ? c.active : true;
+      document.getElementById('cityNameError').style.display = 'none';
+      suggestPriority();
+      if (c) document.getElementById('cityPriorityInput').value = c.priority;
+      document.getElementById('cityModal').classList.add('active');
+      setTimeout(() => document.getElementById('cityNameInput').focus(), 50);
+    }
+    function closeCityModal() { document.getElementById('cityModal').classList.remove('active'); editingCityId = null; }
+    function saveCity() {
+      const code = document.getElementById('cityStateInput').value;
+      const raw = document.getElementById('cityNameInput').value.trim().replace(/\s+/g, ' ').replace(/,\s*[A-Za-z]{2}$/, '');
+      const priority = parseInt(document.getElementById('cityPriorityInput').value, 10);
+      const active = document.getElementById('cityActiveInput').checked;
+      document.getElementById('cityNameError').style.display = 'none';
+      if (!raw) { showFieldError('cityNameError', 'City name is required.'); return; }
+      const name = `${raw}, ${code}`;
+      if (cities.some(c => c.id !== editingCityId && c.name.toLowerCase() === name.toLowerCase())) { showFieldError('cityNameError', 'This city is already in the grid.'); return; }
+      const p = isNaN(priority) || priority < 1 ? 1 : priority;
+      if (editingCityId) {
+        const c = cities.find(x => x.id === editingCityId);
+        c.name = name; c.state = code; c.priority = p; c.active = active;
+        showToast('City updated', 'success');
+      } else {
+        cities.push({ id: 'city-' + Date.now().toString(36), name, state: code, priority: p, active });
+        showToast('City created', 'success');
+      }
+      saveCities(cities); closeCityModal(); renderCities();
+    }
+    // --- modal delete city ---
+    let deletingCityId = null;
+    function openCityDeleteModal(id) {
+      const c = cities.find(x => x.id === id); if (!c) return;
+      deletingCityId = id;
+      document.getElementById('cityDeleteText').innerHTML = `Delete <strong>${esc(c.name)}</strong> from the sweep grid?`;
+      document.getElementById('cityDeleteModal').classList.add('active');
+    }
+    function closeCityDeleteModal() { document.getElementById('cityDeleteModal').classList.remove('active'); deletingCityId = null; }
+    function confirmDeleteCity() {
+      const c = cities.find(x => x.id === deletingCityId);
+      cities = cities.filter(x => x.id !== deletingCityId);
+      saveCities(cities); closeCityDeleteModal(); renderCities();
+      showToast(`${c ? c.name : 'City'} deleted`, 'success');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCityModal(); closeCityDeleteModal(); } });
+    ['cityModal', 'cityDeleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeCityModal(); closeCityDeleteModal(); } }));
+    fillStateSelects();
+
     // === Initial render ===
     loadOndemandConfig();
+    renderPositions();
+    renderCities();
+    if (location.hash === '#positions') showSection('positions', document.querySelector('[data-section="positions"]'));
+    if (location.hash === '#cities') showSection('cities', document.querySelector('[data-section="cities"]'));
   </script>
 </body>
 </html>

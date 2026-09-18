@@ -49,7 +49,8 @@ Fuente canónica: `public/prototypes/solvo-platform-ui/` y `public/prototypes/so
 
 - **Bridge**: el `:root` de `styles.css` mapea las variables históricas de la app (`--bg-primary`, `--accent-primary`, `--spacing-*`, …) a los tokens del DS (`--bg-body`, `--color-primary`, `--space-*`, …). Los componentes no cambiaron de nombres; heredan la marca y responden a `[data-theme]`.
 - **Dark mode**: `theme.css` overridea superficies/texto/bordes y tints semánticos en `[data-theme='dark']`, conservando los hues de marca. Claro por defecto.
-- Ambas apps comparten `styles.css` idéntico — si editás uno, copialo al otro bundle.
+- **Platform UI** y **Recruiter** comparten `styles.css` idéntico — si editás uno, copialo al otro bundle.
+- **`solvo-platform-ui-release-3` es un fork y no se sincroniza con los otros dos.** Tiene su propio `styles.css` (los componentes `.op-*` de Open Positions) y su propio `rbac.js` (catálogo de posiciones, señales de lead, códigos de rol y nivel de decisión de la épica Ajustes Prospect Engine). No lo pises copiando desde `solvo-platform-ui`.
 
 ## Cómo refactorizar / agregar un prototipo
 

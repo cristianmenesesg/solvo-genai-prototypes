@@ -99,6 +99,42 @@ function getActiveIndustries() {
     .sort(function (a, b) { return a.label.localeCompare(b.label); });
 }
 
+// === TRAMOS DE TAMAÑO DE EMPRESA (HUSPL-7.2) ===
+// Cinco tramos sobre `company.size_employees`, con ambos extremos incluidos y sin solaparse:
+// una empresa con el dato informado cae en exactamente uno. `unknown` es el valor reservado
+// para los registros sin el dato, con la misma convención con que industria usa `unclassified`.
+const COMPANY_SIZE_RANGES = [
+  { value: '1-50',     label: '1 – 50',        min: 1,    max: 50 },
+  { value: '51-200',   label: '51 – 200',      min: 51,   max: 200 },
+  { value: '201-500',  label: '201 – 500',     min: 201,  max: 500 },
+  { value: '501-1000', label: '501 – 1,000',   min: 501,  max: 1000 },
+  { value: '1000+',    label: '1,000+',        min: 1001, max: Infinity }
+];
+
+// Un tamaño de 0 o negativo es dato no válido y cae bajo `unknown`, igual que el ausente.
+function companySizeBucket(company) {
+  const n = company && Number(company.sizeEmployees);
+  if (!n || !isFinite(n) || n < 1) return 'unknown';
+  const r = COMPANY_SIZE_RANGES.find(function (x) { return n >= x.min && n <= x.max; });
+  return r ? r.value : 'unknown';
+}
+
+// `getCompany` resuelve la empresa del registro: en Empresas es el registro mismo, en Vacantes
+// es la empresa asociada por company_id. Una vacante sin empresa vigente cae bajo `unknown`
+// y no se omite del listado.
+function filterByCompanySize(records, selected, getCompany) {
+  if (!selected || !selected.length) return records;
+  return records.filter(function (r) {
+    return selected.indexOf(companySizeBucket(getCompany(r))) !== -1;
+  });
+}
+
+// Presencia de contactos de una empresa. En la plataforma el criterio cuenta solo los
+// contactos con `deleted_at` vacío; el prototipo no modela contactos borrados.
+function companyHasContacts(company) {
+  return !!company && getContactsForCompany(company.id).length > 0;
+}
+
 // Etiqueta del catálogo. Una empresa sin clasificar no muestra nada: nunca el texto crudo.
 function getIndustryLabel(code) {
   if (!code) return '';
@@ -965,16 +1001,23 @@ function openConfirmPopup(options) {
 }
 
 // === EXPORT POPUP ===
-// Opens a confirmation popup before exporting, with optional contacts checkbox (companies)
+// Confirmación previa a la descarga. Además de la entidad del listado, ofrece sumar al paquete las
+// entidades relacionadas con el recorte: desde Empresas, vacantes y contactos; desde Vacantes,
+// empresas y contactos. Las casillas arrancan desmarcadas cada vez que se abre el popup, son
+// independientes entre sí, y muestran el conteo de su entidad antes de descargar.
+//
+// options: { entityLabel, entityCount, alreadyExported, companions: [{ key, label, count, note }],
+//            onExport(selectedKeys) }
+
+const EXPORT_ROW_LIMIT = 10000;   // tope de filas por archivo
 
 function openExportPopup(options) {
   const {
-    entityLabel = 'records',      // "companies" or "vacancies"
+    entityLabel = 'records',
     entityCount = 0,
-    contactsCount = 0,              // total contacts across entities (0 = hide checkbox)
-    showContactsOption = false,     // show "Include contacts" checkbox
-    alreadyExported = 0,            // cuántos del recorte ya salieron: dispara el aviso de solapamiento
-    onExport = (includeContacts) => {}
+    alreadyExported = 0,
+    companions = [],
+    onExport = () => {}
   } = options;
 
   if (entityCount === 0) {
@@ -982,7 +1025,7 @@ function openExportPopup(options) {
     return;
   }
 
-  let includeContacts = false;
+  const selected = new Set();
 
   // Aviso de solapamiento: repetir material ya repartido tiene que ser una decisión, no un descuido.
   const overlapSection = alreadyExported > 0 ? `
@@ -994,35 +1037,52 @@ function openExportPopup(options) {
       <span><strong>${alreadyExported}</strong> of ${entityCount} ${entityLabel} were already exported. Exporting again will reassign them to you.</span>
     </div>` : '';
 
+  // Una entidad sin registros deja su casilla deshabilitada; una que supera el tope por archivo
+  // queda señalada, y marcarla deshabilita el botón de exportar con el motivo a la vista.
+  const companionRows = companions.map((c, i) => {
+    const empty = c.count === 0;
+    const overLimit = c.count > EXPORT_ROW_LIMIT;
+    const reason = empty
+      ? 'none in the current selection'
+      : overLimit
+        ? `over the ${EXPORT_ROW_LIMIT.toLocaleString('en-US')}-row per-file limit`
+        : (c.note || '');
+    return `
+      <label class="export-companion${empty ? ' is-disabled' : ''}${overLimit ? ' is-over-limit' : ''}">
+        <input type="checkbox" data-companion="${i}"${empty ? ' disabled' : ''} />
+        <span class="export-companion-label">${c.label}</span>
+        <span class="export-companion-count">${c.count.toLocaleString('en-US')}</span>
+        ${reason ? `<span class="export-companion-note">${reason}</span>` : ''}
+      </label>`;
+  }).join('');
+
+  const companionsSection = companions.length ? `
+    <div class="export-companions">
+      <div class="export-companions-title">Include related data</div>
+      ${companionRows}
+    </div>` : '';
+
+  const mainOverLimit = entityCount > EXPORT_ROW_LIMIT;
+
   const overlay = document.createElement('div');
   overlay.className = 'assign-popup-overlay';
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
-  const contactsSection = showContactsOption ? `
-    <div style="margin-top:16px; padding:12px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; color:var(--text-primary);">
-        <input type="checkbox" id="export-include-contacts" style="width:16px; height:16px; accent-color:var(--color-secondary); cursor:pointer;" />
-        Include associated contacts
-      </label>
-      <div id="export-contacts-count" style="margin-top:6px; font-size:13px; color:var(--text-muted); padding-left:26px; display:none;">
-        <span style="font-weight:600; color:var(--text-secondary);">${contactsCount}</span> contacts from ${entityCount} companies
-      </div>
-    </div>` : '';
-
   overlay.innerHTML = `
-    <div class="assign-popup" style="width:420px;">
+    <div class="assign-popup" style="width:440px;">
       <div class="assign-popup-header">
         <h3>Export CSV</h3>
         <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()" style="padding:4px;">&times;</button>
       </div>
       <div class="assign-popup-body">
         <div style="text-align:center; margin-bottom:8px;">
-          <div style="font-size:36px; font-weight:700; color:var(--text-primary);">${entityCount}</div>
+          <div style="font-size:36px; font-weight:700; color:var(--text-primary);">${entityCount.toLocaleString('en-US')}</div>
           <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} to export</div>
           <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Based on the active filters</div>
         </div>
         ${overlapSection}
-        ${contactsSection}
+        ${companionsSection}
+        <div class="export-limit-note" id="export-limit-note" style="display:none;"></div>
       </div>
       <div class="assign-popup-footer">
         <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancel</button>
@@ -1039,19 +1099,37 @@ function openExportPopup(options) {
 
   document.body.appendChild(overlay);
 
-  // Wire contacts checkbox
-  if (showContactsOption) {
-    const checkbox = document.getElementById('export-include-contacts');
-    const countEl = document.getElementById('export-contacts-count');
-    checkbox.addEventListener('change', () => {
-      includeContacts = checkbox.checked;
-      countEl.style.display = includeContacts ? 'block' : 'none';
-    });
+  const confirmBtn = overlay.querySelector('#export-confirm-btn');
+  const limitNote = overlay.querySelector('#export-limit-note');
+
+  // El tope se evalúa sobre cada archivo del paquete: si alguno lo supera, no se exporta ninguno.
+  function refreshLimitState() {
+    const blocking = [];
+    if (mainOverLimit) blocking.push(entityLabel);
+    companions.forEach((c, i) => { if (selected.has(i) && c.count > EXPORT_ROW_LIMIT) blocking.push(c.label.replace(/^Include /, '')); });
+    if (blocking.length) {
+      limitNote.style.display = '';
+      limitNote.textContent = `${blocking.join(' and ')} ${blocking.length > 1 ? 'exceed' : 'exceeds'} the ${EXPORT_ROW_LIMIT.toLocaleString('en-US')}-row limit per file. Narrow the filters${blocking.length > 1 || !mainOverLimit ? ' or uncheck them' : ''}.`;
+      confirmBtn.disabled = true;
+    } else {
+      limitNote.style.display = 'none';
+      confirmBtn.disabled = false;
+    }
   }
 
-  // Wire confirm button
-  document.getElementById('export-confirm-btn').onclick = () => {
-    onExport(includeContacts);
+  overlay.querySelectorAll('[data-companion]').forEach(box => {
+    box.addEventListener('change', () => {
+      const i = Number(box.dataset.companion);
+      if (box.checked) selected.add(i); else selected.delete(i);
+      refreshLimitState();
+    });
+  });
+  refreshLimitState();
+
+  confirmBtn.onclick = () => {
+    if (confirmBtn.disabled) return;
+    const keys = companions.filter((c, i) => selected.has(i)).map(c => c.key);
+    onExport(keys);
     overlay.remove();
   };
 }
@@ -1297,18 +1375,112 @@ function csvCell(value) {
 }
 
 // `headers` fija el set y el orden de columnas, y permite entregar el archivo con su fila de
-// encabezados aunque el recorte no devuelva ninguna fila.
-function exportToCSV(rows, filename, headers) {
+// encabezados aunque el recorte no devuelva ninguna fila. UTF-8 con BOM y saltos CRLF.
+function buildCSVText(rows, headers) {
   const cols = headers || (rows.length ? Object.keys(rows[0]) : []);
   const lines = [cols.map(csvCell).join(',')];
   rows.forEach(r => lines.push(cols.map(h => csvCell(r[h])).join(',')));
-  const csv = '\uFEFF' + lines.join('\r\n') + '\r\n';
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  return '\uFEFF' + lines.join('\r\n') + '\r\n';
+}
+
+function downloadBlob(blob, filename) {
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = filename;
   link.click();
+}
+
+function exportToCSV(rows, filename, headers) {
+  downloadBlob(new Blob([buildCSVText(rows, headers)], { type: 'text/csv;charset=utf-8;' }), filename);
   showToast(`Exported: ${filename}`);
+}
+
+// === EMPAQUETADO DE LA DESCARGA ===
+// Una exportación de un solo archivo se entrega como CSV directo; una de dos o tres, en un ZIP
+// único con los CSV adentro, cada uno con su nombre de la convención. El ZIP se arma sin comprimir
+// (método `store`), que es suficiente para entregar un paquete válido sin dependencias externas.
+
+function crc32(bytes) {
+  let table = crc32.table;
+  if (!table) {
+    table = crc32.table = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+  }
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function zipStore(files) {   // files: [{ name, text }]
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+
+  files.forEach(f => {
+    const nameBytes = enc.encode(f.name);
+    const data = enc.encode(f.text);
+    const crc = crc32(data);
+
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);   // local file header
+    local.setUint16(4, 20, true);           // version needed
+    local.setUint16(6, 0x0800, true);       // nombre en UTF-8
+    local.setUint16(8, 0, true);            // método: store
+    local.setUint16(12, 0x0021, true);      // fecha DOS válida (1980-01-01)
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, nameBytes.length, true);
+    parts.push(new Uint8Array(local.buffer), nameBytes, data);
+
+    const dir = new DataView(new ArrayBuffer(46));
+    dir.setUint32(0, 0x02014b50, true);     // central directory header
+    dir.setUint16(4, 20, true);
+    dir.setUint16(6, 20, true);
+    dir.setUint16(8, 0x0800, true);
+    dir.setUint16(10, 0, true);
+    dir.setUint16(14, 0x0021, true);
+    dir.setUint32(16, crc, true);
+    dir.setUint32(20, data.length, true);
+    dir.setUint32(24, data.length, true);
+    dir.setUint16(28, nameBytes.length, true);
+    dir.setUint32(42, offset, true);
+    central.push(new Uint8Array(dir.buffer), nameBytes);
+
+    offset += 30 + nameBytes.length + data.length;
+  });
+
+  const centralSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);       // end of central directory
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, offset, true);
+
+  return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/zip' });
+}
+
+// files: [{ entity, rows, columns }] — el primero es el de la entidad del listado.
+function deliverExport(files, from, to) {
+  const csvFiles = files.map(f => ({
+    name: exportFilename(f.entity, from, to),
+    text: buildCSVText(f.rows, f.columns)
+  }));
+
+  if (csvFiles.length === 1) {
+    downloadBlob(new Blob([csvFiles[0].text], { type: 'text/csv;charset=utf-8;' }), csvFiles[0].name);
+    showToast(`Exported: ${csvFiles[0].name}`);
+    return;
+  }
+
+  const zipName = exportFilename('exportacion', from, to).replace(/\.csv$/, '.zip');
+  downloadBlob(zipStore(csvFiles), zipName);
+  showToast(`Exported: ${zipName} — ${csvFiles.map(f => f.name).join(', ')}`);
 }
 
 // === COMPOSICIÓN DE LOS ARCHIVOS EXPORTADOS (HUSPL-2.1 / HUSPL-2.2) ===

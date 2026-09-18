@@ -415,21 +415,16 @@
 
   /* retratos de las fichas de talento */
   .tc-avatar { overflow: hidden; background: var(--color-gray-100); }
+  /* el retrato entra por --face, que cada tarjeta fija con el photo_url de su
+     curriculo; sin foto queda el gris del contenedor como fallback */
   .tc-avatar::before {
     content: "";
     position: absolute;
     inset: 0;
+    background-image: var(--face, none);
     background-size: cover;
     background-position: center;
   }
-  .tc-avatar.ph-1::before { background-image: url("assets/people/person-01.jpg"); }
-  .tc-avatar.ph-2::before { background-image: url("assets/people/person-02.jpg"); }
-  .tc-avatar.ph-3::before { background-image: url("assets/people/person-03.jpg"); }
-  .tc-avatar.ph-4::before { background-image: url("assets/people/person-04.jpg"); }
-  .tc-avatar.ph-5::before { background-image: url("assets/people/person-05.jpg"); }
-  .tc-avatar.ph-6::before { background-image: url("assets/people/person-06.jpg"); }
-  .tc-avatar.ph-7::before { background-image: url("assets/people/person-07.jpg"); }
-  .tc-avatar.ph-8::before { background-image: url("assets/people/person-08.jpg"); }
 
   /* el carrusel full-bleed usa 100vw (incluye la scrollbar): se clipea el eje X
      en todos los anchos para que nunca aparezca scroll horizontal */
@@ -1772,139 +1767,163 @@
      TALENT SHOWCASE (Release 2) · candidatos disponibles bajo el agendamiento
      ==================================================================== */
   var params = new URLSearchParams(location.search);
-  var DEFAULT_MATCHED = ["sales-rep"];
+  var DEFAULT_MATCHED = ["sales-representative"];
   var urlProfiles = (params.get("profiles") || "")
     .split(",").map(function (s) { return s.trim(); }).filter(Boolean);
   var hasProfilesParam = params.has("profiles");
 
+  /* Los doce curriculos del showcase, con los mismos campos que
+     talent_pool.profile_curriculum entrega por el servicio de talento: el
+     prototipo habla el contrato real, no una forma propia. Con match se muestra
+     uno; sin match, los doce recorren el carrusel. */
   var CATALOG = {
-    "sales-rep": {
-      id: "ts-001", profile_id: "sales-rep", face: "ph-1",
-      display_title: "Senior Sales Representative", country: "Colombia",
-      years_experience: 7, languages: ["Spanish (native)", "English (C1)"],
-      hard_skills: ["B2B SaaS sales", "HubSpot CRM", "Pipeline forecasting", "Cold outreach", "Contract negotiation"],
-      soft_skills: ["Resilience", "Active listening", "Consultative selling"],
-      short_summary: "Quota-crushing closer with 7 years selling B2B software to US mid-market accounts — consistently above 120% of target.",
-      long_summary: "<p>Senior commercial professional with seven years owning the full sales cycle for B2B SaaS products sold into the US mid-market. Spent the last three years at a US-based software scale-up, carrying a seven-figure annual quota and finishing above 120% of target in eight of the last ten quarters.</p><p>Strong at multi-threaded deals: discovery, technical demos alongside sales engineers, and procurement and legal negotiation. Comfortable in HubSpot and outbound-heavy motions, and used to working US business hours from a dedicated home office.</p>"
-    },
-    "customer-service-rep": {
-      id: "ts-002", profile_id: "customer-service-rep", face: "ph-2",
-      display_title: "Customer Service Representative", country: "Mexico",
-      years_experience: 5, languages: ["Spanish (native)", "English (C1)"],
-      hard_skills: ["Zendesk", "Live chat & voice", "CRM ticketing", "SLA management", "Order management"],
+    "customer-service-representative": {
+      profile_id: "customer-service-representative",
+      display_title: "Customer Service Representative",
+      country: "Mexico",
+      photo_url: "assets/talent/customer-service-representative.jpg",
+      years_experience: 5,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Zendesk & Freshdesk", "Live chat & voice support", "CRM ticketing", "SLA management", "Order & returns handling", "De-escalation", "Quality scorecards"],
       soft_skills: ["Empathy", "Patience", "Clear communication"],
-      short_summary: "5 years in US customer support — 96% CSAT across chat, email and phone for a high-volume e-commerce brand.",
-      long_summary: "<p>Customer support specialist with five years handling US consumers across phone, email and live chat for a high-volume e-commerce brand. Sustained a 96% CSAT and a sub-two-minute first response time on chat.</p><p>Experienced with Zendesk, order and returns management, and de-escalation of sensitive cases. Neutral accent and fully fluent written English; comfortable with peak-season volumes and rotating US-timezone shifts.</p>"
+      short_profile: "Front-line support professional who resolves customer issues across phone, email and chat, and keeps satisfaction high on high-volume queues.",
+      full_profile: "Customer support professional with five years handling US customers across phone, email and live chat. Works high-volume queues in retail, e-commerce, subscription services and healthcare support, resolving issues on first contact wherever the policy allows it and escalating cleanly when it does not.\n\nFluent in the tools US support teams run on \u2014 Zendesk, Freshdesk and Salesforce Service Cloud \u2014 and used to working inside SLAs, macros and quality scorecards. Sustains satisfaction above 95% and keeps first response times on chat under a few minutes. Strong at de-escalation: takes an angry customer through the fix without handing the problem to a supervisor.\n\nBuilt for remote work with a US team: quiet dedicated workspace, backup connectivity, and comfort with rotating shifts and peak-season volume. Neutral accent on calls, clean written English, and steady enough with process changes to be productive within the first weeks."
     },
-    "executive-assistant": {
-      id: "ts-003", profile_id: "executive-assistant", face: "ph-3",
-      display_title: "Executive Assistant", country: "Argentina",
-      years_experience: 9, languages: ["Spanish (native)", "English (C2)"],
-      hard_skills: ["Calendar & travel", "Inbox triage", "Expense reporting", "Board prep", "Google Workspace"],
-      soft_skills: ["Discretion", "Anticipation", "Organization"],
-      short_summary: "Right hand to two US founders for 9 years — owns calendars, travel and board prep with total discretion.",
-      long_summary: "<p>Seasoned executive assistant with nine years supporting C-level executives at US startups, most recently as the right hand to two co-founders. Owns complex calendars across time zones, international travel, expense reporting and board-meeting preparation.</p><p>Trusted with highly confidential information and known for anticipating needs before they're voiced. Polished English in writing and on calls; fluent in Google Workspace, Notion and common scheduling tools.</p>"
+    "sales-representative": {
+      profile_id: "sales-representative",
+      display_title: "Sales Representative",
+      country: "Colombia",
+      photo_url: "assets/talent/sales-representative.jpg",
+      years_experience: 7,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Full-cycle B2B sales", "Discovery calls", "HubSpot & Salesforce", "Proposal & negotiation", "Pipeline forecasting", "Account planning", "Objection handling"],
+      soft_skills: ["Resilience", "Active listening", "Commercial judgment"],
+      short_profile: "Full-cycle B2B seller who runs discovery, demos, proposal and negotiation end to end for US companies, carrying an individual quota.",
+      full_profile: "Commercial closer with seven years selling for US companies across software, business services and distribution. Owns the cycle from first discovery call through demo, proposal, negotiation and close, and is used to carrying an individual quota rather than supporting someone else's.\n\nWorks the way US sales teams expect: disciplined CRM hygiene in HubSpot or Salesforce, a forecast that holds up, and multi-threaded deals that bring in operations, finance and procurement instead of leaning on a single champion. Runs discovery without a script and adapts the pitch to whoever is in the room.\n\nSet up for remote work with a US team: dedicated home office, full overlap with US business hours, and confident, unhurried English on calls and in writing. Ramps on a new product fast and asks for coaching instead of waiting for it."
+    },
+    "sales-development-representative": {
+      profile_id: "sales-development-representative",
+      display_title: "Sales Development Representative",
+      country: "Guatemala",
+      photo_url: "assets/talent/sales-development-representative.jpg",
+      years_experience: 4,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Outbound prospecting", "Cold calling", "Email sequencing", "Salesforce & Outreach", "Lead qualification (BANT/MEDDIC)", "List building & research", "LinkedIn Sales Navigator"],
+      soft_skills: ["Persistence", "Coachability", "Curiosity"],
+      short_profile: "Pipeline generator who prospects, cold calls and sequences outbound to book qualified meetings for US sales teams.",
+      full_profile: "Sales development representative with four years building pipeline for US companies in software, professional services and staffing. Owns the top of the funnel end to end \u2014 list building, account research, cold calling, email sequences and LinkedIn outreach \u2014 against a target of qualified meetings booked, not activity for its own sake.\n\nRuns high call volume without losing tone, and writes sequences that get replies because they reference something real about the account. Disciplined in Salesforce, Outreach and Apollo, and consistent with qualification frameworks such as BANT or MEDDIC, so what reaches an account executive is actually workable.\n\nCoachable by design: takes call reviews well, adjusts the approach the same week, and tracks their own conversion rates. Clear, energetic English on the phone, full US business-hours coverage, and enough resilience to keep dialing through a bad morning."
+    },
+    "sales-specialist": {
+      profile_id: "sales-specialist",
+      display_title: "Sales Specialist",
+      country: "Colombia",
+      photo_url: "assets/talent/sales-specialist.jpg",
+      years_experience: 6,
+      languages: ["Spanish (native)", "English (C2)"],
+      hard_skills: ["Consultative selling", "Product demos", "Upsell & expansion", "Renewal negotiation", "Account planning", "Quarterly business reviews", "Pipeline management"],
+      soft_skills: ["Product depth", "Patience", "Storytelling"],
+      short_profile: "Product-focused seller who grows existing accounts through tailored demos, upsells, renewals and expansion rather than net-new logos.",
+      full_profile: "Specialist seller with six years growing existing accounts for US companies. Owns product-specific pitches, tailored demos, renewals and expansion plans, working the installed base rather than chasing net-new logos \u2014 the seller you put on an account once it is signed.\n\nLearns a product deeply enough to sell it without a script, and translates a feature into what it saves a particular customer. Comfortable running quarterly business reviews, building expansion plans alongside customer success, and handling pricing conversations at renewal without discounting on reflex. Works fluently in HubSpot, Salesforce and the usual demo tooling.\n\nComposed on video with senior stakeholders and polished in writing, in fully fluent English. Overlaps completely with US business hours, keeps account notes another person could pick up, and is used to being the one who knows the product best on the call."
+    },
+    "legal-assistant": {
+      profile_id: "legal-assistant",
+      display_title: "Legal Assistant",
+      country: "Honduras",
+      photo_url: "assets/talent/legal-assistant.jpg",
+      years_experience: 5,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Document drafting", "Court & client calendaring", "E-filing portals", "Clio & MyCase", "File and records management", "Deadline tracking", "Client correspondence"],
+      soft_skills: ["Organization", "Discretion", "Follow-through"],
+      short_profile: "Legal support professional who drafts correspondence, manages filings and keeps attorney calendars and case files organized.",
+      full_profile: "Legal assistant with five years supporting US attorneys across litigation, immigration, family and corporate practices. Handles the administrative spine of a matter: correspondence and routine document drafting, court and client calendars, file organization, and follow-up on everything still outstanding.\n\nFamiliar with US e-filing portals and with case-management platforms such as Clio and MyCase, and precise with deadlines that carry consequences. Prepares document packets, tracks hearing dates and filing windows, and flags what needs an attorney's attention instead of letting it sit in an inbox.\n\nHandles confidential material without being reminded to, and writes clean, professional English to clients, courts and opposing counsel. Works US business hours from a private, secure workspace, and is comfortable being the person who knows where everything is."
     },
     "paralegal": {
-      id: "ts-004", profile_id: "paralegal", face: "ph-4",
-      display_title: "Paralegal", country: "Peru",
-      years_experience: 6, languages: ["Spanish (native)", "English (C1)"],
-      hard_skills: ["Legal research", "Document drafting", "Case management", "E-filing", "Discovery support"],
+      profile_id: "paralegal",
+      display_title: "Paralegal",
+      country: "Colombia",
+      photo_url: "assets/talent/paralegal.jpg",
+      years_experience: 6,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Legal research (Westlaw/LexisNexis)", "Pleadings & motion drafting", "Discovery support", "Case management", "E-filing", "Medical record summaries", "Deposition summaries"],
       soft_skills: ["Attention to detail", "Confidentiality", "Time management"],
-      short_summary: "6 years supporting US litigation teams — drafting, discovery and case management for a personal-injury firm.",
-      long_summary: "<p>Paralegal with six years supporting US law firms, most recently a personal-injury practice. Handles legal research, drafting of pleadings and correspondence, discovery support and case management end to end.</p><p>Familiar with US court e-filing and case-management platforms, and comfortable interfacing with clients and courts in written English. Detail-obsessed and used to strict deadlines and confidentiality requirements.</p>"
-    },
-    "sales-development-rep": {
-      id: "ts-005", profile_id: "sales-development-rep", face: "ph-5",
-      display_title: "Sales Development Representative", country: "Guatemala",
-      years_experience: 4, languages: ["Spanish (native)", "English (C1)"],
-      hard_skills: ["Outbound prospecting", "Cold calling", "Email sequencing", "Salesforce", "Lead qualification"],
-      soft_skills: ["Persistence", "Coachability", "Curiosity"],
-      short_summary: "Books 30+ qualified meetings a month for US reps — high-volume calls, email and LinkedIn outreach.",
-      long_summary: "<p>SDR with four years generating pipeline for US software companies. Consistently books 30+ qualified meetings per month through high-volume cold calling, email sequences and LinkedIn outreach.</p><p>Disciplined with Salesforce hygiene and qualification frameworks. Energetic on the phone with clear, confident English and a track record of feeding clean pipeline to closing reps.</p>"
-    },
-    "collections-specialist": {
-      id: "ts-006", profile_id: "collections-specialist", face: "ph-6",
-      display_title: "Collections Specialist", country: "Honduras",
-      years_experience: 5, languages: ["Spanish (native)", "English (B2)"],
-      hard_skills: ["AR collections", "Payment negotiation", "Aging reports", "QuickBooks", "Dispute resolution"],
-      soft_skills: ["Tact", "Persistence", "Numeracy"],
-      short_summary: "Recovers overdue receivables for US clients while keeping customer relationships intact.",
-      long_summary: "<p>Collections specialist with five years managing accounts-receivable for US businesses. Reduced average days-sales-outstanding and recovered significant overdue balances while preserving customer relationships.</p><p>Skilled at payment-plan negotiation, aging analysis and dispute resolution, with hands-on QuickBooks experience. Firm but tactful on collection calls in professional English.</p>"
+      short_profile: "Paralegal who runs legal research, drafts pleadings and manages discovery and case files for US litigation teams.",
+      full_profile: "Paralegal with six years doing substantive work for US law firms across personal injury, employment and general civil litigation. Runs legal research, drafts pleadings, motions and discovery responses, assembles exhibits, and manages cases from intake through resolution.\n\nComfortable in Westlaw and LexisNexis, with US court e-filing, and with the case-management platforms firms run on. Summarizes medical records and depositions, builds chronologies an attorney can walk into a hearing with, and keeps discovery deadlines from turning into emergencies.\n\nDetail-obsessed in a way that shows up in the work product, and trusted with privileged material. Written English strong enough for court-facing documents, full US business-hours coverage, and used to a caseload whose priorities change without notice."
     },
     "intake-specialist": {
-      id: "ts-007", profile_id: "intake-specialist", face: "ph-2",
-      display_title: "Intake Specialist", country: "Mexico",
-      years_experience: 4, languages: ["Spanish (native)", "English (C1)"],
-      hard_skills: ["Client intake", "Case screening", "CRM data entry", "Appointment setting", "HIPAA awareness"],
+      profile_id: "intake-specialist",
+      display_title: "Intake Specialist",
+      country: "Mexico",
+      photo_url: "assets/talent/intake-specialist.jpg",
+      years_experience: 4,
+      languages: ["Spanish (native)", "English (C1)"],
+      hard_skills: ["Client intake & screening", "Case qualification", "CRM data entry", "Appointment setting", "HIPAA-aware handling", "Lead follow-up", "Intake documentation"],
       soft_skills: ["Empathy", "Active listening", "Composure"],
-      short_summary: "The first voice clients hear — screens and onboards new cases for a US law firm with warmth and accuracy.",
-      long_summary: "<p>Intake specialist with four years as the first point of contact for new clients at a US law firm. Screens inbound leads, captures case details accurately and books consultations, balancing empathy with efficiency.</p><p>Comfortable with sensitive conversations, CRM data entry and HIPAA-aware handling of personal information. Warm, reassuring phone presence in fluent English.</p>"
+      short_profile: "First point of contact for new clients who screens inbound leads, captures case details and books the consultation.",
+      full_profile: "Intake specialist with four years as the first voice new clients hear at US law firms and healthcare practices. Screens inbound leads against intake criteria, captures the details that decide whether a case is viable, and books the consultation while the person is still on the line.\n\nBalances empathy with the discipline of a script: gets through a full intake form without making it feel like an interrogation, and records it accurately in the CRM so nothing has to be asked twice. Used to HIPAA-aware handling of sensitive information and to working leads that go quiet until they answer.\n\nSteady in emotionally charged conversations \u2014 an accident, an illness, a dispute \u2014 and warm without over-promising what the firm can do. Fluent, reassuring English on the phone, US business-hours coverage, and a conversion rate they can speak to."
+    },
+    "executive-assistant": {
+      profile_id: "executive-assistant",
+      display_title: "Executive Assistant",
+      country: "Colombia",
+      photo_url: "assets/talent/executive-assistant.jpg",
+      years_experience: 9,
+      languages: ["Spanish (native)", "English (C2)"],
+      hard_skills: ["Complex calendar management", "International travel planning", "Inbox triage", "Expense reporting (Concur)", "Board & meeting prep", "Google Workspace & Microsoft 365", "Stakeholder liaison"],
+      soft_skills: ["Discretion", "Anticipation", "Organization"],
+      short_profile: "Executive-level support that owns complex calendars, travel, expenses and board preparation for US leadership.",
+      full_profile: "Executive assistant with nine years supporting C-level leaders at US companies, from venture-backed startups to established mid-market firms. Owns complex calendars across time zones, international travel, expense reporting, board and leadership meeting preparation, and the follow-through afterwards.\n\nProtects an executive's time by making decisions instead of forwarding them: triages the inbox, declines what should not be on the calendar, prepares the briefing before the meeting and chases the action items after it. Fluent in Google Workspace and Microsoft 365, plus Notion, Concur and the usual scheduling tools.\n\nTrusted with information that is not shared widely, and known for anticipating what is needed before it is asked for. Polished English in writing and on calls with external stakeholders, full US business-hours availability, and the judgment to know when to interrupt."
     },
     "administrative-assistant": {
-      id: "ts-008", profile_id: "administrative-assistant", face: "ph-1",
-      display_title: "Administrative Assistant", country: "Colombia",
-      years_experience: 6, languages: ["Spanish (native)", "English (B2)"],
-      hard_skills: ["Scheduling", "Data entry", "Document management", "Microsoft 365", "Vendor coordination"],
+      profile_id: "administrative-assistant",
+      display_title: "Administrative Assistant",
+      country: "Philippines",
+      photo_url: "assets/talent/administrative-assistant.jpg",
+      years_experience: 6,
+      languages: ["Filipino (native)", "English (C1)"],
+      hard_skills: ["Scheduling & coordination", "Document management", "Data entry & reporting", "Microsoft 365 & Google Workspace", "Expense processing", "Vendor coordination", "Process documentation"],
       soft_skills: ["Reliability", "Multitasking", "Proactivity"],
-      short_summary: "Keeps US teams running — scheduling, documents and data entry handled before anyone has to ask.",
-      long_summary: "<p>Administrative assistant with six years supporting US teams remotely. Handles scheduling, document management, data entry and vendor coordination, keeping day-to-day operations running smoothly.</p><p>Highly reliable and proactive, with strong Microsoft 365 skills and a knack for spotting and fixing small problems early. Clear written English and steady follow-through.</p>"
+      short_profile: "Operations support that keeps a US team running \u2014 scheduling, documents, data entry and vendor coordination.",
+      full_profile: "Administrative assistant with six years supporting US teams remotely across operations, HR and finance functions. Handles scheduling, document management, data entry, expense processing and vendor coordination \u2014 the work that keeps a team's week from falling apart.\n\nStrong in Microsoft 365 and Google Workspace, including the spreadsheet work most administrative roles avoid: reconciliations, trackers and reports that stay current. Builds simple systems where there were none \u2014 a shared folder structure, a recurring checklist \u2014 and keeps them alive past the first month.\n\nReliable in the specific sense that things get done without a reminder, and proactive about small problems before they become someone's emergency. Clear written English, US business-hours coverage, and comfortable supporting several people at once with competing priorities."
+    },
+    "collections-specialist": {
+      profile_id: "collections-specialist",
+      display_title: "Collections Specialist",
+      country: "Guatemala",
+      photo_url: "assets/talent/collections-specialist.jpg",
+      years_experience: 5,
+      languages: ["Spanish (native)", "English (B2)"],
+      hard_skills: ["AR collections", "Payment plan negotiation", "Aging report analysis", "QuickBooks & NetSuite", "Dispute resolution", "Invoice reconciliation", "Collection documentation"],
+      soft_skills: ["Tact", "Persistence", "Numeracy"],
+      short_profile: "Accounts-receivable specialist who recovers overdue balances through payment negotiation without damaging the customer relationship.",
+      full_profile: "Collections specialist with five years managing accounts receivable for US businesses across professional services, healthcare billing and B2B distribution. Works the aging report from the top down, makes the calls, negotiates payment plans and gets balances closed.\n\nReads an aging report as a priority list rather than a queue, and tells a genuine billing error apart from a delay tactic. Hands-on with QuickBooks, NetSuite and standard AR modules, and consistent with documentation, so every promise to pay is on record. Brings days-sales-outstanding down in a way that shows up in the month-end numbers.\n\nFirm but tactful on collection calls \u2014 the customer usually stays a customer. Professional English by phone and in writing, US business-hours coverage, and comfortable operating within FDCPA-aware practice and each client's escalation rules."
+    },
+    "scheduler": {
+      profile_id: "scheduler",
+      display_title: "Scheduler",
+      country: "Philippines",
+      photo_url: "assets/talent/scheduler.jpg",
+      years_experience: 4,
+      languages: ["Filipino (native)", "English (C1)"],
+      hard_skills: ["Appointment setting", "Calendar & capacity management", "Confirmation & reminder calls", "Rescheduling & dispatch", "CRM scheduling tools", "Route & territory planning", "No-show recovery"],
+      soft_skills: ["Punctuality", "Diplomacy", "Clarity"],
+      short_profile: "Scheduling coordinator who books, confirms and reshuffles appointments to keep US service calendars full and on time.",
+      full_profile: "Scheduling coordinator with four years running appointment calendars for US service operations \u2014 home services, healthcare practices and field teams. Books and confirms visits, absorbs cancellations and reschedules, and keeps technicians, providers and clients pointed at the same calendar.\n\nTreats the calendar as a capacity problem: fills the gap a cancellation leaves, groups appointments sensibly by geography or provider, and calls ahead so no-shows stay rare. Comfortable in scheduling and dispatch software, in CRMs, and in the reminder workflows that keep confirmation rates high.\n\nCalm through high call volume and last-minute changes, and precise with the notes the next person will read. Clear, friendly English on the phone, coverage across US time zones including early-morning starts, and the follow-through that makes a schedule hold."
+    },
+    "cad-designer": {
+      profile_id: "cad-designer",
+      display_title: "CAD Designer",
+      country: "Colombia",
+      photo_url: "assets/talent/cad-designer.jpg",
+      years_experience: 7,
+      languages: ["Spanish (native)", "English (B2)"],
+      hard_skills: ["AutoCAD", "Revit / BIM", "2D construction drawings", "3D modeling", "Shop drawings", "Redline & markup interpretation", "Drawing standards & title blocks"],
+      soft_skills: ["Precision", "Spatial reasoning", "Coordination"],
+      short_profile: "Technical designer who turns markups and field notes into precise 2D drawings and 3D models for US engineering and construction teams.",
+      full_profile: "CAD designer with seven years producing drawings and models for US engineering, architecture and construction firms. Takes redlines, field measurements and engineer sketches and turns them into clean, dimensioned documentation \u2014 plans, sections, details and shop drawings ready to issue.\n\nWorks daily in AutoCAD and Revit, with SolidWorks and SketchUp as the job requires, and holds to the client's layer standards, title blocks and sheet conventions instead of inventing their own. Catches conflicts on the drawing rather than on site, where the cost of the same mistake changes by an order of magnitude.\n\nCoordinates asynchronously without needing to be chased: sends questions batched and specific, versions files predictably, and hits issue dates. Reads and writes technical English comfortably, overlaps with US business hours, and works from a workstation built for the software."
     }
   };
 
-  /* Los 12 perfiles de b\u00fasqueda que el pipeline de sourcing atiende hoy
-     (espejo de la configuraci\u00f3n de la Solvo Recruiter Platform). En el
-     fallback sin match se muestran en un marquee lento como prueba de capacidad. */
-  var POOL_PROFILES = [
-    { title: "Customer Service Representative", country: "Mexico", face: "ph-1",
-      blurb: "Resolves customer issues across chat, email and phone.",
-      summary: "Front-line support professional who handles US customers across phone, email and live chat — resolving issues fast while keeping CSAT high.",
-      skills: ["Zendesk", "Live chat & voice", "SLA management", "De-escalation"] },
-    { title: "Sales Representative", country: "Colombia", face: "ph-2",
-      blurb: "Owns the full B2B sales cycle and closes deals.",
-      summary: "Commercial closer who runs discovery, demos and negotiation to win B2B deals for US companies.",
-      skills: ["B2B sales", "HubSpot CRM", "Negotiation", "Forecasting"] },
-    { title: "Sales Development Representative", country: "Guatemala", face: "ph-3",
-      blurb: "Books qualified meetings through outbound prospecting.",
-      summary: "Pipeline generator who books qualified meetings for US sales teams via cold calls, email sequences and LinkedIn outreach.",
-      skills: ["Outbound prospecting", "Cold calling", "Email sequencing", "Salesforce"] },
-    { title: "Sales Specialist", country: "Argentina", face: "ph-4",
-      blurb: "Drives product-specific sales, upsells and expansion.",
-      summary: "Specialist seller who owns product-specific pitches, upsells and account expansion for US clients.",
-      skills: ["Consultative selling", "Upselling", "Product demos", "Pipeline management"] },
-    { title: "Legal Assistant", country: "Peru", face: "ph-5",
-      blurb: "Supports attorneys with drafting and case admin.",
-      summary: "Legal support professional who drafts documents, manages calendars and keeps US legal matters organized.",
-      skills: ["Document drafting", "Legal research", "Case management", "E-filing"] },
-    { title: "Paralegal", country: "Colombia", face: "ph-6",
-      blurb: "Runs research, drafting and discovery for legal teams.",
-      summary: "Paralegal who handles research, pleadings, discovery and case management end to end for US law firms.",
-      skills: ["Legal research", "Discovery support", "Pleadings", "Case management"] },
-    { title: "Intake Specialist", country: "Mexico", face: "ph-7",
-      blurb: "Screens and onboards new client cases with care.",
-      summary: "First point of contact who screens inbound leads, captures case details and books consultations with warmth and accuracy.",
-      skills: ["Client intake", "Case screening", "CRM data entry", "Appointment setting"] },
-    { title: "Executive Assistant", country: "Argentina", face: "ph-8",
-      blurb: "Manages calendars, travel and inbox for executives.",
-      summary: "Right hand to US executives — owns complex calendars, travel, expenses and board prep with total discretion.",
-      skills: ["Calendar & travel", "Inbox triage", "Expense reporting", "Board prep"] },
-    { title: "Administrative Assistant", country: "Honduras", face: "ph-1",
-      blurb: "Keeps day-to-day operations running smoothly.",
-      summary: "Operations backbone who handles scheduling, documents, data entry and vendor coordination for US teams.",
-      skills: ["Scheduling", "Data entry", "Document management", "Microsoft 365"] },
-    { title: "Collections Specialist", country: "Colombia", face: "ph-2",
-      blurb: "Recovers overdue receivables, keeps relationships intact.",
-      summary: "AR specialist who recovers overdue balances through tactful negotiation while preserving customer relationships.",
-      skills: ["AR collections", "Payment negotiation", "Aging reports", "QuickBooks"] },
-    { title: "Scheduler", country: "Philippines", face: "ph-3",
-      blurb: "Coordinates appointments and keeps calendars full.",
-      summary: "Scheduling pro who books and confirms appointments, manages calendars and keeps US operations on time.",
-      skills: ["Appointment setting", "Calendar management", "Confirmation calls", "CRM"] },
-    { title: "CAD Designer", country: "Peru", face: "ph-4",
-      blurb: "Produces technical drawings and 2D/3D models.",
-      summary: "Technical designer who produces precise CAD drawings and 2D/3D models for US engineering and construction teams.",
-      skills: ["AutoCAD", "2D/3D modeling", "Technical drawings", "Revit"] }
-  ];
+  var POOL = Object.keys(CATALOG).map(function (k) { return CATALOG[k]; });
 
   var IC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-11a7 7 0 0 1 14 0c0 5.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>';
   var IC_MATCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="12" r="5.6"/><circle cx="15.5" cy="12" r="5.6"/><path d="M10 12l1.7 1.7L14 11"/></svg>';
@@ -1915,8 +1934,12 @@
 
   /* arranca en featured solo si vino ?profiles= vacio/invalido */
   var talentMode = (hasProfilesParam && !urlProfiles.length) ? "featured" : "matched";
+  /* un perfil que el enlace trae pero el catalogo no reconoce cae a la vitrina
+     completa, igual que si no viniera perfil: el servicio de talento nunca
+     inventa un match */
   function resolveTalentMode() {
-    talentMode = (!identified || (hasProfilesParam && !urlProfiles.length)) ? "featured" : "matched";
+    var hasMatch = urlProfiles.some(function (id) { return !!CATALOG[id]; });
+    talentMode = (!identified || (hasProfilesParam && !hasMatch)) ? "featured" : "matched";
   }
   resolveTalentMode();
 
@@ -1925,20 +1948,27 @@
     for (var i = 0; i < profileIds.length; i++) {
       if (CATALOG[profileIds[i]]) return CATALOG[profileIds[i]];
     }
-    return CATALOG["sales-rep"];
+    return CATALOG["sales-representative"];
+  }
+
+  /* full_profile llega como texto plano: la landing arma los parrafos, la base
+     no guarda marcado */
+  function proseHtml(text) {
+    return (text || "").split("\n\n").map(function (p) {
+      return "<p>" + p + "</p>";
+    }).join("");
+  }
+
+  function faceStyle(c) {
+    return c.photo_url ? ' style="--face:url(\'' + c.photo_url + '\')"' : "";
   }
 
   /* mapa de detalle para el drawer (se reconstruye en cada render) */
   var detailMap = {};
-  function normMatched(c) {
-    return { face: c.face, title: c.display_title, country: c.country,
+  function norm(c) {
+    return { photo: c.photo_url, title: c.display_title, country: c.country,
       years: c.years_experience, languages: c.languages,
-      prose: c.long_summary, hard: c.hard_skills, soft: c.soft_skills };
-  }
-  function normPool(p) {
-    return { face: p.face, title: p.title, country: p.country,
-      years: null, languages: null,
-      prose: "<p>" + p.summary + "</p>", hard: p.skills, soft: [] };
+      prose: proseHtml(c.full_profile), hard: c.hard_skills, soft: c.soft_skills };
   }
 
   function candFootHtml(id) {
@@ -1949,30 +1979,32 @@
   }
 
   function matchedCardHtml(c, id) {
+    /* solo las cinco primeras hard_skills salen en la tarjeta; el resto vive
+       en el panel de detalle */
     var skills = c.hard_skills.slice(0, 5).map(function (s) {
       return '<span class="skill-badge">' + s + '</span>';
     }).join("");
     return '<div class="cand-card cand-card--matched">' +
       '<div class="cand-top">' +
-        '<div class="tc-avatar tc-avatar--sm ' + c.face + '"></div>' +
+        '<div class="tc-avatar tc-avatar--sm"' + faceStyle(c) + '></div>' +
         '<div class="cand-id"><div class="cand-title">' + c.display_title + '</div>' +
         '<div class="cand-loc">' + IC_PIN + c.country +
         '<span class="cand-yrs">&middot; ' + c.years_experience + '+ yrs</span></div></div>' +
         '<span class="match-chip">' + IC_MATCH + 'Strong match</span>' +
       '</div>' +
-      '<p class="cand-summary">' + c.short_summary + '</p>' +
+      '<p class="cand-summary">' + c.short_profile + '</p>' +
       '<div class="cand-skills"><span class="cand-skills-label">Core skills</span>' + skills + '</div>' +
       candFootHtml(id) +
     '</div>';
   }
 
-  function poolCardHtml(p, id) {
+  function poolCardHtml(c, id) {
     return '<div class="pool-card">' +
-      '<div class="tc-avatar tc-avatar--sm ' + p.face + '"></div>' +
+      '<div class="tc-avatar tc-avatar--sm"' + faceStyle(c) + '></div>' +
       '<div class="pool-body">' +
-        '<div class="pool-role">' + p.title + '</div>' +
-        '<div class="pool-loc">' + IC_PIN + p.country + '</div>' +
-        '<p class="pool-blurb">' + p.blurb + '</p>' +
+        '<div class="pool-role">' + c.display_title + '</div>' +
+        '<div class="pool-loc">' + IC_PIN + c.country + '</div>' +
+        '<p class="pool-blurb">' + c.short_profile + '</p>' +
         candFootHtml(id) +
       '</div>' +
     '</div>';
@@ -1993,7 +2025,7 @@
 
     if (talentMode === "matched") {
       var match = pickMatch(urlProfiles.length ? urlProfiles : DEFAULT_MATCHED);
-      detailMap[match.profile_id] = normMatched(match);
+      detailMap[match.profile_id] = norm(match);
       headline.innerHTML = '<span class="live-dot" aria-hidden="true"></span>' + prospect.first_name +
         ', we already have a <em>match</em> for your role.';
       anon.style.display = "none";
@@ -2005,10 +2037,10 @@
       anon.style.display = "";
       anon.innerHTML = IC_USERS + " Talent available now \u2014 new candidates every week";
       grid.className = "ts-grid is-marquee";
-      var cards = POOL_PROFILES.map(function (p, i) {
+      var cards = POOL.map(function (c, i) {
         var id = "pool-" + i;
-        detailMap[id] = normPool(p);
-        return poolCardHtml(p, id);
+        detailMap[id] = norm(c);
+        return poolCardHtml(c, id);
       }).join("");
       /* set duplicado (aria-hidden) para que el loop no tenga salto */
       grid.innerHTML =
@@ -2023,7 +2055,7 @@
           '<button type="button" class="pool-nav pool-nav--next" aria-label="Next role">' + IC_CHEV_R + '</button>' +
         '</div>' +
         '<div class="pool-dots"></div>';
-      initPoolCarousel(POOL_PROFILES.length);
+      initPoolCarousel(POOL.length);
     }
   }
 
@@ -2161,7 +2193,9 @@
   function openDrawer(d) {
     if (!d) return;
     lastFocus = document.activeElement;
-    document.getElementById("dh-avatar").className = "tc-avatar tc-avatar--lg " + d.face;
+    var dhAvatar = document.getElementById("dh-avatar");
+    dhAvatar.className = "tc-avatar tc-avatar--lg";
+    dhAvatar.style.setProperty("--face", d.photo ? "url('" + d.photo + "')" : "none");
     document.getElementById("dh-title").textContent = d.title;
     document.getElementById("dh-loc").innerHTML = IC_PIN + d.country;
     document.getElementById("dr-prose").innerHTML = d.prose;

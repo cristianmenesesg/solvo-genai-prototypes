@@ -117,6 +117,12 @@
             </select>
           </div>
 
+          <!-- Tamano: el dato ya se muestra como columna; este filtro lo vuelve accionable -->
+          <div class="filter-group">
+            <label class="filter-label">Employees</label>
+            <div id="companySizeFilter"></div>
+          </div>
+
           <!-- Sales Rep filter (coord/supervisor/admin only) -->
           <div class="filter-group" id="comercialFilterGroup" style="display: none;">
             <label class="filter-label">Sales Rep assigned</label>
@@ -403,11 +409,21 @@
     // === FILTROS NUEVOS DE LA ÉPICA DE MANTENIMIENTO ===
     let detectedRangeFilter = null;
     let industryFilter = null;
+    let companySizeFilter = null;
 
     function setupIndustryFilter() {
       const items = getActiveIndustries().map(i => ({ value: i.code, label: i.label }));
       items.unshift({ value: 'unclassified', label: 'Unclassified', special: true });
       industryFilter = renderMultiSelect('industryFilter', items, {
+        placeholder: 'All',
+        onChange: () => applyFilters(true)
+      });
+    }
+
+    function setupCompanySizeFilter() {
+      const items = COMPANY_SIZE_RANGES.map(r => ({ value: r.value, label: r.label }));
+      items.push({ value: 'unknown', label: 'Unknown', special: true });
+      companySizeFilter = renderMultiSelect('companySizeFilter', items, {
         placeholder: 'All',
         onChange: () => applyFilters(true)
       });
@@ -637,32 +653,38 @@
     }
 
     // === EXPORT CSV ===
-    // El archivo hereda los filtros activos del listado, incluidos el rango de fecha de detección
-    // y el estado de exportación, y toma de ellos el nombre del archivo.
+    // El archivo de empresas hereda los filtros activos del listado, incluidos el rango de fecha de
+    // detección y el estado de exportación, y toma de ellos el nombre del archivo. Los archivos
+    // acompañantes —vacantes y contactos— no heredan ninguno de esos filtros: entregan todo lo
+    // relacionado con el recorte de empresas.
     function handleExportCSV() {
       const data = filterCompanies();
-      const allContacts = data.flatMap(c => getContactsForCompany(c.id));
       const range = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
+
+      const companyIds = new Set(data.map(c => c.id));
+      const relatedVacancies = MOCK_VACANCIES.filter(v => companyIds.has(v.companyId));
+      const relatedContacts = data.flatMap(c => getContactsForCompany(c.id));
 
       openExportPopup({
         entityLabel: 'companies',
         entityCount: data.length,
-        contactsCount: allContacts.length,
-        showContactsOption: true,
         alreadyExported: countAlreadyExported(data),
-        onExport: (includeContacts) => {
-          // Los dos archivos se componen antes de tocar nada: lo que se entrega no depende del marcado.
-          const companyRows = buildCompanyExportRows(data);
-          const contactRows = includeContacts ? buildContactExportRows(data) : null;
+        companions: [
+          { key: 'vacancies', label: 'Include vacancies', count: relatedVacancies.length, note: `all vacancies of the ${data.length} companies` },
+          { key: 'contacts', label: 'Include contacts', count: relatedContacts.length, note: `all contacts of the ${data.length} companies` }
+        ],
+        onExport: (selected) => {
+          // Los archivos se componen antes de tocar nada: lo que se entrega no depende del marcado.
+          const files = [{ entity: 'empresas', rows: buildCompanyExportRows(data), columns: EXPORT_COLUMNS_COMPANIES }];
+          if (selected.includes('vacancies')) files.push({ entity: 'vacantes', rows: buildVacancyExportRows(relatedVacancies), columns: EXPORT_COLUMNS_VACANCIES });
+          if (selected.includes('contacts')) files.push({ entity: 'contactos', rows: buildContactExportRows(data), columns: EXPORT_COLUMNS_CONTACTS });
 
-          exportToCSV(companyRows, exportFilename('empresas', range.from, range.to), EXPORT_COLUMNS_COMPANIES);
-          if (contactRows) {
-            setTimeout(() => exportToCSV(contactRows, exportFilename('contactos', range.from, range.to), EXPORT_COLUMNS_CONTACTS), 500);
-          }
+          deliverExport(files, range.from, range.to);
 
-          // Cada registro entregado queda con quién lo exportó, cuándo, y su conteo incrementado.
+          // El marcado alcanza a cada entidad entregada, sea en el archivo del listado o en uno acompañante.
           markExported(data);
-          if (contactRows) markExported(allContacts);
+          if (selected.includes('vacancies')) markExported(relatedVacancies);
+          if (selected.includes('contacts')) markExported(relatedContacts);
           applyFilters(false);
         }
       });
@@ -687,10 +709,13 @@
       const comercialFilterValue = comercialFilterSearchbox ? comercialFilterSearchbox.getValue() : 'all';
       const sdrFilterValue = sdrFilterSearchbox ? sdrFilterSearchbox.getValue() : 'all';
       const detected = detectedRangeFilter ? detectedRangeFilter.getValue() : { from: '', to: '' };
+      const sizeRanges = companySizeFilter ? companySizeFilter.getValue() : [];
 
       // El rango de detección y el estado de exportación se combinan con los demás filtros con lógica AND
       let base = filterByExportStatus(getVisibleCompanies(), getExportStatusValue());
       base = filterByDetectedRange(base, detected.from, detected.to, 'createdAt');
+      // En Empresas el tamano resuelve sobre el propio registro.
+      base = filterByCompanySize(base, sizeRanges, c => c);
 
       return base.filter(company => {
         const matchesSearch = !searchTerm || company.name.toLowerCase().includes(searchTerm);
@@ -785,6 +810,7 @@
       if (comercialFilterSearchbox) comercialFilterSearchbox.reset();
       if (sdrFilterSearchbox) sdrFilterSearchbox.reset();
       if (industryFilter) industryFilter.reset();
+      if (companySizeFilter) companySizeFilter.reset();
       if (detectedRangeFilter) detectedRangeFilter.reset();
       // "Clear" devuelve el estado de exportación a su valor por defecto, no a "Todos"
       if (canFilterByExportStatus()) document.getElementById('exportStatusFilter').value = 'not_exported';
@@ -816,6 +842,7 @@
     setupAssignmentFilters();
     setupDetectedFilter();
     setupExportStatusFilter();
+    setupCompanySizeFilter();
     setupIndustryFilter();
     setupIndustryFormField();
     renderSkeletonTable();
