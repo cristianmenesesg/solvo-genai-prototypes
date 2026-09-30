@@ -772,25 +772,24 @@
     // --- Exportación ------------------------------------------------------------
     // El archivo de posiciones hereda el recorte del listado y ya lleva los correos de los
     // decisores de cada empresa, así que se puede trabajar solo. El acompañante agrega las
-    // personas de esas empresas: una fila por contacto, y una con las celdas de persona
-    // vacías por cada empresa a la que todavía no se le encontró ninguno.
+    // personas de esas empresas, una fila por contacto; una empresa sin contactos no aporta filas.
     function handleExport(vacancies) {
       const range = (state.filters.detected && state.filters.detected.from) ? state.filters.detected : { from: '', to: '' };
       const ids = new Set(vacancies.map(function (v) { return v.companyId; }));
       const relatedCompanies = MOCK_COMPANIES.filter(function (c) { return ids.has(c.id); });
       const relatedContacts = relatedCompanies.reduce(function (acc, c) { return acc.concat(getContactsForCompany(c.id)); }, []);
-      const contactRows = relatedCompanies.reduce(function (n, c) { return n + Math.max(1, getContactsForCompany(c.id).length); }, 0);
+      const contactRows = relatedContacts.length;
 
       openExportPopup({
         entityLabel: 'positions',
         entityCount: vacancies.length,
         alreadyExported: countAlreadyExported(vacancies),
         companions: [
-          { key: 'prospects', label: 'Include prospects', count: contactRows, note: 'one row per contact of those companies, plus one for each company with no contacts yet' }
+          { key: 'prospects', label: 'Include prospects', count: contactRows, note: 'one row per contact of those companies' }
         ],
         onExport: function (selected) {
           const files = [{ entity: 'posiciones', rows: buildVacancyExportRows(vacancies), columns: EXPORT_COLUMNS_VACANCIES }];
-          if (selected.indexOf('prospects') !== -1) files.push({ entity: 'prospectos', rows: buildProspectExportRows(relatedCompanies), columns: EXPORT_COLUMNS_PROSPECTS });
+          if (selected.indexOf('prospects') !== -1) files.push({ entity: 'prospectos', rows: buildProspectExportRows(relatedCompanies, exportFilename('prospectos', range.from, range.to).replace(/\.csv$/, '')), columns: EXPORT_COLUMNS_PROSPECTS });
           deliverExport(files, range.from, range.to);
           markExported(vacancies);
           if (selected.indexOf('prospects') !== -1) { markExported(relatedCompanies); markExported(relatedContacts); }

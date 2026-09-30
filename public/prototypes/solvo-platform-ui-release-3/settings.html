@@ -69,6 +69,40 @@
     .rank-badge.beyond { color: var(--color-warning-dark, var(--text-muted)); }
     .pos-toolbar .form-select.wide { max-width: 170px; }
     #citySearch { max-width: 210px; }
+
+    /* ── Showcase ── */
+    .sc-row .st-rowhead { gap: var(--space-3); }
+    .sc-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+      background: var(--bg-muted); border: 1px solid var(--border-default); }
+    .sc-photo.is-empty { display: inline-flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--font-semibold); }
+    .sc-title { display: flex; flex-direction: column; min-width: 0; }
+    .sc-flag { display: inline-flex; align-items: center; padding: 1px var(--space-2); border-radius: 20px;
+      font-size: 11px; font-weight: var(--font-semibold); white-space: nowrap;
+      color: var(--color-warning-dark, #92400e); background: color-mix(in srgb, var(--color-warning, #f59e0b) 16%, transparent); }
+    .sc-body { padding-left: 104px; margin-top: var(--space-2); }
+    .sc-short { font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sc-row.is-off .sc-short { color: var(--text-muted); }
+    .sc-skills { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+    .sc-limit { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); }
+    .sc-limit .op-states-search { width: 70px; }
+    .sc-full { color: var(--color-warning-dark, #92400e); font-weight: var(--font-semibold); }
+    /* popup */
+    .sc-photoedit { display: flex; align-items: center; gap: var(--space-4); }
+    .sc-photoedit .sc-photo { width: 88px; height: 88px; font-size: var(--text-sm); }
+    .sc-photobtns { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+    .sc-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 150px; gap: var(--space-3); }
+    .sc-grid .form-label { white-space: nowrap; }
+    .sc-counter { float: right; font-size: 11px; color: var(--text-muted); font-weight: var(--font-regular); }
+    .sc-section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-default); }
+    .sc-section:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+    .sc-sectiontitle { font-size: var(--text-xs); font-weight: var(--font-semibold); color: var(--text-muted); margin-bottom: var(--space-3); }
+    .sc-modal .modal-body { max-height: min(70vh, 720px); overflow-y: auto; }
+    @media (max-width: 640px) {
+      .sc-grid { grid-template-columns: 1fr; }
+      .sc-body { padding-left: 0; }
+    }
   </style>
   <script src="theme.js"></script>
 </head>
@@ -134,6 +168,15 @@
               </svg>
               Scraping window
             </button>
+
+            <div class="st-navgroup">Booking landing</div>
+            <button class="st-navitem" data-section="showcase" onclick="showSection('showcase', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="3" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Showcase
+              <span class="st-navcount" id="navCountShowcase"></span>
+            </button>
           </aside>
 
           <div class="settings-content">
@@ -174,7 +217,7 @@
                   <button type="button" data-posfilter="active" onclick="setPosFilter('active', this)">Active</button>
                   <button type="button" data-posfilter="inactive" onclick="setPosFilter('inactive', this)">Paused</button>
                 </div>
-                <button class="op-btn-link st-reset" onclick="resetPositions()">Restore the seeded catalog</button>
+                <button class="op-clearall st-reset" onclick="resetPositions()">Restore the seeded catalog</button>
               </div>
 
               <p class="st-count" id="posSummary"></p>
@@ -208,12 +251,40 @@
                 <label class="st-capinline" for="cityCap">Per state, per day
                   <input type="number" class="op-states-search" id="cityCap" min="1" onchange="saveCityCap()">
                 </label>
-                <button class="op-btn-link st-reset" onclick="resetCities()">Restore the seeded grid</button>
+                <button class="op-clearall st-reset" onclick="resetCities()">Restore the seeded grid</button>
               </div>
 
               <p class="st-count" id="citySummary"></p>
               <div class="st-list st-citylist" id="cityList"></div>
               <div class="op-pagination" id="cityPagination"></div>
+            </div>
+
+            <!-- Section: Showcase -->
+            <div class="settings-section" id="section-showcase">
+              <div class="st-sectionhead">
+                <div>
+                  <h3 class="st-sectiontitle">Showcase</h3>
+                  <p class="st-sectionsub">The talent the booking landing shows below the calendar. Each role carries its own résumé; only roles in the showcase appear, up to the limit.</p>
+                </div>
+                <button class="op-btn-apply" onclick="openShowcaseModal()">New role</button>
+              </div>
+
+              <div class="st-toolbar">
+                <input type="search" class="op-states-search st-search" id="scSearch" placeholder="Search role, country or skill" oninput="renderShowcase()">
+                <div class="kp-window" role="group" aria-label="Status">
+                  <button type="button" class="is-on" data-scfilter="all" onclick="setScFilter('all', this)">All</button>
+                  <button type="button" data-scfilter="on" onclick="setScFilter('on', this)">In showcase</button>
+                  <button type="button" data-scfilter="off" onclick="setScFilter('off', this)">Hidden</button>
+                </div>
+                <label class="sc-limit" for="scLimit">Showcase limit
+                  <input type="number" class="op-states-search" id="scLimit" min="1" onchange="saveShowcaseLimit()">
+                </label>
+                <button class="op-clearall st-reset" onclick="resetShowcase()">Restore the seeded showcase</button>
+              </div>
+
+              <p class="st-count" id="scSummary"></p>
+              <div class="st-list" id="scList"></div>
+              <div class="op-pagination" id="scPagination"></div>
             </div>
           </div>
         </div>
@@ -336,6 +407,111 @@
     </div>
   </div>
 
+  <!-- Modal: create / edit showcase role -->
+  <div class="modal-overlay" id="showcaseModal">
+    <div class="modal sc-modal" style="max-width: 680px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="scModalTitle">New role</h2>
+        <button class="modal-close" onclick="closeShowcaseModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="sc-section">
+          <div class="sc-sectiontitle">Card</div>
+          <div class="sc-photoedit">
+            <span class="sc-photo is-empty" id="scPhotoPreview">No photo</span>
+            <div class="sc-photobtns">
+              <div style="display:flex; gap: var(--space-2);">
+                <button type="button" class="op-actionbtn" onclick="document.getElementById('scPhotoFile').click()">Upload photo</button>
+                <button type="button" class="op-clearall" style="margin-left: 0;" id="scPhotoRemove" onclick="removeDraftPhoto()">Remove</button>
+              </div>
+              <div class="field-hint">Square JPG or PNG, at least 400 × 400 px, up to 2 MB. It shows as a circle.</div>
+              <div class="field-error" id="scPhotoError"></div>
+              <input type="file" id="scPhotoFile" accept="image/jpeg,image/png,image/webp" hidden onchange="onPhotoChosen(this)">
+            </div>
+          </div>
+          <div class="sc-grid" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="scTitleInput">Title on the landing</label>
+              <input type="text" class="form-input" id="scTitleInput" maxlength="80" placeholder="e.g. Customer Service Representative">
+              <div class="field-error" id="scTitleError"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="scCountryInput">Country</label>
+              <input type="text" class="form-input" id="scCountryInput" maxlength="40" list="scCountries" placeholder="e.g. Colombia">
+              <datalist id="scCountries"><option value="Colombia"><option value="Mexico"><option value="Guatemala"><option value="Honduras"><option value="Philippines"><option value="Argentina"><option value="Peru"></datalist>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="scYearsInput">Years of experience</label>
+              <input type="number" class="form-input" id="scYearsInput" min="0" max="50">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="scShortInput">Short profile <span class="sc-counter" id="scShortCount"></span></label>
+            <textarea class="form-textarea" id="scShortInput" rows="3" maxlength="240" style="min-height: 72px;" oninput="updateCounters()"></textarea>
+            <div class="field-hint">Opens the card on the landing.</div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Hard skills</label>
+            <div class="tags-input" id="scHardEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="Type a skill and press Enter…" autocomplete="off"></div>
+            <div class="field-hint">The first five show on the card; the rest, in the detail panel.</div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <div class="sc-sectiontitle">Detail panel</div>
+          <div class="form-group">
+            <label class="form-label" for="scFullInput">Full profile</label>
+            <textarea class="form-textarea" id="scFullInput" rows="7" style="min-height: 150px;"></textarea>
+            <div class="field-hint">Read in the detail panel. A blank line starts a new paragraph.</div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Languages</label>
+            <div class="tags-input" id="scLangEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="e.g. English (C1) and press Enter…" autocomplete="off"></div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Soft skills</label>
+            <div class="tags-input" id="scSoftEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="Type a skill and press Enter…" autocomplete="off"></div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <div class="form-group modal-row">
+            <label class="toggle-switch"><input type="checkbox" id="scShowInput"><span class="toggle-slider"></span></label>
+            <span class="text-sm" style="color: var(--text-secondary);">Show in the showcase</span>
+          </div>
+          <div class="field-hint" id="scShowHint"></div>
+          <div class="field-error" id="scShowError"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeShowcaseModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveShowcaseRole()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: delete showcase role -->
+  <div class="modal-overlay" id="scDeleteModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Delete role</h2>
+        <button class="modal-close" onclick="closeScDeleteModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="scDeleteText" style="color: var(--text-primary);"></p>
+        <p class="text-muted text-sm" style="margin-top: 8px;">The résumé and its photo are removed. The landing stops showing this role.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeScDeleteModal()">Cancel</button>
+        <button class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error);" onclick="confirmDeleteShowcase()">Delete</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
 
   <script src="rbac.js"></script>
@@ -361,6 +537,9 @@
          `public.us_states` no tiene esa columna.
        · Scraping window — ventana on-demand (getOdConfig / setOdConfig,
          localStorage `odoConfig`), vigente desde On-Demand Openings.
+       · Showcase — catálogo de la vitrina de la landing (`profile_curriculum`, sin asociarse a
+         perfiles ni a posiciones). Lista con toggle de vitrina, tope, alta / edición con foto
+         y baja. Estado en localStorage `showcaseRoles` y `showcaseLimit`.
        ------------------------------------------------------------------------ */
     // === Session & Access Guard (admin only) ===
     const user = initSession();
@@ -383,6 +562,8 @@
         positions.filter(p => p.active).length + ' / ' + positions.length;
       document.getElementById('navCountCities').textContent =
         cities.filter(c => c.active).length + ' / ' + cities.length;
+      if (typeof showcase !== 'undefined') document.getElementById('navCountShowcase').textContent =
+        showcase.filter(r => r.showcase).length + ' / ' + getScLimit();
     }
 
     // === Section: On-Demand scraping config ===
@@ -434,12 +615,13 @@
     // Los dos catálogos paginan igual que los listados de la plataforma.
     const PAGE_SIZE = 12;
 
-    function renderPager(mountId, total, page, go) {
+    function renderPager(mountId, total, page, go, size) {
+      size = size || PAGE_SIZE;
       const el = document.getElementById(mountId);
-      const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (total <= PAGE_SIZE) { el.innerHTML = ''; return; }
-      const from = (page - 1) * PAGE_SIZE + 1;
-      const to = Math.min(page * PAGE_SIZE, total);
+      const pages = Math.max(1, Math.ceil(total / size));
+      if (total <= size) { el.innerHTML = ''; return; }
+      const from = (page - 1) * size + 1;
+      const to = Math.min(page * size, total);
       const nums = [];
       for (let i = 1; i <= pages; i++) {
         if (i === 1 || i === pages || Math.abs(i - page) <= 1) nums.push(i);
@@ -821,14 +1003,283 @@
     ['cityModal', 'cityDeleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeCityModal(); closeCityDeleteModal(); } }));
     fillStateSelects();
 
+
+    // === Section: Showcase ===
+    // Catálogo propio de la vitrina: cada rol es un currículo de `profile_curriculum`, sin
+    // asociarse a perfiles de búsqueda ni a posiciones, y la landing lo lee tal cual por el
+    // servicio de talento. El seed son los doce currículos del paquete inicial (HUECO-0.2/0.3),
+    // con retratos ficticios. Estado en localStorage `showcaseRoles` y `showcaseLimit`;
+    // "Restore the seeded showcase" es solo del prototipo.
+    // Reglas (HUECO-4.1-BE): completo = foto, título, país, perfil corto y perfil completo;
+    // solo un rol completo entra a la vitrina; no se habilita por encima del tope; dejar
+    // incompleto un rol habilitado lo saca de la vitrina.
+    const SHOWCASE_SEED = [{"id":"cv-01","display_title":"Customer Service Representative","country":"Mexico","photo_url":"assets/talent/customer-service-representative.jpg","years_experience":5,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Zendesk & Freshdesk","Live chat & voice support","CRM ticketing","SLA management","Order & returns handling","De-escalation","Quality scorecards"],"soft_skills":["Empathy","Patience","Clear communication"],"short_profile":"Front-line support professional who resolves customer issues across phone, email and chat, and keeps satisfaction high on high-volume queues.","full_profile":"Customer support professional with five years handling US customers across phone, email and live chat. Works high-volume queues in retail, e-commerce, subscription services and healthcare support, resolving issues on first contact wherever the policy allows it and escalating cleanly when it does not.\n\nFluent in the tools US support teams run on — Zendesk, Freshdesk and Salesforce Service Cloud — and used to working inside SLAs, macros and quality scorecards. Sustains satisfaction above 95% and keeps first response times on chat under a few minutes. Strong at de-escalation: takes an angry customer through the fix without handing the problem to a supervisor.\n\nBuilt for remote work with a US team: quiet dedicated workspace, backup connectivity, and comfort with rotating shifts and peak-season volume. Neutral accent on calls, clean written English, and steady enough with process changes to be productive within the first weeks.","showcase":true},{"id":"cv-02","display_title":"Sales Representative","country":"Colombia","photo_url":"assets/talent/sales-representative.jpg","years_experience":7,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Full-cycle B2B sales","Discovery calls","HubSpot & Salesforce","Proposal & negotiation","Pipeline forecasting","Account planning","Objection handling"],"soft_skills":["Resilience","Active listening","Commercial judgment"],"short_profile":"Full-cycle B2B seller who runs discovery, demos, proposal and negotiation end to end for US companies, carrying an individual quota.","full_profile":"Commercial closer with seven years selling for US companies across software, business services and distribution. Owns the cycle from first discovery call through demo, proposal, negotiation and close, and is used to carrying an individual quota rather than supporting someone else's.\n\nWorks the way US sales teams expect: disciplined CRM hygiene in HubSpot or Salesforce, a forecast that holds up, and multi-threaded deals that bring in operations, finance and procurement instead of leaning on a single champion. Runs discovery without a script and adapts the pitch to whoever is in the room.\n\nSet up for remote work with a US team: dedicated home office, full overlap with US business hours, and confident, unhurried English on calls and in writing. Ramps on a new product fast and asks for coaching instead of waiting for it.","showcase":true},{"id":"cv-03","display_title":"Sales Development Representative","country":"Guatemala","photo_url":"assets/talent/sales-development-representative.jpg","years_experience":4,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Outbound prospecting","Cold calling","Email sequencing","Salesforce & Outreach","Lead qualification (BANT/MEDDIC)","List building & research","LinkedIn Sales Navigator"],"soft_skills":["Persistence","Coachability","Curiosity"],"short_profile":"Pipeline generator who prospects, cold calls and sequences outbound to book qualified meetings for US sales teams.","full_profile":"Sales development representative with four years building pipeline for US companies in software, professional services and staffing. Owns the top of the funnel end to end — list building, account research, cold calling, email sequences and LinkedIn outreach — against a target of qualified meetings booked, not activity for its own sake.\n\nRuns high call volume without losing tone, and writes sequences that get replies because they reference something real about the account. Disciplined in Salesforce, Outreach and Apollo, and consistent with qualification frameworks such as BANT or MEDDIC, so what reaches an account executive is actually workable.\n\nCoachable by design: takes call reviews well, adjusts the approach the same week, and tracks their own conversion rates. Clear, energetic English on the phone, full US business-hours coverage, and enough resilience to keep dialing through a bad morning.","showcase":true},{"id":"cv-04","display_title":"Sales Specialist","country":"Colombia","photo_url":"assets/talent/sales-specialist.jpg","years_experience":6,"languages":["Spanish (native)","English (C2)"],"hard_skills":["Consultative selling","Product demos","Upsell & expansion","Renewal negotiation","Account planning","Quarterly business reviews","Pipeline management"],"soft_skills":["Product depth","Patience","Storytelling"],"short_profile":"Product-focused seller who grows existing accounts through tailored demos, upsells, renewals and expansion rather than net-new logos.","full_profile":"Specialist seller with six years growing existing accounts for US companies. Owns product-specific pitches, tailored demos, renewals and expansion plans, working the installed base rather than chasing net-new logos — the seller you put on an account once it is signed.\n\nLearns a product deeply enough to sell it without a script, and translates a feature into what it saves a particular customer. Comfortable running quarterly business reviews, building expansion plans alongside customer success, and handling pricing conversations at renewal without discounting on reflex. Works fluently in HubSpot, Salesforce and the usual demo tooling.\n\nComposed on video with senior stakeholders and polished in writing, in fully fluent English. Overlaps completely with US business hours, keeps account notes another person could pick up, and is used to being the one who knows the product best on the call.","showcase":true},{"id":"cv-05","display_title":"Legal Assistant","country":"Honduras","photo_url":"assets/talent/legal-assistant.jpg","years_experience":5,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Document drafting","Court & client calendaring","E-filing portals","Clio & MyCase","File and records management","Deadline tracking","Client correspondence"],"soft_skills":["Organization","Discretion","Follow-through"],"short_profile":"Legal support professional who drafts correspondence, manages filings and keeps attorney calendars and case files organized.","full_profile":"Legal assistant with five years supporting US attorneys across litigation, immigration, family and corporate practices. Handles the administrative spine of a matter: correspondence and routine document drafting, court and client calendars, file organization, and follow-up on everything still outstanding.\n\nFamiliar with US e-filing portals and with case-management platforms such as Clio and MyCase, and precise with deadlines that carry consequences. Prepares document packets, tracks hearing dates and filing windows, and flags what needs an attorney's attention instead of letting it sit in an inbox.\n\nHandles confidential material without being reminded to, and writes clean, professional English to clients, courts and opposing counsel. Works US business hours from a private, secure workspace, and is comfortable being the person who knows where everything is.","showcase":true},{"id":"cv-06","display_title":"Paralegal","country":"Colombia","photo_url":"assets/talent/paralegal.jpg","years_experience":6,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Legal research (Westlaw/LexisNexis)","Pleadings & motion drafting","Discovery support","Case management","E-filing","Medical record summaries","Deposition summaries"],"soft_skills":["Attention to detail","Confidentiality","Time management"],"short_profile":"Paralegal who runs legal research, drafts pleadings and manages discovery and case files for US litigation teams.","full_profile":"Paralegal with six years doing substantive work for US law firms across personal injury, employment and general civil litigation. Runs legal research, drafts pleadings, motions and discovery responses, assembles exhibits, and manages cases from intake through resolution.\n\nComfortable in Westlaw and LexisNexis, with US court e-filing, and with the case-management platforms firms run on. Summarizes medical records and depositions, builds chronologies an attorney can walk into a hearing with, and keeps discovery deadlines from turning into emergencies.\n\nDetail-obsessed in a way that shows up in the work product, and trusted with privileged material. Written English strong enough for court-facing documents, full US business-hours coverage, and used to a caseload whose priorities change without notice.","showcase":true},{"id":"cv-07","display_title":"Intake Specialist","country":"Mexico","photo_url":"assets/talent/intake-specialist.jpg","years_experience":4,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Client intake & screening","Case qualification","CRM data entry","Appointment setting","HIPAA-aware handling","Lead follow-up","Intake documentation"],"soft_skills":["Empathy","Active listening","Composure"],"short_profile":"First point of contact for new clients who screens inbound leads, captures case details and books the consultation.","full_profile":"Intake specialist with four years as the first voice new clients hear at US law firms and healthcare practices. Screens inbound leads against intake criteria, captures the details that decide whether a case is viable, and books the consultation while the person is still on the line.\n\nBalances empathy with the discipline of a script: gets through a full intake form without making it feel like an interrogation, and records it accurately in the CRM so nothing has to be asked twice. Used to HIPAA-aware handling of sensitive information and to working leads that go quiet until they answer.\n\nSteady in emotionally charged conversations — an accident, an illness, a dispute — and warm without over-promising what the firm can do. Fluent, reassuring English on the phone, US business-hours coverage, and a conversion rate they can speak to.","showcase":true},{"id":"cv-08","display_title":"Executive Assistant","country":"Colombia","photo_url":"assets/talent/executive-assistant.jpg","years_experience":9,"languages":["Spanish (native)","English (C2)"],"hard_skills":["Complex calendar management","International travel planning","Inbox triage","Expense reporting (Concur)","Board & meeting prep","Google Workspace & Microsoft 365","Stakeholder liaison"],"soft_skills":["Discretion","Anticipation","Organization"],"short_profile":"Executive-level support that owns complex calendars, travel, expenses and board preparation for US leadership.","full_profile":"Executive assistant with nine years supporting C-level leaders at US companies, from venture-backed startups to established mid-market firms. Owns complex calendars across time zones, international travel, expense reporting, board and leadership meeting preparation, and the follow-through afterwards.\n\nProtects an executive's time by making decisions instead of forwarding them: triages the inbox, declines what should not be on the calendar, prepares the briefing before the meeting and chases the action items after it. Fluent in Google Workspace and Microsoft 365, plus Notion, Concur and the usual scheduling tools.\n\nTrusted with information that is not shared widely, and known for anticipating what is needed before it is asked for. Polished English in writing and on calls with external stakeholders, full US business-hours availability, and the judgment to know when to interrupt.","showcase":true},{"id":"cv-09","display_title":"Administrative Assistant","country":"Philippines","photo_url":"assets/talent/administrative-assistant.jpg","years_experience":6,"languages":["Filipino (native)","English (C1)"],"hard_skills":["Scheduling & coordination","Document management","Data entry & reporting","Microsoft 365 & Google Workspace","Expense processing","Vendor coordination","Process documentation"],"soft_skills":["Reliability","Multitasking","Proactivity"],"short_profile":"Operations support that keeps a US team running — scheduling, documents, data entry and vendor coordination.","full_profile":"Administrative assistant with six years supporting US teams remotely across operations, HR and finance functions. Handles scheduling, document management, data entry, expense processing and vendor coordination — the work that keeps a team's week from falling apart.\n\nStrong in Microsoft 365 and Google Workspace, including the spreadsheet work most administrative roles avoid: reconciliations, trackers and reports that stay current. Builds simple systems where there were none — a shared folder structure, a recurring checklist — and keeps them alive past the first month.\n\nReliable in the specific sense that things get done without a reminder, and proactive about small problems before they become someone's emergency. Clear written English, US business-hours coverage, and comfortable supporting several people at once with competing priorities.","showcase":true},{"id":"cv-10","display_title":"Collections Specialist","country":"Guatemala","photo_url":"assets/talent/collections-specialist.jpg","years_experience":5,"languages":["Spanish (native)","English (B2)"],"hard_skills":["AR collections","Payment plan negotiation","Aging report analysis","QuickBooks & NetSuite","Dispute resolution","Invoice reconciliation","Collection documentation"],"soft_skills":["Tact","Persistence","Numeracy"],"short_profile":"Accounts-receivable specialist who recovers overdue balances through payment negotiation without damaging the customer relationship.","full_profile":"Collections specialist with five years managing accounts receivable for US businesses across professional services, healthcare billing and B2B distribution. Works the aging report from the top down, makes the calls, negotiates payment plans and gets balances closed.\n\nReads an aging report as a priority list rather than a queue, and tells a genuine billing error apart from a delay tactic. Hands-on with QuickBooks, NetSuite and standard AR modules, and consistent with documentation, so every promise to pay is on record. Brings days-sales-outstanding down in a way that shows up in the month-end numbers.\n\nFirm but tactful on collection calls — the customer usually stays a customer. Professional English by phone and in writing, US business-hours coverage, and comfortable operating within FDCPA-aware practice and each client's escalation rules.","showcase":true},{"id":"cv-11","display_title":"Scheduler","country":"Philippines","photo_url":"assets/talent/scheduler.jpg","years_experience":4,"languages":["Filipino (native)","English (C1)"],"hard_skills":["Appointment setting","Calendar & capacity management","Confirmation & reminder calls","Rescheduling & dispatch","CRM scheduling tools","Route & territory planning","No-show recovery"],"soft_skills":["Punctuality","Diplomacy","Clarity"],"short_profile":"Scheduling coordinator who books, confirms and reshuffles appointments to keep US service calendars full and on time.","full_profile":"Scheduling coordinator with four years running appointment calendars for US service operations — home services, healthcare practices and field teams. Books and confirms visits, absorbs cancellations and reschedules, and keeps technicians, providers and clients pointed at the same calendar.\n\nTreats the calendar as a capacity problem: fills the gap a cancellation leaves, groups appointments sensibly by geography or provider, and calls ahead so no-shows stay rare. Comfortable in scheduling and dispatch software, in CRMs, and in the reminder workflows that keep confirmation rates high.\n\nCalm through high call volume and last-minute changes, and precise with the notes the next person will read. Clear, friendly English on the phone, coverage across US time zones including early-morning starts, and the follow-through that makes a schedule hold.","showcase":true},{"id":"cv-12","display_title":"CAD Designer","country":"Colombia","photo_url":"assets/talent/cad-designer.jpg","years_experience":7,"languages":["Spanish (native)","English (B2)"],"hard_skills":["AutoCAD","Revit / BIM","2D construction drawings","3D modeling","Shop drawings","Redline & markup interpretation","Drawing standards & title blocks"],"soft_skills":["Precision","Spatial reasoning","Coordination"],"short_profile":"Technical designer who turns markups and field notes into precise 2D drawings and 3D models for US engineering and construction teams.","full_profile":"CAD designer with seven years producing drawings and models for US engineering, architecture and construction firms. Takes redlines, field measurements and engineer sketches and turns them into clean, dimensioned documentation — plans, sections, details and shop drawings ready to issue.\n\nWorks daily in AutoCAD and Revit, with SolidWorks and SketchUp as the job requires, and holds to the client's layer standards, title blocks and sheet conventions instead of inventing their own. Catches conflicts on the drawing rather than on site, where the cost of the same mistake changes by an order of magnitude.\n\nCoordinates asynchronously without needing to be chased: sends questions batched and specific, versions files predictably, and hits issue dates. Reads and writes technical English comfortably, overlaps with US business hours, and works from a workstation built for the software.","showcase":true}];
+    const SC_KEY = 'showcaseRoles', SC_LIMIT_KEY = 'showcaseLimit', SC_LIMIT_DEFAULT = 12;
+    // Las filas de la vitrina son más altas que las de los catálogos: 10 por página.
+    const SC_PAGE_SIZE = 10;
+    function loadShowcase() {
+      try { const s = JSON.parse(localStorage.getItem(SC_KEY)); if (Array.isArray(s)) return s; } catch (e) {}
+      return JSON.parse(JSON.stringify(SHOWCASE_SEED));
+    }
+    function saveShowcase(list) { localStorage.setItem(SC_KEY, JSON.stringify(list)); }
+    let showcase = loadShowcase();
+    function getScLimit() { const v = parseInt(localStorage.getItem(SC_LIMIT_KEY), 10); return isNaN(v) || v < 1 ? SC_LIMIT_DEFAULT : v; }
+    const scOnCount = () => showcase.filter(r => r.showcase).length;
+
+    const SC_REQUIRED = [['photo_url', 'photo'], ['display_title', 'title'], ['country', 'country'], ['short_profile', 'short profile'], ['full_profile', 'full profile']];
+    const scMissing = r => SC_REQUIRED.filter(([k]) => !String(r[k] || '').trim()).map(([, label]) => label);
+    const initials = t => String(t || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+    const photoHtml = r => r.photo_url
+      ? '<img class="sc-photo" src="' + esc(r.photo_url) + '" alt="">'
+      : '<span class="sc-photo is-empty">' + esc(initials(r.display_title)) + '</span>';
+
+    function resetShowcase() {
+      showcase = JSON.parse(JSON.stringify(SHOWCASE_SEED)); saveShowcase(showcase);
+      localStorage.removeItem(SC_LIMIT_KEY); renderShowcase(); showToast('Showcase restored to seed', 'success');
+    }
+    function saveShowcaseLimit() {
+      const input = document.getElementById('scLimit');
+      const v = parseInt(input.value, 10), on = scOnCount();
+      if (isNaN(v) || v < 1) { input.value = getScLimit(); return; }
+      if (v < on) { input.value = getScLimit(); showToast('There are ' + on + ' roles in the showcase: hide some before lowering the limit to ' + v, 'error'); return; }
+      localStorage.setItem(SC_LIMIT_KEY, String(v)); renderShowcase(true); showToast('Showcase limit saved', 'success');
+    }
+
+    let scFilter = 'all', scPage = 1;
+    function setScFilter(value, btn) {
+      scFilter = value; scPage = 1;
+      document.querySelectorAll('[data-scfilter]').forEach(b => b.classList.remove('is-on'));
+      btn.classList.add('is-on'); renderShowcase();
+    }
+    function goScPage(n) { scPage = n; renderShowcase(true); }
+
+    function renderShowcase(keepPage) {
+      if (!keepPage) scPage = 1;
+      renderNavCounts();
+      const limit = getScLimit(), on = scOnCount();
+      document.getElementById('scLimit').value = limit;
+      const q = document.getElementById('scSearch').value.trim().toLowerCase();
+      const rows = showcase.filter(r => {
+        if (scFilter === 'on' && !r.showcase) return false;
+        if (scFilter === 'off' && r.showcase) return false;
+        if (!q) return true;
+        return [r.display_title, r.country].concat(r.hard_skills || []).some(t => String(t || '').toLowerCase().includes(q));
+      });
+      const incomplete = showcase.filter(r => scMissing(r).length).length;
+      document.getElementById('scSummary').innerHTML =
+        rows.length + ' of ' + showcase.length + ' roles · ' +
+        (on >= limit ? '<span class="sc-full">' + on + ' of ' + limit + ' in the showcase — limit reached</span>' : on + ' of ' + limit + ' in the showcase') +
+        (incomplete ? ' · ' + incomplete + ' incomplete' : '');
+      const list = document.getElementById('scList');
+      if (!rows.length) {
+        list.innerHTML = '<div class="op-empty"><h3>' + (showcase.length ? 'No role matches' : 'No roles yet') + '</h3><p>' +
+          (showcase.length ? 'Try another role, country or skill.' : 'Create the first one to fill the showcase.') + '</p></div>';
+        document.getElementById('scPagination').innerHTML = '';
+        return;
+      }
+      const pages = Math.max(1, Math.ceil(rows.length / SC_PAGE_SIZE));
+      if (scPage > pages) scPage = pages;
+      list.innerHTML = rows.slice((scPage - 1) * SC_PAGE_SIZE, scPage * SC_PAGE_SIZE).map(r => {
+        const miss = scMissing(r);
+        const meta = [r.country, r.years_experience != null && r.years_experience !== '' ? r.years_experience + ' yrs' : ''].filter(Boolean).join(' · ');
+        const skills = (r.hard_skills || []).slice(0, 5).map(t => '<span class="st-term">' + esc(t) + '</span>').join('');
+        return '<article class="st-row sc-row' + (r.showcase ? '' : ' is-off') + '" data-id="' + r.id + '">' +
+          '<div class="st-rowhead">' +
+            '<label class="toggle-switch" title="' + (r.showcase ? 'In the showcase' : 'Hidden') + '">' +
+              '<input type="checkbox" ' + (r.showcase ? 'checked' : '') + ' onchange="toggleShowcase(\'' + r.id + '\', this)">' +
+              '<span class="toggle-slider"></span></label>' +
+            photoHtml(r) +
+            '<div class="sc-title"><span class="st-rowname">' + esc(r.display_title || 'Untitled role') + '</span>' +
+              (meta ? '<span class="st-rowmeta">' + esc(meta) + '</span>' : '') + '</div>' +
+            (miss.length ? '<span class="sc-flag" title="Missing: ' + esc(miss.join(', ')) + '">Incomplete</span>' : '') +
+            '<div class="st-rowactions">' +
+              '<button class="op-actionbtn" onclick="openShowcaseModal(\'' + r.id + '\')">Edit</button>' +
+              '<button class="cd-iconbtn" title="Delete role" onclick="openScDeleteModal(\'' + r.id + '\')">' +
+                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="sc-body">' +
+            (r.short_profile ? '<p class="sc-short">' + esc(r.short_profile) + '</p>' : '<p class="sc-short">No short profile yet.</p>') +
+            (skills ? '<div class="sc-skills">' + skills + '</div>' : '') +
+          '</div>' +
+        '</article>';
+      }).join('');
+      renderPager('scPagination', rows.length, scPage, goScPage, SC_PAGE_SIZE);
+    }
+
+    // Habilitar desde la lista pide un currículo completo y lugar bajo el tope; si no, el
+    // control vuelve a su estado y se avisa qué falta.
+    function canEnable(r) {
+      const miss = scMissing(r);
+      if (miss.length) return 'Complete the résumé first — missing ' + miss.join(', ') + '.';
+      if (!r.showcase && scOnCount() >= getScLimit()) return 'The showcase is full (' + getScLimit() + ' roles). Hide one or raise the limit.';
+      return '';
+    }
+    function toggleShowcase(id, box) {
+      const r = showcase.find(x => x.id === id); if (!r) return;
+      if (box.checked) {
+        const why = canEnable(r);
+        if (why) { box.checked = false; showToast(why, 'error'); return; }
+      }
+      r.showcase = box.checked; saveShowcase(showcase); renderShowcase(true);
+      showToast(r.display_title + (r.showcase ? ' added to the showcase' : ' hidden from the showcase'), 'success');
+    }
+
+    // --- tag editors (languages, hard skills, soft skills) ---
+    const scTags = { scLangEditor: [], scHardEditor: [], scSoftEditor: [] };
+    function renderTagEditor(id) {
+      const editor = document.getElementById(id), input = editor.querySelector('input');
+      editor.querySelectorAll('.tag-chip').forEach(c => c.remove());
+      scTags[id].forEach((t, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = esc(t) + '<span class="tag-chip-remove" title="Remove">×</span>';
+        chip.querySelector('.tag-chip-remove').onclick = e => { e.stopPropagation(); scTags[id].splice(i, 1); renderTagEditor(id); };
+        editor.insertBefore(chip, input);
+      });
+    }
+    function addTag(id, raw) {
+      const t = raw.trim().replace(/\s+/g, ' ');
+      if (!t) return;
+      if (scTags[id].some(x => x.toLowerCase() === t.toLowerCase())) { showToast('"' + t + '" is already in the list', 'error'); return; }
+      scTags[id].push(t); renderTagEditor(id);
+    }
+    Object.keys(scTags).forEach(id => {
+      const input = document.getElementById(id).querySelector('input');
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addTag(id, input.value); input.value = ''; }
+        else if (e.key === 'Backspace' && !input.value && scTags[id].length) { scTags[id].pop(); renderTagEditor(id); }
+      });
+      input.addEventListener('blur', () => { if (input.value.trim()) { addTag(id, input.value); input.value = ''; } });
+    });
+
+    // --- photo ---
+    let draftPhoto = '';
+    function renderDraftPhoto() {
+      const prev = document.getElementById('scPhotoPreview');
+      if (draftPhoto) {
+        prev.outerHTML = '<img class="sc-photo" id="scPhotoPreview" src="' + esc(draftPhoto) + '" alt="Photo preview">';
+      } else {
+        prev.outerHTML = '<span class="sc-photo is-empty" id="scPhotoPreview">No photo</span>';
+      }
+      document.getElementById('scPhotoRemove').style.visibility = draftPhoto ? 'visible' : 'hidden';
+    }
+    function removeDraftPhoto() { draftPhoto = ''; renderDraftPhoto(); updateShowHint(); }
+    function onPhotoChosen(input) {
+      const file = input.files && input.files[0]; input.value = '';
+      document.getElementById('scPhotoError').style.display = 'none';
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { showFieldError('scPhotoError', 'Use a JPG, PNG or WebP image.'); return; }
+      if (file.size > 2 * 1024 * 1024) { showFieldError('scPhotoError', 'The image weighs more than 2 MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          if (Math.min(img.width, img.height) < 400) { showFieldError('scPhotoError', 'The image is ' + img.width + ' × ' + img.height + ' px; it needs at least 400 px per side.'); return; }
+          draftPhoto = reader.result; renderDraftPhoto(); updateShowHint();
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // --- modal create / edit ---
+    let editingScId = null;
+    function draftFromForm() {
+      return {
+        photo_url: draftPhoto,
+        display_title: document.getElementById('scTitleInput').value.trim(),
+        country: document.getElementById('scCountryInput').value.trim(),
+        years_experience: document.getElementById('scYearsInput').value === '' ? null : parseInt(document.getElementById('scYearsInput').value, 10),
+        short_profile: document.getElementById('scShortInput').value.trim(),
+        full_profile: document.getElementById('scFullInput').value.trim(),
+        languages: scTags.scLangEditor.slice(), hard_skills: scTags.scHardEditor.slice(), soft_skills: scTags.scSoftEditor.slice()
+      };
+    }
+    function updateCounters() {
+      const n = document.getElementById('scShortInput').value.length;
+      document.getElementById('scShortCount').textContent = n + ' / 240';
+    }
+    function updateShowHint() {
+      const miss = scMissing(draftFromForm());
+      document.getElementById('scShowHint').textContent = miss.length
+        ? 'To show it, complete: ' + miss.join(', ') + '.'
+        : scOnCount() + ' of ' + getScLimit() + ' roles are in the showcase.';
+    }
+    ['scTitleInput', 'scCountryInput', 'scShortInput', 'scFullInput'].forEach(id => document.getElementById(id).addEventListener('input', updateShowHint));
+
+    function openShowcaseModal(id) {
+      editingScId = id || null;
+      const r = id ? showcase.find(x => x.id === id) : null;
+      document.getElementById('scModalTitle').textContent = r ? 'Edit role' : 'New role';
+      draftPhoto = r ? (r.photo_url || '') : '';
+      document.getElementById('scTitleInput').value = r ? r.display_title : '';
+      document.getElementById('scCountryInput').value = r ? r.country : '';
+      document.getElementById('scYearsInput').value = r && r.years_experience != null ? r.years_experience : '';
+      document.getElementById('scShortInput').value = r ? r.short_profile : '';
+      document.getElementById('scFullInput').value = r ? r.full_profile : '';
+      scTags.scLangEditor = r ? (r.languages || []).slice() : [];
+      scTags.scHardEditor = r ? (r.hard_skills || []).slice() : [];
+      scTags.scSoftEditor = r ? (r.soft_skills || []).slice() : [];
+      Object.keys(scTags).forEach(renderTagEditor);
+      document.getElementById('scShowInput').checked = r ? !!r.showcase : false;
+      ['scPhotoError', 'scTitleError', 'scShowError'].forEach(i => document.getElementById(i).style.display = 'none');
+      renderDraftPhoto(); updateCounters(); updateShowHint();
+      document.getElementById('showcaseModal').classList.add('active');
+      document.querySelector('#showcaseModal .modal-body').scrollTop = 0;
+      setTimeout(() => document.getElementById('scTitleInput').focus(), 50);
+    }
+    function closeShowcaseModal() { document.getElementById('showcaseModal').classList.remove('active'); editingScId = null; }
+
+    function saveShowcaseRole() {
+      const d = draftFromForm();
+      let show = document.getElementById('scShowInput').checked;
+      ['scTitleError', 'scShowError'].forEach(i => document.getElementById(i).style.display = 'none');
+      if (!d.display_title) { showFieldError('scTitleError', 'The title is required.'); return; }
+      const current = editingScId ? showcase.find(x => x.id === editingScId) : null;
+      const miss = scMissing(d);
+      let note = '';
+      if (show && miss.length) {
+        // Un rol habilitado que queda incompleto sale de la vitrina; uno nuevo no puede entrar así.
+        if (current && current.showcase) { show = false; note = ' — removed from the showcase: missing ' + miss.join(', '); }
+        else { showFieldError('scShowError', 'Complete the résumé to show it — missing ' + miss.join(', ') + '.'); return; }
+      }
+      if (show && !(current && current.showcase) && scOnCount() >= getScLimit()) {
+        showFieldError('scShowError', 'The showcase is full (' + getScLimit() + ' roles). Hide one or raise the limit.'); return;
+      }
+      if (current) { Object.assign(current, d, { showcase: show }); }
+      else { showcase.unshift(Object.assign({ id: 'cv-' + Date.now().toString(36) }, d, { showcase: show })); }
+      saveShowcase(showcase); closeShowcaseModal(); renderShowcase();
+      showToast((current ? 'Role updated' : 'Role created') + note, note ? 'error' : 'success');
+    }
+
+    // --- modal delete ---
+    let deletingScId = null;
+    function openScDeleteModal(id) {
+      const r = showcase.find(x => x.id === id); if (!r) return;
+      deletingScId = id;
+      document.getElementById('scDeleteText').innerHTML = 'Delete <strong>' + esc(r.display_title) + '</strong> from the showcase catalog?';
+      document.getElementById('scDeleteModal').classList.add('active');
+    }
+    function closeScDeleteModal() { document.getElementById('scDeleteModal').classList.remove('active'); deletingScId = null; }
+    function confirmDeleteShowcase() {
+      const r = showcase.find(x => x.id === deletingScId);
+      showcase = showcase.filter(x => x.id !== deletingScId);
+      saveShowcase(showcase); closeScDeleteModal(); renderShowcase();
+      showToast((r ? r.display_title : 'Role') + ' deleted', 'success');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeShowcaseModal(); closeScDeleteModal(); } });
+    ['showcaseModal', 'scDeleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeShowcaseModal(); closeScDeleteModal(); } }));
+
     // === Initial render ===
     loadOndemandConfig();
     renderPositions();
     renderCities();
+    renderShowcase();
     renderNavCounts();
     // La sección se abre desde el hash; sin hash arranca en el catálogo de posiciones.
     const fromHash = (location.hash || '').replace('#', '');
-    if (['positions', 'cities', 'ondemand'].indexOf(fromHash) !== -1) {
+    if (['positions', 'cities', 'ondemand', 'showcase'].indexOf(fromHash) !== -1) {
       showSection(fromHash, document.querySelector('[data-section="' + fromHash + '"]'));
     }
   </script>

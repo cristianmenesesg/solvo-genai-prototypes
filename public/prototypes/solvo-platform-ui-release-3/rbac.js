@@ -262,7 +262,7 @@ function getIndustryLabel(code) {
 // `industryCode` es la clasificación contra el catálogo (null = sin clasificar).
 // La marca de exportación (lastExportedBy / lastExportedAt / exportCount) la siembra seedExportState().
 const MOCK_COMPANIES = [
-  { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', industryCode: 'technology_software', location: 'Miami, FL', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', indeedId: 'techcorp-solutions', sizeEmployees: 750, lastContactedAt: null, researchedAt: '2025-12-15', salesPitch: 'TechCorp offers customized solutions with demonstrable ROI within 6 months. Their 500+ engineering team guarantees 24/7 support and continuous updates.', pipelineStage: 'onboarding started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
+  { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', industryCode: 'technology_software', location: 'Miami, FL', city: 'Miami', state: 'Florida', country: 'United States', phone: '+1 305-555-0100', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', indeedId: 'techcorp-solutions', sizeEmployees: 750, lastContactedAt: null, researchedAt: '2025-12-15', salesPitch: 'TechCorp offers customized solutions with demonstrable ROI within 6 months. Their 500+ engineering team guarantees 24/7 support and continuous updates.', pipelineStage: 'onboarding started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
   { id: 'comp-002', name: 'GlobalHealth Inc', industry: 'Hospital & Health Care', industryCode: 'healthcare', location: 'New York, NY', website: 'https://globalhealth.com', linkedinId: 'globalhealth-inc', indeedId: 'globalhealth-inc', sizeEmployees: 1200, lastContactedAt: null, researchedAt: '2026-01-10', salesPitch: 'GlobalHealth is expanding rapidly and needs staffing solutions for their new clinics.', pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
   { id: 'comp-003', name: 'FinServe Partners', industry: 'financial services', industryCode: 'financial_services', location: 'Chicago, IL', website: 'https://finserve.com', linkedinId: 'finserve-partners', indeedId: null, sizeEmployees: 320, lastContactedAt: null, researchedAt: '2026-02-02', salesPitch: 'Mid-market advisory firm scaling its back office; open to nearshore analysts.', pipelineStage: 'engaged', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
   { id: 'comp-004', name: 'DataStream Analytics', industry: 'Computer Software', industryCode: 'technology_software', location: 'Austin, TX', website: 'https://datastream.io', linkedinId: 'datastream-analytics', indeedId: 'datastream-analytics', sizeEmployees: 85, lastContactedAt: null, researchedAt: '2026-03-18', salesPitch: 'Series A startup hiring fast with no internal recruiting team.', pipelineStage: 'lead', type: 'prospect', remoteViable: true, comercialId: null, sdrId: 'uuid-staff-006', coordinatorId: null, contactsCount: 1 },
@@ -289,7 +289,7 @@ const MOCK_COMPANIES = [
 // y `email_verification`, y los que dejó el pipeline anterior o cargó una persona, que tienen
 // esos tres campos vacíos y por eso no cuentan como decisores (ver seedContactAnalysis).
 const MOCK_CONTACTS = [
-  { id: 'ct-001', companyId: 'comp-001', fullName: 'James Wilson', position: 'Chief Executive Officer', department: 'executive', seniorityLevel: 'c_suite', email: 'j.wilson@techcorp.com', phone: '+1 305-555-0101', linkedinUrl: 'https://linkedin.com/in/jameswilson' },
+  { id: 'ct-001', companyId: 'comp-001', fullName: 'James Wilson', position: 'Chief Executive Officer', department: 'executive', seniorityLevel: 'c_suite', email: 'j.wilson@techcorp.com', phone: '+1 305-555-0101', directPhone: '+1 305-555-0100 ext 12', linkedinUrl: 'https://linkedin.com/in/jameswilson' },
   { id: 'ct-002', companyId: 'comp-001', fullName: 'Sarah Chen', position: 'VP of Sales', department: 'sales', seniorityLevel: 'vp', email: 's.chen@techcorp.com', phone: '+1 305-555-0102', linkedinUrl: 'https://linkedin.com/in/sarachen' },
   { id: 'ct-005', companyId: 'comp-002', fullName: 'Dr. Robert Kim', position: 'President & CEO', department: 'executive', seniorityLevel: 'c_suite', email: 'r.kim@globalhealth.com', phone: '+1 212-555-0201', linkedinUrl: 'https://linkedin.com/in/drrobertkim' },
   { id: 'ct-008', companyId: 'comp-003', fullName: 'Jennifer Lee', position: 'Chief Financial Officer', department: 'finance', seniorityLevel: 'c_suite', email: 'j.lee@finserve.com', phone: '+1 312-555-0302', linkedinUrl: 'https://linkedin.com/in/jenniferlee' },
@@ -995,19 +995,19 @@ function renderAssignmentSection(containerId, options) {
   // lado del nombre, no debajo, para que no parta el nombre en columnas angostas.
   function slot(label, member, type, title) {
     let origin = '';
-    if (showInheritance && member) {
-      if (type === 'inherited') {
-        origin = '<span class="assign-origin" title="Inherited from ' + (companyName || 'the company') +
-          '. Reassigning the company changes it too.">Inherited</span>';
-      } else if (type === 'direct') {
-        origin = '<span class="assign-origin is-direct" title="Set on this record; it no longer follows the company.">Direct</span>';
-      }
+    if (showInheritance && member && type === 'inherited') {
+      origin = '<span class="assign-origin" title="Inherited from ' + (companyName || 'the company') +
+        '. Reassigning the company changes it too.">Inherited</span>';
+    } else if (showInheritance && type === 'direct') {
+      origin = '<span class="assign-origin is-direct" title="' + (member
+        ? 'Set on this record; it no longer follows the company.'
+        : 'Left unassigned on this record; reassigning the company does not fill it.') + '">Direct</span>';
     }
     return '<div class="assign-slot"' + (title ? ' title="' + title + '"' : '') + '>' +
       '<dt>' + label + '</dt>' +
       '<dd>' + (member
         ? '<span class="assign-name">' + member.name + '</span>' + origin
-        : '<span class="assign-name is-unassigned">Unassigned</span>') +
+        : '<span class="assign-name is-unassigned">Unassigned</span>' + origin) +
       '</dd></div>';
   }
 
@@ -1570,18 +1570,19 @@ function deliverExport(files, from, to) {
 // contexto después. Los encabezados son contrato y van en español, como los nombra la HU.
 // Ningún archivo incluye quién exportó ni cuándo: eso vive en el listado, no en el archivo.
 
-// El motor rediseñado agrega lo que decide por cada registro —puntaje y señales de la empresa,
-// posición del catálogo y veredicto de viabilidad de la vacante—: sin eso, quien recibe el archivo
-// no ve por qué ese lead está ahí y tiene que volver a la plataforma a mirarlo.
-// Una fila por persona, que es con lo que se escribe y se llama: primero a quién, después cómo
-// alcanzarlo, después dónde trabaja y por qué vale la pena, y al final quién lo tiene asignado.
-// Las columnas de la empresa se repiten en cada fila a propósito: ordenar por industria o por
-// etapa tiene que funcionar sobre el archivo, sin cruzarlo con otro.
+// El archivo de prospectos se importa en Apollo, que es donde los SDR trabajan los contactos.
+// Las columnas 1–31 llevan los encabezados de la exportación de contactos de Apollo para que se
+// mapeen solas al importar; el contexto que produce el motor viaja al lado con sufijo _genai,
+// que Apollo toma como campos personalizados sin pisar los suyos. Una fila por persona.
 const EXPORT_COLUMNS_PROSPECTS = [
-  'Nombre', 'Cargo', 'Rol', 'Nivel de decisión', 'Correo', 'Verificación del correo', 'Teléfono', 'LinkedIn',
-  'Empresa', 'Posiciones detectadas', 'Puntaje ICP', 'Señales', 'Industria', 'Tamaño', 'Ubicación',
-  'Sitio web', 'LinkedIn de la empresa', 'Relación', 'Etapa del embudo', 'Última vez contactada',
-  'Detectado', 'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'ID de empresa'
+  'First Name', 'Last Name', 'Title', 'Company Name', 'Company Name for Emails', 'Email',
+  'Primary Email Verification Source', 'Seniority', 'Sub Departments', 'Contact Owner',
+  'Work Direct Phone', 'Mobile Phone', 'Corporate Phone', 'Do Not Call', 'Lists', 'Account Owner',
+  '# Employees', 'Industry', 'Person Linkedin Url', 'Website', 'Company Linkedin Url',
+  'Address', 'City', 'State', 'Country', 'Company Address', 'Company City', 'Company State',
+  'Company Country', 'Company Phone', 'Apollo Record Id',
+  'Email Verification_genai', 'Detected Positions_genai', 'ICP Score_genai', 'Lead Summary_genai',
+  'Pipeline Stage_genai', 'Last Contacted_genai', 'Detected_genai', 'Company ID_genai'
 ];
 
 const EXPORT_COLUMNS_VACANCIES = [
@@ -1624,52 +1625,76 @@ function assignmentCells(record) {
   };
 }
 
-// Una fila por contacto de las empresas del recorte. Una empresa a la que todavía no se le
-// encontró a nadie entrega igual su fila, con las celdas de persona vacías: si desapareciera,
-// el archivo no representaría el recorte que la persona filtró y eso se nota tarde.
-function buildProspectExportRows(companies) {
+// Etiquetas de seniority con que Apollo las muestra; un valor fuera del vocabulario sale tal cual.
+const APOLLO_SENIORITY = { owner: 'Owner', founder: 'Founder', c_suite: 'C suite', partner: 'Partner', vp: 'Vp',
+  head: 'Head', director: 'Director', manager: 'Manager', senior: 'Senior', entry: 'Entry' };
+
+// El nombre de la empresa sin su forma societaria final, como lo usa Apollo para personalizar correos.
+function companyNameForEmails(name) {
+  return String(name || '').replace(/,?\s+(inc|llc|l\.l\.c|ltd|corp|corporation|co|pllc|llp|lp|pc)\.?$/i, '').trim();
+}
+
+function withProtocol(url) {
+  if (!url) return '';
+  return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+}
+
+// Una fila por contacto de las empresas del recorte; una empresa sin contactos no aporta filas.
+// El nombre y el apellido salen de sus campos y, en un contacto que no los tiene, se parten del
+// nombre completo. `listName` es el nombre del archivo sin extensión, que Apollo usa como lista.
+function buildProspectExportRows(companies, listName) {
   const rows = [];
   companies.forEach(c => {
     const ctx = companyContextCells(c);
-    const base = Object.assign({}, assignmentCells(c), {
-      'Empresa': c.name,
-      'Posiciones detectadas': companyPositionTitles(c.id),
-      'Puntaje ICP': ctx['Puntaje ICP'],
-      'Señales': ctx['Señales'],
-      'Industria': ctx['Industria'],
-      'Tamaño': ctx['Tamaño'],
-      'Ubicación': ctx['Ubicación'],
-      'Sitio web': ctx['Sitio web'],
-      'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
-      'Relación': ctx['Relación'],
-      'Etapa del embudo': ctx['Etapa del embudo'],
-      'Última vez contactada': ctx['Última vez contactada'],
-      'ID de empresa': c.id
-    });
+    const base = {
+      'Company Name': c.name,
+      'Company Name for Emails': companyNameForEmails(c.name),
+      'Corporate Phone': c.phone || '',
+      'Lists': listName || '',
+      // La asignación es por empresa, no por contacto: Contact Owner va vacía.
+      'Contact Owner': '',
+      'Account Owner': staffEmail(c.coordinatorId),
+      '# Employees': ctx['Tamaño'],
+      'Industry': ctx['Industria'],
+      'Website': withProtocol(ctx['Sitio web']),
+      'Company Linkedin Url': ctx['LinkedIn de la empresa'],
+      'Company Address': c.address || ctx['Ubicación'] || '',
+      'Company City': c.city || '',
+      'Company State': c.state || '',
+      'Company Country': c.country || '',
+      'Company Phone': c.phone || '',
+      'Detected Positions_genai': companyPositionTitles(c.id),
+      'ICP Score_genai': ctx['Puntaje ICP'],
+      'Lead Summary_genai': c.leadSummary || '',
+      'Pipeline Stage_genai': ctx['Etapa del embudo'],
+      'Last Contacted_genai': ctx['Última vez contactada'],
+      'Company ID_genai': c.id
+    };
 
-    const contactos = getContactsForCompany(c.id);
-    if (!contactos.length) {
-      rows.push(Object.assign({}, base, { 'Detectado': csvDate(c.createdAt) }));
-      return;
-    }
-    contactos.forEach(ct => {
+    getContactsForCompany(c.id).forEach(ct => {
+      const parts = String(ct.fullName || '').trim().split(/\s+/);
+      const city = ct.city || '', state = ct.state || '', country = ct.country || '';
       rows.push(Object.assign({}, base, {
-        'Nombre': ct.fullName,
-        // El cargo es el texto crudo del perfil; el rol es la lectura del motor contra su
-        // vocabulario, y el nivel se deriva de ese rol. Un contacto anterior al análisis
-        // tiene cargo pero no rol ni nivel, y la fila lo muestra tal cual.
-        'Cargo': ct.position,
-        'Rol': ct.roleCode ? roleCodeLabel(ct.roleCode) : '',
-        'Nivel de decisión': ct.decisionLevel || '',
-        'Correo': ct.email,
-        'Verificación del correo': emailVerificationShort(ct.emailVerification),
-        'Teléfono': ct.phone,
-        'LinkedIn': ct.linkedinUrl,
-        'Detectado': csvDate(ct.createdAt)
+        'First Name': ct.firstName || parts[0] || '',
+        'Last Name': ct.lastName || parts.slice(1).join(' '),
+        'Title': ct.position,
+        'Email': ct.email,
+        'Primary Email Verification Source': ct.emailSource === 'hunter' ? 'Hunter' : (ct.emailSource === 'apollo' ? 'Apollo' : ''),
+        'Seniority': APOLLO_SENIORITY[ct.seniorityLevel] || ct.seniorityLevel || '',
+        'Sub Departments': (ct.subdepartments || []).join(', '),
+        'Work Direct Phone': ct.directPhone || '',
+        'Mobile Phone': ct.phone || '',
+        'Do Not Call': ct.doNotCall === true ? 'true' : (ct.doNotCall === false ? 'false' : ''),
+        'Person Linkedin Url': ct.linkedinUrl,
+        'Address': [city, state, country].filter(Boolean).join(', '),
+        'City': city, 'State': state, 'Country': country,
+        'Apollo Record Id': ct.idApollo || '',
+        'Email Verification_genai': emailVerificationShort(ct.emailVerification),
+        'Detected_genai': csvDate(ct.createdAt, true)
       }));
     });
   });
-  return sortForExport(rows, 'Detectado', 'Empresa');
+  return sortForExport(rows, 'Detected_genai', 'Company Name');
 }
 
 // La etiqueta corta del estado de verificación, que es lo que decide si el ciclo de envío
@@ -2186,7 +2211,7 @@ MOCK_COMPANIES.push({
 // El cargo crudo se normaliza a `role_code` y el nivel sale de la tabla de derivación:
 // nunca se escribe a mano, se calcula con la banda de tamaño de la empresa.
 MOCK_CONTACTS.push(
-  { id: 'ct-009', companyId: 'comp-003', fullName: 'Miguel Santos', position: 'Director of Operations', department: 'operations', seniorityLevel: 'director', email: 'm.santos@finserve.com', phone: null, linkedinUrl: 'https://linkedin.com/in/miguelsantos' },
+  { id: 'ct-009', companyId: 'comp-003', fullName: 'Miguel Santos', position: 'Director of Operations', department: 'operations', seniorityLevel: 'director', email: 'm.santos@finserve.com', phone: null, directPhone: '+1 312-555-0310', linkedinUrl: 'https://linkedin.com/in/miguelsantos' },
   { id: 'ct-022', companyId: 'comp-009', fullName: 'Daniel Okafor', position: 'Chief Operating Officer', department: 'operations', seniorityLevel: 'c_suite', email: 'd.okafor@cloudbridge.io', phone: '+1 415-555-0902', linkedinUrl: 'https://linkedin.com/in/danielokafor' }
 );
 
@@ -2431,7 +2456,7 @@ applyVacancySignals();
 })();
 
 // Antigüedad de la detección: horas mientras es del día, días la primera semana,
-// semanas después. Es la lectura que la card pone junto al título.
+// semanas hasta la quinta y meses después. Es la lectura que la card pone junto al título.
 // `agoPhrase` es la misma lectura en frase, para los detalles: "Detected just now" en vez
 // del "Detected now ago" que salía de concatenar la forma corta.
 function agoPhrase(prefix, value) {

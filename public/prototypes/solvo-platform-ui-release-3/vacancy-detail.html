@@ -508,7 +508,8 @@
               (ver.short ? '<span class="vd-ver vd-ver-' + ver.tone + '">' + esc(ver.short) + '</span>' : '') +
               '</a>'
             : '') +
-          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span><span class="vd-phone-type">Mobile</span></a>' : '') +
+          (p.directPhone ? '<a class="vd-dm-line" href="tel:' + esc(p.directPhone) + '">' + ICON.phone + '<span>' + esc(p.directPhone) + '</span><span class="vd-phone-type">Direct</span></a>' : '') +
           (p.linkedinUrl ? '<a class="vd-dm-line" href="' + esc(p.linkedinUrl) + '" target="_blank" rel="noopener">' + ICON.external + '<span>LinkedIn profile</span></a>' : '') +
           (p.interestSignal
             ? '<div class="vd-dm-why"><span class="vd-dm-whylabel">Why now</span>' +
@@ -540,14 +541,16 @@
             showInheritance: true,
             inheritedComercialId: company ? company.comercialId : null,
             inheritedSdrId: company ? company.sdrId : null,
+            // Lo que coincide con la empresa queda heredado y lo distinto, directo. Dejar un
+            // puesto sin asignar lo deja directo en nulo: reasignar la empresa no lo vuelve a llenar.
             onSave: function (newComercialId, newSdrId) {
               if (newComercialId !== vacData.comercialId) {
                 vacData.comercialId = newComercialId;
-                vacData.comercialType = (company && newComercialId === company.comercialId) ? 'inherited' : (newComercialId ? 'direct' : null);
+                vacData.comercialType = (company && newComercialId === company.comercialId) ? 'inherited' : 'direct';
               }
               if (newSdrId !== vacData.sdrId) {
                 vacData.sdrId = newSdrId;
-                vacData.sdrType = (company && newSdrId === company.sdrId) ? 'inherited' : (newSdrId ? 'direct' : null);
+                vacData.sdrType = (company && newSdrId === company.sdrId) ? 'inherited' : 'direct';
               }
               renderAssignment();
             }

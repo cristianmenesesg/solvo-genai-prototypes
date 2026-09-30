@@ -172,6 +172,11 @@
               <label class="form-label">Website</label>
               <input type="url" class="form-input" id="createWebsite" placeholder="https://example.com">
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Corporate phone</label>
+              <input type="tel" class="form-input" id="createPhone" placeholder="+1 (555) 123-4567">
+            </div>
           </div>
 
           <!-- Section 2: Company Details -->
@@ -764,7 +769,7 @@
     // todo lo relacionado con esas empresas, sin heredar sus filtros.
     // El archivo de prospectos es la lista de personas: una fila por contacto, con las
     // columnas de la empresa repetidas para que se pueda ordenar y filtrar sin cruzar nada.
-    // Una empresa sin contactos entrega igual su fila, con las celdas de persona vacías.
+    // Una empresa sin contactos no aporta filas: el archivo lleva solo personas.
     // El acompañante despliega las posiciones de esas empresas, una fila por aviso.
     function handleExport(companies) {
       const range = state.filters.detected && state.filters.detected.from
@@ -772,19 +777,20 @@
       const ids = new Set(companies.map(function (c) { return c.id; }));
       const relatedVacancies = MOCK_VACANCIES.filter(function (v) { return ids.has(v.companyId); });
       const relatedContacts = companies.reduce(function (acc, c) { return acc.concat(getContactsForCompany(c.id)); }, []);
-      const filas = companies.reduce(function (n, c) { return n + Math.max(1, getContactsForCompany(c.id).length); }, 0);
+      const filas = relatedContacts.length;
+      const sinContactos = companies.filter(function (c) { return getContactsForCompany(c.id).length === 0; }).length;
 
       openExportPopup({
         entityLabel: 'prospects',
         entityCount: companies.length,
         alreadyExported: countAlreadyExported(companies),
-        note: 'One row per contact: ' + filas.toLocaleString('en-US') + ' rows, ' +
-              relatedContacts.length.toLocaleString('en-US') + ' of them people found so far.',
+        note: 'One row per contact: ' + filas.toLocaleString('en-US') + ' rows.' +
+              (sinContactos ? ' ' + sinContactos.toLocaleString('en-US') + ' prospects have no contacts yet and are not included.' : ''),
         companions: [
           { key: 'positions', label: 'Include positions', count: relatedVacancies.length, note: 'every position of these companies, one row each' }
         ],
         onExport: function (selected) {
-          const files = [{ entity: 'prospectos', rows: buildProspectExportRows(companies), columns: EXPORT_COLUMNS_PROSPECTS }];
+          const files = [{ entity: 'prospectos', rows: buildProspectExportRows(companies, exportFilename('prospectos', range.from, range.to).replace(/\.csv$/, '')), columns: EXPORT_COLUMNS_PROSPECTS }];
           if (selected.indexOf('positions') !== -1) files.push({ entity: 'posiciones', rows: buildVacancyExportRows(relatedVacancies), columns: EXPORT_COLUMNS_VACANCIES });
           deliverExport(files, range.from, range.to);
           markExported(companies);
@@ -837,6 +843,8 @@
         location: city + ', ' + stateCode,
         stateCode: stateCode,
         website: document.getElementById('createWebsite').value.trim() || null,
+        phone: document.getElementById('createPhone').value.trim() || null,
+        city: city, state: stateName(stateCode), country: 'United States',
         linkedinId: null, indeedId: null, linkedinUrl: null, indeedUrl: null,
         sizeEmployees: Number(document.getElementById('createEmployees').value) || null,
         revenueUsd: Number(document.getElementById('createRevenue').value) || null,

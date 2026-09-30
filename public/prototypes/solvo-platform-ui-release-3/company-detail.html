@@ -145,6 +145,11 @@
                 </button>
               </div>
             </div>
+
+            <div class="form-group">
+              <label class="form-label">Corporate phone</label>
+              <input type="tel" class="form-input" id="editPhone" placeholder="+1 (555) 123-4567">
+            </div>
           </div>
 
           <!-- Section 2: Company Details -->
@@ -354,9 +359,16 @@
               <label class="form-label">Email</label>
               <input type="email" class="form-input" id="newContactEmail" placeholder="email@company.com">
             </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Phone</label>
+              <label class="form-label">Mobile phone</label>
               <input type="tel" class="form-input" id="newContactPhone" placeholder="+1 (555) 123-4567">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Direct phone</label>
+              <input type="tel" class="form-input" id="newContactDirectPhone" placeholder="+1 (555) 123-4567">
             </div>
           </div>
 
@@ -543,6 +555,9 @@
         specRow('Location', esc(company.location) + ' · ' + esc(stateName(company.stateCode))) +
         specRow('Website', company.website
           ? '<a href="' + esc(company.website) + '" target="_blank" rel="noopener">' + esc(String(company.website).replace(/^https?:\/\//, '')) + '</a>'
+          : '<em>Unknown</em>') +
+        specRow('Corporate phone', company.phone
+          ? '<a href="tel:' + esc(company.phone) + '" style="white-space: nowrap;">' + esc(company.phone) + '</a>'
           : '<em>Unknown</em>') +
         specRow('Detected', esc(formatDate(company.createdAt)), 'The day a sweep first found one of its postings') +
         specRow('On-demand scraping', company.lastScrapedAt
@@ -766,7 +781,8 @@
               ICON.mail + '<span>' + esc(p.email) + '</span>' +
               (ver.short ? '<span class="vd-ver vd-ver-' + ver.tone + '">' + esc(ver.short) + '</span>' : '') + '</a>'
             : '') +
-          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+          (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span><span class="vd-phone-type">Mobile</span></a>' : '') +
+          (p.directPhone ? '<a class="vd-dm-line" href="tel:' + esc(p.directPhone) + '">' + ICON.phone + '<span>' + esc(p.directPhone) + '</span><span class="vd-phone-type">Direct</span></a>' : '') +
           (p.linkedinUrl ? '<a class="vd-dm-line" href="' + esc(p.linkedinUrl) + '" target="_blank" rel="noopener">' + ICON.external + '<span>LinkedIn profile</span></a>' : '') +
           (p.interestSignal
             ? '<div class="vd-dm-why"><span class="vd-dm-whylabel">Why now</span><p class="vd-dm-signal">' + esc(p.interestSignal) + '</p></div>'
@@ -793,7 +809,8 @@
             '</div>' +
             '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
             (p.email ? '<a class="vd-dm-line" href="mailto:' + esc(p.email) + '">' + ICON.mail + '<span>' + esc(p.email) + '</span></a>' : '') +
-            (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span></a>' : '') +
+            (p.phone ? '<a class="vd-dm-line" href="tel:' + esc(p.phone) + '">' + ICON.phone + '<span>' + esc(p.phone) + '</span><span class="vd-phone-type">Mobile</span></a>' : '') +
+            (p.directPhone ? '<a class="vd-dm-line" href="tel:' + esc(p.directPhone) + '">' + ICON.phone + '<span>' + esc(p.directPhone) + '</span><span class="vd-phone-type">Direct</span></a>' : '') +
           '</article>';
         }).join('') +
       '</section>';
@@ -879,6 +896,7 @@
       setupIndustryFormField();
       document.getElementById('editName').value = company.name;
       document.getElementById('editWebsite').value = company.website || '';
+      document.getElementById('editPhone').value = company.phone || '';
       document.getElementById('editEmployees').value = company.sizeEmployees || '';
       document.getElementById('editRevenue').value = company.revenueUsd || '';
       document.getElementById('editYearFounded').value = company.yearFounded || '';
@@ -895,6 +913,7 @@
       if (!name) { showToast('The company needs a name', 'error'); return; }
       company.name = name;
       company.website = document.getElementById('editWebsite').value.trim() || null;
+      company.phone = document.getElementById('editPhone').value.trim() || null;
       company.industryCode = document.getElementById('editIndustry').value || null;
       company.sizeEmployees = Number(document.getElementById('editEmployees').value) || null;
       company.revenueUsd = Number(document.getElementById('editRevenue').value) || null;
@@ -903,6 +922,9 @@
       const stateCode = document.getElementById('editState').value;
       if (!city || !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
       company.location = city + ', ' + stateCode;
+      // Además de `location`, la empresa guarda ciudad, estado y país por separado: es lo que
+      // exporta el archivo de importación a Apollo.
+      company.city = city; company.state = stateName(stateCode); company.country = 'United States';
       company.stateCode = stateCode;
       company.type = document.getElementById('editRelationType').value;
 
@@ -1086,6 +1108,7 @@
       document.getElementById('newContactTitle').value = c.position || '';
       document.getElementById('newContactEmail').value = c.email || '';
       document.getElementById('newContactPhone').value = c.phone || '';
+      document.getElementById('newContactDirectPhone').value = c.directPhone || '';
       document.getElementById('newContactLinkedin').value = c.linkedinUrl || '';
       document.getElementById('newContactDepartment').value = c.department || '';
       document.getElementById('newContactSeniority').value = c.seniorityLevel || '';
@@ -1114,6 +1137,7 @@
         // El teléfono es lo que se tipeó. La regla de "teléfono solo para nivel 1" gobierna qué
         // revela el motor en Apollo, que es donde se gasta el crédito, no lo que carga una persona.
         phone: document.getElementById('newContactPhone').value.trim() || null,
+        directPhone: document.getElementById('newContactDirectPhone').value.trim() || null,
         linkedinUrl: document.getElementById('newContactLinkedin').value.trim() || null,
         department: document.getElementById('newContactDepartment').value.trim() || null,
         seniorityLevel: document.getElementById('newContactSeniority').value || null,
