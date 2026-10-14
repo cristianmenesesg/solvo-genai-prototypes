@@ -60,6 +60,19 @@ export const products = [
         ],
       },
       {
+        id: 'retargeting-reminders',
+        nombre: 'Retargeting reminders (email)',
+        categoria: 'Email',
+        bundle: 'email-cold-outreach-retargeting',
+        notas: 'Dos recordatorios en texto plano, como mensaje directo del VP of Sales: correo no abierto (presupuesto para sus posiciones abiertas) y visita sin reserva (los números del rol, en la llamada). Mismo tono conversacional que el cold email.',
+        versions: [
+          { label: 'Preview · no abierto', file: 'sales-retargeting-not-opened-preview.html' },
+          { label: 'Email (Brevo) · no abierto', file: 'sales-retargeting-not-opened.html' },
+          { label: 'Preview · visita sin reserva', file: 'sales-retargeting-visited-preview.html' },
+          { label: 'Email (Brevo) · visita sin reserva', file: 'sales-retargeting-visited.html' },
+        ],
+      },
+      {
         id: 'booking-confirmation',
         nombre: 'Booking confirmation (email)',
         categoria: 'Email',
