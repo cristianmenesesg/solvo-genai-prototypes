@@ -6,7 +6,8 @@
 
   Params del envío:
     {{ params.first_name }}  nombre del candidato (saludo)
-    {{ params.apply_url }}   destino del CTA — PENDIENTE DE DEFINIR
+
+  El CTA apunta fijo al sitio de empleos: https://careers.solvoglobal.com/
 
   El subject se configura en el propio template de Brevo (no viaja en el body).
 -->
@@ -98,13 +99,13 @@
                 <tr>
                   <td align="center" style="background:#ED7422;border-radius:9px;mso-padding-alt:15px 40px;">
                     <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ params.apply_url }}" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="18%" stroke="f" fillcolor="#ED7422">
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://careers.solvoglobal.com/" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="18%" stroke="f" fillcolor="#ED7422">
                       <w:anchorlock/>
                       <center style="color:#FFFFFF;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">I want to apply</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-- -->
-                    <a href="{{ params.apply_url }}" target="_blank" style="display:inline-block;padding:15px 40px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;line-height:1;color:#FFFFFF;text-decoration:none;border-radius:9px;background:#ED7422;mso-hide:all;">
+                    <a href="https://careers.solvoglobal.com/" target="_blank" style="display:inline-block;padding:15px 40px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:15px;font-weight:600;line-height:1;color:#FFFFFF;text-decoration:none;border-radius:9px;background:#ED7422;mso-hide:all;">
                       I want to apply
                     </a>
                     <!--<![endif]-->

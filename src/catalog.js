@@ -179,7 +179,7 @@ export const products = [
         nombre: 'Invitación a aplicar (email)',
         categoria: 'Email',
         bundle: 'solvo-recruiter-platform-outreach',
-        notas: 'Outreach al candidato: título, párrafo y CTA. El destino del CTA está pendiente de definir.',
+        notas: 'Outreach al candidato: título, párrafo y CTA hacia careers.solvoglobal.com.',
         versions: [
           { label: 'Preview', file: 'recruiter-outreach-invitation-preview.html' },
           { label: 'Email (Brevo)', file: 'recruiter-outreach-invitation.html' },
