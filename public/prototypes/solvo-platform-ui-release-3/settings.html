@@ -53,6 +53,23 @@
     .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
     .field-error { display: none; color: var(--color-error); font-size: 13px; margin-top: 4px; }
     .modal-row { display: flex; align-items: center; gap: 10px; }
+    .tags-input .tag-chip.is-flagged { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 12%, transparent); }
+    .modal-footer .btn:disabled,
+    .modal-footer .btn:disabled:hover { opacity: .45; cursor: not-allowed; background-color: var(--color-primary); border-color: var(--color-primary); }
+
+    /* Términos por idioma: EN se busca en USA, ES en España */
+    .st-termgroups { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); padding-left: 52px; }
+    .st-termgroup { display: flex; align-items: flex-start; gap: var(--space-2); }
+    .st-termgroup .st-terms { margin-top: 0; padding-left: 0; }
+    .st-termlang { flex: 0 0 22px; font-size: 10px; font-weight: var(--font-semibold); letter-spacing: .04em;
+      line-height: 20px; color: var(--text-muted); }
+    .st-termnone { font-size: var(--text-xs); line-height: 20px; color: var(--text-muted); }
+
+    /* Ciudades: país + estado, y estado fuera de la programación del barrido */
+    .st-noday { font-size: var(--text-xs); color: var(--text-muted); font-style: italic; }
+    .st-toolbar.st-toolbar-row1 { margin-bottom: var(--space-2); }
+    .st-toolbar #cityCountry { max-width: 150px; }
+    @media (max-width: 860px) { .st-termgroups { padding-left: 0; } }
 
     /* ── Search Cities ── */
     .city-cap { display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13px; color: var(--text-secondary); }
@@ -205,7 +222,7 @@
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Search positions</h3>
-                  <p class="st-sectionsub">What the engine searches for every day. A position is searched with all of its terms; pausing it stops all of them at once.</p>
+                  <p class="st-sectionsub">What the engine searches for every day. English terms are searched in the USA and Spanish terms in Spain; pausing a position stops all of its terms at once.</p>
                 </div>
                 <button class="op-btn-apply" onclick="openPositionModal()">New position</button>
               </div>
@@ -217,7 +234,6 @@
                   <button type="button" data-posfilter="active" onclick="setPosFilter('active', this)">Active</button>
                   <button type="button" data-posfilter="inactive" onclick="setPosFilter('inactive', this)">Paused</button>
                 </div>
-                <button class="op-clearall st-reset" onclick="resetPositions()">Restore the seeded catalog</button>
               </div>
 
               <p class="st-count" id="posSummary"></p>
@@ -236,13 +252,18 @@
                 <button class="op-btn-apply" onclick="openCityModal()">New city</button>
               </div>
 
-              <div class="st-toolbar">
+              <div class="st-toolbar st-toolbar-row1">
                 <input type="search" class="op-states-search st-search" id="citySearch" placeholder="Search city or state" oninput="renderCities()">
+                <select class="form-select" id="cityCountry" onchange="renderCities()">
+                  <option value="US" selected>United States</option><option value="ES">Spain</option>
+                </select>
                 <select class="form-select" id="cityState" onchange="renderCities()"><option value="all">All states</option></select>
                 <select class="form-select" id="cityDay" onchange="renderCities()">
                   <option value="all">All days</option>
                   <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>
                 </select>
+              </div>
+              <div class="st-toolbar">
                 <div class="kp-window" role="group" aria-label="Status">
                   <button type="button" class="is-on" data-cityfilter="all" onclick="setCityFilter('all', this)">All</button>
                   <button type="button" data-cityfilter="active" onclick="setCityFilter('active', this)">Active</button>
@@ -251,7 +272,6 @@
                 <label class="st-capinline" for="cityCap">Per state, per day
                   <input type="number" class="op-states-search" id="cityCap" min="1" onchange="saveCityCap()">
                 </label>
-                <button class="op-clearall st-reset" onclick="resetCities()">Restore the seeded grid</button>
               </div>
 
               <p class="st-count" id="citySummary"></p>
@@ -304,16 +324,24 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">Position name</label>
-          <input type="text" class="form-input" id="posNameInput" placeholder="e.g. Accounting & Finance" maxlength="80">
+          <input type="text" class="form-input" id="posNameInput" placeholder="e.g. Accounting & Finance" maxlength="80" oninput="updatePosSaveState()">
           <div class="field-error" id="posNameError"></div>
         </div>
         <div class="form-group" style="margin-top: 14px;">
-          <label class="form-label">Search terms</label>
-          <div class="tags-input" id="termsEditor" onclick="document.getElementById('termInput').focus()">
-            <input type="text" id="termInput" placeholder="Type a term and press Enter…" autocomplete="off">
+          <label class="form-label">Search terms (EN)</label>
+          <div class="tags-input" id="termsEditorEn" data-lang="en" onclick="document.getElementById('termInputEn').focus()">
+            <input type="text" id="termInputEn" data-lang="en" placeholder="Type a term and press Enter…" autocomplete="off">
           </div>
-          <div class="field-hint">Enter or comma adds a term; × removes it. All terms of an active position are searched.</div>
-          <div class="field-error" id="posTermsError"></div>
+          <div class="field-hint">Enter or comma adds a term; × removes it. English terms are searched in the USA.</div>
+          <div class="field-error" id="posTermsErrorEn"></div>
+        </div>
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label">Search terms (ES)</label>
+          <div class="tags-input" id="termsEditorEs" data-lang="es" onclick="document.getElementById('termInputEs').focus()">
+            <input type="text" id="termInputEs" data-lang="es" placeholder="Type a term and press Enter…" autocomplete="off">
+          </div>
+          <div class="field-hint">Enter or comma adds a term; × removes it. Spanish terms are searched in Spain.</div>
+          <div class="field-error" id="posTermsErrorEs"></div>
         </div>
         <div class="form-group modal-row" style="margin-top: 14px;">
           <label class="toggle-switch"><input type="checkbox" id="posActiveInput" checked><span class="toggle-slider"></span></label>
@@ -338,13 +366,20 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">State</label>
+          <label class="form-label" for="cityCountryInput">Country</label>
+          <select class="form-select" id="cityCountryInput" onchange="onCityCountryChange()">
+            <option value="">Select a country</option>
+            <option value="US">United States</option><option value="ES">Spain</option>
+          </select>
+        </div>
+        <div class="form-group" id="cityStateGroup" style="margin-top: 14px;">
+          <label class="form-label" for="cityStateInput">State</label>
           <select class="form-select" id="cityStateInput" onchange="suggestPriority()"></select>
           <div class="field-hint" id="cityDayHint"></div>
         </div>
         <div class="form-group" style="margin-top: 14px;">
-          <label class="form-label">City</label>
-          <input type="text" class="form-input" id="cityNameInput" placeholder="e.g. Dallas" maxlength="60">
+          <label class="form-label" for="cityNameInput">City</label>
+          <input type="text" class="form-input" id="cityNameInput" placeholder="e.g. Dallas" maxlength="60" oninput="updateCitySaveState()">
           <div class="field-hint">Stored on its own; the sweep sends it as "City, ST".</div>
           <div class="field-error" id="cityNameError"></div>
         </div>
@@ -362,7 +397,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeCityModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveCity()">Save</button>
+        <button class="btn btn-primary" onclick="saveCity()" id="citySaveBtn">Save</button>
       </div>
     </div>
   </div>
@@ -519,20 +554,23 @@
     /* ------------------------------------------------------------------------
        Settings — Configuración Global (solo Administrador; requireAdmin()).
        Secciones por hash: #positions · #cities · #ondemand.
-       · Search positions — public.positions_catalog (FSPL-1). Lista, filtro por
-         estado, búsqueda por nombre o término, activar / pausar (PATCH
-         /api/v1/settings/positions/{id}), alta y edición con editor de términos
-         (POST / PUT), baja (DELETE). Un término que ya pertenece a otra posición se rechaza
-         como lo hace la API (HTTP 409), porque la base no puede imponer esa unicidad.
-         Estado en localStorage `positionsCatalog` a partir de POSITIONS_CATALOG (rbac.js);
-         "Restore the seeded catalog" es solo del prototipo.
-       · Search cities — public.us_cities + día de barrido (FSPL-2). Filtros por
-         texto, estado, día y estado activo; tope por estado y día (PUT
-         /api/v1/settings/cities/cap → configuración global, clave sugerida
-         sweep_cities_per_state); rank y "past the cap" salen de rankMap();
+       · Search positions — public.positions_catalog. Lista, filtro por estado,
+         búsqueda por nombre o término en los dos idiomas, activar / pausar (PATCH
+         /api/v1/settings/positions/{id}), alta y edición con un editor de términos por
+         idioma — `search_terms` (EN, se buscan en USA) y `search_terms_es` (ES, en
+         España) — (POST / PUT), baja (DELETE). Un término que ya pertenece a otra
+         posición en el mismo idioma se rechaza como lo hace la API (HTTP 409), porque la
+         base no puede imponer esa unicidad.
+         Estado en localStorage `positionsCatalog` a partir de POSITIONS_CATALOG (rbac.js)
+         y POSITIONS_ES.
+       · Search cities — public.us_cities + día de barrido. Ciudades de USA o de España
+         según el filtro de país (`country_code`, arranca en US); las de España no tienen
+         estado ni día. Conteos y riel sobre el país del filtro. Filtros por texto, país,
+         estado, día y estado activo; tope por estado y día (PUT
+         /api/v1/settings/cities/per-state-cap → configuración global), que aplica a la
+         grilla por estado; rank y "past the cap" salen de rankMap();
          alta / edición / baja (POST / PUT / PATCH / DELETE /api/v1/settings/cities).
-         Estado en localStorage `citiesGrid` y `citiesCap`; "Restore the seeded
-         grid" es solo del prototipo.
+         Estado en localStorage `citiesGrid` y `citiesCap`.
          El día de barrido lo define el estado en us_state_schedule.weekday, no la ciudad;
          `public.us_states` no tiene esa columna.
        · Scraping window — ventana on-demand (getOdConfig / setOdConfig,
@@ -560,8 +598,10 @@
     function renderNavCounts() {
       document.getElementById('navCountPositions').textContent =
         positions.filter(p => p.active).length + ' / ' + positions.length;
+      // Las ciudades se cuentan sobre el país del filtro de la sección.
+      const inCountry = cities.filter(c => c.country === cityCountry());
       document.getElementById('navCountCities').textContent =
-        cities.filter(c => c.active).length + ' / ' + cities.length;
+        inCountry.filter(c => c.active).length + ' / ' + inCountry.length;
       if (typeof showcase !== 'undefined') document.getElementById('navCountShowcase').textContent =
         showcase.filter(r => r.showcase).length + ' / ' + getScLimit();
     }
@@ -592,25 +632,33 @@
 
     // === Section: Search Positions ===
     // El catálogo vive en rbac.js, cargado del seed de FPEA-0: 21 posiciones con sus
-    // 54 términos. La página lo refleja en vez de llevar su propia copia.
+    // 54 términos en inglés (`search_terms`). Los términos en español (`search_terms_es`)
+    // salen del seed de HUPES-1.1 (prospect-engine-espana-mvp/seed-search-terms-es.json),
+    // cruzados por nombre: 54 términos. Los de inglés se buscan en USA y los de español en
+    // España; una posición sin términos en español no se busca en España.
+    const POSITIONS_ES = {"Accounting & Finance": ["administrativo contable", "técnico de cuentas a pagar", "técnico de cuentas a cobrar", "contable", "técnico contable"], "Administrative & Executive Assistant": ["asistente de dirección"], "Construction Estimating & Support": ["técnico de presupuestos"], "Customer Service & Intake": ["atención al cliente bilingüe", "gestor de cobros", "atención al cliente", "administrativo de admisión"], "Data & Analytics": ["analista de datos"], "Data Entry & Back Office": ["grabador de datos"], "E-commerce Support": ["atención al cliente ecommerce", "administrativo de pedidos"], "Engineering & Technical Design": ["delineante"], "HR & Recruiting": ["técnico de recursos humanos", "técnico de nóminas", "técnico de selección", "coordinador de selección"], "Healthcare Administrative Support": ["coordinador de citas", "coordinador de personal"], "IT Support": ["técnico helpdesk", "técnico de soporte informático"], "Inside Sales & Business Development": ["concertador de citas", "comercial de desarrollo de negocio", "comercial telefónico", "teleprospector"], "Insurance & Benefits Operations": ["tramitador de siniestros", "gestor de cuentas de seguros", "atención al cliente seguros", "tramitador de pólizas"], "Legal Support": ["asistente legal", "atención al cliente legal", "administrativo de historias clínicas", "paralegal"], "Logistics & Supply Chain Support": ["comercial de transporte", "técnico de tráfico", "administrativo de facturación de transporte", "coordinador de logística"], "Marketing & Content": ["redactor de contenidos", "coordinador de marketing", "community manager"], "Medical Billing & RCM": ["facturación médica", "codificador clínico", "tramitador de autorizaciones médicas", "técnico de ciclo de ingresos"], "Mortgage Processing": ["tramitador de préstamos", "tramitador de hipotecas"], "Project Management & PMO": ["coordinador de proyectos"], "Property Management Coordination": ["coordinador de alquileres", "administrativo de fincas"], "Software Development": ["desarrollador .net", "ingeniero qa"]};
     const POSITIONS_SEED = POSITIONS_CATALOG.map(function (p) {
-      return { id: p.id, name: p.name, active: p.isActive, terms: p.terms.slice() };
+      return { id: p.id, name: p.name, active: p.isActive, terms: p.terms.slice(), termsEs: (POSITIONS_ES[p.name] || []).slice() };
     });
     const POS_KEY = 'positionsCatalog';
 
     function loadPositions() {
-      try { const s = JSON.parse(localStorage.getItem(POS_KEY)); if (Array.isArray(s) && s.length) return s; } catch (e) {}
+      try {
+        const s = JSON.parse(localStorage.getItem(POS_KEY));
+        if (Array.isArray(s) && s.length) {
+          // Un catálogo guardado antes de los términos en español los recibe del seed.
+          s.forEach(function (p) { if (!Array.isArray(p.termsEs)) p.termsEs = (POSITIONS_ES[p.name] || []).slice(); });
+          return s;
+        }
+      } catch (e) {}
       return JSON.parse(JSON.stringify(POSITIONS_SEED));
     }
-    function savePositions(list) { localStorage.setItem(POS_KEY, JSON.stringify(list)); }
+    function savePositions(list) { try { localStorage.setItem(POS_KEY, JSON.stringify(list)); } catch (e) {} }
     let positions = loadPositions();
 
-    function resetPositions() {
-      positions = JSON.parse(JSON.stringify(POSITIONS_SEED));
-      savePositions(positions); renderPositions();
-      showToast('Catalog restored to seed', 'success');
-    }
     const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    // Las búsquedas no distinguen mayúsculas ni acentos, como el parámetro `q` de la API.
+    const fold = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
     // Los dos catálogos paginan igual que los listados de la plataforma.
     const PAGE_SIZE = 12;
@@ -642,13 +690,15 @@
       });
     }
 
+    // Conteos del catálogo completo: los de términos van por idioma, y "searched" son los
+    // de las posiciones activas.
     function renderSummary(shown) {
-      const total = positions.reduce((n, p) => n + p.terms.length, 0);
-      const running = positions.reduce((n, p) => n + (p.active ? p.terms.length : 0), 0);
+      const sum = (key, onlyActive) => positions.reduce((n, p) => n + (!onlyActive || p.active ? p[key].length : 0), 0);
       const activePos = positions.filter(p => p.active).length;
       document.getElementById('posSummary').textContent =
         shown + ' of ' + positions.length + ' positions · ' + activePos + ' active · ' +
-        running + ' of ' + total + ' terms searched';
+        sum('terms', true) + ' of ' + sum('terms') + ' EN terms · ' +
+        sum('termsEs', true) + ' of ' + sum('termsEs') + ' ES terms searched';
     }
 
     let posFilter = 'all', posPage = 1;
@@ -659,46 +709,62 @@
       btn.classList.add('is-on');
       renderPositions();
     }
+    function clearPosFilters() {
+      document.getElementById('posSearch').value = '';
+      setPosFilter('all', document.querySelector('[data-posfilter="all"]'));
+    }
 
     function goPosPage(n) { posPage = n; renderPositions(true); }
+
+    function termGroup(label, terms, emptyText) {
+      return '<div class="st-termgroup"><span class="st-termlang">' + label + '</span>' +
+        (terms.length
+          ? '<div class="st-terms">' + terms.map(t => '<span class="st-term">' + esc(t) + '</span>').join('') + '</div>'
+          : '<span class="st-termnone">' + emptyText + '</span>') +
+        '</div>';
+    }
 
     function renderPositions(keepPage) {
       if (!keepPage) posPage = 1;
       renderNavCounts();
-      const q = document.getElementById('posSearch').value.trim().toLowerCase();
+      const q = fold(document.getElementById('posSearch').value.trim());
       const list = document.getElementById('posList');
       const rows = positions.filter(p => {
         if (posFilter === 'active' && !p.active) return false;
         if (posFilter === 'inactive' && p.active) return false;
         if (!q) return true;
-        return p.name.toLowerCase().includes(q) || p.terms.some(t => t.includes(q));
+        return fold(p.name).includes(q) || p.terms.concat(p.termsEs).some(t => fold(t).includes(q));
       });
       renderSummary(rows.length);
       if (!rows.length) {
-        list.innerHTML = '<div class="op-empty"><h3>' +
-          (positions.length ? 'No position matches' : 'No positions yet') + '</h3><p>' +
-          (positions.length ? 'Try another name or term.' : 'Create the first one to start searching.') + '</p></div>';
+        list.innerHTML = positions.length
+          ? '<div class="op-empty"><h3>No position matches</h3><p>No position matches the search or the status.</p>' +
+            '<button class="op-actionbtn" onclick="clearPosFilters()">Clear filters</button></div>'
+          : '<div class="op-empty"><h3>No positions yet</h3><p>The engine is not searching any position.</p>' +
+            '<button class="op-btn-apply" onclick="openPositionModal()">New position</button></div>';
         document.getElementById('posPagination').innerHTML = '';
         return;
       }
       const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
       if (posPage > pages) posPage = pages;
       list.innerHTML = rows.slice((posPage - 1) * PAGE_SIZE, posPage * PAGE_SIZE).map(p => {
-        const chips = p.terms.map(t => '<span class="st-term">' + esc(t) + '</span>').join('');
         return '<article class="st-row' + (p.active ? '' : ' is-off') + '" data-id="' + p.id + '">' +
           '<div class="st-rowhead">' +
             '<label class="toggle-switch" title="' + (p.active ? 'Searched every day' : 'Paused') + '">' +
               '<input type="checkbox" ' + (p.active ? 'checked' : '') + ' onchange="togglePosition(\'' + p.id + '\', this.checked)">' +
               '<span class="toggle-slider"></span></label>' +
             '<span class="st-rowname">' + esc(p.name) + '</span>' +
-            '<span class="st-rowmeta">' + p.terms.length + ' term' + (p.terms.length === 1 ? '' : 's') + '</span>' +
+            '<span class="st-rowmeta">' + p.terms.length + ' EN · ' + p.termsEs.length + ' ES terms</span>' +
             '<div class="st-rowactions">' +
               '<button class="op-actionbtn" onclick="openPositionModal(\'' + p.id + '\')">Edit</button>' +
               '<button class="cd-iconbtn" title="Delete position" onclick="openDeleteModal(\'' + p.id + '\')">' +
                 '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>' +
             '</div>' +
           '</div>' +
-          '<div class="st-terms">' + (chips || '<span class="st-rowmeta">No terms</span>') + '</div>' +
+          '<div class="st-termgroups">' +
+            termGroup('EN', p.terms, 'No terms') +
+            termGroup('ES', p.termsEs, 'No terms · not searched in Spain') +
+          '</div>' +
         '</article>';
       }).join('');
       renderPager('posPagination', rows.length, posPage, goPosPage);
@@ -711,7 +777,14 @@
     }
 
     // --- modal create / edit ---
-    let editingId = null, draftTerms = [];
+    // Dos campos de etiquetas, uno por idioma. La unicidad de un término cruza el catálogo
+    // dentro de su idioma; un repetido dentro del mismo campo no se agrega.
+    let editingId = null;
+    const draft = { en: [], es: [] };
+    const LANG = {
+      en: { key: 'terms', editor: 'termsEditorEn', input: 'termInputEn', error: 'posTermsErrorEn' },
+      es: { key: 'termsEs', editor: 'termsEditorEs', input: 'termInputEs', error: 'posTermsErrorEs' }
+    };
     const norm = s => s.trim().toLowerCase().replace(/\s+/g, ' ');
 
     function openPositionModal(id) {
@@ -720,67 +793,93 @@
       document.getElementById('positionModalTitle').textContent = p ? 'Edit position' : 'New position';
       document.getElementById('posNameInput').value = p ? p.name : '';
       document.getElementById('posActiveInput').checked = p ? p.active : true;
-      draftTerms = p ? p.terms.slice() : [];
-      ['posNameError', 'posTermsError'].forEach(i => document.getElementById(i).style.display = 'none');
-      renderDraftTerms();
+      draft.en = p ? p.terms.slice() : [];
+      draft.es = p ? p.termsEs.slice() : [];
+      ['posNameError', 'posTermsErrorEn', 'posTermsErrorEs'].forEach(i => document.getElementById(i).style.display = 'none');
+      ['en', 'es'].forEach(l => { document.getElementById(LANG[l].input).value = ''; renderDraftTerms(l); });
       document.getElementById('positionModal').classList.add('active');
-      setTimeout(() => document.getElementById(p ? 'termInput' : 'posNameInput').focus(), 50);
+      setTimeout(() => document.getElementById(p ? 'termInputEn' : 'posNameInput').focus(), 50);
     }
     function closePositionModal() { document.getElementById('positionModal').classList.remove('active'); }
 
-    function renderDraftTerms() {
-      const editor = document.getElementById('termsEditor');
-      const input = document.getElementById('termInput');
+    // Save queda deshabilitado sin nombre o sin al menos un término en inglés; el español es
+    // opcional. Lo escrito y no confirmado cuenta, porque al salir del campo se agrega.
+    function updatePosSaveState() {
+      const name = document.getElementById('posNameInput').value.trim();
+      const hasEn = draft.en.length > 0 || !!norm(document.getElementById('termInputEn').value);
+      document.getElementById('posSaveBtn').disabled = !(name && hasEn);
+    }
+
+    function renderDraftTerms(lang, flagged) {
+      const cfg = LANG[lang];
+      const editor = document.getElementById(cfg.editor);
+      const input = document.getElementById(cfg.input);
       editor.querySelectorAll('.tag-chip').forEach(c => c.remove());
-      draftTerms.forEach((t, i) => {
+      draft[lang].forEach((t, i) => {
         const chip = document.createElement('span');
-        chip.className = 'tag-chip';
+        chip.className = 'tag-chip' + (t === flagged ? ' is-flagged' : '');
         chip.innerHTML = `${esc(t)}<span class="tag-chip-remove" title="Remove">×</span>`;
-        chip.querySelector('.tag-chip-remove').onclick = e => { e.stopPropagation(); draftTerms.splice(i, 1); renderDraftTerms(); };
+        chip.querySelector('.tag-chip-remove').onclick = e => {
+          e.stopPropagation(); draft[lang].splice(i, 1);
+          document.getElementById(cfg.error).style.display = 'none';
+          renderDraftTerms(lang);
+        };
         editor.insertBefore(chip, input);
       });
+      updatePosSaveState();
     }
-    function addDraftTerm(raw) {
+    function addDraftTerm(lang, raw) {
       const text = norm(raw);
       if (!text) return;
-      if (draftTerms.includes(text)) { showToast(`"${text}" is already in the list`, 'error'); return; }
-      draftTerms.push(text);
-      renderDraftTerms();
-      document.getElementById('posTermsError').style.display = 'none';
-    }
-    document.getElementById('termInput').addEventListener('keydown', e => {
-      const input = e.target;
-      if (e.key === 'Enter' || e.key === ',') {
-        e.preventDefault(); addDraftTerm(input.value); input.value = '';
-      } else if (e.key === 'Backspace' && !input.value && draftTerms.length) {
-        draftTerms.pop(); renderDraftTerms();
+      if (draft[lang].includes(text)) {
+        showFieldError(LANG[lang].error, `“${text}” is already in this list.`);
+        renderDraftTerms(lang, text);
+        return;
       }
+      draft[lang].push(text);
+      document.getElementById(LANG[lang].error).style.display = 'none';
+      renderDraftTerms(lang);
+    }
+    ['en', 'es'].forEach(function (lang) {
+      const input = document.getElementById(LANG[lang].input);
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault(); addDraftTerm(lang, input.value); input.value = '';
+        } else if (e.key === 'Backspace' && !input.value && draft[lang].length) {
+          draft[lang].pop(); renderDraftTerms(lang);
+        }
+      });
+      input.addEventListener('input', updatePosSaveState);
+      input.addEventListener('blur', () => { if (input.value.trim()) { addDraftTerm(lang, input.value); input.value = ''; } });
     });
-    document.getElementById('termInput').addEventListener('blur', e => { if (e.target.value.trim()) { addDraftTerm(e.target.value); e.target.value = ''; } });
 
     function savePosition() {
       const name = document.getElementById('posNameInput').value.trim();
       const active = document.getElementById('posActiveInput').checked;
       let ok = true;
-      ['posNameError', 'posTermsError'].forEach(i => document.getElementById(i).style.display = 'none');
-      if (!name) { showFieldError('posNameError', 'Position name is required.'); ok = false; }
-      else if (positions.some(p => p.id !== editingId && p.name.toLowerCase() === name.toLowerCase())) { showFieldError('posNameError', 'A position with this name already exists.'); ok = false; }
-      if (!draftTerms.length) { showFieldError('posTermsError', 'Add at least one search term.'); ok = false; }
-      // Un término vive en una sola posición: con dos dueños, la vacante que encuentra no sabría
-      // a cuál asociarse. La base no puede imponerlo —`search_terms` es un arreglo—, así que lo
-      // valida la API con HTTP 409 y acá se reproduce el mismo rechazo.
-      const clash = draftTerms.map(function (t) {
-        const owner = positions.find(function (p) { return p.id !== editingId && p.terms.indexOf(t) !== -1; });
-        return owner ? { term: t, position: owner.name } : null;
-      }).filter(Boolean)[0];
-      if (clash) { showFieldError('posTermsError', `“${clash.term}” already belongs to ${clash.position}.`); ok = false; }
+      ['posNameError', 'posTermsErrorEn', 'posTermsErrorEs'].forEach(i => document.getElementById(i).style.display = 'none');
+      if (!name || !draft.en.length) return;
+      const sameName = positions.find(p => p.id !== editingId && p.name.toLowerCase() === name.toLowerCase());
+      if (sameName) { showFieldError('posNameError', `“${sameName.name}” already exists.`); ok = false; }
+      // Un término vive en una sola posición dentro de su idioma: con dos dueños, la vacante
+      // que encuentra no sabría a cuál asociarse. La base no puede imponerlo —los términos son
+      // arreglos—, así que lo valida la API con HTTP 409 y acá se reproduce el mismo rechazo.
+      ['en', 'es'].forEach(function (lang) {
+        const key = LANG[lang].key;
+        const clash = draft[lang].map(function (t) {
+          const owner = positions.find(function (p) { return p.id !== editingId && p[key].indexOf(t) !== -1; });
+          return owner ? { term: t, position: owner.name } : null;
+        }).filter(Boolean)[0];
+        renderDraftTerms(lang, clash ? clash.term : null);
+        if (clash) { showFieldError(LANG[lang].error, `“${clash.term}” already belongs to ${clash.position}.`); ok = false; }
+      });
       if (!ok) return;
       if (editingId) {
         const p = positions.find(x => x.id === editingId);
-        p.name = name; p.active = active; p.terms = draftTerms;
+        p.name = name; p.active = active; p.terms = draft.en.slice(); p.termsEs = draft.es.slice();
         showToast('Position updated', 'success');
       } else {
-        positions.push({ id: 'pos-' + Date.now().toString(36), name, active, terms: draftTerms });
+        positions.push({ id: 'pos-' + Date.now().toString(36), name, active, terms: draft.en.slice(), termsEs: draft.es.slice() });
         showToast('Position created', 'success');
       }
       savePositions(positions); closePositionModal(); renderPositions();
@@ -791,7 +890,8 @@
     function openDeleteModal(id) {
       const p = positions.find(x => x.id === id); if (!p) return;
       deletingId = id;
-      document.getElementById('deleteText').innerHTML = `Delete <strong>${esc(p.name)}</strong> and its ${p.terms.length} search term${p.terms.length === 1 ? '' : 's'}?`;
+      const n = p.terms.length + p.termsEs.length;
+      document.getElementById('deleteText').innerHTML = `Delete <strong>${esc(p.name)}</strong> and its ${p.terms.length} English and ${p.termsEs.length} Spanish search term${n === 1 ? '' : 's'}?`;
       document.getElementById('deleteModal').classList.add('active');
     }
     function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('active'); deletingId = null; }
@@ -809,55 +909,81 @@
 
 
     // === Section: Search Cities ===
-        // La grilla vive en seed-us-cities.csv de FPEA-0: 50 ciudades activas, una por estado, el
+    // La grilla vive en seed-us-cities.csv de FPEA-0: 50 ciudades activas, una por estado, el
     // área metropolitana principal de cada uno. El día de barrido no es de la ciudad: lo define
     // el estado, en `scrapping_vacantes_potenciales.us_state_schedule.weekday` (1-5). Acá viaja
     // junto al estado por comodidad del prototipo; en la plataforma el endpoint lo resuelve con
     // un join por `state_code`.
     const CITIES_SEED = {"states":[{"code":"AK","name":"Alaska","weekday":5},{"code":"AL","name":"Alabama","weekday":3},{"code":"AR","name":"Arkansas","weekday":4},{"code":"AZ","name":"Arizona","weekday":2},{"code":"CA","name":"California","weekday":1},{"code":"CO","name":"Colorado","weekday":3},{"code":"CT","name":"Connecticut","weekday":3},{"code":"DE","name":"Delaware","weekday":5},{"code":"FL","name":"Florida","weekday":1},{"code":"GA","name":"Georgia","weekday":1},{"code":"HI","name":"Hawaii","weekday":4},{"code":"IA","name":"Iowa","weekday":4},{"code":"ID","name":"Idaho","weekday":4},{"code":"IL","name":"Illinois","weekday":1},{"code":"IN","name":"Indiana","weekday":2},{"code":"KS","name":"Kansas","weekday":4},{"code":"KY","name":"Kentucky","weekday":3},{"code":"LA","name":"Louisiana","weekday":3},{"code":"MA","name":"Massachusetts","weekday":2},{"code":"MD","name":"Maryland","weekday":2},{"code":"ME","name":"Maine","weekday":5},{"code":"MI","name":"Michigan","weekday":1},{"code":"MN","name":"Minnesota","weekday":3},{"code":"MO","name":"Missouri","weekday":2},{"code":"MS","name":"Mississippi","weekday":4},{"code":"MT","name":"Montana","weekday":5},{"code":"NC","name":"North Carolina","weekday":1},{"code":"ND","name":"North Dakota","weekday":5},{"code":"NE","name":"Nebraska","weekday":4},{"code":"NH","name":"New Hampshire","weekday":5},{"code":"NJ","name":"New Jersey","weekday":2},{"code":"NM","name":"New Mexico","weekday":4},{"code":"NV","name":"Nevada","weekday":4},{"code":"NY","name":"New York","weekday":1},{"code":"OH","name":"Ohio","weekday":1},{"code":"OK","name":"Oklahoma","weekday":3},{"code":"OR","name":"Oregon","weekday":3},{"code":"PA","name":"Pennsylvania","weekday":1},{"code":"RI","name":"Rhode Island","weekday":5},{"code":"SC","name":"South Carolina","weekday":3},{"code":"SD","name":"South Dakota","weekday":5},{"code":"TN","name":"Tennessee","weekday":2},{"code":"TX","name":"Texas","weekday":1},{"code":"UT","name":"Utah","weekday":3},{"code":"VA","name":"Virginia","weekday":2},{"code":"VT","name":"Vermont","weekday":5},{"code":"WA","name":"Washington","weekday":2},{"code":"WI","name":"Wisconsin","weekday":2},{"code":"WV","name":"West Virginia","weekday":4},{"code":"WY","name":"Wyoming","weekday":5}],"cities":[{"id":"city-anchorage-ak","name":"Anchorage","state":"AK","priority":1,"active":true},{"id":"city-birmingham-al","name":"Birmingham","state":"AL","priority":1,"active":true},{"id":"city-little-rock-ar","name":"Little Rock","state":"AR","priority":1,"active":true},{"id":"city-phoenix-az","name":"Phoenix","state":"AZ","priority":1,"active":true},{"id":"city-los-angeles-ca","name":"Los Angeles","state":"CA","priority":1,"active":true},{"id":"city-denver-co","name":"Denver","state":"CO","priority":1,"active":true},{"id":"city-bridgeport-ct","name":"Bridgeport","state":"CT","priority":1,"active":true},{"id":"city-wilmington-de","name":"Wilmington","state":"DE","priority":1,"active":true},{"id":"city-miami-fl","name":"Miami","state":"FL","priority":1,"active":true},{"id":"city-atlanta-ga","name":"Atlanta","state":"GA","priority":1,"active":true},{"id":"city-honolulu-hi","name":"Honolulu","state":"HI","priority":1,"active":true},{"id":"city-des-moines-ia","name":"Des Moines","state":"IA","priority":1,"active":true},{"id":"city-boise-id","name":"Boise","state":"ID","priority":1,"active":true},{"id":"city-chicago-il","name":"Chicago","state":"IL","priority":1,"active":true},{"id":"city-indianapolis-in","name":"Indianapolis","state":"IN","priority":1,"active":true},{"id":"city-wichita-ks","name":"Wichita","state":"KS","priority":1,"active":true},{"id":"city-louisville-ky","name":"Louisville","state":"KY","priority":1,"active":true},{"id":"city-new-orleans-la","name":"New Orleans","state":"LA","priority":1,"active":true},{"id":"city-boston-ma","name":"Boston","state":"MA","priority":1,"active":true},{"id":"city-baltimore-md","name":"Baltimore","state":"MD","priority":1,"active":true},{"id":"city-portland-me","name":"Portland","state":"ME","priority":1,"active":true},{"id":"city-detroit-mi","name":"Detroit","state":"MI","priority":1,"active":true},{"id":"city-minneapolis-mn","name":"Minneapolis","state":"MN","priority":1,"active":true},{"id":"city-kansas-city-mo","name":"Kansas City","state":"MO","priority":1,"active":true},{"id":"city-jackson-ms","name":"Jackson","state":"MS","priority":1,"active":true},{"id":"city-billings-mt","name":"Billings","state":"MT","priority":1,"active":true},{"id":"city-charlotte-nc","name":"Charlotte","state":"NC","priority":1,"active":true},{"id":"city-fargo-nd","name":"Fargo","state":"ND","priority":1,"active":true},{"id":"city-omaha-ne","name":"Omaha","state":"NE","priority":1,"active":true},{"id":"city-manchester-nh","name":"Manchester","state":"NH","priority":1,"active":true},{"id":"city-newark-nj","name":"Newark","state":"NJ","priority":1,"active":true},{"id":"city-albuquerque-nm","name":"Albuquerque","state":"NM","priority":1,"active":true},{"id":"city-las-vegas-nv","name":"Las Vegas","state":"NV","priority":1,"active":true},{"id":"city-new-york-ny","name":"New York","state":"NY","priority":1,"active":true},{"id":"city-columbus-oh","name":"Columbus","state":"OH","priority":1,"active":true},{"id":"city-oklahoma-city-ok","name":"Oklahoma City","state":"OK","priority":1,"active":true},{"id":"city-portland-or","name":"Portland","state":"OR","priority":1,"active":true},{"id":"city-philadelphia-pa","name":"Philadelphia","state":"PA","priority":1,"active":true},{"id":"city-providence-ri","name":"Providence","state":"RI","priority":1,"active":true},{"id":"city-charleston-sc","name":"Charleston","state":"SC","priority":1,"active":true},{"id":"city-sioux-falls-sd","name":"Sioux Falls","state":"SD","priority":1,"active":true},{"id":"city-nashville-tn","name":"Nashville","state":"TN","priority":1,"active":true},{"id":"city-houston-tx","name":"Houston","state":"TX","priority":1,"active":true},{"id":"city-salt-lake-city-ut","name":"Salt Lake City","state":"UT","priority":1,"active":true},{"id":"city-virginia-beach-va","name":"Virginia Beach","state":"VA","priority":1,"active":true},{"id":"city-burlington-vt","name":"Burlington","state":"VT","priority":1,"active":true},{"id":"city-seattle-wa","name":"Seattle","state":"WA","priority":1,"active":true},{"id":"city-milwaukee-wi","name":"Milwaukee","state":"WI","priority":1,"active":true},{"id":"city-charleston-wv","name":"Charleston","state":"WV","priority":1,"active":true},{"id":"city-cheyenne-wy","name":"Cheyenne","state":"WY","priority":1,"active":true}]};
+    // Las 20 ciudades de España de HUPES-1.1 (`country_code = 'ES'`), activas y sin estado:
+    // los códigos de provincia chocan con los de USA. Al no tener estado no tienen día de
+    // barrido ni entran en el tope por estado, que gobierna solo la grilla de USA.
+    const ES_CITY_NAMES = ['Madrid', 'Barcelona', 'Valencia', 'Sevilla', 'Málaga', 'Marbella', 'Alicante', 'Palma de Mallorca', 'Zaragoza', 'Murcia', 'Bilbao', 'Las Palmas de Gran Canaria', 'Córdoba', 'Santa Cruz de Tenerife', 'Elche', 'Granada', 'A Coruña', 'Valladolid', 'Terrassa', 'Badalona'];
+    const ES_CITIES_SEED = ES_CITY_NAMES.map(n => ({
+      id: 'city-es-' + n.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+      name: n, country: 'ES', state: null, priority: 1, active: true
+    }));
+    const CITIES_ALL_SEED = CITIES_SEED.cities.map(c => Object.assign({ country: 'US' }, c)).concat(ES_CITIES_SEED);
+    const COUNTRIES = { US: 'United States', ES: 'Spain' };
     const CITY_KEY = 'citiesGrid', CAP_KEY = 'citiesCap';
     const DAYS = {1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri'}, DAYS_LONG = {1:'Monday',2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday'};
     const STATES = CITIES_SEED.states; const stateOf = code => STATES.find(s => s.code === code);
+    const NOT_SCHEDULED = 'Not in the sweep schedule';
     function loadCities() {
-      try { const s = JSON.parse(localStorage.getItem(CITY_KEY)); if (Array.isArray(s) && s.length) return s; } catch (e) {}
-      return JSON.parse(JSON.stringify(CITIES_SEED.cities));
+      try {
+        const s = JSON.parse(localStorage.getItem(CITY_KEY));
+        if (Array.isArray(s) && s.length) {
+          // Una grilla guardada antes del país es toda de USA y recibe las ciudades de España.
+          if (s.some(c => !c.country)) {
+            s.forEach(c => { if (!c.country) c.country = 'US'; });
+            ES_CITIES_SEED.forEach(e => { if (!s.some(c => c.id === e.id)) s.push(Object.assign({}, e)); });
+          }
+          return s;
+        }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(CITIES_ALL_SEED));
     }
-    function saveCities(list) { localStorage.setItem(CITY_KEY, JSON.stringify(list)); }
+    function saveCities(list) { try { localStorage.setItem(CITY_KEY, JSON.stringify(list)); } catch (e) {} }
     let cities = loadCities();
-    function getCap() { const v = parseInt(localStorage.getItem(CAP_KEY), 10); return isNaN(v) || v < 1 ? 3 : v; }
+    function getCap() { let v; try { v = parseInt(localStorage.getItem(CAP_KEY), 10); } catch (e) {} return isNaN(v) || v < 1 ? 3 : v; }
     function saveCityCap() {
       const v = parseInt(document.getElementById('cityCap').value, 10);
       if (isNaN(v) || v < 1) { document.getElementById('cityCap').value = getCap(); return; }
-      localStorage.setItem(CAP_KEY, String(v)); renderCities(true); showToast('Daily cap saved', 'success');
+      try { localStorage.setItem(CAP_KEY, String(v)); } catch (e) {}
+      renderCities(true); showToast('Daily cap saved', 'success');
     }
-    function resetCities() {
-      cities = JSON.parse(JSON.stringify(CITIES_SEED.cities)); saveCities(cities);
-      localStorage.removeItem(CAP_KEY); renderCities(); showToast('Grid restored to seed', 'success');
-    }
-    // rank of each active city within its state, by priority; searched = rank ≤ cap
+    // rank of each active city within its state, by priority; searched = rank ≤ cap.
+    // Solo las ciudades con estado (USA) entran: el tope es por estado.
     function rankMap() {
       const cap = getCap(), m = {};
       STATES.forEach(s => {
-        cities.filter(c => c.state === s.code && c.active).sort((a, b) => a.priority - b.priority)
-          .forEach((c, i) => { m[c.id] = { rank: i + 1, searched: i < cap }; });
+        cities.filter(c => c.state === s.code && c.active).sort((a, b) => a.priority - b.priority || a.name.localeCompare(b.name))
+          .forEach((c, i) => { m[c.id] = { rank: i + 1, searched: i < cap && s.weekday != null }; });
       });
       return m;
     }
     function fillStateSelects() {
       const opts = STATES.map(s => `<option value="${s.code}">${esc(s.name)} (${s.code})</option>`).join('');
       document.getElementById('cityState').innerHTML = '<option value="all">All states</option>' + opts;
-      document.getElementById('cityStateInput').innerHTML = opts;
+      document.getElementById('cityStateInput').innerHTML = '<option value="">Select a state</option>' + opts;
     }
+    // El país del filtro: no hay "todos"; la sección arranca en United States.
+    const cityCountry = () => document.getElementById('cityCountry').value || 'US';
+    // Conteos sobre el país del filtro. Estados, tope y "searched each week" solo existen
+    // donde hay estados (USA); España, sin estados, muestra ciudades y activas.
     function renderCitySummary(rm, shown) {
-      const active = cities.filter(c => c.active).length;
-      const searched = Object.values(rm).filter(r => r.searched).length;
-      const states = new Set(cities.map(c => c.state)).size;
-      const cap = getCap();
-      const over = new Set(cities.filter(c => c.active && rm[c.id] && !rm[c.id].searched).map(c => c.state)).size;
-      document.getElementById('citySummary').textContent =
-        shown + ' of ' + cities.length + ' cities · ' + active + ' active in ' + states + ' states · ' +
-        searched + ' searched each week' +
-        (over ? ' · ' + over + (over === 1 ? ' state is' : ' states are') + ' over the cap of ' + cap : '');
+      const pool = cities.filter(c => c.country === cityCountry());
+      const active = pool.filter(c => c.active).length;
+      let line = shown + ' of ' + pool.length + ' cities · ' + active + ' active';
+      if (pool.some(c => c.state)) {
+        const searched = pool.filter(c => rm[c.id] && rm[c.id].searched).length;
+        const states = new Set(pool.filter(c => c.active && c.state).map(c => c.state)).size;
+        const cap = getCap();
+        const over = new Set(pool.filter(c => c.active && rm[c.id] && !rm[c.id].searched).map(c => c.state)).size;
+        line += ' in ' + states + ' states · ' + searched + ' searched each week' +
+          (over ? ' · ' + over + (over === 1 ? ' state is' : ' states are') + ' over the cap of ' + cap : '');
+      }
+      document.getElementById('citySummary').textContent = line;
     }
 
     let cityFilter = 'all', cityPage = 1;
@@ -868,9 +994,14 @@
       btn.classList.add('is-on');
       renderCities();
     }
+    function clearCityFilters() {
+      document.getElementById('citySearch').value = '';
+      ['cityState', 'cityDay'].forEach(id => document.getElementById(id).value = 'all');
+      setCityFilter('all', document.querySelector('[data-cityfilter="all"]'));
+    }
 
-    // Una fila por ciudad, ordenadas por estado. El orden dentro del estado solo se
-    // muestra donde hay más de una: con una sola, un "#1" no dice nada.
+    // Una fila por ciudad, ordenadas por estado y prioridad. El orden dentro del estado
+    // solo se muestra donde hay más de una: con una sola, un "#1" no dice nada.
     function goCityPage(n) { cityPage = n; renderCities(true); }
 
     function renderCities(keepPage) {
@@ -879,30 +1010,34 @@
       const rm = rankMap();
       renderNavCounts();
 
-      const q = document.getElementById('citySearch').value.trim().toLowerCase();
+      const q = fold(document.getElementById('citySearch').value.trim());
+      const ct = cityCountry();
       const st = document.getElementById('cityState').value;
       const d = document.getElementById('cityDay').value;
 
       const perState = {};
-      cities.forEach(c => { perState[c.state] = (perState[c.state] || 0) + 1; });
+      cities.forEach(c => { if (c.state) perState[c.state] = (perState[c.state] || 0) + 1; });
 
       const rows = cities.filter(c => {
-        const s = stateOf(c.state);
+        const s = c.state ? stateOf(c.state) : null;
+        if (c.country !== ct) return false;
         if (st !== 'all' && c.state !== st) return false;
-        if (d !== 'all' && String(s.weekday) !== d) return false;
+        if (d !== 'all' && !(s && String(s.weekday) === d)) return false;
         if (cityFilter === 'active' && !c.active) return false;
         if (cityFilter === 'inactive' && c.active) return false;
         if (!q) return true;
-        return c.name.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || c.state.toLowerCase() === q;
-      }).sort((a, b) => stateOf(a.state).name.localeCompare(stateOf(b.state).name) ||
+        return fold(c.name).includes(q) || (s && (fold(s.name).includes(q) || fold(c.state) === q));
+      }).sort((a, b) => (a.state ? stateOf(a.state).name : '').localeCompare(b.state ? stateOf(b.state).name : '') ||
         a.priority - b.priority || a.name.localeCompare(b.name));
 
       const list = document.getElementById('cityList');
       renderCitySummary(rm, rows.length);
       if (!rows.length) {
-        list.innerHTML = '<div class="op-empty"><h3>' +
-          (cities.length ? 'No city matches' : 'No cities yet') + '</h3><p>' +
-          (cities.length ? 'Try another city, state or weekday.' : 'Add the first one to start searching.') + '</p></div>';
+        list.innerHTML = cities.length
+          ? '<div class="op-empty"><h3>No city matches</h3><p>No city matches the search, the country, the state, the weekday or the status.</p>' +
+            '<button class="op-actionbtn" onclick="clearCityFilters()">Clear filters</button></div>'
+          : '<div class="op-empty"><h3>No cities yet</h3><p>The engine is not sweeping any city.</p>' +
+            '<button class="op-btn-apply" onclick="openCityModal()">New city</button></div>';
         document.getElementById('cityPagination').innerHTML = '';
         return;
       }
@@ -910,16 +1045,21 @@
       const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
       if (cityPage > pages) cityPage = pages;
       list.innerHTML = rows.slice((cityPage - 1) * PAGE_SIZE, cityPage * PAGE_SIZE).map(c => {
-        const s = stateOf(c.state), r = rm[c.id];
+        const s = c.state ? stateOf(c.state) : null, r = rm[c.id];
+        const place = COUNTRIES[c.country] + (s ? ' · ' + c.state + ' · ' + esc(s.name) : '');
+        const day = s && s.weekday != null
+          ? '<span class="st-day">' + DAYS_LONG[s.weekday] + '</span>'
+          : '<span class="st-noday">' + NOT_SCHEDULED + '</span>';
         return '<div class="st-city' + (c.active ? '' : ' is-off') + '" data-id="' + c.id + '">' +
           '<label class="toggle-switch" title="' + (c.active ? 'In the grid' : 'Paused') + '">' +
             '<input type="checkbox" ' + (c.active ? 'checked' : '') + ' onchange="toggleCity(\'' + c.id + '\', this.checked)">' +
             '<span class="toggle-slider"></span></label>' +
           '<span class="st-cityname">' + esc(c.name) + '</span>' +
-          '<span class="st-statecode">' + c.state + ' · ' + esc(s.name) + '</span>' +
-          '<span class="st-day">' + DAYS_LONG[s.weekday] + '</span>' +
-          (perState[c.state] > 1 && c.active && r ? '<span class="st-rank">#' + r.rank + ' in ' + c.state + '</span>' : '') +
-          (c.active && r && !r.searched ? '<span class="st-beyond">past the cap</span>' : '') +
+          '<span class="st-statecode">' + place + '</span>' +
+          day +
+          (c.state && perState[c.state] > 1 && c.active && r ? '<span class="st-rank">#' + r.rank + ' in ' + c.state + '</span>' : '') +
+          (c.active && r && !r.searched && s && s.weekday != null
+            ? '<span class="st-beyond" title="' + esc(s.name) + ' searches ' + getCap() + ' cit' + (getCap() === 1 ? 'y' : 'ies') + ' per day; this one is past the cap and is not swept.">past the cap</span>' : '') +
           '<div class="st-cityactions">' +
             '<button class="op-actionbtn" onclick="openCityModal(\'' + c.id + '\')">Edit</button>' +
             '<button class="cd-iconbtn" title="Delete city" onclick="openCityDeleteModal(\'' + c.id + '\')">' +
@@ -936,53 +1076,83 @@
       showToast(`${c.name} ${on ? 'activated' : 'paused'}`, 'success');
     }
     // --- modal create / edit city ---
+    // El país va primero; el estado solo aplica a United States, y con él la línea del día
+    // que hereda del estado.
     let editingCityId = null;
+    function onCityCountryChange() {
+      const country = document.getElementById('cityCountryInput').value;
+      document.getElementById('cityStateGroup').style.display = country === 'US' ? '' : 'none';
+      suggestPriority();
+    }
     function suggestPriority() {
-      const code = document.getElementById('cityStateInput').value;
-      const s = stateOf(code); document.getElementById('cityDayHint').textContent = s ? `Swept on ${DAYS_LONG[s.weekday]}.` : '';
+      const country = document.getElementById('cityCountryInput').value;
+      const code = country === 'US' ? document.getElementById('cityStateInput').value : null;
+      const s = code ? stateOf(code) : null;
+      document.getElementById('cityDayHint').textContent = s ? (s.weekday != null ? `Swept on ${DAYS_LONG[s.weekday]}.` : NOT_SCHEDULED + '.') : '';
       if (!editingCityId) {
-        const max = cities.filter(c => c.state === code).reduce((m, c) => Math.max(m, c.priority), 0);
+        const max = country && (country !== 'US' || code)
+          ? cities.filter(c => c.country === country && c.state === code).reduce((m, c) => Math.max(m, c.priority), 0) : 0;
         document.getElementById('cityPriorityInput').value = max + 1;
       }
+      updateCitySaveState();
+    }
+    // Save queda deshabilitado mientras falte el país, la ciudad o, en United States, el estado.
+    function updateCitySaveState() {
+      const country = document.getElementById('cityCountryInput').value;
+      const state = document.getElementById('cityStateInput').value;
+      const name = document.getElementById('cityNameInput').value.trim();
+      document.getElementById('citySaveBtn').disabled = !(country && name && (country !== 'US' || state));
     }
     function openCityModal(id) {
       editingCityId = id || null;
       const c = id ? cities.find(x => x.id === id) : null;
       document.getElementById('cityModalTitle').textContent = c ? 'Edit city' : 'New city';
-      document.getElementById('cityStateInput').value = c ? c.state : 'TX';
+      document.getElementById('cityCountryInput').value = c ? c.country : '';
+      document.getElementById('cityStateInput').value = c && c.state ? c.state : '';
       document.getElementById('cityNameInput').value = c ? c.name : '';
       document.getElementById('cityActiveInput').checked = c ? c.active : true;
       document.getElementById('cityNameError').style.display = 'none';
-      suggestPriority();
+      onCityCountryChange();
       if (c) document.getElementById('cityPriorityInput').value = c.priority;
       document.getElementById('cityModal').classList.add('active');
-      setTimeout(() => document.getElementById('cityNameInput').focus(), 50);
+      setTimeout(() => document.getElementById(c ? 'cityNameInput' : 'cityCountryInput').focus(), 50);
     }
     function closeCityModal() { document.getElementById('cityModal').classList.remove('active'); editingCityId = null; }
     function saveCity() {
-      const code = document.getElementById('cityStateInput').value;
+      const country = document.getElementById('cityCountryInput').value;
+      const code = country === 'US' ? document.getElementById('cityStateInput').value : null;
       const raw = document.getElementById('cityNameInput').value.trim().replace(/\s+/g, ' ').replace(/,\s*[A-Za-z]{2}$/, '');
       const priority = parseInt(document.getElementById('cityPriorityInput').value, 10);
       const active = document.getElementById('cityActiveInput').checked;
       document.getElementById('cityNameError').style.display = 'none';
-      if (!raw) { showFieldError('cityNameError', 'City name is required.'); return; }
+      if (!country || !raw || (country === 'US' && !code)) return;
       // `us_cities.city_name` guarda solo la ciudad (HUPEA-0.5); el estado ya está en
-      // `state_code` y el barrido arma "City, ST" al consultar la fuente. La unicidad es por el
-      // par: Portland existe en Maine y en Oregon, y Charleston en dos estados.
+      // `state_code` y el barrido arma "City, ST" al consultar la fuente. La unicidad es por
+      // país y estado: Portland existe en Maine y en Oregon, y Charleston en dos estados.
       const name = raw;
-      if (cities.some(c => c.id !== editingCityId && c.state === code && c.name.toLowerCase() === name.toLowerCase())) {
-        showFieldError('cityNameError', 'This city is already in the grid for that state.'); return;
+      if (cities.some(c => c.id !== editingCityId && c.country === country && c.state === code && c.name.toLowerCase() === name.toLowerCase())) {
+        showFieldError('cityNameError', 'This city is already in the grid for ' + (code ? stateOf(code).name + ', ' : '') + COUNTRIES[country] + '.'); return;
       }
       const p = isNaN(priority) || priority < 1 ? 1 : priority;
-      if (editingCityId) {
-        const c = cities.find(x => x.id === editingCityId);
-        c.name = name; c.state = code; c.priority = p; c.active = active;
-        showToast('City updated', 'success');
+      let saved;
+      const isEdit = !!editingCityId;
+      if (isEdit) {
+        saved = cities.find(x => x.id === editingCityId);
+        saved.name = name; saved.country = country; saved.state = code; saved.priority = p; saved.active = active;
       } else {
-        cities.push({ id: 'city-' + Date.now().toString(36), name, state: code, priority: p, active });
-        showToast('City created', 'success');
+        saved = { id: 'city-' + Date.now().toString(36), name, country, state: code, priority: p, active };
+        cities.push(saved);
       }
       saveCities(cities); closeCityModal(); renderCities();
+      // Una ciudad que queda fuera del tope de su estado no se barre: el aviso lo dice.
+      const r = rankMap()[saved.id];
+      const done = isEdit ? 'City updated' : 'City created';
+      if (r && !r.searched) {
+        const cap = getCap();
+        showToast(`${done} — past the daily cap: ${stateOf(code).name} searches ${cap} cit${cap === 1 ? 'y' : 'ies'} per day`, 'info');
+      } else {
+        showToast(done, 'success');
+      }
     }
     // --- modal delete city ---
     let deletingCityId = null;
@@ -1001,6 +1171,7 @@
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCityModal(); closeCityDeleteModal(); } });
     ['cityModal', 'cityDeleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeCityModal(); closeCityDeleteModal(); } }));
+    ['cityStateInput', 'cityCountryInput'].forEach(id => document.getElementById(id).addEventListener('change', updateCitySaveState));
     fillStateSelects();
 
 
