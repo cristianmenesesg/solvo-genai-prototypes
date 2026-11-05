@@ -25,7 +25,7 @@
       /* KPIs: 4 en fila → 2×2 (inline-block; font-size:0 en la grilla colapsa el espacio entre celdas) */
       .kpi-grid { font-size: 0 !important; }
       .kpi-cell { width: 50% !important; display: inline-block !important; box-sizing: border-box !important; vertical-align: top !important; padding: 0 4px 8px 4px !important; }
-      /* Preferencias: 2 columnas → 1 */
+      /* Tarjetas: 2 columnas → 1 */
       .stack { width: 100% !important; display: block !important; box-sizing: border-box !important; padding: 0 0 10px 0 !important; }
     }
   </style>
@@ -34,7 +34,7 @@
 
   <!-- preheader -->
   <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;color:#F5F5F5;">
-    {{ params.kpi_bookings }} reuniones agendadas · conversión {{ params.rate_e2e }} · {{ params.period_label }}
+    {{ params.human_booking_confirmed }} reservas confirmadas · {{ params.human_verified }} interacciones verificadas
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F5F5;">
@@ -52,7 +52,7 @@
             </td>
           </tr>
 
-          <!-- ============ TÍTULO Y PERÍODO ============ -->
+          <!-- ============ TÍTULO ============ -->
           <tr>
             <td class="px-32" style="padding:30px 32px 0 32px;">
               <p style="margin:0 0 6px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">
@@ -62,8 +62,7 @@
                 Funnel de cold outreach
               </h1>
               <p style="margin:6px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.6;color:#656971;">
-                {{ params.period_label }} · variación contra la semana anterior
-                <span style="font-weight:600;color:#92400E;">{{ params.period_note }}</span>
+                Semana de lunes a domingo, en hora de Nueva York
               </p>
             </td>
           </tr>
@@ -75,55 +74,36 @@
                 <tr>
                   <td class="kpi-cell" width="25%" valign="top" style="padding:0 6px 0 0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
-                      <tr><td style="padding:14px 12px 12px 12px;">
+                      <tr><td style="padding:14px 12px 14px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Entregados</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_delivered }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_delivered_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.human_delivered }}</p>
                       </td></tr>
                     </table>
                   </td>
                   <td class="kpi-cell" width="25%" valign="top" style="padding:0 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
-                      <tr><td style="padding:14px 12px 12px 12px;">
+                      <tr><td style="padding:14px 12px 14px 12px;">
+                        <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Interacciones</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.human_verified }}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td class="kpi-cell" width="25%" valign="top" style="padding:0 6px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
+                      <tr><td style="padding:14px 12px 14px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Visitas</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_visits }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_visits_delta }}</p>
-                      </td></tr>
-                    </table>
-                  </td>
-                  <td class="kpi-cell" width="25%" valign="top" style="padding:0 6px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
-                      <tr><td style="padding:14px 12px 12px 12px;">
-                        <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Selecciones</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.kpi_selections }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#656971;">{{ params.kpi_selections_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#3A3E40;">{{ params.human_landing_views }}</p>
                       </td></tr>
                     </table>
                   </td>
                   <td class="kpi-cell" width="25%" valign="top" style="padding:0 0 0 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E0F8FB;border:1px solid #00BED6;border-radius:12px;">
-                      <tr><td style="padding:14px 12px 12px 12px;">
+                      <tr><td style="padding:14px 12px 14px 12px;">
                         <p style="margin:0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#005F74;">Reservas</p>
-                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#0089AB;">{{ params.kpi_bookings }}</p>
-                        <p style="margin:5px 0 0 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1;color:#005F74;">{{ params.kpi_bookings_delta }}</p>
+                        <p style="margin:6px 0 0 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:700;color:#0089AB;">{{ params.human_booking_confirmed }}</p>
                       </td></tr>
                     </table>
                   </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- conversión end-to-end -->
-          <tr>
-            <td class="px-32" style="padding:12px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E3E3E3;border-radius:12px;">
-                <tr>
-                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#53585A;">
-                    Conversión end-to-end
-                    <span style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;">&nbsp;{{ params.rate_e2e }}</span>
-                  </td>
-                  <td align="right" style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#656971;white-space:nowrap;">{{ params.rate_e2e_delta }}</td>
                 </tr>
               </table>
             </td>
@@ -133,197 +113,8 @@
           <tr>
             <td class="px-32" style="padding:30px 32px 0 32px;">
               <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Embudo</p>
-              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
-                Contactos distintos por paso · % del paso anterior y % sobre entregados
-              </p>
-            </td>
-          </tr>
-          <tr>
-            <td class="px-32" style="padding:0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-
-                <!-- f1 · entregado -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Correo entregado</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f1_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f1_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f1_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f1_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f2 · abierto -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Abierto</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f2_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f2_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f2_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f2_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f3 · click -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Click en el CTA</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f3_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f3_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f3_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f3_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f4 · visita -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Visita a la landing</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f4_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f4_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f4_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f4_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f5 · disponibilidad -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Vio horarios</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f5_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f5_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f5_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f5_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f6 · selección -->
-                <tr><td style="padding:0 0 12px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Eligió horario</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.f6_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f6_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f6_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f6_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-                <!-- f7 · reserva -->
-                <tr><td style="padding:0 0 4px 0;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:600;color:#0089AB;">Reserva confirmada</td>
-                      <td align="right" style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#0089AB;">{{ params.f7_count }}</td>
-                      <td align="right" width="58" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#899094;">{{ params.f7_pct_prev }}</td>
-                      <td align="right" width="52" style="font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;color:#656971;">{{ params.f7_pct_total }}</td>
-                    </tr>
-                    <tr><td colspan="4" style="padding-top:5px;">
-                      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E3E3E3;border-radius:4px;"><tr>
-                        <td width="{{ params.f7_bar }}" style="background:#0089AB;border-radius:4px;font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                        <td style="font-size:0;line-height:0;height:8px;">&nbsp;</td>
-                      </tr></table>
-                    </td></tr>
-                  </table>
-                </td></tr>
-
-              </table>
-            </td>
-          </tr>
-
-          <!-- mayor caída -->
-          <tr>
-            <td class="px-32" style="padding:14px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FEF3C7;border-left:4px solid #F59E0B;border-radius:8px;">
-                <tr>
-                  <td style="padding:12px 14px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#92400E;">
-                    <strong style="font-family:'Poppins',Arial,Helvetica,sans-serif;font-weight:700;">Mayor caída</strong>
-                    {{ params.biggest_drop_label }}
-                  </td>
-                  <td align="right" style="padding:12px 14px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;line-height:1.55;color:#92400E;white-space:nowrap;">{{ params.biggest_drop_pct }}</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ============ SALUD DEL RECORRIDO ============ -->
-          <tr>
-            <td class="px-32" style="padding:30px 32px 0 32px;">
-              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Salud del recorrido</p>
-              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
-                Sobre el total de visitas del período
-              </p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #E3E3E3;border-radius:12px;">
-                <tr>
-                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">
-                    Vieron un error
-                    <span style="font-size:12px;color:#899094;">· disponibilidad {{ params.health_error_availability }} · reserva {{ params.health_error_booking }}</span>
-                  </td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_error_pct }}</td>
-                </tr>
-                <tr>
-                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Sin horarios para ofrecer</td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_empty_pct }}</td>
-                </tr>
-                <tr>
-                  <td style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Eligieron horario y no reservaron</td>
-                  <td align="right" style="padding:13px 16px;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_selected_not_booked_pct }}</td>
-                </tr>
-                <tr>
-                  <td style="padding:13px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;color:#53585A;">Llegaron sin identidad en el link</td>
-                  <td align="right" style="padding:13px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.health_no_identity_pct }}</td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-
-          <!-- ============ PREFERENCIAS Y TIEMPOS ============ -->
-          <tr>
-            <td class="px-32" style="padding:30px 32px 0 32px;">
-              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Preferencias y tiempos</p>
-              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
-                Sobre las reservas confirmadas del período
+              <p style="margin:0 0 10px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
+                De la entrega del correo a la reserva
               </p>
             </td>
           </tr>
@@ -331,44 +122,55 @@
             <td class="px-32" style="padding:0 32px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td class="stack" width="50%" valign="top" style="padding:0 6px 12px 0;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
-                      <tr><td style="padding:14px 16px;">
-                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Franja</p>
-                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Mañana <strong style="color:#3A3E40;">{{ params.pref_morning }}</strong><br />
-                          Mediodía <strong style="color:#3A3E40;">{{ params.pref_midday }}</strong><br />
-                          Tarde <strong style="color:#3A3E40;">{{ params.pref_afternoon }}</strong>
-                        </p>
-                      </td></tr>
-                    </table>
-                  </td>
-                  <td class="stack" width="50%" valign="top" style="padding:0 0 12px 6px;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
-                      <tr><td style="padding:14px 16px;">
-                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Día de la semana</p>
-                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Lun <strong style="color:#3A3E40;">{{ params.pref_mon }}</strong> ·
-                          Mar <strong style="color:#3A3E40;">{{ params.pref_tue }}</strong> ·
-                          Mié <strong style="color:#3A3E40;">{{ params.pref_wed }}</strong><br />
-                          Jue <strong style="color:#3A3E40;">{{ params.pref_thu }}</strong> ·
-                          Vie <strong style="color:#3A3E40;">{{ params.pref_fri }}</strong>
-                        </p>
-                      </td></tr>
-                    </table>
-                  </td>
+                  <td style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Correo entregado</td>
+                  <td align="right" style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.human_delivered }}</td>
                 </tr>
+                <tr>
+                  <td style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Interacción verificada</td>
+                  <td align="right" style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.human_verified }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Visita a la landing</td>
+                  <td align="right" style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.human_landing_views }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Vio horarios</td>
+                  <td align="right" style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.human_availability_shown }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:500;color:#3A3E40;">Eligió horario</td>
+                  <td align="right" style="padding:11px 0;border-bottom:1px solid #E3E3E3;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#3A3E40;">{{ params.human_slot_selected }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;font-weight:600;color:#0089AB;">Reserva confirmada</td>
+                  <td align="right" style="padding:11px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#0089AB;">{{ params.human_booking_confirmed }}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ============ SALUD DEL CANAL ============ -->
+          <tr>
+            <td class="px-32" style="padding:30px 32px 0 32px;">
+              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Salud del canal</p>
+              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
+                Rebotes, quejas y bajas de la semana
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td class="px-32" style="padding:0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td class="stack" width="50%" valign="top" style="padding:0 6px 0 0;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
                       <tr><td style="padding:14px 16px;">
-                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Camino y dispositivo</p>
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Rebotes</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Tarjetas <strong style="color:#3A3E40;">{{ params.pref_path_card }}</strong> ·
-                          Calendario <strong style="color:#3A3E40;">{{ params.pref_path_calendar }}</strong><br />
-                          Desktop <strong style="color:#3A3E40;">{{ params.pref_desktop }}</strong> ·
-                          Mobile <strong style="color:#3A3E40;">{{ params.pref_mobile }}</strong> ·
-                          Tablet <strong style="color:#3A3E40;">{{ params.pref_tablet }}</strong>
+                          Duro <strong style="color:#3A3E40;">{{ params.hard_bounces }}</strong> ·
+                          Suave <strong style="color:#3A3E40;">{{ params.soft_bounces }}</strong><br />
+                          Bloqueado <strong style="color:#3A3E40;">{{ params.blocked_bounces }}</strong> ·
+                          Inválido <strong style="color:#3A3E40;">{{ params.invalid_bounces }}</strong>
                         </p>
                       </td></tr>
                     </table>
@@ -376,11 +178,11 @@
                   <td class="stack" width="50%" valign="top" style="padding:0 0 0 6px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
                       <tr><td style="padding:14px 16px;">
-                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Tiempos</p>
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Quejas y bajas</p>
                         <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
-                          Click → reserva <strong style="color:#3A3E40;">{{ params.time_click_to_book_median }}</strong><br />
-                          <span style="font-size:12px;color:#899094;">p90 {{ params.time_click_to_book_p90 }}</span><br />
-                          Anticipación <strong style="color:#3A3E40;">{{ params.time_lead_median }}</strong>
+                          Quejas de spam <strong style="color:#3A3E40;">{{ params.spam_complaints }}</strong> ·
+                          Bajas <strong style="color:#3A3E40;">{{ params.unsubscribes }}</strong><br />
+                          <span style="color:#899094;">Apertura (referencia) <strong style="color:#656971;">{{ params.reference_open_rate }}%</strong></span>
                         </p>
                       </td></tr>
                     </table>
@@ -390,24 +192,64 @@
             </td>
           </tr>
 
-          <!-- ============ ADJUNTO Y NOTAS ============ -->
+          <!-- ============ TRÁFICO SINTÉTICO ============ -->
           <tr>
-            <td class="px-32" style="padding:26px 32px 0 32px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E6F4F8;border-radius:12px;">
+            <td class="px-32" style="padding:30px 32px 0 32px;">
+              <p style="margin:0 0 4px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:#ED7422;">Tráfico sintético</p>
+              <p style="margin:0 0 14px 0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.5;color:#899094;">
+                Eventos fuera del embudo
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFFFFF;border:1px solid #E3E3E3;border-radius:12px;">
                 <tr>
-                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#005F74;">
-                    El detalle de los eventos de la semana va adjunto en CSV, una fila por evento.
-                    {{ params.attachment_note }}
-                  </td>
+                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:14px;line-height:1.5;color:#53585A;">Eventos marcados</td>
+                  <td align="right" style="padding:14px 16px;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#3A3E40;white-space:nowrap;">{{ params.total_synthetic_events }}</td>
                 </tr>
               </table>
             </td>
           </tr>
           <tr>
-            <td class="px-32" style="padding:14px 32px 0 32px;">
-              <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:12px;line-height:1.65;color:#899094;">
-                Las aperturas son indicativas: los clientes de correo que bloquean imágenes no las reportan, así que el número real es mayor. La conversión se mide sobre las reservas confirmadas en el servidor.
-              </p>
+            <td class="px-32" style="padding:12px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td class="stack" width="50%" valign="top" style="padding:0 6px 0 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Por razón</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">
+                          Reacción inmediata a la entrega <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.latency|default:"0" }}</strong><br />
+                          Ráfaga del mismo dominio <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.domain_burst|default:"0" }}</strong><br />
+                          Clic en todos los enlaces <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.all_links_burst|default:"0" }}</strong><br />
+                          Escáner de seguridad <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.scanner_ua|default:"0" }}</strong><br />
+                          Contacto desconocido <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.unknown_contact|default:"0" }}</strong><br />
+                          Sesión duplicada <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.duplicate_session|default:"0" }}</strong><br />
+                          Tráfico interno <strong style="color:#3A3E40;">{{ params.synthetic_by_reason.internal|default:"0" }}</strong>
+                        </p>
+                      </td></tr>
+                    </table>
+                  </td>
+                  <td class="stack" width="50%" valign="top" style="padding:0 0 0 6px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F9F9F9;border:1px solid #E3E3E3;border-radius:12px;">
+                      <tr><td style="padding:14px 16px;">
+                        <p style="margin:0 0 8px 0;font-family:'Poppins',Arial,Helvetica,sans-serif;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#899094;">Por dominio</p>
+                        <p style="margin:0;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.9;color:#53585A;">{% for domain, count in params.synthetic_by_domain sorted %}{{ domain }} <strong style="color:#3A3E40;">{{ count }}</strong><br />{% endfor %}</p>
+                      </td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ============ ADJUNTOS ============ -->
+          <tr>
+            <td class="px-32" style="padding:26px 32px 0 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E6F4F8;border-radius:12px;">
+                <tr>
+                  <td style="padding:14px 16px;font-family:'Wix Madefor Text',Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#005F74;">
+                    Van adjuntos los eventos, las vacantes y los contactos de la semana.
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 

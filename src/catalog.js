@@ -88,7 +88,7 @@ export const products = [
         nombre: 'Reporte semanal del funnel (email)',
         categoria: 'Email',
         bundle: 'email-cold-outreach-funnel-report',
-        notas: 'Reporte interno: KPIs, embudo, salud del recorrido y preferencias. El CSV de eventos viaja adjunto.',
+        notas: 'Reporte interno en tres bloques: funnel humano, salud del canal y tráfico sintético, sobre los eventos sin marca. Los eventos, las vacantes y los contactos de la semana viajan adjuntos.',
         versions: [
           { label: 'Preview', file: 'sales-funnel-report-preview.html' },
           { label: 'Email (Brevo)', file: 'sales-funnel-report.html' },
@@ -99,7 +99,7 @@ export const products = [
         nombre: 'Reporte semanal del funnel (email) — Release 2',
         categoria: 'Email',
         bundle: 'email-cold-outreach-funnel-report-release-2',
-        notas: 'El mismo reporte con la sección de showcase de talento entre el embudo y la salud del recorrido: aperturas de currículo, paso al agendamiento y conversión contra la línea base previa al showcase.',
+        notas: 'El reporte R1 con dos secciones más: retargeting, con el recorrido de cada recordatorio contra la semana anterior, a continuación del embudo; y showcase de talento entre el retargeting y la salud del canal: aperturas de currículo, paso al agendamiento y conversión contra la línea base previa al showcase. Solo visitas de personas, como el resto del reporte.',
         versions: [
           { label: 'Preview', file: 'sales-funnel-report-preview.html' },
           { label: 'Email (Brevo)', file: 'sales-funnel-report.html' },
