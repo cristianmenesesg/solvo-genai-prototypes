@@ -359,56 +359,8 @@
   border-radius: var(--radius-sm); font-size: var(--font-size-xs); font-weight: 500;
 }
 
-/* ---------- Panel de interpretación sobre los resultados ---------- */
-.ai-panel {
-  margin-bottom: var(--spacing-md); padding: var(--spacing-md);
-  background: var(--bg-card); border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-}
-.ai-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.ai-badge {
-  padding: 3px 9px; border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
-  color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-}
-.ai-panel-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); }
-
-.crit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.crit-chip {
-  display: inline-flex; align-items: baseline; gap: 5px;
-  padding: 4px 10px; border-radius: var(--radius-full);
-  background: var(--bg-muted); border: 1px solid var(--border-color);
-  font-size: var(--font-size-xs); color: var(--text-primary);
-}
-.crit-key { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
-
-.ai-levels { display: flex; flex-direction: column; gap: 6px; }
-.ai-level {
-  padding: 8px 10px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color); background: var(--bg-muted); opacity: .55;
-}
-.ai-level.active { opacity: 1; border-color: var(--color-secondary); background: var(--status-accent-bg); }
-.ai-level.used { opacity: .8; }
-.ai-level-name {
-  display: block; font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;
-}
-.ai-level-query {
-  display: block; font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 10.5px; line-height: 1.5; color: var(--text-secondary); word-break: break-word;
-}
-
-.ai-spend {
-  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
-  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color);
-  font-size: 11px; color: var(--text-muted);
-}
-.ai-spend b { color: var(--text-primary); font-weight: 600; }
-.ai-spend-cost { margin-left: auto; }
-.ai-spend-budget { color: var(--text-secondary); }
-
 @media (max-width: 640px) {
   .ai-form-row { flex-direction: column; gap: 0; }
-  .ai-spend-cost { margin-left: 0; }
 }
 
 /* ========================================================================
@@ -478,11 +430,6 @@
   .proj-total { text-align: left; margin-top: 10px; }
   .proj-vol-runs { margin-left: 0; }
 }
-
-/* Descartes del intérprete de AI Search: lo que se leyó y no se usó. */
-.crit-discarded { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -6px 0 14px; }
-.crit-chip.out { opacity: .5; text-decoration: line-through; }
-.ai-status { font-weight: 700; }
 
 /* ---------- Historial del candidato (experiencia y educación) ---------- */
 .tl-item {

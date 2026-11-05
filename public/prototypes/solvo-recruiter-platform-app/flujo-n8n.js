@@ -5,7 +5,7 @@
    maneras de construir ese mismo JSON.
    ======================================================================== */
 
-const HU_C = { 'HUSRP-2.1':'#ef4444', 'HUSRP-2.2':'#0ea5e9', 'HUSRP-2.3':'#f59e0b', 'HUSRP-2.10':'#22c55e' };
+const HU_C = { 'HUSRP-2.1':'#ef4444', 'HUSRP-2.2':'#0ea5e9', 'HUSRP-2.3':'#f59e0b' };
 
 /* Catálogo de HUs que no se implementan dentro de un flujo. */
 const HU_INFO = {
@@ -419,97 +419,7 @@ metadata = { cost_estimated, cost_real, level_reached,
   ],
 };
 
-/* ============ 4 · Re-validación de disponibilidad ============ */
-const REVAL = {
-  key:'reval', name:'TS_REVALIDATE_CANDIDATES', hu:'HUSRP-2.10',
-  huName:'Re-validación de disponibilidad como flujo único, activo e invocado',
-  rel:[ { id:'HUSRP-2.2', how:'lo encadena al cerrar la ejecución' } ],
-  sub:'Instancia única y activa · el pipeline programado le pasa los candidatos vencidos al cerrar su ejecución',
-  intro:'Mantiene fresca la señal de disponibilidad del pool sin que el reclutador espere por ella. El disparo programado, terminado el recorrido de su cola, selecciona los candidatos cuya fecha de análisis quedó fuera de la ventana de vigencia y se los pasa a este flujo, que los vuelve a consultar en la fuente y persiste el resultado por candidato. La búsqueda del reclutador lee lo que este flujo dejó escrito.',
-  nodes: [
-    { id:'trg', n:'Receive Revalidation\nRequest Trigger', t:'trigger', x:0, y:230, trigger:true,
-      d:{ does:'Punto de entrada del flujo. Lo invoca el disparo programado con los candidatos vencidos que hay que refrescar.',
-          in:'El conjunto de candidatos a re-validar, con la ejecución que los pidió.',
-          op:`{
-  "execution_id": "610394",
-  "candidates": [
-    { "id": "uuid", "linkedin_url": "https://www.linkedin.com/in/..." }
-  ]
-}`,
-          note:'Recibe el recorte ya decidido por quien lo llama, no un <code>search_profile_id</code> cuya vigencia tenga que resolver él mismo. Existe una sola instancia del flujo, con nombre único y activa.' } },
-
-    { id:'val', n:'Validate Candidate\nBatch Code', t:'code', x:190, y:230,
-      d:{ does:'Valida el lote antes de gastar scraping: descarta entradas sin <code>linkedin_url</code> y corta si el conjunto viene vacío.',
-          in:'El JSON del trigger.', out:'Los candidatos normalizados, listos para recorrer.',
-          note:'Un lote vacío termina la ejecución de forma controlada y queda registrado; no se llama a la fuente.' } },
-
-    { id:'batch', n:'Split Candidate\nBatch Loop', t:'code', x:380, y:230,
-      d:{ does:'Recorre los candidatos por lotes, para que un conjunto grande no dispare todas las llamadas a la vez.',
-          out:'El próximo grupo de candidatos a consultar.' } },
-
-    { id:'scrape', n:'Fetch Profile\nApify', t:'http', x:570, y:230,
-      d:{ does:'Vuelve a consultar el perfil del candidato en la fuente para leer su señal de disponibilidad actual.',
-          api:'Actor de Apify <code>M2FMdjRVeF1HPGFcc</code> (<code>harvestapi/linkedin-profile-search</code>), el mismo que usa el scraping del pipeline, con el <code>linkedin_url</code> del candidato.',
-          note:'Es el único paso que cuesta dinero del flujo: una página por candidato. Por eso el disparo programado despacha solo a los vencidos que están marcados open-to-work, y no a todo el pool.' } },
-
-    { id:'eval', n:'Resolve Availability\nCode', t:'code', x:760, y:230,
-      d:{ does:'Resuelve la disponibilidad con la misma regla que el pipeline, para que un candidato no quede marcado distinto según por dónde pasó.',
-          out:'Disponible, no disponible, o no verificable cuando el perfil ya no es alcanzable.',
-          note:'<code>open_to_work</code> verdadero si la fuente lo declara, o si el candidato no tiene ninguna posición vigente marcada <code>Present</code> teniendo historial laboral.' } },
-
-    { id:'sw', n:'Route By\nResult Switch', t:'switch', x:950, y:230,
-      d:{ does:'Separa el candidato que la fuente devolvió del que ya no se puede consultar, porque se escriben distinto.' } },
-
-    { id:'upd', n:'Update Availability\nDatabase', t:'postgres', x:1140, y:80,
-      d:{ does:'Persiste la señal fresca y la fecha del análisis, que es lo que vuelve a poner al candidato dentro de la ventana de vigencia.',
-          op:`UPDATE solvo_pipeline.candidates
-SET open_to_work = $1, analyzed_at = NOW()
-WHERE id = $2;`,
-          note:'El candidato que dejó de estar disponible <b>no se borra</b>: queda con su marca en falso y sigue en el pool, visible para el reclutador cuando cambia el filtro de disponibilidad.' } },
-
-    { id:'unv', n:'Mark Not Verifiable\nDatabase', t:'postgres', x:1140, y:380,
-      d:{ does:'Registra que el perfil ya no es alcanzable en la fuente, sin afirmar que el candidato dejó de estar disponible.',
-          op:`UPDATE solvo_pipeline.candidates
-SET analyzed_at = NOW(), revalidation_status = 'not_verifiable'
-WHERE id = $1;`,
-          note:'No verificable es un estado distinto de no disponible: conserva el <code>open_to_work</code> anterior. Un perfil borrado o cerrado no es lo mismo que uno que tomó trabajo.' } },
-
-    { id:'mrg', n:'Merge Results', t:'merge', x:1330, y:230,
-      d:{ does:'Junta las dos ramas para seguir el recorrido con un solo hilo.',
-          note:'Un candidato que falla —error de la fuente o límite de uso— se registra y no aborta el lote: los demás siguen.' } },
-
-    { id:'ifp', n:'More Candidates?\nIf', t:'if', x:1520, y:230,
-      d:{ does:'Decide si queda otro lote por recorrer o si la ejecución terminó.' } },
-
-    { id:'resp', n:'Return Result\nPer Candidate Code', t:'code', x:1710, y:80,
-      d:{ does:'Devuelve a la plataforma qué pasó con cada candidato, para que la tabla se refresque con lo que cambió.',
-          op:`{ "execution_id": "610394",
-  "revalidated": 34,
-  "still_open_to_work": 21,
-  "no_longer_available": 11,
-  "not_verifiable": 2 }` } },
-
-    { id:'log', n:'Log Revalidation\nSubworkflow', t:'subwf', x:1710, y:380,
-      d:{ does:'Deja en el log central los candidatos re-consultados, los que cambiaron de disponibilidad y el consumo de la fuente.',
-          api:'<code>99_HLP_LOGGER_SYSTEM</code> · id <code>RVWYKqLh0m7DTaKK</code>.',
-          op:`provider = 'apify'
-usage_type = 'requests'   usage_unit = 'count'
-usage_amount = <candidatos re-consultados>
-metadata = { revalidated, no_longer_available, not_verifiable }`,
-          note:'Sin esta traza el consumo de la re-validación no aparece en la proyección de costo ni en el techo de presupuesto.' } },
-  ],
-  links: [
-    ['trg','val'],['val','batch'],['batch','scrape'],['scrape','eval'],['eval','sw'],
-    ['sw','upd',{label:'disponible / no disponible'}],
-    ['sw','unv',{label:'perfil no alcanzable'}],
-    ['upd','mrg'],['unv','mrg'],['mrg','ifp'],
-    ['ifp','batch',{back:true,label:'true · quedan candidatos'}],
-    ['ifp','resp',{label:'false'}],
-    ['resp','log',{dashed:true}],
-  ],
-};
-
-const WFS = [SEARCH, CRON, AI, REVAL];
+const WFS = [SEARCH, CRON, AI];
 
 /* ======================= Canvas ======================= */
 const NW = 96, NWS = 64;
@@ -663,7 +573,7 @@ function openNotes() {
   document.getElementById('detail').innerHTML = `
     <div class="d-head">
       <div class="d-titles">
-        <div class="d-name">Decisiones que atraviesan los cuatro workflows</div>
+        <div class="d-name">Decisiones que atraviesan los tres workflows</div>
         <div class="d-meta">contexto del refactor</div>
       </div>
       <button class="d-close" data-close aria-label="Cerrar">&times;</button>
@@ -675,8 +585,7 @@ function openNotes() {
       <li><b>APIs</b>: actor Apify <code>M2FMdjRVeF1HPGFcc</code> para la búsqueda, <code>LpVuK3Zozwuipa5bp</code> vía <code>TS_EMAIL_FINDER</code> para el correo, OpenAI <code>gpt-5-mini</code> para la interpretación. Las tres cuentas ya existen.</li>
       <li><b>La cuota del actor es por hora y compartida</b> entre los dos disparadores. <code>startPage</code> permite retomar sin repagar páginas ya traídas.</li>
       <li><b>El pool guarda todas las detecciones.</b> Nada se descarta por disponibilidad: el candidato se persiste con su <code>open_to_work</code> resuelto y el reclutador filtra por ese campo. Por eso la compra de correo deja de filtrar por disponibilidad y alcanza a todo candidato sin <code>email</code>.</li>
-      <li><b>La re-validación cuelga del disparo programado.</b> Una sola instancia activa, invocada al cerrar la ejecución del pipeline con el conjunto de candidatos ya decidido. La búsqueda del reclutador no la dispara: resuelve contra lo que el flujo dejó escrito, y por eso responde sin esperar a la fuente.</li>
-      <li><b>Solo se re-valida al disponible vencido.</b> Con el pool guardando también a los no disponibles, despachar todos los vencidos multiplicaría el gasto de cada ejecución.</li>
+      <li><b>Sin re-validación.</b> La ejecución programada termina con el reporte. La disponibilidad de un candidato se actualiza cuando una búsqueda, programada o asistida, lo vuelve a encontrar, y la búsqueda del reclutador resuelve contra lo que el flujo dejó escrito, sin esperar a la fuente (HUSRP-2.19).</li>
       <li><b>Prefijo <code>AS_</code></b> propuesto para el disparador de la búsqueda asistida, distinguiéndolo de <code>TS_</code>, <code>AU_</code> y <code>ENRICH_</code>. Decisión de nomenclatura a confirmar.</li>
     </ul></div>`;
   document.getElementById('detail').classList.add('open');

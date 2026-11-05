@@ -962,7 +962,6 @@ function runSearch() {
 
   empty.style.display = 'none';
   card.style.display = 'block';
-  const aip = document.getElementById('aiPanel'); if (aip) aip.style.display = 'none';
   if (ind) ind.style.display = 'flex';
   note.style.display = 'none';
   tbody.innerHTML = '';
@@ -1348,133 +1347,8 @@ function refreshRowState(id) {
 
 
 /* ========================================================================
-   AI Search — interpretación de la descripción y búsqueda en la fuente
+   AI Search — estimación y búsqueda en la fuente
    ======================================================================== */
-
-/* Léxico del intérprete. En operación esto lo resuelve el modelo de lenguaje;
-   acá se replica con coincidencia de términos para que la demo sea real. */
-const LEX = {
-  roles: {
-    'Paralegal': ['paralegal'],
-    'Legal Assistant': ['legal assistant','asistente legal','asistente jurídico','law clerk'],
-    'Customer Service Representative': ['customer service','servicio al cliente','csr','customer support','soporte al cliente'],
-    'Executive Assistant': ['executive assistant','asistente ejecutiv','virtual assistant','asistente virtual'],
-    'Sales Development Representative': ['sdr','sales development','inside sales','representante de ventas'],
-    'Collections Specialist': ['collections','cobranza'],
-    'Medical Biller': ['medical billing','medical biller','facturación médica'],
-    'Bookkeeper': ['bookkeeper','auxiliar contable','accounting assistant'],
-    'Technical Support Specialist': ['technical support','soporte técnico','help desk'],
-  },
-  skills: {
-    'Litigation': ['litigation','litigio'],
-    'Immigration Law': ['immigration','inmigración','migratorio'],
-    'Personal Injury': ['personal injury','lesiones personales'],
-    'Case Management': ['case management','manejo de casos','expedientes'],
-    'Drafting': ['drafting','redacción','pleadings','demandas'],
-    'Salesforce': ['salesforce'],
-    'Zendesk': ['zendesk'],
-    'HubSpot': ['hubspot'],
-    'QuickBooks': ['quickbooks'],
-    'CRM': ['crm'],
-    'Call Center': ['call center','contact center'],
-    'E-commerce': ['e-commerce','ecommerce','shopify'],
-    'Cold Calling': ['cold call','llamada en frío'],
-  },
-  industries: {
-    'Legal': ['law firm','bufete','legal','jurídic'],
-    'Healthcare': ['healthcare','salud','medical','médic'],
-    'Fintech': ['fintech','banking','banca'],
-    'SaaS': ['saas','software'],
-    'Logistics': ['logistics','logística','freight'],
-    'BPO': ['bpo','outsourcing','tercerizac'],
-  },
-  seniority: {
-    'Entry level': ['entry level','junior','trainee','sin experiencia'],
-    'Mid-Senior': ['semi senior','mid','intermedio'],
-    'Senior': ['senior','sr.','experimentad'],
-    'Manager': ['manager','gerente','jefe de'],
-  },
-  languages: {
-    'English': ['english','inglés','ingles','bilingual','bilingüe','c1','b2'],
-    'Portuguese': ['portuguese','portugués'],
-    'French': ['french','francés'],
-  },
-};
-
-/* Palabras que no aportan a una búsqueda de perfiles. */
-const STOPWORDS = new Set(('necesito busco buscamos quiero requiero alguien persona candidato candidata ' +
-  'que para con una unos unas los las del de la el en por sobre como muy más mas tenga tener sea ser ' +
-  'need needing looking want wanted someone person candidate profile that for with the and are who ' +
-  'able must should have has our we').split(/\s+/));
-
-function keyTerms(raw) {
-  const words = raw.toLowerCase()
-    .replace(/[^\p{L}\p{N}\s+#]/gu, ' ')
-    .split(/\s+/)
-    .filter(w => w.length > 3 && !STOPWORDS.has(w));
-  const uniq = [...new Set(words)].slice(0, 3);
-  return uniq.length ? [uniq.join(' ')] : ['Customer Service Representative'];
-}
-
-function matchLex(text, group) {
-  const out = [];
-  for (const [label, terms] of Object.entries(group)) {
-    if (terms.some(t => text.includes(t))) out.push(label);
-  }
-  return out;
-}
-
-/* Traduce el texto libre a criterios + tres consultas jerárquicas. */
-function interpretDescription(raw, langHint) {
-  const text = raw.toLowerCase();
-  const roles = matchLex(text, LEX.roles);
-  const skills = matchLex(text, LEX.skills);
-  const industries = matchLex(text, LEX.industries);
-  const seniority = matchLex(text, LEX.seniority);
-  const langs = matchLex(text, LEX.languages);
-  if (langHint && !langs.includes(langHint)) langs.unshift(langHint);
-
-  const yearsMatch = text.match(/(\d+)\s*\+?\s*(años|years|year|año)/);
-  const years = yearsMatch ? parseInt(yearsMatch[1], 10) : null;
-
-  /* Si el texto no dispara ningún rol conocido, se destilan las palabras con
-     contenido y se usan como frase de búsqueda: es lo que haría el modelo ante
-     una descripción atípica, en vez de mandar la oración entera a la fuente. */
-  const roleTerms = roles.length ? roles : keyTerms(raw);
-  const roleFromText = !roles.length;
-
-  const OTW = '("Open to work" OR "#OpenToWork" OR "Búsqueda activa")';
-  const NOT_REC = 'NOT (recruiter OR reclutador OR "talent acquisition")';
-  const q = arr => arr.map(t => `"${t}"`).join(' OR ');
-
-  const levels = [
-    { name: 'Specific',
-      query: `(${q(roleTerms)}) AND ${OTW}` +
-             (skills.length ? ` AND (${q(skills.slice(0, 2))})` : '') +
-             (langs.length ? ` AND "${langs[0]}"` : '') + ` ${NOT_REC}` },
-    { name: 'Broader',
-      query: `(${q(roleTerms)}) AND ${OTW}` +
-             (skills.length ? ` AND (${q(skills.slice(0, 1))})` : '') + ` ${NOT_REC}` },
-    { name: 'Generic',
-      query: `(${q(roleTerms)}) AND ${OTW} ${NOT_REC}` },
-  ];
-
-  const keywords = [...roleTerms, ...skills, ...industries, ...seniority, ...langs];
-  const discarded = descartes(raw, keywords);
-  return { keywords, discarded, levels };
-}
-
-/* Lo que el modelo leyó y decidió no usar: describe al puesto, no al candidato. */
-const RUIDO = ['remoto','remote','full time','tiempo completo','beneficios','seguro','pto',
-  'vacaciones','salario','comisión','ambiente','crecimiento','proactiv','responsab','puntual',
-  'detallista','organizad','bajo presión','multitarea','atención al detalle','años de experiencia',
-  'microsoft office','contrato','quincenal','estabilidad'];
-function descartes(raw, usados) {
-  const t = raw.toLowerCase();
-  const hit = RUIDO.filter(r => t.includes(r));
-  const uniq = [...new Set(hit)].slice(0, 6);
-  return uniq.map(x => x.charAt(0).toUpperCase() + x.slice(1));
-}
 
 /* ----------------- Estimación de alcance y costo -----------------
    Mismas tarifas y supuestos que la proyección mensual: COST_MODEL. */
@@ -1492,43 +1366,43 @@ const budgetLeft = () => BUDGET.cap - BUDGET.spent;
 
 /* ----------------- Candidatos que trae la búsqueda asistida (mock) ----------------- */
 const AI_POOL = [
-  { id:101, first:'Camila', last:'Ospina', loc:'Bogotá, Colombia', verified:true, emailKnown:true,
+  { id:101, first:'Camila', last:'Ospina', loc:'Bogotá, Colombia', verified:true, otw:true, emailKnown:true,
     headline:'Paralegal | Immigration & Family Law', email:'camila.ospina@gmail.com',
     skills:['Immigration Law','Case Management','Drafting'], languages:['Español','Inglés'],
     about:'Paralegal con 5 años en firmas de inmigración. Manejo de expedientes USCIS. Inglés C1. Open to work.' },
-  { id:102, first:'Tomás', last:'Aguirre', loc:'Buenos Aires, Argentina', verified:true, emailKnown:true,
+  { id:102, first:'Tomás', last:'Aguirre', loc:'Buenos Aires, Argentina', verified:true, otw:true, emailKnown:true,
     headline:'Legal Assistant | Personal Injury', email:'tomas.aguirre@outlook.com',
     skills:['Personal Injury','Litigation','Case Management'], languages:['Español','Inglés'],
     about:'Asistente legal especializado en personal injury para firmas de EE. UU. Redacción de demandas.' },
-  { id:103, first:'Daniela', last:'Rojas', loc:'Medellín, Colombia', verified:false, emailKnown:false,
+  { id:103, first:'Daniela', last:'Rojas', loc:'Medellín, Colombia', verified:false, otw:true, emailKnown:false,
     headline:'Paralegal | Corporate & Contracts', email:null,
     skills:['Drafting','Case Management'], languages:['Español','Inglés'],
     about:'Paralegal corporativa, revisión y redacción de contratos. Inglés avanzado, disponible de inmediato.' },
-  { id:104, first:'Andrés', last:'Quispe', loc:'Lima, Perú', verified:true, emailKnown:true,
+  { id:104, first:'Andrés', last:'Quispe', loc:'Lima, Perú', verified:true, otw:true, emailKnown:true,
     headline:'Legal Assistant | Immigration Law', email:'a.quispe@proton.me',
     skills:['Immigration Law','Drafting'], languages:['Español','Inglés'],
     about:'Asistente jurídico con foco migratorio. Preparación de peticiones y seguimiento de casos.' },
-  { id:105, first:'Lucía', last:'Ferreira', loc:'Córdoba, Argentina', verified:false, emailKnown:true,
+  { id:105, first:'Lucía', last:'Ferreira', loc:'Córdoba, Argentina', verified:false, otw:true, emailKnown:true,
     headline:'Paralegal | Litigation Support', email:'lucia.ferreira@gmail.com',
     skills:['Litigation','Case Management','Drafting'], languages:['Español','Inglés','Portugués'],
     about:'Paralegal con experiencia en litigio civil. Soporte a abogados en descubrimiento de prueba.' },
-  { id:106, first:'Jorge', last:'Betancur', loc:'Barranquilla, Colombia', verified:true, emailKnown:false,
+  { id:106, first:'Jorge', last:'Betancur', loc:'Barranquilla, Colombia', verified:true, otw:true, emailKnown:false,
     headline:'Legal Assistant | Bilingual', email:null,
     skills:['Case Management'], languages:['Español','Inglés'],
     about:'Asistente legal bilingüe. Atención a clientes y gestión documental para firma en Florida.' },
-  { id:107, first:'Paula', last:'Ncube', loc:'Nairobi, Kenia', verified:true, emailKnown:true,
+  { id:107, first:'Paula', last:'Ncube', loc:'Nairobi, Kenia', verified:true, otw:true, emailKnown:true,
     headline:'Legal Assistant | Contracts & Compliance', email:'p.ncube@gmail.com',
     skills:['Drafting','Case Management'], languages:['Inglés'],
     about:'Legal assistant supporting US-based contract review. Native English, remote-first.' },
-  { id:108, first:'Ricardo', last:'Salas', loc:'Chihuahua, México', verified:false, emailKnown:true,
+  { id:108, first:'Ricardo', last:'Salas', loc:'Chihuahua, México', verified:false, otw:true, emailKnown:true,
     headline:'Paralegal | Immigration', email:'ricardo.salas@hotmail.com',
     skills:['Immigration Law','Drafting'], languages:['Español','Inglés'],
     about:'Paralegal migratorio con 3 años en despacho binacional. Buscando rol remoto.' },
-  { id:109, first:'Mariana', last:'Duarte', loc:'Mérida, México', verified:true, emailKnown:false,
+  { id:109, first:'Mariana', last:'Duarte', loc:'Mérida, México', verified:true, otw:true, emailKnown:false,
     headline:'Legal Support Specialist | Family Law', email:null,
     skills:['Case Management','Drafting'], languages:['Español','Inglés'],
     about:'Soporte legal en derecho de familia. Inglés B2, disponible medio tiempo o completo.' },
-  { id:110, first:'Sebastián', last:'Rivas', loc:'Medellín Area Metropolitana, Colombia', verified:false, emailKnown:true,
+  { id:110, first:'Sebastián', last:'Rivas', loc:'Medellín Area Metropolitana, Colombia', verified:false, otw:true, emailKnown:true,
     headline:'Paralegal Assistant | Real Estate Closings', email:'seb.rivas@gmail.com',
     skills:['Drafting','Case Management'], languages:['Español','Inglés'],
     about:'Asistente paralegal en cierres inmobiliarios para clientes de EE. UU.' },
@@ -1731,7 +1605,6 @@ function submitAiSearch() {
 /* ----------------- AI Search — ejecución ----------------- */
 function runAiSearch(desc, langHint) {
   const tbody = document.getElementById('candRows'); if (!tbody) return;
-  const crit = interpretDescription(desc, langHint);
   const cities = AI_FORM.cities.size;
   const pageBudget = AI_FORM.pages * cities;
 
@@ -1742,7 +1615,6 @@ function runAiSearch(desc, langHint) {
   clearFilters();
   populateFilterOptions();
   bindRowSelection(tbody);
-  renderAiPanel(crit, 0);
 
   const note = document.getElementById('loadNote');
   const ind = document.getElementById('searchIndicator');
@@ -1775,7 +1647,6 @@ function runAiSearch(desc, langHint) {
   deliver(AI_POOL.slice(0, 4), 700, () => {
     if (delivered.length >= BROADEN_MIN || l2Pages < 1) return finish();
     /* Por debajo del mínimo: se amplía al criterio siguiente y se acumula sin duplicar. */
-    renderAiPanel(crit, 1);
     setNote(`Only ${delivered.length} matched — broadening to a wider criteria with the pages left…`);
     spent.pages += l2Pages; spent.profiles += scrapedFor(l2Pages);
     setTimeout(() => deliver(AI_POOL.slice(4), 0, finish), 900);
@@ -1791,7 +1662,6 @@ function runAiSearch(desc, langHint) {
     /* Estado con que cierra el flujo: done · empty · partial · error. */
     const status = !delivered.length ? 'empty'
       : (spent.pages < pageBudget && delivered.length < BROADEN_MIN ? 'partial' : 'done');
-    renderAiSpend(spent, real, est.total, status);
     if (status === 'empty') {
       showToast('No candidates matched. Try a broader description or add cities.', 'info');
     } else if (status === 'partial') {
@@ -1800,49 +1670,6 @@ function runAiSearch(desc, langHint) {
       showToast(`${delivered.length} candidates added · ${money(real)} spent of ${money(est.total)} estimated`, 'success');
     }
   }
-}
-
-/* Panel de interpretación: qué entendió el modelo y con qué criterio está buscando. */
-function renderAiPanel(crit, activeLevel) {
-  const panel = document.getElementById('aiPanel'); if (!panel) return;
-  panel.style.display = 'block';
-  const kw = crit.keywords.map(k => `<span class="crit-chip">${k}</span>`).join('');
-  const dis = crit.discarded.length
-    ? `<div class="crit-discarded"><span class="crit-key">descartado</span>${crit.discarded.map(d => `<span class="crit-chip out">${d}</span>`).join('')}</div>` : '';
-  panel.innerHTML = `
-    <div class="ai-panel-head">
-      <span class="ai-badge">AI Search</span>
-      <span class="ai-panel-title">Palabras clave con que estamos buscando</span>
-    </div>
-    <div class="crit-chips">${kw}</div>
-    ${dis}
-    <div class="ai-levels">
-      ${crit.levels.map((l, i) => `
-        <div class="ai-level${i === activeLevel ? ' active' : ''}${i < activeLevel ? ' used' : ''}">
-          <span class="ai-level-name">${i + 1}. ${l.name}${i === activeLevel ? ' · en curso' : (i < activeLevel ? ' · pocos resultados' : '')}</span>
-          <code class="ai-level-query">${l.query.replace(/</g, '&lt;')}</code>
-        </div>`).join('')}
-    </div>
-    <div id="aiSpend" class="ai-spend" style="display:none;"></div>`;
-}
-
-const AI_STATUS = {
-  done:    { t:'Búsqueda completada', c:'var(--status-success-fg)' },
-  empty:   { t:'Sin resultados', c:'var(--text-muted)' },
-  partial: { t:'Resultado parcial — la fuente limitó el uso', c:'var(--status-warning-fg)' },
-  error:   { t:'La búsqueda falló', c:'var(--status-error-fg)' },
-};
-function renderAiSpend(spent, real, est, status = 'done') {
-  const el = document.getElementById('aiSpend'); if (!el) return;
-  const st = AI_STATUS[status] || AI_STATUS.done;
-  el.style.display = 'flex';
-  el.innerHTML = `
-    <span class="ai-status" style="color:${st.c}">${st.t}</span>
-    <span><b>${spent.pages}</b> pages opened</span>
-    <span><b>${spent.profiles}</b> profiles scraped</span>
-    <span><b>${spent.emails}</b> emails captured</span>
-    <span class="ai-spend-cost">Real cost <b>${money(real)}</b> vs ${money(est)} estimated</span>
-    <span class="ai-spend-budget">${money(budgetLeft())} left of ${money(BUDGET.cap)}</span>`;
 }
 
 
