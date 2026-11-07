@@ -79,13 +79,13 @@
               <thead><tr>
                 <th style="width:36px;"></th>
                 <th>Candidate</th>
-                <th class="th-match" id="thMatch" title="Fit against this search's description · click to sort">AI match <span class="th-sort">↓</span></th>
+                <th class="th-match" id="thMatch" title="Fit against the description of an AI search. In the pool, the most recent analysis · click to sort">AI match <span class="th-sort">↓</span></th>
                 <th>Headline</th>
+                <th>Experience</th>
+                <th>Seniority</th>
                 <th>Skills</th>
                 <th>Languages</th>
                 <th>Email</th>
-                <th>Status</th>
-                <th>Exported</th>
                 <th>LinkedIn</th>
               </tr></thead>
               <tbody id="candRows"></tbody>
@@ -121,6 +121,10 @@
         <h3 data-d-name>—</h3>
         <p data-d-headloc>—</p>
       </div>
+      <a class="btn btn-secondary btn-sm drawer-li" href="#" target="_blank" rel="noopener" title="Open the candidate's LinkedIn profile">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+        LinkedIn ↗
+      </a>
       <button class="drawer-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
     </div>
     <!-- AI match de la búsqueda que trajo al candidato -->
@@ -129,6 +133,7 @@
       <button class="drawer-tab active" role="tab" data-tab="profile">Profile</button>
       <button class="drawer-tab" role="tab" data-tab="history">Experience</button>
       <button class="drawer-tab" role="tab" data-tab="notes">Notes <span class="drawer-tab-count" data-d-notecount></span></button>
+      <button class="drawer-tab" role="tab" data-tab="searches">Searches <span class="drawer-tab-count" data-d-searchcount></span></button>
     </div>
     <div class="drawer-body">
       <section data-panel="profile">
@@ -147,9 +152,16 @@
         </div>
         <div class="drawer-section">
           <span class="detail-label">Details</span>
+          <div class="drawer-kv"><b>Vertical</b><span data-d-vertical>—</span></div>
+          <div class="drawer-kv"><b>Profile</b><span data-d-profile>—</span></div>
           <div class="drawer-kv"><b>Location</b><span data-d-loc>—</span></div>
           <div class="drawer-kv"><b>Email</b><span data-d-email>—</span></div>
           <div class="drawer-kv"><b>Languages</b><span data-d-langs>—</span></div>
+          <div class="drawer-kv"><b>Experience</b><span data-d-years>—</span></div>
+          <div class="drawer-kv"><b>Seniority</b><span data-d-seniority>—</span></div>
+          <div class="drawer-kv"><b>Current role</b><span data-d-current>—</span></div>
+          <div class="drawer-kv"><b>Education</b><span data-d-edu>—</span></div>
+          <div class="drawer-kv"><b>Remote</b><span data-d-remote>—</span></div>
         </div>
         <div class="drawer-section">
           <span class="detail-label">Status</span>
@@ -172,6 +184,13 @@
         </div>
       </section>
 
+      <section data-panel="searches" hidden>
+        <div class="drawer-section">
+          <span class="detail-label">AI searches that found this candidate</span>
+          <div id="searchHistory" class="search-history"></div>
+        </div>
+      </section>
+
       <section data-panel="notes" hidden>
         <div class="drawer-section">
           <span class="detail-label">Notes</span>
@@ -183,9 +202,6 @@
         </div>
       </section>
 
-      <div class="drawer-action">
-        <a class="btn btn-secondary" href="#" target="_blank" rel="noopener" style="width:100%; justify-content:center;">View LinkedIn profile ↗</a>
-      </div>
     </div>
   </aside>
 
@@ -198,9 +214,9 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="aiProfile">Search profile</label>
-          <select class="form-select" id="aiProfile"></select>
-          <p class="filter-hint">Candidates we find get attached to this profile, so you can look them up later the usual way.</p>
+          <label class="form-label" for="aiVertical">Vertical</label>
+          <select class="form-select" id="aiVertical"></select>
+          <p class="filter-hint">The area of the role you need. Candidates whose role fits it add this vertical, and each one gets the catalog profile that matches their experience.</p>
         </div>
 
         <div class="form-group">
@@ -231,18 +247,13 @@
             <div class="city-suggest" id="aiCitySuggest"></div>
           </div>
           <div class="city-chips" id="aiCities"></div>
-          <p class="filter-hint">Any city in the catalog is available here, not only the ones the scheduled search covers. The pages you pick are searched <b>in each city you select</b>, so both the result and the cost multiply.</p>
+          <p class="filter-hint">Any city in the catalog is available here, not only the ones the scheduled search covers. The pages you pick are searched <b>in each city you select</b>, so the reach multiplies.</p>
         </div>
 
+        <!-- Alcance de la búsqueda. El costo no se muestra a quien busca: lo gobierna el administrador en Parámetros. -->
         <div class="ai-estimate">
           <div class="ai-est-row"><span class="ai-est-label">Scope</span><span id="aiMath">—</span></div>
           <div class="ai-est-row"><span class="ai-est-label">Candidates</span><span id="aiCands">—</span></div>
-          <div class="ai-est-row ai-est-total"><span class="ai-est-label">Estimated cost</span><span id="aiCost">—</span></div>
-          <p class="ai-est-break" id="aiCostBreak"></p>
-          <div class="ai-budget">
-            <div class="ai-budget-bar" id="aiBudgetBar"></div>
-            <span id="aiBudget"></span>
-          </div>
           <div class="ai-warn" id="aiBudgetWarn" style="display:none;"></div>
         </div>
       </div>
@@ -280,7 +291,7 @@
     </div>
   </div>
 
-  <!-- Progreso de la AI Search, fijo en el pie -->
+  <!-- Progreso de la AI Search, fijo en el footer -->
   <div class="ai-progress" id="aiProgress" role="status" aria-live="polite" hidden>
     <span class="ai-progress-ico" data-p-ico></span>
     <div class="ai-progress-body">
@@ -290,6 +301,18 @@
     <span data-p-action></span>
     <button type="button" class="ai-progress-close" onclick="hideAiProgress()" aria-label="Close">&times;</button>
     <span class="ai-progress-bar"></span>
+  </div>
+
+  <!-- Detalle de una búsqueda asistida (desde la pestaña Searches del candidato) -->
+  <div class="modal-overlay" id="searchModal">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 class="modal-title" data-s-name>—</h3>
+        <button class="modal-close" onclick="closeModal('searchModal')" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" data-s-body></div>
+      <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('searchModal')">Close</button></div>
+    </div>
   </div>
 
   <div class="toast-container" id="toastContainer"></div>

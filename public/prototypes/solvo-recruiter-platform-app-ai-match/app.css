@@ -627,11 +627,11 @@ th.th-match.sorted .th-sort { opacity: 1; color: var(--text-primary); }
 }
 
 /* La columna solo existe en los resultados de una AI Search: el pool no tiene descripción contra la cual medir. */
-#resultsCard:not(.is-ai) .th-match,
-#resultsCard:not(.is-ai) td.td-match { display: none; }
+/* La columna existe siempre: en el pool muestra el análisis más reciente; sin análisis, un guion. */
+.match-none { color: var(--text-muted); padding-left: 10px; }
 
 /* Con la columna de match la tabla suma una columna ancha: más ancho mínimo y el nombre sin partir. */
-#resultsCard.is-ai .table-container table { min-width: 1320px; }
+#resultsCard .table-container table { min-width: 1320px; }
 .cand-name { min-width: 210px; }
 .cand-name .font-medium { white-space: nowrap; }
 
@@ -1664,7 +1664,7 @@ th.th-match.sorted .th-sort { opacity: 1; color: var(--text-primary); }
 .op-chip.op-chip-ai { background: var(--status-accent-bg); color: var(--status-accent-fg); border-color: transparent; font-weight: 600; }
 
 /* ========================================================================
-   Progreso de la AI Search: barra fija en el pie, reemplaza al panel que
+   Progreso de la AI Search: barra fija en el footer, reemplaza al panel que
    mostraba palabras, descartes y criterios. Solo dice lo que el reclutador
    necesita: qué búsqueda, si sigue corriendo, cuántos lleva y cómo terminó.
    ======================================================================== */
@@ -1707,3 +1707,47 @@ body.has-ai-progress .bulk-bar { bottom: 84px; }
 body.has-ai-progress .toast-container { bottom: 84px; }
 @media (max-width: 1024px) { .ai-progress { left: var(--spacing-md); right: var(--spacing-md); } }
 @media (prefers-reduced-motion: reduce) { .ai-progress-bar::after { animation: none; left: 0; width: 100%; opacity: .4; } }
+
+/* Habilidades agrupadas en el detalle (perfil normalizado) */
+.skill-group { display: grid; grid-template-columns: 72px 1fr; align-items: start; gap: 6px; margin-bottom: 8px; }
+.skill-group:last-child { margin-bottom: 0; }
+.skill-group .top-skills-label { padding-top: 5px; }
+
+/* Historial de análisis en el detalle */
+.m-history { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-color); }
+.m-history-title { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.m-history-title span { font-weight: 600; margin-left: 4px; }
+.m-history-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: var(--radius-md); }
+.m-history-row.is-shown { background: var(--bg-card); border: 1px solid var(--border-color); }
+.m-history-txt { font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.4; min-width: 0; }
+.m-history-txt b { color: var(--text-primary); font-weight: 600; }
+.m-history-txt span { color: var(--text-muted); font-size: 10.5px; }
+.lang-item .lang-src { font-size: 10.5px; }
+
+/* Pestaña Searches: historial de búsquedas asistidas del candidato */
+.search-history { display: flex; flex-direction: column; gap: 6px; }
+.sh-row {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  padding: 10px 12px; border-radius: var(--radius-md); background: var(--bg-card);
+  border: 1px solid var(--border-color); font-family: var(--font-family); transition: border-color .15s ease;
+}
+.sh-row:hover, .sh-row:focus-visible { border-color: var(--color-secondary); outline: none; }
+.sh-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.sh-txt b { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-primary); line-height: 1.35; }
+.sh-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--font-size-xs); color: var(--text-muted); }
+.sh-vertical { padding: 1px 7px; border-radius: var(--radius-full); background: var(--status-accent-bg); color: var(--status-accent-fg); font-weight: 600; font-size: 10.5px; }
+.sh-go { color: var(--text-muted); flex-shrink: 0; }
+/* Detalle de la búsqueda */
+.sd-result { display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 14px; border-radius: var(--radius-md); background: var(--bg-muted); border: 1px solid var(--border-color); }
+.sd-result b { font-size: var(--font-size-sm); color: var(--text-primary); }
+.sd-result p { margin: 2px 0 0; font-size: var(--font-size-xs); color: var(--text-secondary); line-height: 1.5; }
+.sd-desc { margin-top: 12px; }
+.sd-desc p { margin: 6px 0 0; font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.6; background: var(--bg-muted); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 12px; }
+
+/* Tabla: experiencia y seniority; selección solo con correo */
+.cand-years { white-space: nowrap; font-size: var(--font-size-sm); color: var(--text-primary); }
+.seniority-pill { display: inline-block; padding: 2px 9px; border-radius: var(--radius-full); background: var(--bg-tertiary); border: 1px solid var(--border-color); font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+.cand-check input:disabled { cursor: not-allowed; opacity: .35; }
+
+/* LinkedIn en el encabezado de la ficha */
+.drawer-li { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; white-space: nowrap; }

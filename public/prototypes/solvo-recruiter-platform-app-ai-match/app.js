@@ -928,18 +928,39 @@ const ICON_FILTERS = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none
 /* Filtros del popup. `neutral` es el valor que no filtra (no lleva chip);
    `def` es con lo que arranca la página: disponibles y no exportados, como antes. */
 const FILTER_DEFS = [
+  { key: 'vertical', group: 'Candidate', label: 'Vertical', type: 'multi', neutral: [], def: [],
+    hint: 'Verticals of the AI searches that found the candidate on target. A candidate can have more than one.',
+    options: () => [...VERTICALS.map(v => ({ value: v, label: v })), { value: 'none', label: 'No vertical' }],
+    chip: v => v.length > 2 ? `${v.length} verticals` : v.map(x => x === 'none' ? 'No vertical' : x).join(', ') },
   { key: 'avail', group: 'Candidate', label: 'Availability', type: 'single', neutral: 'all', def: 'yes',
     hint: 'Open to work as the last availability check found it.',
     options: () => [{ value: 'yes', label: 'Open to work', note: 'Default' }, { value: 'no', label: 'Not available' }, { value: 'all', label: 'Both' }],
     chip: v => ({ yes: 'Open to work', no: 'Not available' })[v] },
   { key: 'lang', group: 'Candidate', label: 'Languages', type: 'multi', neutral: [], def: [],
-    hint: 'Languages listed on the profile. A candidate matches if they list any of the checked ones.',
-    options: () => [...new Set(poolCands().flatMap(c => langNames(c)))].sort().map(l => ({ value: l, label: l })),
+    hint: 'Languages on the profile, with one name per language whatever way the candidate wrote it. A candidate matches if they speak any of the checked ones.',
+    options: () => [...new Set(poolCands().flatMap(c => normalizeProfile(c).languages.map(l => l.language)))].sort().map(l => ({ value: l, label: l })),
     chip: v => v.length > 2 ? `${v.length} languages` : v.join(', ') },
-  { key: 'loc', group: 'Candidate', label: 'Location', type: 'multi', neutral: [], def: [],
-    hint: 'Country of the candidate.',
-    options: () => [...new Set(poolCands().map(candCountry))].sort().map(l => ({ value: l, label: l })),
-    chip: v => v.length > 2 ? `${v.length} countries` : v.join(', ') },
+  { key: 'langLevel', group: 'Candidate', label: 'Language level', type: 'single', neutral: 'any', def: 'any',
+    hint: 'Minimum level for the languages checked above. With no language checked, it applies to English.',
+    options: () => [{ value: 'any', label: 'Any level' }, ...LEVELS.slice(1).map(l => ({ value: l, label: `${LEVEL_LABEL[l]} or higher` }))],
+    chip: v => `${LEVEL_LABEL[v]}+` },
+  { key: 'exp', group: 'Candidate', label: 'Years of experience', type: 'multi', neutral: [], def: [],
+    hint: 'Total years in their positions, without counting overlaps twice or internships.',
+    options: () => [{ value: 'lt2', label: 'Less than 2' }, { value: '2to5', label: '2 to 5' }, { value: '5to10', label: '5 to 10' }, { value: 'gt10', label: 'More than 10' }],
+    chip: v => v.map(x => ({ lt2: '<2 yrs', '2to5': '2–5 yrs', '5to10': '5–10 yrs', gt10: '10+ yrs' })[x]).join(', ') },
+  { key: 'seniority', group: 'Candidate', label: 'Seniority', type: 'multi', neutral: [], def: [],
+    hint: 'Level of the current or most recent role, from its title, whether they lead others and their years of experience.',
+    options: () => Object.entries(SENIORITY_LABEL).map(([value, label]) => ({ value, label })),
+    chip: v => v.map(x => SENIORITY_LABEL[x]).join(', ') },
+  { key: 'remote', group: 'Candidate', label: 'Remote experience', type: 'single', neutral: 'any', def: 'any',
+    hint: 'Whether at least one of their positions was remote.',
+    options: () => [{ value: 'any', label: 'Any' }, { value: 'yes', label: 'Has worked remotely' }],
+    chip: () => 'Remote experience' },
+  { key: 'loc', group: 'Candidate', label: 'City', type: 'multi', neutral: [], def: [],
+    hint: 'City from the cities catalog: the one the AI search used when it found the candidate.',
+    options: () => [...ALL_CITIES.filter(x => poolCands().some(c => normalizeProfile(c).city === x.city)).map(x => ({ value: x.city, label: x.city, note: x.country })),
+                    { value: 'none', label: 'No catalog city' }],
+    chip: v => v.length > 2 ? `${v.length} cities` : v.map(x => x === 'none' ? 'No catalog city' : x).join(', ') },
   { key: 'email', group: 'Candidate', label: 'Contact email', type: 'single', neutral: 'any', def: 'any',
     hint: 'Whether the pipeline found a contact email for the candidate.',
     options: () => [{ value: 'any', label: 'Any' }, { value: 'with', label: 'With email' }, { value: 'without', label: 'Without email' }],
@@ -970,7 +991,7 @@ const detectedAt = c => c.detectedAt || (c.detectedAt = new Date(Date.now() - c.
 function initSearchPage() {
   profilePicker = renderShellPicker('pickProfile', {
     icon: ICON_PROFILE, allLabel: 'All profiles', plural: 'profiles', searchPlaceholder: 'Search profile',
-    items: PROFILES.map(p => ({ value: p, label: p })),
+    items: [...CATALOG_PROFILES, 'Otros'].map(p => ({ value: p, label: p })),
     onChange: v => { SEARCH.profiles = v; candPage = 0; applyFilters(); },
   });
   const input = document.getElementById('searchInput');
@@ -1013,8 +1034,9 @@ function loadPool() {
 }
 
 function renderSortOptions() {
-  const opts = [['newest', 'Newest detected'], ['oldest', 'Oldest detected'], ['name', 'Name A–Z']];
-  if (SEARCH.ai) opts.unshift(['match', 'AI match']);
+  const opts = [['newest', 'Newest detected'], ['oldest', 'Oldest detected'], ['experience', 'Most experience'], ['name', 'Name A–Z']];
+  opts.push(['match', 'AI match']);
+  if (SEARCH.ai) opts.unshift(opts.pop());
   const sel = document.getElementById('sortSelect');
   sel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
   sel.value = SEARCH.sort;
@@ -1040,12 +1062,22 @@ let LAST_MATCHES = [];
 
 function rowPasses(tr) {
   const f = SEARCH.filters;
-  if (SEARCH.ai && tr.dataset.off === '1' && !SHOW_OFF) return false;
-  if (SEARCH.q && !tr.dataset.text.includes(SEARCH.q.toLowerCase())) return false;
+  if (SEARCH.q && !tr.dataset.text.includes(norm(SEARCH.q))) return false;
   if (SEARCH.profiles.length && !SEARCH.profiles.includes(tr.dataset.profile)) return false;
+  if (f.vertical.length) {
+    const vs = JSON.parse(tr.dataset.vertical || '[]');
+    if (!f.vertical.some(v => v === 'none' ? !vs.length : vs.includes(v))) return false;
+  }
   if (f.avail !== 'all' && tr.dataset.otw !== f.avail) return false;
-  if (f.lang.length && !tr.dataset.langs.split('|').some(l => f.lang.includes(l))) return false;
-  if (f.loc.length && !f.loc.includes(tr.dataset.country)) return false;
+  if (f.lang.length || f.langLevel !== 'any') {
+    const want = f.lang.length ? f.lang : ['English'];
+    const min = f.langLevel === 'any' ? -1 : LEVELS.indexOf(f.langLevel);
+    if (!JSON.parse(tr.dataset.langs || '[]').some(l => want.includes(l.language) && LEVELS.indexOf(l.level) >= min)) return false;
+  }
+  if (f.exp.length && !f.exp.includes(yearsBucket(tr.dataset.years === '' ? null : +tr.dataset.years))) return false;
+  if (f.remote === 'yes' && tr.dataset.remote !== '1') return false;
+  if (f.seniority.length && !f.seniority.includes(tr.dataset.seniority)) return false;
+  if (f.loc.length && !f.loc.includes(tr.dataset.city)) return false;
   if (f.email === 'with' && tr.dataset.email !== '1') return false;
   if (f.email === 'without' && tr.dataset.email === '1') return false;
   if (f.status.length && !f.status.includes(tr.dataset.status)) return false;
@@ -1058,6 +1090,7 @@ const SORTERS = {
   newest: (a, b) => (+b.dataset.detected) - (+a.dataset.detected),
   oldest: (a, b) => (+a.dataset.detected) - (+b.dataset.detected),
   name:   (a, b) => a.dataset.name.localeCompare(b.dataset.name),
+  experience: (a, b) => (+b.dataset.years || 0) - (+a.dataset.years || 0),
 };
 
 function applyFilters() {
@@ -1145,8 +1178,8 @@ function clearEverything() {
 function enterAiMode() {
   SEARCH.ai = true;
   SEARCH.q = ''; document.getElementById('searchInput').value = '';
-  SEARCH.filters = defaultFilters();
-  SEARCH.filters.avail = 'all';
+  /* Los resultados muestran a todos los candidatos de la búsqueda: sin los filtros del pool. */
+  SEARCH.filters = Object.fromEntries(FILTER_DEFS.map(f => [f.key, clone(f.neutral)]));
   SEARCH.sort = 'match';
   renderSortOptions();
 }
@@ -1222,16 +1255,25 @@ function fillDrawer(c) {
   d.querySelector('[data-d-about]').textContent = c.about;
   /* La ubicación estructurada se lee de un vistazo; el texto que devuelve
      LinkedIn queda debajo porque es el que el reclutador reconoce al buscar. */
-  const lp = c.locationParts;
-  d.querySelector('[data-d-loc]').innerHTML = lp
-    ? `<span class="loc-parsed">${[lp.city, lp.country].filter(Boolean).join(', ')}</span><span class="loc-raw">${c.loc}</span>`
+  const np0 = normalizeProfile(c);
+  d.querySelector('[data-d-loc]').innerHTML = np0.city
+    ? `<span class="loc-parsed">${np0.city}, ${np0.country}</span><span class="loc-raw">${c.loc}</span>`
     : c.loc;
   const langEl = d.querySelector('[data-d-langs]');
   /* languages llega de la fuente como objetos {name, proficiency}: el nivel
      es la mitad del dato y sin él no se puede decidir a quién presentar. */
-  if (langEl) langEl.innerHTML = (c.languages || []).length
-    ? c.languages.map(l => `<span class="lang-item"><b>${l.name}</b>${l.proficiency ? `<i>${shortProficiency(l.proficiency)}</i>` : ''}</span>`).join('')
+  const np = normalizeProfile(c);
+  if (langEl) langEl.innerHTML = np.languages.length
+    ? np.languages.map(l => `<span class="lang-item"><b>${l.language}</b>${l.level ? `<i>${LEVEL_LABEL[l.level]}</i>` : ''}${l.source === 'text' ? '<i class="lang-src">· from profile text</i>' : ''}</span>`).join('')
     : '<span class="text-muted">Not stated</span>';
+  const kv = (sel, v) => { const el = d.querySelector(sel); if (el) el.innerHTML = v || '<span class="text-muted">Not stated</span>'; };
+  kv('[data-d-vertical]', np.verticals.join(' · '));
+  kv('[data-d-profile]', np.profile ? `${np.profile}${np.profile === 'Otros' ? ' <span class="text-muted">· no catalog profile fits</span>' : ''}` : '');
+  kv('[data-d-years]', np.years == null ? '' : yearsLabel(np.years));
+  kv('[data-d-seniority]', np.seniority ? SENIORITY_LABEL[np.seniority] : '');
+  kv('[data-d-current]', np.title ? `${np.title}${np.company ? ` <span class="text-muted">· ${np.company}</span>` : ''}` : '');
+  kv('[data-d-edu]', np.edu ? `${EDU_LABEL[np.edu]}${np.field ? ` <span class="text-muted">· ${np.field}</span>` : ''}` : '');
+  kv('[data-d-remote]', np.remote ? 'Yes' : 'No');
   d.querySelector('[data-d-email]').textContent = hasEmailFor(c.id) ? c.email : 'no email';
   d.querySelector('[data-d-experience]').innerHTML = timeline(c.experience, e =>
     [e.position, e.companyName, [e.employmentType, e.location].filter(Boolean).join(' · '),
@@ -1245,9 +1287,9 @@ function fillDrawer(c) {
   const top = c.topSkills || [];
   const topEl = d.querySelector('[data-d-topskills]');
   if (topEl) topEl.innerHTML = top.length ? `<span class="top-skills-label">Top</span>${chips(top)}` : '';
-  /* La lista completa no repite las destacadas: muestra lo que queda. */
-  const resto = c.skills.filter(sk => !top.includes(sk));
-  d.querySelector('[data-d-skills]').innerHTML = resto.length ? chips(resto) : '';
+  /* Habilidades con su nombre canónico, agrupadas: herramientas, técnicas y blandas. */
+  const all = [...np.skills.tools, ...np.skills.technical, ...np.skills.soft].filter(x => !top.includes(x));
+  d.querySelector('[data-d-skills]').innerHTML = all.length ? chips(all) : '';
   DRAWER_ID = c.id;
   const st = candState(c.id);
   const otwEl = d.querySelector('[data-d-otw]'); if (otwEl) otwEl.innerHTML = otwBadge(c);
@@ -1259,6 +1301,7 @@ function fillDrawer(c) {
   renderNotes();
   setCount(d, '[data-d-notecount]', candState(c.id).notes.length);
   fillDrawerMatch(c);
+  renderSearchHistory(c);
   resetDrawerTabs();
 }
 
@@ -1408,29 +1451,39 @@ function buildCandRow(c) {
   tr.className = 'cand-row';
   tr.style.cursor = 'pointer';
   tr.dataset.id = c.id;
-  tr.dataset.text = (c.headline + ' ' + c.about + ' ' + c.skills.join(' ')).toLowerCase();
-  tr.dataset.langs = langNames(c).join('|');
+  const np = normalizeProfile(c);
+  /* La búsqueda de texto lee también las habilidades canónicas: "customer service" encuentra a quien escribió "atención al cliente". */
+  tr.dataset.text = norm([c.headline, c.about, c.skills.join(' '), ...np.skills.tools, ...np.skills.technical, ...np.skills.soft].join(' '));
+  tr.dataset.langs = JSON.stringify(np.languages);
+  tr.dataset.years = np.years ?? '';
+  tr.dataset.edu = np.edu || '';
+  tr.dataset.remote = np.remote ? '1' : '0';
+  tr.dataset.seniority = np.seniority || '';
   tr.dataset.country = candCountry(c);
+  tr.dataset.city = normalizeProfile(c).city || 'none';
   tr.dataset.email = hasEmail ? '1' : '0';
   tr.dataset.status = st.status;
   tr.dataset.otw = otwKey(c);
   tr.dataset.exp = expOwner(st.exp);
-  tr.dataset.profile = c.profile || '';
+  tr.dataset.profile = normalizeProfile(c).profile || '';
+  tr.dataset.vertical = JSON.stringify(normalizeProfile(c).verticals);
   tr.dataset.detected = +detectedAt(c);
   tr.dataset.name = `${c.first} ${c.last}`;
-  tr.dataset.score = c.match && !c.offTarget ? c.match.score : -1;
-  if (c.offTarget) { tr.classList.add('is-off'); tr.dataset.off = '1'; }
+  const ra = rowAnalysis(c);
+  tr.dataset.score = ra && !ra.off && !(SEARCH.ai && c.analyzing) ? ra.score : -1;
   tr.innerHTML = `
-    <td class="cand-check" onclick="event.stopPropagation()"><input type="checkbox" data-id="${c.id}"></td>
+    <td class="cand-check" onclick="event.stopPropagation()">${hasEmail
+      ? `<input type="checkbox" data-id="${c.id}" aria-label="Select for the invitation email">`
+      : `<input type="checkbox" disabled title="No email: an invitation cannot be sent" aria-label="No email, cannot be selected">`}</td>
     <td><div class="cand-name"><span class="cand-avatar">${initials(c)}</span>
-        <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${c.loc}</span></div></div></td>
+        <div><span class="font-medium">${c.first} ${c.last}</span>${st.notes.length ? noteDot(st.notes.length) : ''}<br><span class="text-muted cand-loc">${normalizeProfile(c).city ? `${normalizeProfile(c).city}, ${normalizeProfile(c).country}` : c.loc}</span></div></div></td>
     <td class="td-match" data-cell="match">${matchCell(c)}</td>
     <td class="cand-headline"><span>${c.headline}</span></td>
+    <td class="cand-years">${normalizeProfile(c).years == null ? '<span class="text-muted">—</span>' : yearsLabel(normalizeProfile(c).years)}</td>
+    <td>${normalizeProfile(c).seniority ? `<span class="seniority-pill">${SENIORITY_LABEL[normalizeProfile(c).seniority]}</span>` : '<span class="text-muted">—</span>'}</td>
     <td>${chipsCapped(c.skills, 3)}</td>
-    <td>${chipsCapped(langNames(c), 2)}</td>
+    <td>${chipsCapped(normalizeProfile(c).languages.map(langLabel), 2)}</td>
     <td class="cand-email">${hasEmail ? `<span class="email-cell">${c.email}</span>` : `<span class="email-cell email-none">no email</span>`}</td>
-    <td data-cell="status"><div class="cand-status">${otwBadge(c)}<span data-cell="mgmt">${statusBadge(st.status)}</span></div></td>
-    <td data-cell="export">${exportCell(st.exp)}</td>
     <td onclick="event.stopPropagation()"><a class="cand-li" href="#" target="_blank" rel="noopener">LinkedIn ↗</a></td>`;
   tr.addEventListener('click', () => { fillDrawer(c); openDrawer(); });
   return tr;
@@ -1443,8 +1496,7 @@ function refreshRowState(id) {
   const st = candState(id);
   tr.dataset.status = st.status;
   tr.dataset.exp = expOwner(st.exp);
-  tr.querySelector('[data-cell="mgmt"]').innerHTML = statusBadge(st.status);
-  tr.querySelector('[data-cell="export"]').innerHTML = exportCell(st.exp);
+  /* Estatus y exportación ya no son columnas: siguen en el detalle y en los filtros. */
   const nameCell = tr.querySelector('.cand-name .font-medium');
   const dot = tr.querySelector('.note-dot');
   if (st.notes.length && !dot) nameCell.insertAdjacentHTML('afterend', noteDot(st.notes.length));
@@ -1599,8 +1651,7 @@ const AI_POOL = [
     experience: [xp('Asesor comercial', 'Grupo Soluciones TI', 'Feb 2022', 'Present', '3 yrs 8 mos', 'Medellín, Colombia'),
                  xp('Especialista en tecnología', 'Alkosto', 'Jan 2019', 'Jan 2022', '3 yrs', 'Medellín, Colombia')],
     education: [ed('Profesional', 'Administración de Empresas', 'Universidad EAFIT', '2013 - 2018')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Headline and positions are B2B technology sales; no customer-service role term appears in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'B2B technology sales: consultative selling and demos to companies, not inbound support to consumers.' } },
 
   { id: 203, first: 'Daniela', last: 'Cárdenas', ...where('Barranquilla', 'Colombia', 'Atlántico'), verified: true, otw: true, emailKnown: true,
     email: 'dani.cardenas@outlook.com',
@@ -1628,8 +1679,7 @@ const AI_POOL = [
     languages: [lg('Español', NATIVE), lg('Inglés', WORK)], topSkills: [], skills: ['Six Sigma', 'PPAP', '8D', 'Control de calidad'],
     experience: [xp('Quality Control Engineer', 'Autopartes Andinas', 'Mar 2021', 'Present', '4 yrs 7 mos', 'Lima, Perú')],
     education: [ed('Bachiller', 'Ingeniería Industrial', 'Universidad de Lima', '2014 - 2019')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Quality engineering in manufacturing; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'Quality engineer in automotive manufacturing; no customer support in his history.' } },
 
   { id: 205, first: 'Natalia', last: 'Pardo', ...where('Bogotá', 'Colombia', 'Bogotá D.C.'), verified: true, otw: true, emailKnown: true,
     email: 'natalia.pardo.s@gmail.com',
@@ -1689,8 +1739,7 @@ const AI_POOL = [
     languages: [lg('Español', NATIVE), lg('Inglés', FULL)], topSkills: [], skills: ['Trade marketing', 'Branding', 'Marketing digital'],
     experience: [xp('Jefe de marketing', 'Alicorp', 'May 2019', 'Present', '6 yrs 5 mos', 'Lima, Perú')],
     education: [ed('Licenciatura', 'Marketing', 'Universidad del Pacífico', '2008 - 2013')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Marketing management; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'Twelve years leading trade marketing and brands; a different function from customer support.' } },
 
   { id: 209, first: 'Felipe', last: 'Arango', ...where('Medellín', 'Colombia', 'Antioquia'), verified: true, otw: true, emailKnown: false, email: null,
     headline: 'iOS Developer | 3+ years | SwiftUI | UIKit',
@@ -1698,14 +1747,13 @@ const AI_POOL = [
     languages: [lg('Español', NATIVE), lg('Inglés', WORK)], topSkills: [], skills: ['Swift', 'SwiftUI', 'UIKit', 'REST APIs'],
     experience: [xp('iOS Developer', 'Pragma', 'Jul 2022', 'Present', '3 yrs 3 mos', 'Medellín, Colombia')],
     education: [ed('Profesional', 'Ingeniería de Sistemas', 'Universidad Nacional de Colombia', '2016 - 2021')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Software development; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'iOS developer; no customer-facing support in his history.' } },
 
   { id: 210, first: 'Paola', last: 'Ramírez', ...where('Barranquilla', 'Colombia', 'Atlántico'), verified: false, otw: true, emailKnown: true,
     email: 'paola.ramirez.v@hotmail.com',
     headline: 'Especialista en Ventas | Telemercadeo | Atención al Cliente | Ventas para USA',
-    about: 'Agente de ventas telefónicas para el mercado de Estados Unidos en reparación de crédito. Llamadas outbound, manejo de objeciones y seguimiento en HubSpot.',
-    languages: [lg('Español', NATIVE), lg('Inglés', WORK)],
+    about: 'Agente de ventas telefónicas para el mercado de Estados Unidos en reparación de crédito. Llamadas outbound, manejo de objeciones y seguimiento en HubSpot. Inglés B2.',
+    languages: [lg('Español', NATIVE)],
     topSkills: ['Outbound calls', 'Objection handling'],
     skills: ['Outbound calls', 'Objection handling', 'HubSpot', 'Sales', 'Atención al cliente'],
     experience: [xp('Agente de ventas — US credit repair', 'Allied Global', 'Sep 2023', 'Present', '2 yrs 1 mo', 'Barranquilla, Colombia'),
@@ -1747,8 +1795,7 @@ const AI_POOL = [
     languages: [lg('Español', NATIVE)], topSkills: [], skills: ['Compras', 'Supply chain', 'Negociación'],
     experience: [xp('Jefe de compras', 'Distribuidora Norte', 'Jan 2020', 'Present', '5 yrs 9 mos', 'Lima, Perú')],
     education: [ed('Bachiller', 'Administración', 'Universidad San Martín de Porres', '2010 - 2015')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Procurement management; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'Procurement and supplier management; a different function from customer support.' } },
 
   { id: 213, first: 'Gabriela', last: 'Torres', ...where('Bogotá', 'Colombia', 'Bogotá D.C.'), verified: true, otw: true, emailKnown: true,
     email: 'gabriela.torres.abg@gmail.com',
@@ -1807,8 +1854,7 @@ const AI_POOL = [
     languages: [lg('Español', NATIVE), lg('Inglés', WORK)], topSkills: [], skills: ['Gestión humana', 'Clima organizacional', 'Formación'],
     experience: [xp('Jefe de Desarrollo Humano y Organizacional', 'Comfama', 'Jun 2019', 'Present', '6 yrs 4 mos', 'Medellín, Colombia')],
     education: [ed('Profesional', 'Psicología', 'Universidad CES', '2009 - 2014')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Human resources management; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'Human resources management (organizational development and training); not customer support.' } },
 
   { id: 217, first: 'Mateo', last: 'Cifuentes', ...where('Bogotá', 'Colombia', 'Bogotá D.C.'), verified: false, otw: true, emailKnown: true,
     email: 'mateo.cifuentes@proton.me',
@@ -1868,8 +1914,7 @@ const AI_POOL = [
     experience: [xp('Administrador de A&B', 'Hotel Caribe Plaza', 'Jul 2021', 'Present', '4 yrs 3 mos', 'Barranquilla, Colombia'),
                  xp('Representante de ventas', 'Postobón', 'Jan 2018', 'Jun 2021', '3 yrs 6 mos', 'Barranquilla, Colombia')],
     education: [ed('Técnico', 'Gastronomía', 'SENA', '2015 - 2017')],
-    profile: 'Customer Service Representative', offTarget: 'filter',
-    offReason: 'Food and beverage administration and field sales; no customer-service role term in the headline or in a current or recent position.' },
+    profile: 'Customer Service Representative', match: { off: true, reason: 'Food and beverage administration and field sales; no phone, chat or email support.' } },
 ];
 
 
@@ -1949,10 +1994,11 @@ function openAiSearch() {
     langSel.innerHTML = '<option value="">Any language</option>' +
       REQUIRED_LANGS.map(l => `<option>${l}</option>`).join('');
   }
-  const prof = document.getElementById('aiProfile');
-  if (prof && !prof.options.length) {
-    prof.innerHTML = PROFILES.map(p => `<option>${p}</option>`).join('');
-    prof.value = 'Customer Service Representative';
+  /* La búsqueda arranca por la vertical; el perfil de cada candidato lo asigna la IA al normalizarlo. */
+  const vert = document.getElementById('aiVertical');
+  if (vert && !vert.options.length) {
+    vert.innerHTML = VERTICALS.map(v => `<option>${v}</option>`).join('');
+    vert.value = 'CSR';
     if (langSel) langSel.value = 'English';
   }
   updateAiEstimate();
@@ -2029,41 +2075,35 @@ function updateAiEstimate() {
   AI_FORM.pages = pages;
   const cities = AI_FORM.cities.size;
   const est = estimate(pages, cities);
-  const left = budgetLeft();
 
   const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
   set('aiMath', cities
     ? `<b>${pages}</b> page${pages === 1 ? '' : 's'} × <b>${cities}</b> cit${cities === 1 ? 'y' : 'ies'} = <b>${est.totalPages}</b> pages`
     : 'Pick at least one city');
-  set('aiCands', cities ? `up to <b>${est.maxCands}</b> candidates · <b>~${est.persisted}</b> new to your pool · <b>~${est.expected}</b> expected available` : '—');
-  set('aiCost', cities ? `<b>${money(est.total)}</b>` : '—');
-  set('aiCostBreak', cities
-    ? `search ${money(est.searchCost)} (capped by your pages) + email ~${money(est.emailCost)} (every candidate we keep) + AI match ~${money(est.matchCost)} (available candidates that pass the relevance filter)`
-    : '');
-  set('aiBudget', `${money(left)} left of ${money(BUDGET.cap)} this period`);
+  set('aiCands', cities ? `up to <b>${est.maxCands}</b> candidates` : '—');
 
-  const over = cities && est.total > left;
+  /* El presupuesto se sigue validando, pero quien busca solo ve si puede lanzar, sin montos. */
+  const exhausted = budgetLeft() <= 0;
+  const over = exhausted || (cities && est.total > budgetLeft());
   const btn = document.getElementById('aiSubmit');
   const warn = document.getElementById('aiBudgetWarn');
   if (btn) btn.disabled = !cities || over;
   if (warn) {
     warn.style.display = over ? 'flex' : 'none';
-    warn.innerHTML = over
-      ? `This search would cost ${money(est.total)} and only ${money(left)} is left. Reduce pages or cities.` : '';
+    warn.innerHTML = !over ? ''
+      : exhausted ? "AI Search reached its limit for this period. Ask an administrator."
+      : "This search exceeds what's left in the period. Reduce pages or cities.";
   }
-  document.getElementById('aiBudgetBar')?.style.setProperty('--pct', (BUDGET.spent / BUDGET.cap * 100).toFixed(1) + '%');
 }
 
 function submitAiSearch() {
   const desc = (document.getElementById('aiDesc')?.value || '').trim();
   if (!desc) { showToast('Describe the profile you need', 'info'); return; }
   if (!AI_FORM.cities.size) { showToast('Pick at least one city', 'info'); return; }
-  const est = estimate(AI_FORM.pages, AI_FORM.cities.size);
   closeModal('aiModal');
   openConfirmPopup({
     title: 'Start AI search',
     message: `We'll search LinkedIn live across <b>${AI_FORM.cities.size}</b> cit${AI_FORM.cities.size === 1 ? 'y' : 'ies'}, up to <b>${AI_FORM.pages}</b> page${AI_FORM.pages === 1 ? '' : 's'} each. Candidates will appear in the table as we find them.`,
-    highlight: `Estimated cost up to ${money(est.total)}`,
     icon: 'sparkle',
     confirmLabel: 'Search now',
     onConfirm: () => runAiSearch(desc, document.getElementById('aiLang')?.value || '')
@@ -2090,7 +2130,9 @@ function runAiSearch(desc, langHint) {
   const tbody = document.getElementById('candRows'); if (!tbody) return;
   const cities = AI_FORM.cities.size;
   const pageBudget = AI_FORM.pages * cities;
-  AI_RUN = { at: new Date(), label: runLabel(desc, langHint), found: 0, off: 0, aiOff: 0, analyzed: 0, pending: 0 };
+  AI_RUN = { at: new Date(), label: runLabel(desc, langHint), vertical: document.getElementById('aiVertical')?.value || 'CSR',
+             by: (getCurrentUser() || {}).name || 'You', description: desc, cities: [...AI_FORM.cities], pages: AI_FORM.pages,
+             language: langHint || 'Any language', found: 0, off: 0, aiOff: 0, analyzed: 0, pending: 0 };
 
   SELECTED.clear(); updateBulk();
   document.getElementById('emptyState').style.display = 'none';
@@ -2104,7 +2146,7 @@ function runAiSearch(desc, langHint) {
   bindRowSelection(tbody);
 
   AI_RUN.running = true;
-  const progress = () => showAiProgress('running', onTarget(), AI_RUN.pending);
+  const progress = () => showAiProgress('running', AI_RUN.found, AI_RUN.pending);
 
   /* La ampliación consume el mismo presupuesto de páginas, no uno adicional. */
   const l1Pages = Math.max(1, Math.min(pageBudget, Math.round(pageBudget * 0.55)));
@@ -2112,13 +2154,16 @@ function runAiSearch(desc, langHint) {
   const spent = { pages: 0, profiles: 0, emails: 0 };
   const scrapedFor = p => Math.round(p * COST_MODEL.profilesPerPage * COST_MODEL.uniqueRate);
   /* Pertinentes: lo que pasó el filtro y la IA no marcó fuera de foco. */
-  const onTarget = () => AI_RUN.found - AI_RUN.off - AI_POOL.filter(c => c.match && c.match.off && document.querySelector(`#candRows tr[data-id="${c.id}"]`)).length;
+  const onTarget = () => AI_RUN.found - AI_POOL.filter(c => c.match && c.match.off && document.querySelector(`#candRows tr[data-id="${c.id}"]`)).length;
 
   function analyze(c, tr) {
     AI_RUN.pending++;
     setTimeout(() => {
       c.analyzing = false;
       c.match.run = AI_RUN;
+      const np = normalizeProfile(c);
+      if (!c.match.off && !np.verticals.includes(AI_RUN.vertical)) np.verticals.push(AI_RUN.vertical);
+      tr.dataset.vertical = JSON.stringify(np.verticals);
       tr.dataset.score = c.match.off ? -1 : c.match.score;
       if (c.match.off) { tr.dataset.off = '1'; tr.classList.add('is-off'); AI_RUN.aiOff++; applyFilters(); }
       tr.querySelector('[data-cell="match"]').innerHTML = matchCell(c);
@@ -2133,10 +2178,10 @@ function runAiSearch(desc, langHint) {
       setTimeout(() => {
         AI_RUN.found++;
         AI_DELIVERED.add(c.id);
-        if (c.emailKnown && !c.offTarget) spent.emails++;
+        if (c.emailKnown) spent.emails++;
         const tr = buildCandRow(c);
         tbody.appendChild(tr);
-        if (c.offTarget) AI_RUN.off++; else analyze(c, tr);
+        analyze(c, tr);
         progress();
         applyFilters();
         if (i === list.length - 1) done();
@@ -2169,7 +2214,7 @@ function runAiSearch(desc, langHint) {
     sortByMatch();
     const status = !onTarget() ? 'empty'
       : (spent.pages < pageBudget && onTarget() < BROADEN_MIN ? 'partial' : 'done');
-    showAiProgress(status, onTarget());
+    showAiProgress(status, AI_RUN.found);
   }
 }
 
@@ -2298,11 +2343,17 @@ function matchRing(score, size = 30) {
 }
 
 /* Celda de la tabla. Estados: analizando · fuera de foco (descartado por el filtro) · analizado. */
+/* Análisis que muestra la fila: en una AI Search, el de esa búsqueda; en el pool, el más reciente del candidato. */
+function rowAnalysis(c) {
+  if (SEARCH.ai && c.match && c.match.run === AI_RUN) return c.match;
+  return analysesOf(c)[0] || null;
+}
 function matchCell(c) {
-  if (c.offTarget === 'filter') return `<span class="match-off" tabindex="0" data-mtip="${c.id}:filter">Keyword filter · not analyzed</span>`;
-  const m = c.match;
-  if (m && m.off && !c.analyzing) return `<span class="match-off" tabindex="0" data-mtip="${c.id}:overall">${svgIco(MATCH_OVERALL_ICON, 11)} Off-target</span>`;
-  if (!m || c.analyzing) {
+  const inRun = SEARCH.ai && c.match && c.match.run === AI_RUN;
+  if (!inRun && !rowAnalysis(c)) return '<span class="match-none" title="No AI search has analyzed this candidate yet">—</span>';
+  const m = rowAnalysis(c) || c.match;
+  if (m && m.off && !(inRun && c.analyzing)) return `<span class="match-off" tabindex="0" data-mtip="${c.id}:overall">${svgIco(MATCH_OVERALL_ICON, 11)} Off-target</span>`;
+  if (!m || (inRun && c.analyzing)) {
     return `<div class="match-cell match-pending" title="Analyzing…">${matchRing(null, 30)}<div class="match-icons">${
       MATCH_CRITERIA.map(k => `<span class="m-ico">${svgIco(k.icon, 13)}</span>`).join('')}</div></div>`;
   }
@@ -2317,7 +2368,7 @@ function matchCell(c) {
 
 const fmtRunDate = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' +
   d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-const runSource = run => `AI Search · <b>${run.label}</b> · ${fmtRunDate(run.at)}`;
+const runSource = run => `AI Search · <b>${run.label}</b> · ${fmtRunDate(run.at)}${run.by ? ` · ${run.by}` : ''}`;
 
 /* Tarjeta flotante: una sola en el documento, alimentada por data-mtip="<id>:<criterio>". */
 function initMatchTip() {
@@ -2331,7 +2382,8 @@ function initMatchTip() {
     current = el;
     const [id, key] = el.dataset.mtip.split(':');
     const c = candById(id); if (!c) return;
-    const m = c.match;
+    /* En el detalle, la tarjeta es del análisis que muestra el bloque (puede ser de otra búsqueda). */
+    const m = el.closest('#drawerMatch') ? (c.shown || c.match) : (rowAnalysis(c) || c.match);
     if (key === 'filter') {
       tip.className = 'match-tip m-na';
       tip.innerHTML = `
@@ -2396,18 +2448,27 @@ function initMatchTip() {
 }
 
 /* Bloque del detalle, encima de las pestañas. */
+/* Análisis del candidato: el de cada búsqueda que lo trajo, del más reciente al más antiguo. */
+function analysesOf(c) {
+  const list = (ANALYSIS_HISTORY[c.id] || []).slice();
+  if (c.match && c.match.run && !c.analyzing) list.push(c.match);
+  return list.sort((a, b) => b.run.at - a.run.at);
+}
 function fillDrawerMatch(c) {
   const box = document.getElementById('drawerMatch'); if (!box) return;
-  const m = c.match;
-  if (c.offTarget === 'filter' || (m && m.off)) {
+  const all = analysesOf(c);
+  /* El bloque muestra el de la búsqueda en pantalla; desde el pool, el más reciente. */
+  const m = (SEARCH.ai && c.match && c.match.run === AI_RUN && !c.analyzing) ? c.match : all[0];
+  c.shown = m;
+  if (m && m.off && !c.analyzing) {
     box.hidden = false; box.className = 'drawer-match m-na';
     box.innerHTML = `
       <div class="drawer-match-head">
         ${matchRing(null, 54)}
         <div class="drawer-match-sum">
-          <div class="drawer-match-verdict">${svgIco(MATCH_OVERALL_ICON, 13)} ${c.offTarget === 'filter' ? 'Set aside by the keyword filter' : 'Off-target — a different function'}</div>
-          <div class="drawer-match-reason">${c.offTarget === 'filter' ? c.offReason : m.reason}</div>
-          ${(m && m.run) || AI_RUN ? `<div class="drawer-match-src">${runSource((m && m.run) || AI_RUN)}</div>` : ''}
+          <div class="drawer-match-verdict">${svgIco(MATCH_OVERALL_ICON, 13)} Off-target — a different function</div>
+          <div class="drawer-match-reason">${m.reason}</div>
+          ${m.run ? `<div class="drawer-match-src">${runSource(m.run)}</div>` : ''}
         </div>
       </div>`;
     return;
@@ -2529,7 +2590,7 @@ function renderShellPicker(containerId, options) {
 
 
 
-/* ----------------- Progreso de la AI Search (barra fija en el pie) ----------------- */
+/* ----------------- Progreso de la AI Search (barra fija en el footer) ----------------- */
 const ICO_DONE = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>';
 const ICO_WARN = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>';
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
@@ -2556,3 +2617,232 @@ function hideAiProgress() {
   const el = document.getElementById('aiProgress'); if (el) el.hidden = true;
   document.body.classList.remove('has-ai-progress');
 }
+
+
+/* ========================================================================
+   Perfil normalizado del candidato (FSRP-1 lo calcula en el flujo; acá se
+   replica para la demo). Lo que sale de la fuente se calcula sin IA: años de
+   experiencia, cargo y empresa actual, experiencia remota e idiomas con su
+   nivel. Formación y habilidades canónicas las resuelve la IA en el flujo.
+   ======================================================================== */
+const LANG_CANON = { espanol: 'Spanish', spanish: 'Spanish', ingles: 'English', english: 'English',
+  portugues: 'Portuguese', portuguese: 'Portuguese', frances: 'French', french: 'French',
+  tagalo: 'Tagalog', tagalog: 'Tagalog', italiano: 'Italian', italian: 'Italian', aleman: 'German', german: 'German' };
+const LEVELS = ['elementary', 'limited_working', 'professional_working', 'full_professional', 'native_bilingual'];
+const LEVEL_LABEL = { elementary: 'Elementary', limited_working: 'Limited', professional_working: 'Professional',
+  full_professional: 'Full professional', native_bilingual: 'Native' };
+const LEVEL_FROM_TEXT = { 'elementary proficiency': 'elementary', 'limited working proficiency': 'limited_working',
+  'professional working proficiency': 'professional_working', 'full professional proficiency': 'full_professional',
+  'native or bilingual proficiency': 'native_bilingual' };
+const EDU_LABEL = { secondary: 'Secondary', technical: 'Technical', bachelor: "Bachelor's", postgraduate: 'Postgraduate' };
+/* Nombre canónico (inglés) y grupo de cada habilidad conocida; lo demás queda como técnica con su nombre. */
+const SKILL_CANON = {
+  'atencion al cliente': 'Customer Service', 'servicio al cliente': 'Customer Service', 'customer service': 'Customer Service',
+  'liderazgo': 'Leadership', 'gestion de equipos': 'Team Leadership', 'trabajo en equipo': 'Teamwork',
+  'comunicacion': 'Communication', 'comunicacion interna': 'Internal Communications', 'ventas': 'Sales',
+  'redaccion': 'Writing', 'redaccion juridica': 'Legal Writing', 'litigio': 'Litigation', 'inventarios': 'Inventory Management',
+  'negociacion': 'Negotiation', 'compras': 'Procurement', 'prospeccion': 'Prospecting', 'retail': 'Retail',
+};
+const TOOLS = new Set(['zendesk', 'gorgias', 'salesforce service cloud', 'salesforce', 'shopify', 'hubspot', 'intercom',
+  'freshdesk', 'microsoft office', 'excel', 'crm', 'crm ticketing', 'swift', 'swiftui', 'uikit']);
+const SOFT = new Set(['de-escalation', 'leadership', 'teamwork', 'communication', 'conflict resolution', 'active listening',
+  'negotiation', 'coaching', 'objection handling', 'team leadership']);
+const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 };
+const REMOTE_DEMO = new Set([1, 4, 201, 211, 215, 217, 219]);   // cargos marcados Remote por la fuente en la demo
+
+function monthIndex(txt) {
+  if (!txt) return null;
+  if (/present/i.test(txt)) { const d = new Date(); return d.getFullYear() * 12 + d.getMonth(); }
+  const m = String(txt).match(/([A-Za-z]{3})[a-z]*\s+(\d{4})/); if (m) return +m[2] * 12 + (MONTHS[m[1].toLowerCase()] ?? 0);
+  const y = String(txt).match(/(\d{4})/); return y ? +y[1] * 12 : null;
+}
+
+function normalizeProfile(c) {
+  if (c.norm) return c.norm;
+  const text = norm(`${c.headline || ''} ${c.about || ''}`);
+  /* Idiomas: un elemento por idioma, nombre en inglés, nivel de la fuente o del texto. */
+  const langs = new Map();
+  const fromText = new Set();
+  (c.languages || []).forEach(l => {
+    const raw = typeof l === 'string' ? l : (l.name || '');
+    const inParen = (raw.match(/\(([^)]+)\)/) || [])[1];
+    const name = LANG_CANON[norm(raw.replace(/\(.*\)/, '').trim())] || raw.replace(/\(.*\)/, '').trim();
+    const lvl = LEVEL_FROM_TEXT[norm((l && l.proficiency) || inParen || '')] || null;
+    const prev = langs.get(name);
+    if (!prev || LEVELS.indexOf(lvl) > LEVELS.indexOf(prev)) langs.set(name, lvl);
+  });
+  const cefr = text.match(/\b(ingles|english)\b[^.]{0,20}\b(b2|c1|c2)\b|\b(b2|c1|c2)\b[^.]{0,12}\b(ingles|english)\b/);
+  if (cefr) {
+    const lv = { b2: 'professional_working', c1: 'full_professional', c2: 'native_bilingual' }[cefr[2] || cefr[3]];
+    if (!langs.has('English')) { langs.set('English', lv); fromText.add('English'); }
+    else if (langs.get('English') == null) langs.set('English', lv);
+  }
+  const languages = [...langs].map(([language, level]) => ({ language, level, source: fromText.has(language) ? 'text' : 'profile' }));
+  /* Años de experiencia: meses cubiertos por los cargos, sin solapes y sin prácticas. */
+  const months = new Set();
+  (c.experience || []).filter(e => !/intern/i.test(e.employmentType || '')).forEach(e => {
+    const a = monthIndex(e.startDate), b = monthIndex(e.endDate);
+    if (a != null && b != null) for (let m = a; m <= b; m++) months.add(m);
+  });
+  const years = months.size ? Math.round(months.size / 12 * 10) / 10 : null;
+  /* Cargo y empresa actual: el vigente que empezó más recientemente. */
+  const current = (c.experience || []).filter(e => /present/i.test(e.endDate || ''))
+    .sort((a, b) => (monthIndex(b.startDate) || 0) - (monthIndex(a.startDate) || 0))[0];
+  const remote = REMOTE_DEMO.has(c.id) || (c.experience || []).some(e => /remote/i.test(`${e.workplaceType || ''} ${e.location || ''}`));
+  /* Formación: el nivel más alto (en el flujo lo resuelve la IA; "Bachiller" es secundaria o universitario según el país). */
+  const rank = { secondary: 1, technical: 2, bachelor: 3, postgraduate: 4 };
+  let edu = null, field = null;
+  (c.education || []).forEach(e => {
+    const d = norm(e.degree || '');
+    const lv = /doctor|maestr|master|mba|especializ|posgrado/.test(d) ? 'postgraduate'
+      : /tecnolog|tecnico|technical|diplomatura/.test(d) ? 'technical'
+      : /profesional|licenciatura|bachelor|bachiller|grado|estudiante/.test(d) ? 'bachelor'
+      : /secundaria|high school/.test(d) ? 'secondary' : null;
+    if (lv && (!edu || rank[lv] > rank[edu])) { edu = lv; field = e.fieldOfStudy || null; }
+  });
+  /* Habilidades canónicas, sin duplicados entre idiomas y agrupadas. */
+  const groups = { tools: new Set(), technical: new Set(), soft: new Set() };
+  (c.skills || []).forEach(s => {
+    const n = norm(s);
+    const canon = SKILL_CANON[n] || s;
+    const k = norm(canon);
+    (TOOLS.has(k) ? groups.tools : SOFT.has(k) ? groups.soft : groups.technical).add(canon);
+  });
+  const profile = ASSIGNED_PROFILE[c.id] || c.profile || null;
+  /* Ciudad del catálogo: la que corresponde a la ubicación del perfil; si trae solo el país,
+     la de su cargo más reciente (en el flujo lo resuelve la IA, que también lee el about). */
+  const cityIn = t => { const x = norm(t || ''); return ALL_CITIES.find(k => x.startsWith(norm(k.city))) || ALL_CITIES.find(k => x.includes(norm(k.city))); };
+  const byRecency = (c.experience || []).slice().sort((a, b) => (monthIndex(b.startDate) || 0) - (monthIndex(a.startDate) || 0));
+  const cat = cityIn(`${(c.locationParts && c.locationParts.city) || ''} | ${c.loc || ''}`)
+    || byRecency.map(e => cityIn(e.location)).find(Boolean) || null;
+  const roleTxt = norm(`${current ? current.position : ''} ${c.headline || ''}`);
+  const seniority = /\b(manager|gerente|jefe|jefa|director|directora|head of|administrador de tienda)\b/.test(roleTxt) ? 'manager'
+    : /\b(lead|lider|supervisor|supervisora|team leader|coordinador|coordinadora)\b/.test(roleTxt) ? 'lead'
+    : /\b(junior|jr|trainee|intern|practicante|estudiante|student)\b/.test(roleTxt) || (years != null && years < 2) ? 'junior'
+    : /\b(senior|sr)\b/.test(roleTxt) || (years != null && years >= 6) ? 'senior'
+    : years == null ? null : 'mid';
+  c.norm = {
+    city: cat ? cat.city : null, country: cat ? cat.country : null,
+    seniority,
+    languages, years, edu, field, remote, profile, verticals: [...(PRIOR_VERTICALS[c.id] || [])],
+    title: current ? current.position : null, company: current ? current.companyName : null,
+    skills: { tools: [...groups.tools], technical: [...groups.technical], soft: [...groups.soft] },
+  };
+  return c.norm;
+}
+const langLabel = l => `${l.language}${l.level ? ` · ${LEVEL_LABEL[l.level]}` : ''}`;
+const yearsLabel = y => y == null ? 'Not stated' : `${y < 1 ? '<1' : Math.floor(y)} year${Math.floor(y) === 1 ? '' : 's'}`;
+const yearsBucket = y => y == null ? 'na' : y < 2 ? 'lt2' : y < 5 ? '2to5' : y < 10 ? '5to10' : 'gt10';
+
+
+/* ----------------- Vertical y perfil asignado (demo) -----------------
+   El perfil lo elige la IA entre los del catálogo (o `Otros`) leyendo el rol del
+   candidato; la vertical sale del perfil. A un `Otros` la IA solo le pone vertical
+   si su rol encaja en una; si no, queda sin vertical. */
+const VERTICALS = ['Finance', 'Legal', 'IT', 'HR/Schedulers', 'CSR', 'Sales', 'Administrative', 'Marketing', 'Healthcare'];
+const PROFILE_VERTICAL = {
+  'Customer Service Representative': 'CSR', 'Sales Representative': 'Sales', 'Sales Development Representative': 'Sales',
+  'Sales Specialist': 'Sales', 'Intake Specialist': 'Legal', 'Executive Assistant': 'Administrative',
+  'Administrative Assistant': 'Administrative', 'Collections Specialist': 'Finance', 'Scheduler': 'HR/Schedulers',
+  'Litigation Assistant': 'Legal', 'Senior Paralegal': 'Legal', 'Legal Assistant': 'Legal', 'Paralegal': 'Legal',
+  'Marketing Assistant': 'Marketing', 'Software Developer': 'IT', 'HR Assistant': 'HR/Schedulers',
+  'Procurement Specialist': 'Finance', 'CAD Designer': null, 'Content Moderator': null,
+};
+const CATALOG_PROFILES = Object.keys(PROFILE_VERTICAL).sort();
+const ASSIGNED_PROFILE = {
+  9: 'Customer Service Representative',
+  201: 'Customer Service Representative', 202: 'Sales Representative', 203: 'Customer Service Representative',
+  204: 'Otros', 205: 'Customer Service Representative', 206: 'Marketing Assistant', 207: 'Customer Service Representative',
+  208: 'Marketing Assistant', 209: 'Software Developer', 210: 'Sales Representative', 211: 'Customer Service Representative',
+  212: 'Procurement Specialist', 213: 'Legal Assistant', 214: 'Otros', 215: 'Customer Service Representative',
+  216: 'HR Assistant', 217: 'Content Moderator', 218: 'Otros', 219: 'Customer Service Representative', 220: 'Otros',
+};
+const OTROS_VERTICAL = { 214: 'Sales' };
+
+
+/* ----------------- Historial de análisis del candidato ----------------- */
+function historyBlock(all, shown) {
+  const others = all.filter(a => a !== shown);
+  if (!others.length) return '';
+  return `<div class="m-history"><div class="m-history-title">Analysis history <span>${all.length}</span></div>` +
+    all.map(a => {
+      const band = a.off ? 'na' : matchBand(a.score);
+      return `<div class="m-history-row${a === shown ? ' is-shown' : ''} m-${band}">
+        ${a.off ? '<span class="match-off">Off-target</span>' : matchRing(a.score, 26)}
+        <div class="m-history-txt"><b>${a.off ? 'Off-target' : MATCH_VERDICT[band]}</b> · ${a.run.label}<br><span>${fmtRunDate(a.run.at)} · ${a.run.by || ''}</span></div>
+      </div>`;
+    }).join('') + '</div>';
+}
+/* Vertical de las búsquedas previas que lo encontraron (demo). */
+const PRIOR_VERTICALS = { 1: ['CSR'], 2: ['CSR'], 3: ['Legal'], 4: ['CSR'], 5: ['CSR'], 6: ['CSR'], 7: ['CSR'], 8: ['Sales'], 9: ['CSR', 'Finance'], 203: ['CSR'] };
+/* Análisis de búsquedas anteriores (demo): el mismo candidato, otra descripción, otro puntaje. */
+const crit = (e, s, k, l, ed, u, why) => ({
+  experience: { score: e, reason: why[0] }, seniority: { score: s, reason: why[1] }, skills: { score: k, reason: why[2] },
+  languages: { score: l, reason: why[3] }, education: ed == null ? { na: true, reason: 'This search does not ask for a degree or a certification.' } : { score: ed, reason: why[4] },
+  us: { score: u, reason: why[5] } });
+const RUN_RETAIL = { label: 'Bilingual CSR · Retail support, Zendesk · English C1', at: new Date(2026, 10, 2, 9, 40), by: 'Carlos Ortega',
+  vertical: 'CSR', cities: ['Bogotá', 'Medellín', 'Buenos Aires', 'Cebu'], pages: 2, language: 'English',
+  description: 'Bilingual customer service agent for a US retail chain. 3+ years of inbound phone and chat support, Zendesk, English C1. Rotating shifts.' };
+const ANALYSIS_HISTORY = {
+  5: [{ score: 71, reason: 'Two years of bilingual chat and email support for a US fintech; solid English, but no Zendesk and no retail orders.',
+        run: RUN_RETAIL,
+        criteria: crit(72, 75, 55, 85, null, 74, ['Two years of inbound support, fintech rather than retail.', 'Agent level.', 'Intercom and internal tools; no Zendesk.', 'English at professional working proficiency.', '', 'US fintech customers.']) }],
+  7: [{ score: 48, reason: 'Technical support for a SaaS product; customer-facing, but troubleshooting rather than retail service, and no Zendesk.',
+        run: RUN_RETAIL,
+        criteria: crit(45, 60, 40, 88, null, 50, ['Technical troubleshooting rather than retail service.', 'Agent level.', 'Ticketing in Jira; no Zendesk.', 'Full professional English.', '', 'Some US end users.']) }],
+  203: [{ score: 88, reason: 'Three years handling US auto-insurance claims by phone in Salesforce Service Cloud — the core of this search.',
+          run: { label: 'Insurance Claims Rep · Salesforce Service Cloud · English B2', at: new Date(2026, 9, 28, 10, 12), by: 'Laura Méndez',
+                 vertical: 'CSR', cities: ['Barranquilla', 'Bogotá', 'Medellín'], pages: 2, language: 'English',
+                 description: 'Claims Customer Service Representative for a US auto insurance carrier. 2+ years handling first notice of loss and claim status calls, Salesforce Service Cloud, English B2 or higher. Remote, US Eastern hours.' },
+          criteria: crit(92, 85, 88, 72, null, 90, ['Claims intake and follow-up for a US insurer, three years.', 'Agent level, as asked.', 'Salesforce Service Cloud daily.', 'Professional working English, at the B2 asked.', '', 'US insurer, US hours.']) }],
+  1: [{ score: 81, reason: 'Four years of bilingual support for US retail accounts on Zendesk and Salesforce, with C1 English.',
+        run: { label: 'Bilingual CSR · Retail support, Zendesk · English C1', at: new Date(2026, 10, 2, 9, 40), by: 'Carlos Ortega',
+               vertical: 'CSR', cities: ['Bogotá', 'Medellín'], pages: 2, language: 'English',
+               description: 'Bilingual customer service agent for a US retail chain. 3+ years of inbound phone and chat support, Zendesk, English C1. Rotating shifts.' },
+        criteria: crit(84, 80, 86, 88, null, 82, ['Four years of inbound support for US retail.', 'Agent level with tenure.', 'Zendesk and Salesforce Service Cloud.', 'C1 English, as asked.', '', 'US accounts throughout.']) },
+      { off: true, reason: 'Customer service agent; the search asked for a collections specialist with negotiation targets.',
+        run: { label: 'Collections Specialist · Early-stage debt · Spanish native', at: new Date(2026, 9, 21, 15, 5), by: 'Andrea Ramírez',
+               vertical: 'Finance', cities: ['Bogotá', 'Cali'], pages: 1, language: 'Spanish',
+               description: 'Collections specialist for early-stage consumer debt. Negotiation of payment agreements by phone, monthly recovery targets, native Spanish.' } }],
+};
+
+
+/* ----------------- Pestaña Searches: búsquedas asistidas que encontraron al candidato ----------------- */
+let HISTORY_SHOWN = [];
+function renderSearchHistory(c) {
+  const box = document.getElementById('searchHistory'); if (!box) return;
+  const all = analysesOf(c);
+  HISTORY_SHOWN = all;
+  setCount(document.getElementById('drawer'), '[data-d-searchcount]', all.length);
+  box.innerHTML = all.length ? all.map((a, i) => {
+    const band = a.off ? 'na' : matchBand(a.score);
+    return `<button type="button" class="sh-row m-${band}" onclick="openSearchDetail(${i})">
+      ${a.off ? '<span class="match-off">Off-target</span>' : matchRing(a.score, 34)}
+      <span class="sh-txt">
+        <b>${a.run.label}</b>
+        <span class="sh-meta"><span class="sh-vertical">${a.run.vertical || '—'}</span>${a.off ? 'Off-target' : MATCH_VERDICT[band]} · ${fmtRunDate(a.run.at)} · ${a.run.by || ''}</span>
+      </span>
+      <svg class="sh-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>`;
+  }).join('') : '<p class="tl-empty">No AI search has found this candidate yet.</p>';
+}
+/* Detalle de la búsqueda: qué pidió el reclutador y dónde buscó, con el resultado de este candidato. */
+function openSearchDetail(i) {
+  const a = HISTORY_SHOWN[i]; if (!a) return;
+  const r = a.run, band = a.off ? 'na' : matchBand(a.score);
+  const m = document.getElementById('searchModal');
+  m.querySelector('[data-s-name]').textContent = r.label;
+  const kv = (k, v) => `<div class="drawer-kv"><b>${k}</b><span>${v}</span></div>`;
+  m.querySelector('[data-s-body]').innerHTML = `
+    <div class="sd-result m-${band}">${a.off ? '<span class="match-off">Off-target</span>' : matchRing(a.score, 40)}
+      <div><b>${a.off ? 'Off-target for this search' : MATCH_VERDICT[band] + ' for this candidate'}</b><p>${a.reason}</p></div></div>
+    ${kv('Vertical', r.vertical || '—')}
+    ${kv('Searched by', `${r.by || '—'} · ${fmtRunDate(r.at)}`)}
+    ${kv('Cities', (r.cities || []).join(' · ') || '—')}
+    ${kv('Pages per city', r.pages || '—')}
+    ${kv('Language', r.language || 'Any language')}
+    <div class="sd-desc"><span class="detail-label">Description</span><p>${r.description || '—'}</p></div>`;
+  openModal('searchModal');
+}
+
+const SENIORITY_LABEL = { junior: 'Junior', mid: 'Mid', senior: 'Senior', lead: 'Lead', manager: 'Manager' };

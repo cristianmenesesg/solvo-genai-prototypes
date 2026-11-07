@@ -176,12 +176,12 @@ export const products = [
       },
       {
         id: 'recruiter-app-ai-match',
-        nombre: 'Recruiter Platform (app) — AI match',
+        nombre: 'Recruiter Platform (app) — Release 3',
         categoria: 'App',
         bundle: 'solvo-recruiter-platform-app-ai-match',
         tokens: 'platform',
         multipage: true,
-        notas: 'La app de reclutadores con el análisis de afinidad de AI Search. Cada candidato que trae la búsqueda pasa primero por un filtro de pertinencia por palabras clave y, si lo pasa, por un análisis de IA que califica experiencia, seniority, skills, idiomas, formación y experiencia con EE. UU. contra la descripción. La tabla suma la columna AI match (puntaje general más un icono por criterio, de rojo a verde, con tarjeta al pasar el mouse) y el detalle lo muestra sobre las pestañas, con la etiqueta de la búsqueda y su fecha. Los descartados quedan aparte y se ven a pedido. Para verlo: login → Candidate search → AI Search → Search now; la descripción de ejemplo trae el análisis precalculado sobre candidatos ficticios.',
+        notas: 'Solvo Recruiter Platform — Release 3. La búsqueda arranca mostrando el pool, con un solo campo y los filtros en un popup (vertical, perfil asignado, idiomas con nivel, años de experiencia, experiencia remota…). AI Search se lanza por vertical y sin información de costo, y su avance se sigue en una barra en el footer. Cada candidato llega con su análisis de afinidad: puntaje general y por criterio (experiencia, seniority, skills, idiomas, formación, experiencia con EE. UU.), o fuera de foco con su razón; los resultados se ordenan por afinidad y el detalle muestra el historial de análisis. Para verlo: login → Candidate search → AI Search → Search now; la demo trae el análisis precalculado sobre candidatos ficticios.',
         versions: [{ label: 'App', file: 'index.html' }],
       },
       {
