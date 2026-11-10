@@ -15,11 +15,11 @@ La revisión funcional y de datos del prototipo, con los puntos a decidir antes 
 | Página | Sección | Qué introduce Release 3 |
 |---|---|---|
 | `index.html` | Login | Selector de usuario demo (reemplaza el SSO de Entra ID). |
-| `dashboard.html` | KPIs | Embudo de detección, dos tendencias diarias con vista de tabla, embudo de agendamiento y su registro diario. Ventana 7 / 30 días. Es volumen del motor: no se filtra por asignación. |
+| `dashboard.html` | Dashboard | Embudo de detección, dos tendencias diarias con vista de tabla, embudo de agendamiento y su registro diario. Ventana 7 / 30 días. Es volumen del motor: no se filtra por asignación. |
 | `open-positions.html` | Open Positions (antes Vacancies) | Grilla de cards; búsqueda por título/descripción; selectores rápidos de empresa, posición y estado; popup de criterios declarativo; orden; exportación con acompañantes. |
-| `prospects.html` | Prospects (antes Companies) | Filas por empresa con resumen de lead, señales, posiciones, decisores, outreach y dueños; mismo motor de criterios; alta de empresa; exportación con acompañantes. |
+| `prospects.html` | Companies | Filas por empresa con resumen de lead, señales, posiciones, decisores, outreach y dueños; mismo motor de criterios; alta de empresa; exportación con acompañantes. |
 | `vacancy-detail.html` | Open Position | Cabecera, Job info + Analysis (veredicto, señales del aviso), descripción, Follow-up; barra lateral con empresa, decisores y asignación; edición, cambio de estado y borrado. |
-| `company-detail.html` | Prospect | Cabecera, Info (firmografía, Research, Analysis), Positions, Follow-up; decisores y contactos sin analizar, con alta/edición/baja; asignación; scraping on-demand; solicitud de investigación; borrado. |
+| `company-detail.html` | Company | Cabecera, Info (firmografía, Research, Analysis), Positions, Follow-up; decisores y contactos sin analizar, con alta/edición/baja; asignación; scraping on-demand; solicitud de investigación; borrado. |
 | `settings.html` | Settings | Search positions (catálogo), Search cities (grilla y tope por estado), Scraping window (on-demand). Solo Administrator. |
 | `admin-users.html` | Users | Sin cambios respecto de Release 2. |
 
@@ -32,7 +32,7 @@ tokens.css   tokens del brand (los escribe vendor-tokens del sitio; no editar a 
 theme.css    tokens de estado, focus ring y [data-theme='dark']
 styles.css   estilos de la app; su :root es un bridge a los tokens. Fork propio de
              este bundle: contiene los componentes .op-* (Open Positions), .pr-*
-             (Prospects), .vd-* / .cd-* (detalles), .kp-* (KPIs), .st-* (Settings).
+             (Companies), .vd-* / .cd-* (detalles), .kp-* (Dashboard), .st-* (Settings).
 theme.js     anti-flash + toggle claro/oscuro (localStorage `theme`)
 rbac.js      capa compartida: sesión y roles, datos mock, catálogos del motor,
              popups, exportación. Tiene índice de secciones al inicio.
@@ -57,7 +57,7 @@ rbac.js      capa compartida: sesión y roles, datos mock, catálogos del motor,
 
 ### Motor de criterios de los listados
 
-Open Positions y Prospects comparten el patrón; cada uno declara su propio `FILTERS`:
+Open Positions y Companies comparten el patrón; cada uno declara su propio `FILTERS`:
 
 ```js
 { key, group, label, type,      // single | multi | text | daterange | search | dm
@@ -77,8 +77,8 @@ Dos archivos, y cada uno se basta solo:
 
 | Archivo | Una fila por | Se pide desde | Lleva del otro lado |
 |---|---|---|---|
-| `posiciones_<fecha>.csv` | aviso | Open Positions (recorte del listado) o Prospects (acompañante: todas las posiciones de esas empresas) | `Correos de decisores`: los correos de los decisores de la empresa, separados por `;` |
-| `prospectos_<fecha>.csv` | contacto | Prospects (recorte del listado) o Open Positions (acompañante: los contactos de esas empresas) | `Posiciones detectadas`: los cargos publicados, separados por barra |
+| `posiciones_<fecha>.csv` | aviso | Open Positions (recorte del listado) o Companies (acompañante: todas las posiciones de esas empresas) | `Correos de decisores`: los correos de los decisores de la empresa, separados por `;` |
+| `prospectos_<fecha>.csv` | contacto | Companies (recorte del listado) o Open Positions (acompañante: los contactos de esas empresas) | `Posiciones detectadas`: los cargos publicados, separados por barra |
 
 - El de prospectos es la lista de personas —nombre, cargo, rol, nivel de decisión, correo con su verificación, teléfono y LinkedIn— y repite en cada fila las columnas de su empresa, para poder ordenarlo y filtrarlo sin cruzarlo con nada. Una empresa a la que todavía no se le encontró a nadie entrega igual su fila, con las celdas de persona vacías.
 - Cada archivo entrega además lo que dedujo el motor: puntaje ICP y señales en el de prospectos; posición del catálogo, veredicto de viabilidad, confianza e idiomas en el de posiciones.
@@ -109,7 +109,7 @@ Dos nombres invertidos a propósito, porque las páginas los leen así: en el mo
 
 Los valores que guardan los objetos mock son los de la base: `relationship_type` (`client` | `prospect` | `inactive`), `source_project` (`prospect_engine`, `general-us-openings`, `current-client-us-openings`, `on_demand_openings`), `source` (`indeed` | `linkedin`), `work_modality` (`remote` | `hybrid` | `onsite` | `unknown`) y `seniority_level` (`entry` | `mid` | `senior` | `lead` | `executive` | `unspecified`). `city_name` guarda el nombre pelado y el día de barrido viaja con el estado, porque en la base lo define `us_state_schedule.weekday`.
 
-Dos cosas que la HU tiene que decir y no se ven en el prototipo: el día de barrido sale de `scrapping_vacantes_potenciales.us_state_schedule.weekday` con join por `state_code` —`public.us_states` no tiene esa columna—, y el listado de Prospects necesita un `LEFT JOIN` a `company_research` para traer `lead_summary`. `revenue_usd` y `year_founded` se quedan como `VARCHAR`: ningún filtro resuelve sobre ellos.
+Dos cosas que la HU tiene que decir y no se ven en el prototipo: el día de barrido sale de `scrapping_vacantes_potenciales.us_state_schedule.weekday` con join por `state_code` —`public.us_states` no tiene esa columna—, y el listado de Companies necesita un `LEFT JOIN` a `company_research` para traer `lead_summary`. `revenue_usd` y `year_founded` se quedan como `VARCHAR`: ningún filtro resuelve sobre ellos.
 
 ## Contratos existentes que las páginas reutilizan
 
@@ -128,7 +128,7 @@ No forman parte de ninguna feature:
 - Login por selector de rol y sesión en `localStorage`.
 - Persistencia de Configuración en `localStorage` y los botones "Restore the seeded catalog" / "Restore the seeded grid".
 - Popup on-demand con espera simulada (`setTimeout`) y un nombre con `zzz` como "empresa no encontrada".
-- `createCompany()` de Prospects es un stub (solo toast); `investigateFromEdit()` y "Run research" solo muestran un toast.
+- `createCompany()` de Companies es un stub (solo toast); `investigateFromEdit()` y "Run research" solo muestran un toast.
 - Series del tablero sintéticas; `MOCK_EXECUTION_LOGS` sembrado pero no mostrado (R3-A12).
 - Selector de idioma sin efecto (R3-D6).
 - Derivación client-side de `role_code` para contactos manuales (`normalizeRoleCode`), espejo del prompt de HUPEA-2.3.

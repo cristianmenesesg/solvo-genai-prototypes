@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prospects - Solvo Platform</title>
+  <title>Companies - Solvo Platform</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css">
@@ -31,7 +31,7 @@
       </header>
 
       <div class="page-content">
-        <h2 class="page-title">Prospects</h2>
+        <h2 class="page-title">Companies</h2>
 
         <div class="op-searchrow">
           <!-- Buscar exige el botón; los filtros de al lado se aplican al elegir -->
@@ -229,7 +229,7 @@
   <script src="rbac.js"></script>
   <script>
     /* ------------------------------------------------------------------------
-       Prospects — listado de empresas (antes "Companies").
+       Companies — listado de empresas.
        Datos: getVisibleCompanies() + companyOpenPositions(id) (vacantes por
        company_id) + contactos con role_code / decision_level. Mismo motor de
        criterios que Open Positions (FILTERS / state / draft); cada criterio es un
@@ -242,7 +242,7 @@
        Defaults que recortan: viabilidad; exportación (coordinación); decisores.
        ------------------------------------------------------------------------ */
     /* ========================================================================
-       Prospects — listado de empresas detectadas y calificadas.
+       Companies — listado de empresas detectadas y calificadas.
        Comparte con Open Positions la fila de búsqueda, la barra de filtros
        activos y el popup; cambia la unidad: una fila por empresa en vez de una
        grilla de cards, con las columnas que deciden a quién trabajar primero.
@@ -781,11 +781,11 @@
       const sinContactos = companies.filter(function (c) { return getContactsForCompany(c.id).length === 0; }).length;
 
       openExportPopup({
-        entityLabel: 'prospects',
+        entityLabel: 'companies',
         entityCount: companies.length,
         alreadyExported: countAlreadyExported(companies),
         note: 'One row per contact: ' + filas.toLocaleString('en-US') + ' rows.' +
-              (sinContactos ? ' ' + sinContactos.toLocaleString('en-US') + ' prospects have no contacts yet and are not included.' : ''),
+              (sinContactos ? ' ' + sinContactos.toLocaleString('en-US') + ' companies have no contacts yet and are not included.' : ''),
         companions: [
           { key: 'positions', label: 'Include positions', count: relatedVacancies.length, note: 'every position of these companies, one row each' }
         ],

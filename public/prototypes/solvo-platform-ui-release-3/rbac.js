@@ -23,7 +23,7 @@
                                               icpTier, ROLE_CODES, nivel de decisión,
                                               EMAIL_VERIFICATION, seeds de calificación,
                                               análisis de contactos y vacantes del barrido
-   14. RELEASE 3 — Prospects ................ PIPELINE_STAGES, posiciones por empresa,
+   14. RELEASE 3 — Companies ................ PIPELINE_STAGES, posiciones por empresa,
                                               nombres, antigüedades, señal de interés
    15. SELECTOR DE LA BARRA DE BÚSQUEDA ..... renderShellPicker / renderShellSearchbox
    16. HISTORIAL DE ESTADOS ................. public.states_history + actividad
@@ -658,9 +658,9 @@ function renderSidebar(activePage) {
   const showAdmin = canAccessAdmin();
 
   const navItems = [
-    { id: 'dashboard', label: 'KPIs', href: 'dashboard.html', icon: '<rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect>' },
+    { id: 'dashboard', label: 'Dashboard', href: 'dashboard.html', icon: '<rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect>' },
     { id: 'vacancies', label: 'Open Positions', href: 'open-positions.html', icon: '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect>' },
-    { id: 'companies', label: 'Prospects', href: 'prospects.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' }
+    { id: 'companies', label: 'Companies', href: 'prospects.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' }
   ];
   const adminItems = [
     { id: 'admin-users', label: 'Users', href: 'admin-users.html', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' },
@@ -1081,7 +1081,7 @@ function openConfirmPopup(options) {
 
 // === EXPORT POPUP ===
 // Confirmación previa a la descarga. Además de la entidad del listado, ofrece sumar al paquete la
-// entidad relacionada con el recorte: desde Prospects, sus posiciones; desde Open Positions, sus
+// entidad relacionada con el recorte: desde Companies, sus posiciones; desde Open Positions, sus
 // prospectos. Las casillas arrancan desmarcadas cada vez que se abre el popup y muestran el conteo
 // de su entidad antes de descargar.
 // El paquete son dos archivos y ninguno de contactos: cada uno lleva lo del otro denormalizado
@@ -2377,7 +2377,7 @@ const VACANCY_SIGNAL_SEED = {
   'vac-039': ['client_facing', 'no_visa_sponsorship']
 };
 
-// Se llama después de cada tanda de vacantes: el bloque de Prospects agrega más abajo las que
+// Se llama después de cada tanda de vacantes: el bloque de Companies agrega más abajo las que
 // sostienen las señales de empresa, y también tienen que quedar etiquetadas.
 function applyVacancySignals() {
   MOCK_VACANCIES.forEach(function (v) {
@@ -2479,7 +2479,7 @@ function detectedAge(vacancy) {
 }
 
 /* ============================================================================
-   RELEASE 3 — Prospects
+   RELEASE 3 — Companies
    Lo que el listado de empresas necesita y no existía como pieza compartida.
    ============================================================================ */
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KPIs - Solvo Platform</title>
+  <title>Dashboard - Solvo Platform</title>
   <link rel="stylesheet" href="tokens.css" />
   <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="styles.css">
@@ -32,7 +32,7 @@
 
       <div class="page-content">
         <div class="kp-head">
-          <h2 class="page-title" style="margin:0;">KPIs</h2>
+          <h2 class="page-title" style="margin:0;">Dashboard</h2>
           <div class="kp-window" role="group" aria-label="Time range">
             <button type="button" data-days="7">Last 7 days</button>
             <button type="button" data-days="30" class="is-on">Last 30 days</button>
@@ -93,7 +93,7 @@
   <script src="rbac.js"></script>
   <script>
     /* ------------------------------------------------------------------------
-       KPIs — tablero del motor de prospección. Reemplaza los KPIs comerciales por rol del
+       Dashboard — tablero del motor de prospección. Reemplaza los KPIs comerciales por rol del
        MVP: lo que muestra es volumen del motor y del embudo de agendamiento, igual para
        todos los roles.
        Datos: MOCK_DAILY_METRICS y MOCK_BOOKING_FUNNEL (rbac.js), sintéticos y
@@ -113,7 +113,7 @@
        Contrato: sin definir; hoy existe GET /api/dashboard/kpis/{vacancies,companies}.
        ------------------------------------------------------------------------ */
     /* ========================================================================
-       Tablero de KPIs.
+       Dashboard: tablero del motor.
        Arriba el embudo de detección: de lo que el barrido trae a lo que se puede
        trabajar. Debajo, cómo evoluciona día a día, y al costado qué pasa cuando
        ese material sale como correo.
