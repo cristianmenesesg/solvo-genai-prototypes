@@ -157,7 +157,7 @@
         { label: 'Remote viable', value: sumMetric(rows, 'viablePositions'), chain: true,
           note: 'The classifier judged the role coverable from outside the US' },
         { label: 'Companies', value: sumMetric(rows, 'companies'), chain: false,
-          note: 'Distinct companies behind those positions' },
+          note: 'New companies the engine brought in during the period' },
         { label: 'Viable companies', value: sumMetric(rows, 'viableCompanies'), chain: true,
           note: 'With at least one remote viable position' },
         { label: 'With decision makers', value: sumMetric(rows, 'companiesWithDm'), chain: true,
@@ -309,8 +309,8 @@
         document.getElementById('positionsTable'), 'Positions detected and remote viable, by day');
 
       document.getElementById('prospectsSub').textContent =
-        num(sumMetric(rows, 'companies')) + ' companies behind those positions, and ' +
-        num(sumMetric(rows, 'decisionMakers')) + ' decision makers found at them.';
+        num(sumMetric(rows, 'companies')) + ' new companies brought in by the engine, and ' +
+        num(sumMetric(rows, 'decisionMakers')) + ' decision makers found.';
       legend(document.getElementById('prospectsLegend'), PROSPECT_SERIES);
       lineChart(document.getElementById('prospectsChart'), rows, PROSPECT_SERIES,
         document.getElementById('prospectsTable'), 'Companies and decision makers, by day');
