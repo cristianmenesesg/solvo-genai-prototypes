@@ -929,7 +929,7 @@ const ICON_FILTERS = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none
    `def` es con lo que arranca la página: disponibles y no exportados, como antes. */
 const FILTER_DEFS = [
   { key: 'vertical', group: 'Candidate', label: 'Vertical', type: 'multi', neutral: [], def: [],
-    hint: 'Verticals of the AI searches that found the candidate on target. A candidate can have more than one.',
+    hint: 'Verticals of the AI searches that found the candidate on target. Candidates already in the pool take them from their profile. A candidate can have more than one.',
     options: () => [...VERTICALS.map(v => ({ value: v, label: v })), { value: 'none', label: 'No vertical' }],
     chip: v => v.length > 2 ? `${v.length} verticals` : v.map(x => x === 'none' ? 'No vertical' : x).join(', ') },
   { key: 'avail', group: 'Candidate', label: 'Availability', type: 'single', neutral: 'all', def: 'yes',
@@ -941,13 +941,13 @@ const FILTER_DEFS = [
     options: () => [...new Set(poolCands().flatMap(c => normalizeProfile(c).languages.map(l => l.language)))].sort().map(l => ({ value: l, label: l })),
     chip: v => v.length > 2 ? `${v.length} languages` : v.join(', ') },
   { key: 'langLevel', group: 'Candidate', label: 'Language level', type: 'single', neutral: 'any', def: 'any',
-    hint: 'Minimum level for the languages checked above. With no language checked, it applies to English.',
+    hint: 'Minimum level for the languages checked in Languages. Check a language first.',
     options: () => [{ value: 'any', label: 'Any level' }, ...LEVELS.slice(1).map(l => ({ value: l, label: `${LEVEL_LABEL[l]} or higher` }))],
     chip: v => `${LEVEL_LABEL[v]}+` },
-  { key: 'exp', group: 'Candidate', label: 'Years of experience', type: 'multi', neutral: [], def: [],
-    hint: 'Total years in their positions, without counting overlaps twice or internships.',
-    options: () => [{ value: 'lt2', label: 'Less than 2' }, { value: '2to5', label: '2 to 5' }, { value: '5to10', label: '5 to 10' }, { value: 'gt10', label: 'More than 10' }],
-    chip: v => v.map(x => ({ lt2: '<2 yrs', '2to5': '2–5 yrs', '5to10': '5–10 yrs', gt10: '10+ yrs' })[x]).join(', ') },
+  { key: 'exp', group: 'Candidate', label: 'Years of experience', type: 'range', neutral: null, def: null,
+    hint: 'Years of experience the candidate states on their profile or, if they state none, years in their main role. Candidates without this data are left out.',
+    options: () => [],
+    chip: v => v.min != null && v.max != null ? (v.min === v.max ? `${v.min} yrs` : `${v.min}–${v.max} yrs`) : v.min != null ? `${v.min}+ yrs` : `Up to ${v.max} yrs` },
   { key: 'seniority', group: 'Candidate', label: 'Seniority', type: 'multi', neutral: [], def: [],
     hint: 'Level of the current or most recent role, from its title, whether they lead others and their years of experience.',
     options: () => Object.entries(SENIORITY_LABEL).map(([value, label]) => ({ value, label })),
@@ -957,7 +957,7 @@ const FILTER_DEFS = [
     options: () => [{ value: 'any', label: 'Any' }, { value: 'yes', label: 'Has worked remotely' }],
     chip: () => 'Remote experience' },
   { key: 'loc', group: 'Candidate', label: 'City', type: 'multi', neutral: [], def: [],
-    hint: 'City from the cities catalog: the one the AI search used when it found the candidate.',
+    hint: 'City from the cities catalog that matches where the candidate lives.',
     options: () => [...ALL_CITIES.filter(x => poolCands().some(c => normalizeProfile(c).city === x.city)).map(x => ({ value: x.city, label: x.city, note: x.country })),
                     { value: 'none', label: 'No catalog city' }],
     chip: v => v.length > 2 ? `${v.length} cities` : v.map(x => x === 'none' ? 'No catalog city' : x).join(', ') },
@@ -974,9 +974,10 @@ const FILTER_DEFS = [
     options: () => [{ value: 'none', label: 'Not exported', note: 'Default' }, { value: 'me', label: 'Exported by me' }, { value: 'other', label: 'Exported by others' }, { value: 'all', label: 'All' }],
     chip: v => ({ none: 'Not exported', me: 'Exported by me', other: 'Exported by others' })[v] },
 ];
-const clone = v => Array.isArray(v) ? v.slice() : v;
+const clone = v => Array.isArray(v) ? v.slice() : (v && typeof v === 'object') ? { ...v } : v;
 const defaultFilters = () => Object.fromEntries(FILTER_DEFS.map(f => [f.key, clone(f.def)]));
-const isNeutral = (f, v) => Array.isArray(f.neutral) ? !(v && v.length) : v === f.neutral;
+const isNeutral = (f, v) => Array.isArray(f.neutral) ? !(v && v.length)
+  : f.type === 'range' ? !v || (v.min == null && v.max == null) : v === f.neutral;
 
 const SEARCH = { q: '', profiles: [], filters: defaultFilters(), sort: 'newest', ai: false };
 const AI_DELIVERED = new Set();
@@ -1055,7 +1056,7 @@ function bindRowSelection(tbody) {
 }
 
 /* Paginación sobre el resultado ya filtrado y ordenado. */
-const CAND_PAGE_SIZE = 5;
+const CAND_PAGE_SIZE = 15;
 let candPage = 0;
 /* Filas que pasan la búsqueda y los filtros: es lo que exporta el botón Export. */
 let LAST_MATCHES = [];
@@ -1069,12 +1070,16 @@ function rowPasses(tr) {
     if (!f.vertical.some(v => v === 'none' ? !vs.length : vs.includes(v))) return false;
   }
   if (f.avail !== 'all' && tr.dataset.otw !== f.avail) return false;
-  if (f.lang.length || f.langLevel !== 'any') {
-    const want = f.lang.length ? f.lang : ['English'];
+  if (f.lang.length) {
+    const want = f.lang;
     const min = f.langLevel === 'any' ? -1 : LEVELS.indexOf(f.langLevel);
     if (!JSON.parse(tr.dataset.langs || '[]').some(l => want.includes(l.language) && LEVELS.indexOf(l.level) >= min)) return false;
   }
-  if (f.exp.length && !f.exp.includes(yearsBucket(tr.dataset.years === '' ? null : +tr.dataset.years))) return false;
+  /* Rango de años con mínimo y máximo enteros; sin el dato, el candidato no cumple. */
+  if (!isNeutral(FILTER_DEFS.find(d => d.key === 'exp'), f.exp)) {
+    const y = tr.dataset.years === '' ? null : Math.floor(+tr.dataset.years);
+    if (y == null || (f.exp.min != null && y < f.exp.min) || (f.exp.max != null && y > f.exp.max)) return false;
+  }
   if (f.remote === 'yes' && tr.dataset.remote !== '1') return false;
   if (f.seniority.length && !f.seniority.includes(tr.dataset.seniority)) return false;
   if (f.loc.length && !f.loc.includes(tr.dataset.city)) return false;
@@ -1148,6 +1153,7 @@ function activeChips() {
   return chips;
 }
 function renderFilterBar() {
+  if (!SEARCH.filters.lang.length) SEARCH.filters.langLevel = 'any';
   const chips = activeChips();
   const n = chips.filter(c => c.key.indexOf('__') !== 0).length;
   document.getElementById('filterBar').innerHTML =
@@ -1197,6 +1203,13 @@ function openFilterModal(key) {
 function closeFilterModal() { document.getElementById('filterModal').classList.remove('open'); }
 const draftCount = f => isNeutral(f, draft[f.key]) ? 0 : (Array.isArray(draft[f.key]) ? draft[f.key].length : 1);
 function renderModal() {
+  if (!draft.lang.length) draft.langLevel = 'any';
+  renderModalRail();
+  renderPanel(FILTER_DEFS.find(f => f.key === activeCategory));
+  renderModalChips();
+}
+/* Riel y etiquetas se redibujan solos para no perder el foco de un campo del panel. */
+function renderModalRail() {
   let rail = '', group = null;
   FILTER_DEFS.forEach(f => {
     if (f.group !== group) { group = f.group; rail += `<div class="op-rail-group">${group}</div>`; }
@@ -1205,19 +1218,55 @@ function renderModal() {
   });
   document.getElementById('modalRail').innerHTML = rail;
   document.querySelectorAll('#modalRail [data-cat]').forEach(b => { b.onclick = () => { activeCategory = b.dataset.cat; renderModal(); }; });
-  renderPanel(FILTER_DEFS.find(f => f.key === activeCategory));
+}
+function renderModalChips() {
   const chips = FILTER_DEFS.filter(f => !isNeutral(f, draft[f.key]));
   document.getElementById('modalChips').innerHTML = chips.map(f =>
     `<span class="op-chip"><span>${f.chip(draft[f.key])}</span><button class="op-chip-x" data-dchip="${f.key}" aria-label="Remove">${ICON_X_SM}</button></span>`).join('');
   document.querySelectorAll('[data-dchip]').forEach(b => { b.onclick = () => { draft[b.dataset.dchip] = clone(FILTER_DEFS.find(f => f.key === b.dataset.dchip).neutral); renderModal(); }; });
 }
+/* Panel de rango: dos campos enteros; un campo vacío no acota ese extremo. */
+function renderRangePanel(f) {
+  const v = draft[f.key] || {};
+  const field = (end, label) => `<label class="op-range-field"><span>${label}</span>` +
+    `<input class="form-input" type="number" min="0" step="1" inputmode="numeric" data-end="${end}" value="${v[end] ?? ''}" placeholder="Any"></label>`;
+  document.getElementById('modalPanel').innerHTML =
+    `<div class="op-panel-head"><div class="op-panel-heading"><h3 class="op-panel-title">${f.label}</h3><p class="op-panel-hint">${f.hint}</p></div>` +
+    `<div class="op-panel-actions"><button type="button" class="op-panel-clear" id="panelClear"${draftCount(f) ? '' : ' hidden'}>Clear</button></div></div>` +
+    `<div class="op-range">${field('min', 'Minimum')}<span class="op-range-sep">to</span>${field('max', 'Maximum')}</div>`;
+  document.getElementById('panelClear').addEventListener('click', () => { draft[f.key] = clone(f.neutral); renderModal(); });
+  const sync = () => {
+    draft[f.key] = read();
+    document.getElementById('panelClear').hidden = !draftCount(f);
+    renderModalRail(); renderModalChips();
+  };
+  const read = () => {
+    const val = {};
+    document.querySelectorAll('#modalPanel [data-end]').forEach(inp => {
+      const n = inp.value === '' ? null : Math.max(0, Math.floor(+inp.value));
+      val[inp.dataset.end] = Number.isFinite(n) ? n : null;
+    });
+    if (val.min != null && val.max != null && val.min > val.max) [val.min, val.max] = [val.max, val.min];
+    return val.min == null && val.max == null ? null : val;
+  };
+  /* Al salir del campo se muestran los valores tal como quedaron (enteros y en orden). */
+  document.querySelectorAll('#modalPanel [data-end]').forEach(inp => {
+    inp.oninput = sync;
+    inp.onchange = () => {
+      sync();
+      document.querySelectorAll('#modalPanel [data-end]').forEach(x => { x.value = draft[f.key]?.[x.dataset.end] ?? ''; });
+    };
+  });
+}
 function renderPanel(f) {
+  if (f.type === 'range') return renderRangePanel(f);
   const v = draft[f.key];
   const opts = f.options();
   const multi = f.type === 'multi';
+  const off = f.key === 'langLevel' && !draft.lang.length;
   const body = `<div class="op-options${multi ? '' : ' one-col'}">` + opts.map(o => {
     const on = multi ? v.includes(o.value) : v === o.value;
-    return `<label class="op-option${on ? ' is-checked' : ''}"><input type="${multi ? 'checkbox' : 'radio'}" name="opt-${f.key}" value="${o.value}"${on ? ' checked' : ''}>` +
+    return `<label class="op-option${on ? ' is-checked' : ''}"${off ? ' aria-disabled="true" style="opacity:.5"' : ''}><input type="${multi ? 'checkbox' : 'radio'}" name="opt-${f.key}" value="${o.value}"${on ? ' checked' : ''}${off ? ' disabled' : ''}>` +
       `<span>${o.label}</span>${o.note ? `<span class="op-option-note">${o.note}</span>` : ''}</label>`;
   }).join('') + '</div>';
   const canAll = multi && opts.length > 2 && v.length < opts.length;
@@ -2732,18 +2781,17 @@ function normalizeProfile(c) {
 }
 const langLabel = l => `${l.language}${l.level ? ` · ${LEVEL_LABEL[l.level]}` : ''}`;
 const yearsLabel = y => y == null ? 'Not stated' : `${y < 1 ? '<1' : Math.floor(y)} year${Math.floor(y) === 1 ? '' : 's'}`;
-const yearsBucket = y => y == null ? 'na' : y < 2 ? 'lt2' : y < 5 ? '2to5' : y < 10 ? '5to10' : 'gt10';
 
 
 /* ----------------- Vertical y perfil asignado (demo) -----------------
    El perfil lo elige la IA entre los del catálogo (o `Otros`) leyendo el rol del
    candidato; la vertical sale del perfil. A un `Otros` la IA solo le pone vertical
    si su rol encaja en una; si no, queda sin vertical. */
-const VERTICALS = ['Finance', 'Legal', 'IT', 'HR/Schedulers', 'CSR', 'Sales', 'Administrative', 'Marketing', 'Healthcare'];
+const VERTICALS = ['Finance', 'Legal', 'IT', 'HR/Schedulers', 'CSR', 'Sales', 'Administrative', 'Marketing', 'Healthcare', 'Collections', 'Solvo Staff'];
 const PROFILE_VERTICAL = {
   'Customer Service Representative': 'CSR', 'Sales Representative': 'Sales', 'Sales Development Representative': 'Sales',
   'Sales Specialist': 'Sales', 'Intake Specialist': 'Legal', 'Executive Assistant': 'Administrative',
-  'Administrative Assistant': 'Administrative', 'Collections Specialist': 'Finance', 'Scheduler': 'HR/Schedulers',
+  'Administrative Assistant': 'Administrative', 'Collections Specialist': 'Collections', 'Scheduler': 'HR/Schedulers',
   'Litigation Assistant': 'Legal', 'Senior Paralegal': 'Legal', 'Legal Assistant': 'Legal', 'Paralegal': 'Legal',
   'Marketing Assistant': 'Marketing', 'Software Developer': 'IT', 'HR Assistant': 'HR/Schedulers',
   'Procurement Specialist': 'Finance', 'CAD Designer': null, 'Content Moderator': null,
