@@ -776,6 +776,17 @@ tr:last-child td {
   text-decoration: none;
 }
 
+.btn-danger {
+  background-color: var(--accent-danger);
+  color: #fff;
+  border: 1px solid var(--accent-danger);
+}
+
+.btn-danger:hover {
+  filter: brightness(0.9);
+  text-decoration: none;
+}
+
 .btn-secondary {
   background-color: var(--bg-surface);
   border: 1px solid var(--border-strong);

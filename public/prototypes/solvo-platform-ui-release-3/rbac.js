@@ -1048,6 +1048,7 @@ function openConfirmPopup(options) {
     highlight = '',            // texto destacado bajo el mensaje (ej. nombre del registro)
     icon = 'trash',            // 'trash' | 'search' | html custom
     confirmLabel = 'Confirm',
+    danger = false,            // true en borrados: el botón de confirmar lleva el tratamiento destructivo
     onConfirm = () => {}
   } = options;
 
@@ -1067,7 +1068,7 @@ function openConfirmPopup(options) {
       </div>
       <div class="modal-footer" style="justify-content:center;">
         <button class="btn btn-secondary" data-action="cancel">Cancel</button>
-        <button class="btn btn-primary" data-action="confirm">${confirmLabel}</button>
+        <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${confirmLabel}</button>
       </div>
     </div>`;
 
