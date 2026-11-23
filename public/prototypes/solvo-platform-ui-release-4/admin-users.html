@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Dual-assignment column helpers */
+    .col-assignment { text-align: center; min-width: 80px; }
+    .col-assignment-header { font-size: 0.72rem; line-height: 1.2; text-align: center; }
+    .col-assignment-header small { display: block; font-weight: 400; color: var(--text-muted); }
+    .count-zero { color: var(--text-muted); }
+  </style>
+  <script src="theme.js"></script>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by RBAC) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content">
+        <!-- Breadcrumb -->
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title">Users</h2>
+            <p class="page-header-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Users and roles are managed in Microsoft Entra ID</p>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Role</label>
+            <select class="form-select" id="filterRole" onchange="filterUsers()">
+              <option value="">All roles</option>
+              <option value="comercial">Sales Rep</option>
+              <option value="sdr">SDR</option>
+              <option value="coordinador">Coordinator</option>
+              <option value="supervisor">Supervisor</option>
+              <option value="administrador">Administrator</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Search</label>
+            <input type="text" class="form-input" id="filterSearch" placeholder="Name or email..." oninput="filterUsers()">
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Last login</th>
+                <th class="col-assignment-header">Companies<small>Sales Rep</small></th>
+                <th class="col-assignment-header">Companies<small>SDR</small></th>
+                <th class="col-assignment-header">Vacancies<small>Sales Rep</small></th>
+                <th class="col-assignment-header">Vacancies<small>SDR</small></th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+
+          <div class="table-pagination">
+            <div class="pagination-info" id="usersPaginationInfo">Showing 0 of 0</div>
+            <div class="pagination-controls">
+              <button class="pagination-btn" disabled>Previous</button>
+              <button class="pagination-btn active">1</button>
+              <button class="pagination-btn" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Users — administración (solo Administrador). Sin cambios en Release 3.
+       Datos: TEAM_MEMBERS (public.solvo_staff) + conteos de asignación por slot
+       (staff_company_assignment / staff_vacancy_assignment) + last_login_at
+       (MOCK_LAST_LOGIN, relativo a hoy). Solo lectura: altas,
+       bajas y roles viven en Microsoft Entra ID. Contrato: GET /api/admin/users.
+       ------------------------------------------------------------------------ */
+    // === Session & Access Guard ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    if (!requireAdmin()) throw new Error('Access denied');
+    renderSidebar('admin-users');
+
+    // === Último login (solvo_staff.last_login_at) ===
+    // Relativo a hoy, como el resto de la siembra: con fechas fijas la columna envejecía y
+    // terminaba mostrando a todo el equipo sin entrar hace meses.
+    const MOCK_LAST_LOGIN = (function () {
+      const hoursAgo = { 'uuid-staff-001': 3, 'uuid-staff-002': 5, 'uuid-staff-003': 27, 'uuid-staff-004': 2,
+        'uuid-staff-005': 49, 'uuid-staff-006': 4, 'uuid-staff-007': 30, 'uuid-staff-008': 8,
+        'uuid-staff-009': 26, 'uuid-staff-010': 96, 'uuid-staff-011': 6 };
+      const out = {};
+      Object.keys(hoursAgo).forEach(function (id) {
+        out[id] = formatStamp(new Date(Date.now() - hoursAgo[id] * 3600000));
+      });
+      return out;
+    })();
+
+    // === Render Users Table ===
+    function renderUsersTable(data) {
+      const members = data || TEAM_MEMBERS;
+      const tbody = document.getElementById('usersTableBody');
+
+      if (members.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              No users match these filters
+            </td>
+          </tr>`;
+        return;
+      }
+
+      document.getElementById('usersPaginationInfo').textContent =
+        `Showing ${members.length ? '1-' + members.length : '0'} of ${members.length}`;
+      tbody.innerHTML = members.map(member => {
+        const roleData = ROLES[member.roleKey];
+        const roleName = roleData ? roleData.name : member.roleKey;
+        const lastLogin = MOCK_LAST_LOGIN[member.id] || '—';
+
+        const fmtCount = (n) => n > 0
+          ? `<strong>${n.toLocaleString()}</strong>`
+          : `<span class="count-zero">0</span>`;
+
+        return `
+          <tr>
+            <td class="font-medium">${member.name}</td>
+            <td class="text-secondary">${member.email}</td>
+            <td>
+              <span class="badge badge-role badge-role-${member.roleKey}">${roleName}</span>
+            </td>
+            <td class="text-secondary" style="white-space:nowrap;">${lastLogin}</td>
+            <td class="col-assignment">${fmtCount(member.companiesAsComercial)}</td>
+            <td class="col-assignment">${fmtCount(member.companiesAsSDR)}</td>
+            <td class="col-assignment">${fmtCount(member.vacanciesAsComercial)}</td>
+            <td class="col-assignment">${fmtCount(member.vacanciesAsSDR)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    // === Filter Users ===
+    function filterUsers() {
+      const roleFilter = document.getElementById('filterRole').value;
+      const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
+
+      const filtered = TEAM_MEMBERS.filter(member => {
+        const matchesRole = !roleFilter || member.roleKey === roleFilter;
+        const matchesSearch = !searchFilter ||
+          member.name.toLowerCase().includes(searchFilter) ||
+          member.email.toLowerCase().includes(searchFilter);
+
+        return matchesRole && matchesSearch;
+      });
+
+      renderUsersTable(filtered);
+    }
+
+    // === Initial render ===
+    renderUsersTable();
+  </script>
+</body>
+</html>

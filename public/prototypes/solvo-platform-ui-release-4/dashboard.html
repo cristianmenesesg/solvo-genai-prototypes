@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="r4-lists.css">
+  <script src="theme.js"></script>
+</head>
+<body>
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <div id="sidebar-container"></div>
+
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="kp-head">
+          <h2 class="page-title" style="margin:0;">Dashboard</h2>
+          <div class="kp-window" role="group" aria-label="Time range">
+            <button type="button" data-days="7">Last 7 days</button>
+            <button type="button" data-days="30" class="is-on">Last 30 days</button>
+          </div>
+        </div>
+
+        <!-- Embudo de detección: de lo que el motor trae a lo que se puede trabajar.
+             Se puede partir por trigger o por país (Release 4). -->
+        <div class="r4-funnelhead">
+          <p class="kp-panel-sub" id="funnelSub"></p>
+          <div class="kp-window" role="group" aria-label="Split the detection funnel" id="splitCtl">
+            <button type="button" data-split="all" class="is-on" aria-pressed="true">All</button>
+            <button type="button" data-split="trigger" aria-pressed="false">By trigger</button>
+            <button type="button" data-split="country" aria-pressed="false">By country</button>
+          </div>
+        </div>
+        <div class="kp-funnelstrip" id="kpFunnel"></div>
+        <div class="r4-split" id="kpSplit" hidden></div>
+
+        <div class="kp-grid">
+          <div class="kp-col">
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Positions detected and remote viable</h3>
+                <button type="button" class="kp-toggle" data-table="positions">Table view</button>
+              </div>
+              <p class="kp-panel-sub" id="positionsSub"></p>
+              <div class="kp-legend" id="positionsLegend"></div>
+              <div class="kp-chart" id="positionsChart"></div>
+              <div id="positionsTable" hidden></div>
+            </section>
+
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Companies and decision makers</h3>
+                <button type="button" class="kp-toggle" data-table="prospects">Table view</button>
+              </div>
+              <p class="kp-panel-sub" id="prospectsSub"></p>
+              <div class="kp-legend" id="prospectsLegend"></div>
+              <div class="kp-chart" id="prospectsChart"></div>
+              <div id="prospectsTable" hidden></div>
+            </section>
+          </div>
+
+          <div class="kp-col">
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Booking funnel</h3>
+              </div>
+              <p class="kp-panel-sub">From the email sent to the meeting confirmed on the calendar.</p>
+              <div id="bookingFunnel"></div>
+            </section>
+
+            <section class="kp-panel">
+              <div class="kp-panel-head">
+                <h3 class="kp-panel-title">Booking record</h3>
+              </div>
+              <p class="kp-panel-sub">Every day of the range, stage by stage.</p>
+              <div class="kp-tablewrap" id="bookingRecord"></div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="rbac.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Dashboard — tablero del motor de prospección. Reemplaza los KPIs comerciales por rol del
+       MVP: lo que muestra es volumen del motor y del embudo de agendamiento, igual para
+       todos los roles.
+       Datos: MOCK_DAILY_METRICS y MOCK_BOOKING_FUNNEL (rbac.js), sintéticos y
+       deterministas. Fuentes reales a fijar en la HU:
+         positions          vacancies.created_at por día
+         viablePositions    vacancies.is_remote_viable = true
+         companies          company.created_at por día
+         viableCompanies    empresas con al menos una vacante viable
+         companiesWithDm    contacts_searched_at no nulo y ≥1 contacto con decision_level
+         decisionMakers     company_contacts con decision_level, por analyzed_at
+         booking funnel     public.funnel_events por event_type / occurred_at:
+                            email_delivered → email_opened → email_click →
+                            landing_view → slot_selected → booking_confirmed
+                            (availability_shown y visible_error se registran aparte;
+                            solo interacción humana cuando FSPL-8 se entregue)
+       Release 4 — embudo partido (selector All / By trigger / By country):
+         All          las fichas de siempre, sobre la serie diaria del motor.
+         By trigger   1) registros de la plataforma (MOCK_VACANCIES) detectados en la
+                         ventana, por trigger (`triggerIds`): total y su estado actual
+                         (`entityState`), empresas distintas de esas vacantes, cuántas están
+                         calificadas (`company.entityState`) y sus decisores (contactos con
+                         rol). Una vacante con dos triggers cuenta en las dos filas; el total
+                         cuenta vacantes distintas.
+                      2) lo que reportó cada ejecución (ENGINE_EXECUTIONS, y MOCK_REQUESTS
+                         para On demand) en la ventana: ejecuciones, búsquedas, vacantes,
+                         viables, empresas, calificadas, decisores, costo y la serie diaria
+                         de vacantes desde el primer día del registro.
+         By country   la tabla 1) por país de la vacante (`countryCode`). Las ejecuciones
+                      no se parten por país: un trigger cubre varios.
+         "—" = ningún trigger de esa fila llega a esa etapa (p. ej. Hiring countries
+         termina en el análisis de vacantes): no es un cero.
+       Acciones: ventana 7 / 30 días, embudo partido y vista de tabla por gráfico (client-side).
+       Contrato: sin definir; hoy existe GET /api/dashboard/kpis/{vacancies,companies}.
+       ------------------------------------------------------------------------ */
+    /* ========================================================================
+       Dashboard: tablero del motor.
+       Arriba el embudo de detección: de lo que el barrido trae a lo que se puede
+       trabajar. Debajo, cómo evoluciona día a día, y al costado qué pasa cuando
+       ese material sale como correo.
+
+       Los colores salen del verificador del design system, no del ojo. Las dos
+       series son categóricas —identidad, no magnitud— y el embudo usa una rampa
+       ordinal de un solo tono. Ninguna gráfica tiene dos ejes.
+       ======================================================================== */
+
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    renderSidebar('dashboard');
+    renderHeaderControls();
+
+    let days = 30;
+
+    function esc(s) {
+      return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function num(n) { return Number(n).toLocaleString('en-US'); }
+    function pct(part, whole) { return whole ? Math.round(part / whole * 100) + '%' : '—'; }
+
+    function dayLabel(iso) {
+      return parseStamp(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    }
+
+    /* ---- Embudo de detección ------------------------------------------------ */
+    // Cinco pasos, cada uno un subconjunto del anterior. Van como fichas y no como
+    // gráfico: son cinco números, y un gráfico de cinco barras no diría más.
+    function renderFunnelStrip() {
+      const rows = dailyMetrics(days);
+      // `chain: false` abre una cadena nueva. Las empresas no son un subconjunto de las
+      // posiciones —una empresa aparece en varias—, así que una proporción entre las dos
+      // no significaría nada: la cadena de posiciones termina en las viables y la de
+      // empresas empieza de cero.
+      const steps = [
+        { label: 'Positions detected', value: sumMetric(rows, 'positions'), chain: false,
+          note: 'Everything the sweep brought in' },
+        { label: 'Remote viable', value: sumMetric(rows, 'viablePositions'), chain: true,
+          note: 'The classifier judged the role coverable from outside the US' },
+        { label: 'Companies', value: sumMetric(rows, 'companies'), chain: false,
+          note: 'New companies the engine brought in during the period' },
+        { label: 'Viable companies', value: sumMetric(rows, 'viableCompanies'), chain: true,
+          note: 'With at least one remote viable position' },
+        { label: 'With decision makers', value: sumMetric(rows, 'companiesWithDm'), chain: true,
+          note: 'Somebody to write to' }
+      ];
+
+      document.getElementById('kpFunnel').innerHTML = steps.map(function (s, i) {
+        return '<article class="kp-tile' + (s.chain ? '' : ' starts-chain') + '" title="' + esc(s.note) + '">' +
+          '<div class="kp-tile-label">' + esc(s.label) + '</div>' +
+          '<div class="kp-tile-value">' + num(s.value) + '</div>' +
+          '<div class="kp-tile-step">' +
+            (s.chain
+              ? '<strong>' + pct(s.value, steps[i - 1].value) + '</strong> of the step before'
+              : 'in the last ' + days + ' days') +
+          '</div>' +
+        '</article>';
+      }).join('');
+    }
+
+    /* ---- Embudo partido por trigger o por país (Release 4) -------------------- */
+    let split = 'all';
+
+    function inWindow(iso) { return parseStamp(iso).getTime() >= Date.now() - days * 86400000; }
+
+    // Etapas a las que llega un trigger: las de empresa y decisores solo si tiene
+    // servicios de enriquecimiento o de decisores configurados.
+    function reaches(trigger, stage) {
+      if (!trigger) return false;
+      if (stage === 'companies') return trigger.enrichment.length > 0;
+      if (stage === 'decisionMakers') return trigger.decisionMakers.length > 0;
+      return true;
+    }
+
+    // Cuenta un grupo de vacantes: estado actual, empresas distintas, calificadas y decisores.
+    function countRecords(vacs) {
+      const out = { total: vacs.length, companies: 0, qualified: 0, dms: 0 };
+      Object.keys(VACANCY_STATES).forEach(function (k) { out[k] = 0; });
+      vacs.forEach(function (v) { if (out[v.entityState] !== undefined) out[v.entityState] += 1; });
+      const ids = Array.from(new Set(vacs.map(function (v) { return v.companyId; })));
+      out.companies = ids.length;
+      ids.forEach(function (id) {
+        const c = MOCK_COMPANIES.find(function (x) { return x.id === id; });
+        if (c && c.entityState === 'qualified') out.qualified += 1;
+        out.dms += getContactsForCompany(id).filter(function (ct) { return !!ct.roleCode; }).length;
+      });
+      return out;
+    }
+
+    function cell(value, reached, why) {
+      return reached ? '<td>' + num(value) + '</td>' : '<td class="r4-na" title="' + esc(why) + '">—</td>';
+    }
+
+    // Tabla de registros: una fila por grupo (trigger o país) y una de total con vacantes distintas.
+    function recordsTable(groups, allVacs, firstHeader) {
+      const head = '<thead>' +
+        '<tr class="r4-group"><th></th><th colspan="6">Vacancies, by their state today</th><th colspan="3">Their companies</th></tr>' +
+        '<tr><th>' + esc(firstHeader) + '</th><th>Total</th><th title="Not analyzed yet">Detected</th><th title="Analyzed without a verdict">Analyzed</th>' +
+        '<th>Viable</th><th>Discarded</th><th title="Not seen again in 30 days">Closed</th>' +
+        '<th>Companies</th><th>Qualified</th><th>Decision makers</th></tr></thead>';
+      const row = function (name, note, c, reachCo, reachDm, why) {
+        return '<tr><td><span class="r4-rowname">' + esc(name) + '</span>' + (note ? '<span class="r4-rownote">' + esc(note) + '</span>' : '') + '</td>' +
+          '<td>' + num(c.total) + '</td><td>' + num(c.detected) + '</td><td>' + num(c.analyzed) + '</td>' +
+          '<td>' + num(c.viable) + '<span class="r4-pct">' + pct(c.viable, c.total) + '</span></td>' +
+          '<td>' + num(c.discarded) + '</td><td>' + num(c.closed) + '</td>' +
+          '<td>' + num(c.companies) + '</td>' +
+          cell(c.qualified, reachCo, why) + cell(c.dms, reachDm, why) + '</tr>';
+      };
+      const body = groups.map(function (g) {
+        return row(g.name, g.note, countRecords(g.vacs), g.reachCo, g.reachDm, g.why);
+      }).join('');
+      const total = countRecords(allVacs);
+      return '<div class="r4-scroll"><table class="kp-table">' + head + '<tbody>' + body + '</tbody>' +
+        '<tfoot>' + row('All vacancies', 'Each vacancy once', total, true, true, '') + '</tfoot></table></div>';
+    }
+
+    function windowVacancies() {
+      return MOCK_VACANCIES.filter(function (v) { return inWindow(v.detectedAtTs || v.detectedAt); });
+    }
+
+    // Serie diaria de vacantes de un trigger según el registro de ejecuciones.
+    function sparkline(values) {
+      const max = Math.max.apply(null, values.concat([1]));
+      const w = 120, h = 26;
+      const x = function (i) { return values.length === 1 ? w / 2 : 2 + (w - 4) * i / (values.length - 1); };
+      const y = function (v) { return h - 3 - (v / max) * (h - 6); };
+      const pts = values.map(function (v, i) { return x(i).toFixed(1) + ',' + y(v).toFixed(1); }).join(' ');
+      return '<svg class="r4-spark" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">' +
+        '<polyline points="' + pts + '"></polyline>' +
+        '<circle cx="' + x(values.length - 1).toFixed(1) + '" cy="' + y(values[values.length - 1]).toFixed(1) + '" r="2"></circle></svg>';
+    }
+
+    function executionsPanel() {
+      const exs = ENGINE_EXECUTIONS.filter(function (e) { return inWindow(e.startedAt); });
+      const first = ENGINE_EXECUTIONS.reduce(function (m, e) { return Math.min(m, parseStamp(e.startedAt).getTime()); }, Date.now());
+      const from = Math.max(first, Date.now() - days * 86400000);
+      const dayKeys = [];
+      for (let t = new Date(from).setUTCHours(0, 0, 0, 0); t <= Date.now(); t += 86400000) dayKeys.push(new Date(t).toISOString().slice(0, 10));
+      const reqs = MOCK_REQUESTS.filter(function (r) { return r.triggerId === 'trg-on-demand' && inWindow(r.at); });
+
+      const rows = ENGINE_TRIGGERS.filter(function (t) { return t.searchBy !== 'none'; }).map(function (t) {
+        const mine = exs.filter(function (e) { return e.triggerId === t.id; });
+        const why = t.name + ' does not reach this stage';
+        if (t.id === 'trg-on-demand') {
+          // A pedido no corre por calendario: cada solicitud es su ejecución.
+          const sum = function (k) { return reqs.reduce(function (a, r) { return a + ((r.progress || {})[k] || 0); }, 0); };
+          return '<tr><td><span class="r4-rowname">' + esc(t.name) + '</span><span class="r4-rownote">Requests from the platform</span></td>' +
+            '<td>' + num(reqs.length) + '</td><td>' + num(sum('searched')) + '</td><td>' + num(sum('found')) + '</td><td>' + num(sum('viable')) + '</td>' +
+            cell(0, false, why) + cell(0, false, why) + cell(0, false, why) + '<td class="r4-na" title="Cost is recorded per invocation in Engine activity">—</td><td></td></tr>';
+        }
+        const sum = function (k) { return mine.reduce(function (a, e) { return a + (e.counts[k] || 0); }, 0); };
+        const cost = mine.reduce(function (a, e) { return a + (e.costUsd || 0); }, 0);
+        const perDay = dayKeys.map(function (d) {
+          return mine.filter(function (e) { return e.startedAt.slice(0, 10) === d; }).reduce(function (a, e) { return a + e.counts.vacancies; }, 0);
+        });
+        return '<tr><td><span class="r4-rowname">' + esc(t.name) + '</span><span class="r4-rownote">' + esc(t.activation.mode === 'cron' ? 'Scheduled ' + t.activation.time : 'On request') + '</span></td>' +
+          '<td>' + num(mine.length) + '</td><td>' + num(sum('searches')) + '</td><td>' + num(sum('vacancies')) + '</td><td>' + num(sum('viable')) +
+          '<span class="r4-pct">' + pct(sum('viable'), sum('vacancies')) + '</span></td>' +
+          cell(sum('companies'), reaches(t, 'companies'), why) + cell(sum('qualified'), reaches(t, 'companies'), why) + cell(sum('decisionMakers'), reaches(t, 'decisionMakers'), why) +
+          '<td>$' + cost.toFixed(2) + '</td><td>' + sparkline(perDay) + '</td></tr>';
+      }).join('');
+
+      return '<section class="kp-panel">' +
+        '<div class="kp-panel-head"><h3 class="kp-panel-title">Volume reported by the executions</h3></div>' +
+        '<p class="kp-panel-sub">What each execution of a trigger reported in the range: searches made, vacancies brought in, how many the analysis judged viable, and what the company and decision-maker stages produced. ' +
+          'The execution record starts on ' + esc(dayLabel(new Date(first).toISOString())) + '; the daily line covers ' + dayKeys.length + ' days from ' + esc(dayLabel(dayKeys[0])) + '.</p>' +
+        '<div class="r4-scroll"><table class="kp-table"><thead><tr><th>Trigger</th><th>Executions</th><th>Searches</th><th>Vacancies</th><th>Viable</th>' +
+          '<th>Companies</th><th>Qualified</th><th>Decision makers</th><th>Cost (USD)</th><th>Vacancies per day</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '</section>';
+    }
+
+    function renderSplit() {
+      const sub = document.getElementById('funnelSub');
+      const strip = document.getElementById('kpFunnel');
+      const mount = document.getElementById('kpSplit');
+      // .kp-funnelstrip es grid: `hidden` no le gana, así que se oculta por estilo.
+      strip.style.display = split === 'all' ? '' : 'none';
+      mount.hidden = split === 'all';
+      if (split === 'all') {
+        sub.textContent = 'Detection funnel: engine volume in the last ' + days + ' days, every trigger and country together.';
+        mount.innerHTML = '';
+        return;
+      }
+      const vacs = windowVacancies();
+      let groups;
+      if (split === 'trigger') {
+        sub.textContent = 'Detection funnel by trigger, in the last ' + days + ' days.';
+        groups = ENGINE_TRIGGERS.filter(function (t) { return t.searchBy !== 'none'; }).map(function (t) {
+          return {
+            name: t.name, note: t.countries.length > 2 ? t.countries.length + ' countries' : t.countries.map(countryName).join(', '),
+            vacs: vacs.filter(function (v) { return (v.triggerIds || []).indexOf(t.id) !== -1; }),
+            reachCo: reaches(t, 'companies'), reachDm: reaches(t, 'decisionMakers'), why: t.name + ' does not reach this stage'
+          };
+        });
+      } else {
+        sub.textContent = 'Detection funnel by country of the vacancy, in the last ' + days + ' days.';
+        groups = ENGINE_COUNTRIES.map(function (c) {
+          const trs = ENGINE_TRIGGERS.filter(function (t) { return t.countries.indexOf(c.code) !== -1; });
+          return {
+            name: c.name, note: c.group === 'sales' ? 'Sales country' : 'Hiring country',
+            vacs: vacs.filter(function (v) { return v.countryCode === c.code; }),
+            reachCo: trs.some(function (t) { return reaches(t, 'companies'); }),
+            reachDm: trs.some(function (t) { return reaches(t, 'decisionMakers'); }),
+            why: 'No trigger takes vacancies of ' + c.name + ' to this stage'
+          };
+        }).filter(function (g) { return g.vacs.length; });
+      }
+      mount.innerHTML =
+        '<section class="kp-panel">' +
+          '<div class="kp-panel-head"><h3 class="kp-panel-title">' + (split === 'trigger' ? 'Vacancies in the platform by trigger' : 'Vacancies in the platform by country') + '</h3></div>' +
+          '<p class="kp-panel-sub">' + (split === 'trigger'
+            ? 'Vacancy records detected in the range, by the trigger that brought them, with the state each one is in today. A vacancy brought by two triggers counts in both rows and once in the total.'
+            : 'Vacancy records detected in the range, by the country of the vacancy, with the state each one is in today.') +
+            ' The company columns count the distinct companies of those vacancies, how many are qualified today and the decision makers on record. “—” means no trigger takes that row to the stage.</p>' +
+          recordsTable(groups, vacs, split === 'trigger' ? 'Trigger' : 'Country') +
+        '</section>' +
+        (split === 'trigger' ? executionsPanel() : '');
+    }
+
+    document.querySelectorAll('[data-split]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        split = b.dataset.split;
+        document.querySelectorAll('[data-split]').forEach(function (x) {
+          x.classList.toggle('is-on', x === b);
+          x.setAttribute('aria-pressed', x === b ? 'true' : 'false');
+        });
+        renderSplit();
+      });
+    });
+
+    /* ---- Gráfico de líneas ---------------------------------------------------- */
+    // Dos series por gráfico, un solo eje. Marcas finas, rejilla apenas visible,
+    // etiqueta directa solo en el último punto, y crosshair con tooltip al pasar.
+    const CHART = { w: 720, h: 230, padL: 44, padR: 56, padT: 12, padB: 26 };
+
+    function niceCeil(v) {
+      if (v <= 0) return 10;
+      const mag = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+      return Math.ceil(v / (mag / 2)) * (mag / 2);
+    }
+
+    function lineChart(mount, rows, series, tableMount, tableCaption) {
+      const max = niceCeil(Math.max.apply(null, rows.map(function (r) {
+        return Math.max.apply(null, series.map(function (s) { return r[s.key]; }));
+      })));
+      const innerW = CHART.w - CHART.padL - CHART.padR;
+      const innerH = CHART.h - CHART.padT - CHART.padB;
+      const x = function (i) { return CHART.padL + (rows.length === 1 ? innerW / 2 : innerW * i / (rows.length - 1)); };
+      const y = function (v) { return CHART.padT + innerH - (v / max) * innerH; };
+
+      const ticks = [0, max / 4, max / 2, max * 0.75, max];
+      let svg = '<svg viewBox="0 0 ' + CHART.w + ' ' + CHART.h + '" role="img" aria-label="' + esc(tableCaption) + '">';
+
+      ticks.forEach(function (t) {
+        svg += '<line class="kp-grid-line" x1="' + CHART.padL + '" x2="' + (CHART.w - CHART.padR) + '" y1="' + y(t) + '" y2="' + y(t) + '"></line>' +
+          '<text class="kp-axis-text" x="' + (CHART.padL - 8) + '" y="' + (y(t) + 3.5) + '" text-anchor="end">' + num(Math.round(t)) + '</text>';
+      });
+
+      // Fechas: la primera, la del medio y la última. Una por día sería ilegible.
+      [0, Math.floor(rows.length / 2), rows.length - 1].forEach(function (i, n) {
+        svg += '<text class="kp-axis-text" x="' + x(i) + '" y="' + (CHART.h - 8) + '" text-anchor="' +
+          (n === 0 ? 'start' : n === 2 ? 'end' : 'middle') + '">' + esc(dayLabel(rows[i].date)) + '</text>';
+      });
+
+      series.forEach(function (s) {
+        const pts = rows.map(function (r, i) { return x(i) + ',' + y(r[s.key]); }).join(' ');
+        svg += '<polyline class="kp-line" points="' + pts + '" stroke="var(' + s.token + ')"></polyline>';
+      });
+
+      // Marcador y etiqueta solo al final de cada serie: una etiqueta por punto es ruido.
+      series.forEach(function (s) {
+        const last = rows[rows.length - 1];
+        svg += '<circle class="kp-marker" cx="' + x(rows.length - 1) + '" cy="' + y(last[s.key]) +
+          '" r="4.5" fill="var(' + s.token + ')"></circle>' +
+          '<text class="kp-endlabel" x="' + (CHART.w - CHART.padR + 8) + '" y="' + (y(last[s.key]) + 4) + '">' +
+          num(last[s.key]) + '</text>';
+      });
+
+      svg += '<line class="kp-crosshair" id="' + mount.id + '-cross" x1="0" x2="0" y1="' + CHART.padT +
+        '" y2="' + (CHART.padT + innerH) + '" style="display:none"></line>';
+      svg += '<rect id="' + mount.id + '-hit" x="' + CHART.padL + '" y="' + CHART.padT + '" width="' + innerW +
+        '" height="' + innerH + '" fill="transparent" style="cursor:crosshair"></rect>';
+      svg += '</svg><div class="kp-tip" id="' + mount.id + '-tip"></div>';
+
+      mount.innerHTML = svg;
+
+      // Capa de interacción: el punto más cercano gana, con un blanco de todo el alto.
+      const hit = document.getElementById(mount.id + '-hit');
+      const cross = document.getElementById(mount.id + '-cross');
+      const tip = document.getElementById(mount.id + '-tip');
+
+      function at(clientX) {
+        const box = mount.getBoundingClientRect();
+        const rel = (clientX - box.left) / box.width * CHART.w;
+        let best = 0, bestD = Infinity;
+        rows.forEach(function (r, i) {
+          const d = Math.abs(x(i) - rel);
+          if (d < bestD) { bestD = d; best = i; }
+        });
+        return best;
+      }
+
+      function show(e) {
+        const i = at(e.clientX);
+        const r = rows[i];
+        cross.setAttribute('x1', x(i));
+        cross.setAttribute('x2', x(i));
+        cross.style.display = '';
+        tip.innerHTML = '<div class="kp-tip-date">' + esc(dayLabel(r.date)) + (r.weekend ? ' · weekend' : '') + '</div>' +
+          series.map(function (s) {
+            return '<div class="kp-tip-row"><span class="kp-tip-key" style="background:var(' + s.token + ')"></span>' +
+              esc(s.name) + '<span class="kp-tip-val">' + num(r[s.key]) + '</span></div>';
+          }).join('');
+        tip.classList.add('is-on');
+        const box = mount.getBoundingClientRect();
+        const px = x(i) / CHART.w * box.width;
+        tip.style.left = Math.min(Math.max(px - 66, 0), Math.max(0, box.width - 150)) + 'px';
+        tip.style.top = '4px';
+      }
+
+      hit.addEventListener('mousemove', show);
+      hit.addEventListener('mouseleave', function () { cross.style.display = 'none'; tip.classList.remove('is-on'); });
+
+      // Vista de tabla: obligatoria acá, porque el naranja no llega a 3:1 sobre blanco.
+      tableMount.innerHTML = '<div class="kp-tablewrap"><table class="kp-table"><caption class="sr-only">' +
+        esc(tableCaption) + '</caption><thead><tr><th>Day</th>' +
+        series.map(function (s) { return '<th>' + esc(s.name) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        rows.slice().reverse().map(function (r) {
+          return '<tr><td>' + esc(dayLabel(r.date)) + '</td>' +
+            series.map(function (s) { return '<td>' + num(r[s.key]) + '</td>'; }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+
+    function legend(mount, series) {
+      mount.innerHTML = series.map(function (s) {
+        return '<span class="kp-legend-item"><span class="kp-legend-key" style="background:var(' + s.token + ')"></span>' +
+          esc(s.name) + '</span>';
+      }).join('');
+    }
+
+    const POSITION_SERIES = [
+      { name: 'Detected', key: 'positions', token: '--chart-s1' },
+      { name: 'Remote viable', key: 'viablePositions', token: '--chart-s2' }
+    ];
+
+    const PROSPECT_SERIES = [
+      { name: 'Companies', key: 'companies', token: '--chart-s1' },
+      { name: 'Decision makers', key: 'decisionMakers', token: '--chart-s2' }
+    ];
+
+    function renderTrends() {
+      const rows = dailyMetrics(days);
+
+      document.getElementById('positionsSub').textContent =
+        num(sumMetric(rows, 'positions')) + ' detected, ' + num(sumMetric(rows, 'viablePositions')) +
+        ' of them remote viable (' + pct(sumMetric(rows, 'viablePositions'), sumMetric(rows, 'positions')) + ').';
+      legend(document.getElementById('positionsLegend'), POSITION_SERIES);
+      lineChart(document.getElementById('positionsChart'), rows, POSITION_SERIES,
+        document.getElementById('positionsTable'), 'Positions detected and remote viable, by day');
+
+      document.getElementById('prospectsSub').textContent =
+        num(sumMetric(rows, 'companies')) + ' new companies brought in by the engine, and ' +
+        num(sumMetric(rows, 'decisionMakers')) + ' decision makers found.';
+      legend(document.getElementById('prospectsLegend'), PROSPECT_SERIES);
+      lineChart(document.getElementById('prospectsChart'), rows, PROSPECT_SERIES,
+        document.getElementById('prospectsTable'), 'Companies and decision makers, by day');
+    }
+
+    /* ---- Embudo de agendamiento ------------------------------------------------- */
+    function renderBooking() {
+      const rows = bookingFunnel(days);
+      const totals = BOOKING_FUNNEL_STAGES.map(function (s, i) {
+        return { label: s.label, note: s.note, value: sumMetric(rows, s.key), token: '--funnel-' + (i + 1) };
+      });
+      const top = totals[0].value || 1;
+
+      document.getElementById('bookingFunnel').innerHTML = totals.map(function (t, i) {
+        const prev = i ? totals[i - 1].value : null;
+        const width = Math.max(t.value / top * 100, t.value ? 1.5 : 0);
+        return '<div class="kp-fstage" title="' + esc(t.note) + '">' +
+          '<div class="kp-fstage-head">' +
+            '<span class="kp-fstage-label">' + esc(t.label) + '</span>' +
+            '<span class="kp-fstage-count">' + num(t.value) + '</span>' +
+            '<span class="kp-fstage-rate">' + (prev === null ? '' : pct(t.value, prev)) + '</span>' +
+          '</div>' +
+          '<div class="kp-fbar"><span style="width:' + width + '%;background:var(' + t.token + ')"></span></div>' +
+        '</div>';
+      }).join('');
+
+      document.getElementById('bookingRecord').innerHTML =
+        '<table class="kp-table"><thead><tr><th>Day</th><th>Deliv.</th><th>Open</th><th>Click</th>' +
+        '<th>Landing</th><th>Slot</th><th>Booked</th></tr></thead><tbody>' +
+        rows.slice().reverse().map(function (r) {
+          return '<tr><td>' + esc(dayLabel(r.date)) + '</td><td>' + num(r.email_delivered) + '</td><td>' +
+            num(r.email_opened) + '</td><td>' + num(r.email_click) + '</td><td>' + num(r.landing_view) +
+            '</td><td>' + num(r.slot_selected) + '</td><td>' + num(r.booking_confirmed) + '</td></tr>';
+        }).join('') + '</tbody></table>';
+
+    }
+
+    /* ---- Ventana y vista de tabla ------------------------------------------------- */
+    function renderAll() {
+      renderFunnelStrip();
+      renderSplit();
+      renderTrends();
+      renderBooking();
+    }
+
+    document.querySelectorAll('.kp-head .kp-window button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        days = Number(b.dataset.days);
+        document.querySelectorAll('.kp-head .kp-window button').forEach(function (x) { x.classList.remove('is-on'); });
+        b.classList.add('is-on');
+        renderAll();
+      });
+    });
+
+    document.querySelectorAll('[data-table]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const key = b.dataset.table;
+        const table = document.getElementById(key + 'Table');
+        const chart = document.getElementById(key + 'Chart');
+        const showing = table.hidden;
+        table.hidden = !showing;
+        chart.hidden = showing;
+        b.textContent = showing ? 'Chart view' : 'Table view';
+      });
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>

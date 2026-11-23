@@ -137,6 +137,16 @@ export const products = [
         versions: [{ label: 'App', file: 'index.html' }],
       },
       {
+        id: 'platform-ui-release-4',
+        nombre: 'Platform UI — Release 4',
+        categoria: 'App',
+        bundle: 'solvo-platform-ui-release-4',
+        tokens: 'platform',
+        multipage: true,
+        notas: 'Solvo Platform sobre Prospect Engine Modular. Las vacantes y empresas llevan país, división y ciudad, el trigger que las trajo, los servicios de cada fuente y su estado; los listados arrancan filtrados por Estados Unidos y España, y los países de contratación se ven cambiando el filtro. El salario se muestra en USD anual y, con menos jerarquía, como se publicó. Requests reúne las búsquedas a pedido y las investigaciones con su avance. Settings administra triggers, servicios, posiciones y términos por país, geografía, roles de decisor, prompts por país, reglas y envíos de cold outreach; Engine activity muestra cada ejecución con sus invocaciones y su consumo. Arranca en el login; usá el selector de usuario demo para entrar.',
+        versions: [{ label: 'App', file: 'index.html' }],
+      },
+      {
         id: 'platform-design-system',
         nombre: 'Platform Design System',
         categoria: 'Design system',

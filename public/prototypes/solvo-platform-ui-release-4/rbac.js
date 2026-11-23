@@ -1,0 +1,4522 @@
+/* ============================================================================
+   Solvo Platform — prototipo Release 4 · rbac.js (fork de Release 3; sección 20 = Prospect Engine Modular)
+   Capa compartida de todas las páginas: sesión y roles, datos mock con la forma
+   de la base compartida, catálogos del motor de prospección, popups y helpers
+   de exportación. El README.md del bundle tiene el mapa completo y los
+   contratos existentes; la revisión funcional vive en el vault
+   (analysis/solvo-platform/revision-prototipo-release-3.md).
+
+   ÍNDICE — buscar por el título de cada sección
+    1. ROLE DEFINITIONS · MOCK TEAM DATA ..... roles y staff (public.solvo_staff)
+    2. CATÁLOGO ESTÁNDAR DE INDUSTRIAS ....... public.industry_catalog (HUSPL-0.1)
+    3. TRAMOS DE TAMAÑO DE EMPRESA ........... company.size_employees (FSPL-7)
+    4. ENTIDADES MOCK Y SU COLUMNA ........... typedefs: Company, Vacancy, Contact…
+    5. MOCK COMPANIES / CONTACTS / VACANCIES . datos base + seeds autoejecutados
+    6. ON-DEMAND OPENINGS (ODO) .............. last_scraped_at, ventana, cool-down
+    7. FECHAS · MEMORIA DE EXPORTACIÓN ....... created_at, last_exported_* (HUSPL-0.2)
+    8. ROLE-BASED ACCESS FUNCTIONS ........... canViewAll / canAssign / canDelete / canExport
+    9. SESSION · HEADER · SIDEBAR · TOAST .... shell de la app
+   10. POPUPS ............................... asignación, confirmación, exportación, scraping
+   11. CSV EXPORT · EMPAQUETADO · COLUMNAS ... contrato de archivos (FSPL-2)
+   12. DATE RANGE / MULTI-SELECT / SEARCHBOX . filtros de Release 2, sin uso en Release 3
+   13. RELEASE 3 — Open Positions ........... US_STATES, POSITIONS_CATALOG, LEAD_SIGNALS,
+                                              icpTier, ROLE_CODES, nivel de decisión,
+                                              EMAIL_VERIFICATION, seeds de calificación,
+                                              análisis de contactos y vacantes del barrido
+   14. RELEASE 3 — Companies ................ PIPELINE_STAGES, posiciones por empresa,
+                                              nombres, antigüedades, señal de interés
+   15. SELECTOR DE LA BARRA DE BÚSQUEDA ..... renderShellPicker / renderShellSearchbox
+   16. HISTORIAL DE ESTADOS ................. public.states_history + actividad
+   17. TRAZA DE EJECUCIÓN ................... public.execution_logs (sembrada, no mostrada)
+   18. ENRIQUECIMIENTO DE LA EMPRESA ........ company_research, repeatedPosting, sizeFit
+   19. SERIE DIARIA · FUNNEL DE AGENDAMIENTO  datos sintéticos del tablero
+
+   Convenciones
+   · Los objetos mock usan camelCase; la columna real va en snake_case en el
+     typedef de cada entidad (sección 4). "derivado" = se calcula, no se guarda.
+   · Los comentarios explican por qué el dato tiene esa forma; la revisión del vault
+     (analysis/solvo-platform/revision-prototipo-release-3.md) tiene el registro de las
+     decisiones y su impacto en el backlog.
+   · Nada llama a un servidor: el estado vive en memoria y en localStorage
+     (`user`, `odoConfig`, `theme`, `lang`, `sidebarCollapsed`; Settings agrega
+     `positionsCatalog`, `citiesGrid`, `citiesCap`).
+   ============================================================================ */
+
+// === ROLE DEFINITIONS ===
+const ROLES = {
+  comercial: {
+    name: 'Sales Rep',
+    description: 'Sales executive. Sees and manages only the entities where they are the assigned Sales Rep.',
+    priority: 2
+  },
+  sdr: {
+    name: 'SDR',
+    description: 'Ejecutivo de desarrollo de negocio. Ve y gestiona exclusivamente las entidades donde es el SDR asignado.',
+    priority: 1
+  },
+  coordinador: {
+    name: 'Coordinator',
+    description: 'Operations coordinator. Sees all records, assigns Sales Reps and SDRs.',
+    priority: 3
+  },
+  supervisor: {
+    name: 'Supervisor',
+    description: 'Operations supervisor. Same permissions as Coordinator.',
+    priority: 4
+  },
+  administrador: {
+    name: 'Administrator',
+    description: 'Full access to administration, users and configuration.',
+    priority: 5
+  }
+};
+
+// === MOCK TEAM DATA ===
+const TEAM_MEMBERS = [
+  // Sales Reps
+  { id: 'uuid-staff-001', name: 'Carlos Mendoza', shortName: 'Carlos M.', email: 'carlos.mendoza@solvo.global', roleKey: 'comercial', title: 'Senior Account Executive', isActive: true, companiesAsComercial: 47, companiesAsSDR: 0, vacanciesAsComercial: 1234, vacanciesAsSDR: 0 },
+  { id: 'uuid-staff-002', name: 'María García', shortName: 'María G.', email: 'maria.garcia@solvo.global', roleKey: 'comercial', title: 'Account Executive', isActive: true, companiesAsComercial: 38, companiesAsSDR: 0, vacanciesAsComercial: 987, vacanciesAsSDR: 0 },
+  { id: 'uuid-staff-003', name: 'Juan Pérez', shortName: 'Juan P.', email: 'juan.perez@solvo.global', roleKey: 'comercial', title: 'Account Executive', isActive: true, companiesAsComercial: 42, companiesAsSDR: 0, vacanciesAsComercial: 1102, vacanciesAsSDR: 0 },
+  { id: 'uuid-staff-010', name: 'Laura Torres', shortName: 'Laura T.', email: 'laura.torres@solvo.global', roleKey: 'comercial', title: 'Junior Account Executive', isActive: true, companiesAsComercial: 15, companiesAsSDR: 0, vacanciesAsComercial: 412, vacanciesAsSDR: 0 },
+  // SDRs
+  { id: 'uuid-staff-006', name: 'Daniela López', shortName: 'Daniela L.', email: 'daniela.lopez@solvo.global', roleKey: 'sdr', title: 'Senior SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 52, vacanciesAsComercial: 0, vacanciesAsSDR: 1430 },
+  { id: 'uuid-staff-007', name: 'Andrés Ríos', shortName: 'Andrés R.', email: 'andres.rios@solvo.global', roleKey: 'sdr', title: 'SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 35, vacanciesAsComercial: 0, vacanciesAsSDR: 876 },
+  { id: 'uuid-staff-011', name: 'Valentina Cruz', shortName: 'Valentina C.', email: 'valentina.cruz@solvo.global', roleKey: 'sdr', title: 'SDR', isActive: true, companiesAsComercial: 0, companiesAsSDR: 28, vacanciesAsComercial: 0, vacanciesAsSDR: 720 },
+  // Coordinators
+  { id: 'uuid-staff-004', name: 'Ana Rodríguez', shortName: 'Ana R.', email: 'ana.rodriguez@solvo.global', roleKey: 'coordinador', title: 'Operations Coordinator', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
+  { id: 'uuid-staff-008', name: 'Roberto Vargas', shortName: 'Roberto V.', email: 'roberto.vargas@solvo.global', roleKey: 'coordinador', title: 'Operations Coordinator', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
+  // Supervisors
+  { id: 'uuid-staff-009', name: 'Patricia Morales', shortName: 'Patricia M.', email: 'patricia.morales@solvo.global', roleKey: 'supervisor', title: 'Operations Supervisor', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 },
+  // Administrators
+  { id: 'uuid-staff-005', name: 'Pedro Sánchez', shortName: 'Pedro S.', email: 'pedro.sanchez@solvo.global', roleKey: 'administrador', title: 'Sales Director', isActive: true, companiesAsComercial: 0, companiesAsSDR: 0, vacanciesAsComercial: 0, vacanciesAsSDR: 0 }
+];
+
+// Demo users mapped to roles (for login selector)
+const DEMO_USERS = {
+  comercial: TEAM_MEMBERS[0],      // Carlos Mendoza
+  sdr: TEAM_MEMBERS[4],            // Daniela López
+  coordinador: TEAM_MEMBERS[7],    // Ana Rodríguez
+  supervisor: TEAM_MEMBERS[9],     // Patricia Morales
+  administrador: TEAM_MEMBERS[10]  // Pedro Sánchez
+};
+
+// === CATÁLOGO ESTÁNDAR DE INDUSTRIAS (HUSPL-0.1) ===
+// Fuente única del vocabulario de industria: alimenta el filtro de los dos listados,
+// el formulario de empresa y la clasificación automática. Mantenerlo es editar este dato,
+// no desplegar la app: `active: false` retira una entrada de lo que se ofrece para clasificar,
+// y las empresas que ya la tienen conservan su código y siguen mostrándose con su etiqueta.
+const INDUSTRY_CATALOG = [
+  { code: 'healthcare', label: 'Healthcare', active: true },
+  { code: 'education', label: 'Education', active: true },
+  { code: 'financial_services', label: 'Financial Services', active: true },
+  { code: 'insurance', label: 'Insurance', active: true },
+  { code: 'real_estate', label: 'Real Estate', active: true },
+  { code: 'legal_services', label: 'Legal Services', active: true },
+  { code: 'technology_software', label: 'Technology & Software', active: true },
+  { code: 'staffing_recruiting', label: 'Staffing & Recruiting', active: true },
+  { code: 'professional_services', label: 'Professional Services', active: true },
+  { code: 'logistics_transportation', label: 'Logistics & Transportation', active: true },
+  { code: 'manufacturing', label: 'Manufacturing', active: true },
+  { code: 'construction', label: 'Construction', active: true },
+  { code: 'retail_ecommerce', label: 'Retail & E-commerce', active: true },
+  { code: 'hospitality_travel', label: 'Hospitality & Travel', active: true },
+  { code: 'marketing_advertising', label: 'Marketing & Advertising', active: true },
+  { code: 'media_entertainment', label: 'Media & Entertainment', active: true },
+  { code: 'energy_utilities', label: 'Energy & Utilities', active: true },
+  { code: 'telecommunications', label: 'Telecommunications', active: true },
+  { code: 'nonprofit', label: 'Nonprofit', active: true },
+  { code: 'government_public_sector', label: 'Government & Public Sector', active: true },
+  { code: 'agriculture', label: 'Agriculture', active: true },
+  { code: 'automotive', label: 'Automotive', active: true },
+  { code: 'other', label: 'Other', active: true }
+];
+
+// Entradas ofrecidas para clasificar, por etiqueta alfabética.
+function getActiveIndustries() {
+  return INDUSTRY_CATALOG.filter(function (i) { return i.active; })
+    .slice()
+    .sort(function (a, b) { return a.label.localeCompare(b.label); });
+}
+
+// === TRAMOS DE TAMAÑO DE EMPRESA (FSPL-7) ===
+// Cinco tramos sobre `company.size_employees`, con ambos extremos incluidos y sin solaparse:
+// una empresa con el dato informado cae en exactamente uno. `unknown` es el valor reservado
+// para los registros sin el dato, con la misma convención con que industria usa `unclassified`.
+const COMPANY_SIZE_RANGES = [
+  { value: '1-50',     label: '1 – 50',        min: 1,    max: 50 },
+  { value: '51-200',   label: '51 – 200',      min: 51,   max: 200 },
+  { value: '201-500',  label: '201 – 500',     min: 201,  max: 500 },
+  { value: '501-1000', label: '501 – 1,000',   min: 501,  max: 1000 },
+  { value: '1000+',    label: '1,000+',        min: 1001, max: Infinity }
+];
+
+// Un tamaño de 0 o negativo es dato no válido y cae bajo `unknown`, igual que el ausente.
+function companySizeBucket(company) {
+  const n = company && Number(company.sizeEmployees);
+  if (!n || !isFinite(n) || n < 1) return 'unknown';
+  const r = COMPANY_SIZE_RANGES.find(function (x) { return n >= x.min && n <= x.max; });
+  return r ? r.value : 'unknown';
+}
+
+// Etiqueta del catálogo. Una empresa sin clasificar no muestra nada: nunca el texto crudo.
+function getIndustryLabel(code) {
+  if (!code) return '';
+  var entry = INDUSTRY_CATALOG.find(function (i) { return i.code === code; });
+  return entry ? entry.label : '';
+}
+
+/* ============================================================================
+   ENTIDADES MOCK Y SU COLUMNA EN LA BASE COMPARTIDA
+   Referencia para implementar: campo del objeto → tabla.columna, y la HU que
+   introduce la columna cuando todavía no existe. "derivado" = se calcula.
+
+   Company  (public.company + public.company_research, 1:1 por company_id)
+     id                        company.id
+     name                      company.name
+     industry                  company.industry — texto crudo de la fuente; no se muestra
+     industryCode              company.industry_code (HUSPL-0.1) · null = sin clasificar
+     location                  company.location ("City, ST")
+     stateCode                 company.state_code (HUPEA-0.3)
+     website                   company.website
+     linkedinId / indeedId     company.linkedin_id / indeed_id — slug; ver rebuildPortalUrl
+     linkedinUrl / indeedUrl   derivado (seedPortalUrls)
+     sizeEmployees             company.size_employees
+     revenueUsd                company.revenue_usd — VARCHAR(50) en la base; ningún filtro
+                               resuelve sobre él, así que se guarda tal cual
+     yearFounded               company.year_founded — VARCHAR(10), mismo caso
+     apolloOrganizationId      company.apollo_organization_id (HUPEA-0.3)
+     type                      company.relationship_type — client | prospect | inactive
+     pipelineStage             company.pipeline
+     lastContactedAt           company.last_contacted_at — lo escribe el envío, una sola vez
+                               por empresa (HUPEA-3.1)
+     lastScrapedAt             company.last_scraped_at (on-demand)
+     isResearched              company.is_researched
+     researchedAt / lastResearchAt   company_research.last_research_at
+     icpScore                  company.icp_score (HUPEA-1.7) · null = sin calificar
+     leadSignals               company.lead_signals JSONB — códigos de LEAD_SIGNALS
+     qualifiedAt               company.qualified_at
+     contactsSearchedAt        company.contacts_searched_at (HUPEA-2.2)
+     isExcluded / exclusionReason    company.is_excluded / exclusion_reason
+     leadSummary               company_research.lead_summary (HUPEA-1.7)
+     valueProposition / strengthsDifferentiators   company_research.* — los escribe el motor (HUPEA-1.6)
+     salesPitch / mission / vision / companyHistory  company_research.* — los escribe una persona
+     comercialId / sdrId / coordinatorId   staff_company_assignment, un slot por role_type
+     createdAt                 company.created_at — "Detected"
+     lastExportedBy / lastExportedAt / exportCount   company.last_exported_* (HUSPL-0.2)
+     contactsCount / remoteViable    derivados
+     (no modelado)             source_project — 'solvo-platform' al crear desde la app;
+                               deleted_at — borrado lógico (company_audit_log)
+
+   Vacancy  (public.vacancies)
+     id / title                id / job_title
+     companyId                 company_id
+     positionId / searchText   position_id / search_text (HUPEA-0.3) · null en las de otros pipelines
+     status                    status — detected | contacted | proposal | won | lost
+     source                    source_project — ¡nombre invertido a propósito! valores reales:
+                               general-us-openings | current-client-us-openings | on_demand_openings
+                               | prospect_engine (el barrido por posición del ICP)
+     sourcePortal              source — indeed | linkedin | website | manual
+     stateCode / location      state_code / location
+     workModality              work_modality — remote | hybrid | onsite | unknown
+     jobUrl                    job_url
+     remoteViable              is_remote_viable
+     aiConfidence              ai_confidence NUMERIC(3,2) · null = sin clasificar
+     aiReasons                 ai_reasons TEXT[]
+     aiSignals                 ai_signals JSONB — tags de HUPEA-1.4 (VACANCY_SIGNALS)
+     salaryMinUsd / salaryMaxUsd   salary_min_usd / salary_max_usd (HUPEA-0.3); `salary` = salary_range (texto legado)
+     languages                 languages TEXT[]
+     seniorityLevel            seniority_level — entry | mid | senior | lead | executive | unspecified
+     department / skills       department / skills (skills: TEXT unido por ", ")
+     description               description_text
+     publishedDate             published_date
+     detectedAt / detectedAtTs created_at (fecha / timestamp)
+     comercialId, comercialType, sdrId, sdrType   staff_vacancy_assignment (role_type, assignment_type)
+     assignmentUpdatedAt       staff_vacancy_assignment.assigned_at
+     lastExportedBy / lastExportedAt / exportCount   vacancies.last_exported_* (HUSPL-0.2)
+
+   Contact  (public.company_contacts)
+     id / companyId            id / company_id
+     fullName / position       full_name / position (cargo crudo)
+     department / seniorityLevel   department / seniority_level — TEXT en la base, valor de
+                               CONTACT_DEPARTMENTS y CONTACT_SENIORITIES
+     email / phone / linkedinUrl   email / phone / linkedin_url
+     roleCode                  role_code (HUPEA-2.3) · null = contacto anterior al análisis
+     decisionLevel             decision_level SMALLINT 1 | 2 — derivado de role_code + banda de tamaño
+     interestSignal            interest_signal
+     emailVerification         email_verification — valid | accept_all | unknown | risky · null en existentes
+     analyzedAt                analyzed_at
+     createdAt                 created_at
+     (no modelado)             is_primary — lo marca el motor al guardar (HUPEA-2.5) y la
+                               plataforma no lo administra; id_apollo; deleted_at
+     lastExportedBy / lastExportedAt / exportCount   company_contacts.last_exported_*
+
+   StateHistory  (public.states_history): id, vacancyId, companyId, changedBy, statusFrom,
+     statusTo, note, tags, createdAt — 1:1 con la tabla.
+   ExecutionLog  (public.execution_logs): executionId, workflowName, nodeName, message,
+     usageType / usageAmount / usageUnit, metadata, createdAt (execution_at), logLevel.
+     vacancyId / companyId son ayudas del prototipo: en la base van dentro de metadata.
+   ============================================================================ */
+
+// === MOCK ASSIGNMENT DATA (Dual: Sales Rep + SDR) ===
+// `industry` conserva el texto crudo que escribió la fuente y ya no se muestra en ningún lado;
+// `industryCode` es la clasificación contra el catálogo (null = sin clasificar).
+// La marca de exportación (lastExportedBy / lastExportedAt / exportCount) la siembra seedExportState().
+const MOCK_COMPANIES = [
+  { id: 'comp-001', name: 'TechCorp Solutions', industry: 'Technology', industryCode: 'technology_software', location: 'Miami, FL', city: 'Miami', state: 'Florida', country: 'United States', phone: '+1 305-555-0100', website: 'https://techcorp.com', linkedinId: 'techcorp-solutions', indeedId: 'techcorp-solutions', sizeEmployees: 750, lastContactedAt: null, researchedAt: '2025-12-15', salesPitch: 'TechCorp offers customized solutions with demonstrable ROI within 6 months. Their 500+ engineering team guarantees 24/7 support and continuous updates.', pipelineStage: 'onboarding started', type: 'client', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
+  { id: 'comp-002', name: 'GlobalHealth Inc', industry: 'Hospital & Health Care', industryCode: 'healthcare', location: 'New York, NY', website: 'https://globalhealth.com', linkedinId: 'globalhealth-inc', indeedId: 'globalhealth-inc', sizeEmployees: 1200, lastContactedAt: null, researchedAt: '2026-01-10', salesPitch: 'GlobalHealth is expanding rapidly and needs staffing solutions for their new clinics.', pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-003', name: 'FinServe Partners', industry: 'financial services', industryCode: 'financial_services', location: 'Chicago, IL', website: 'https://finserve.com', linkedinId: 'finserve-partners', indeedId: null, sizeEmployees: 320, lastContactedAt: null, researchedAt: '2026-02-02', salesPitch: 'Mid-market advisory firm scaling its back office; open to nearshore analysts.', pipelineStage: 'engaged', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-004', name: 'DataStream Analytics', industry: 'Computer Software', industryCode: 'technology_software', location: 'Austin, TX', website: 'https://datastream.io', linkedinId: 'datastream-analytics', indeedId: 'datastream-analytics', sizeEmployees: 85, lastContactedAt: null, researchedAt: '2026-03-18', salesPitch: 'Series A startup hiring fast with no internal recruiting team.', pipelineStage: 'lead', type: 'prospect', remoteViable: true, comercialId: null, sdrId: 'uuid-staff-006', coordinatorId: null, contactsCount: 1 },
+  { id: 'comp-005', name: 'Meridian Logistics', industry: 'Transportation/Trucking/Railroad', industryCode: 'logistics_transportation', location: 'Dallas, TX', website: 'https://meridianlog.com', linkedinId: null, indeedId: null, sizeEmployees: 460, lastContactedAt: null, researchedAt: '2026-02-27', salesPitch: 'Regional carrier with heavy back-office load in dispatch and billing.', pipelineStage: 'initial appointment held', type: 'prospect', remoteViable: false, comercialId: 'uuid-staff-003', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-006', name: 'NovaTech Industries', industry: 'Industrial Automation', industryCode: 'manufacturing', location: 'Seattle, WA', website: 'https://novatech.com', linkedinId: 'novatech-industries', indeedId: 'novatech-industries', sizeEmployees: 2100, lastContactedAt: null, researchedAt: '2026-01-29', salesPitch: 'Established client expanding shared services; recurring bilingual support demand.', pipelineStage: 'client', type: 'client', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-008', contactsCount: 2 },
+  { id: 'comp-007', name: 'Summit Education', industry: 'education management', industryCode: 'education', location: 'Boston, MA', website: 'https://summitedu.org', linkedinId: 'summit-education', indeedId: null, sizeEmployees: 140, lastContactedAt: null, researchedAt: '2026-03-05', salesPitch: 'Charter network with seasonal admissions and enrollment support peaks.', pipelineStage: 'lead', type: 'prospect', remoteViable: true, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0 },
+  // El slug de LinkedIn viene guardado como dirección completa: el archivo exportado la entrega tal cual.
+  { id: 'comp-008', name: 'Apex Retail Group', industry: 'Retail', industryCode: 'retail_ecommerce', location: 'Los Angeles, CA', website: 'https://apexretail.com', linkedinId: 'https://www.linkedin.com/company/apex-retail-group', indeedId: null, sizeEmployees: 5400, lastContactedAt: null, researchedAt: '2026-02-14', salesPitch: 'National retailer with high-volume seasonal hiring in customer care.', pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-003', sdrId: 'uuid-staff-011', coordinatorId: 'uuid-staff-009', contactsCount: 0 },
+  // Llegó de General US Openings, que crea la empresa sin industria de origen: queda sin clasificar.
+  { id: 'comp-009', name: 'CloudBridge Systems', industry: '', industryCode: null, location: 'San Francisco, CA', website: 'https://cloudbridge.io', linkedinId: 'cloudbridge-systems', indeedId: 'cloudbridge-systems', sizeEmployees: 210, lastContactedAt: null, researchedAt: '2026-03-22', salesPitch: 'B2B SaaS scaling support coverage to US business hours.', pipelineStage: 'engaged', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-010', name: 'PharmaVita Labs', industry: 'Pharmaceuticals', industryCode: 'healthcare', location: 'Philadelphia, PA', website: 'https://pharmavita.com', linkedinId: null, indeedId: null, sizeEmployees: 890, lastContactedAt: null, researchedAt: '2025-11-08', salesPitch: 'Closed the cycle without moving forward; revisit next budget season.', pipelineStage: 'lost', type: 'inactive', remoteViable: false, comercialId: 'uuid-staff-002', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  // Empresa todavía sin investigar: sin industria, tamaño, sitio web ni perfiles corporativos.
+  { id: 'comp-011', name: 'Harbor Point Services', industry: '', industryCode: null, location: 'Tampa, FL', website: null, linkedinId: null, indeedId: null, sizeEmployees: null, lastContactedAt: null, researchedAt: null, salesPitch: null, pipelineStage: 'lead', type: 'prospect', remoteViable: true, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0 }
+];
+
+// Mock contacts based on company_contacts schema.
+// Lo guardado refleja el filtro de rol decisor de Company Decision Maker: el cargo se contrasta
+// contra el catálogo de roles y cada empresa conserva sus contactos de primer nivel de decisión
+// —CEO, President, Chairman, CFO, CRO, VP of Sales— o, solo cuando no tiene ninguno, un único
+// alterno de segundo nivel (COO, Owner/Founder, Managing Director, Executive Director).
+// Los cargos que no califican no llegan a company_contacts, así que una empresa puede quedar
+// sin contactos: Summit Education, Apex Retail y Harbor Point son ese caso.
+// Conviven dos generaciones: los que guardó el motor nuevo, con `role_code`, `decision_level`
+// y `email_verification`, y los que dejó el pipeline anterior o cargó una persona, que tienen
+// esos tres campos vacíos y por eso no cuentan como decisores (ver seedContactAnalysis).
+const MOCK_CONTACTS = [
+  { id: 'ct-001', companyId: 'comp-001', fullName: 'James Wilson', position: 'Chief Executive Officer', department: 'executive', seniorityLevel: 'c_suite', email: 'j.wilson@techcorp.com', phone: '+1 305-555-0101', directPhone: '+1 305-555-0100 ext 12', linkedinUrl: 'https://linkedin.com/in/jameswilson' },
+  { id: 'ct-002', companyId: 'comp-001', fullName: 'Sarah Chen', position: 'VP of Sales', department: 'sales', seniorityLevel: 'vp', email: 's.chen@techcorp.com', phone: '+1 305-555-0102', linkedinUrl: 'https://linkedin.com/in/sarachen' },
+  { id: 'ct-005', companyId: 'comp-002', fullName: 'Dr. Robert Kim', position: 'President & CEO', department: 'executive', seniorityLevel: 'c_suite', email: 'r.kim@globalhealth.com', phone: '+1 212-555-0201', linkedinUrl: 'https://linkedin.com/in/drrobertkim' },
+  { id: 'ct-008', companyId: 'comp-003', fullName: 'Jennifer Lee', position: 'Chief Financial Officer', department: 'finance', seniorityLevel: 'c_suite', email: 'j.lee@finserve.com', phone: '+1 312-555-0302', linkedinUrl: 'https://linkedin.com/in/jenniferlee' },
+  { id: 'ct-010', companyId: 'comp-004', fullName: 'Alex Rivera', position: 'Founder & CEO', department: 'executive', seniorityLevel: 'c_suite', email: 'a.rivera@datastream.io', phone: '+1 512-555-0401', linkedinUrl: 'https://linkedin.com/in/alexrivera' },
+  // Meridian no tiene ningún contacto de primer nivel: se conserva un único alterno.
+  { id: 'ct-011', companyId: 'comp-005', fullName: 'Karen White', position: 'Chief Operating Officer', department: 'operations', seniorityLevel: 'c_suite', email: 'k.white@meridianlog.com', phone: '+1 214-555-0501', linkedinUrl: 'https://linkedin.com/in/karenwhite' },
+  { id: 'ct-013', companyId: 'comp-006', fullName: 'Rachel Green', position: 'Chief Executive Officer', department: 'executive', seniorityLevel: 'c_suite', email: 'r.green@novatech.com', phone: '+1 206-555-0601', linkedinUrl: 'https://linkedin.com/in/rachelgreen' },
+  { id: 'ct-014', companyId: 'comp-006', fullName: 'Mark Johnson', position: 'VP Sales', department: 'sales', seniorityLevel: 'vp', email: 'm.johnson@novatech.com', phone: '+1 206-555-0602', linkedinUrl: 'https://linkedin.com/in/markjohnson' },
+  { id: 'ct-021', companyId: 'comp-009', fullName: 'Sophia Nguyen', position: 'Chief Executive Officer', department: 'executive', seniorityLevel: 'c_suite', email: 's.nguyen@cloudbridge.io', phone: '+1 415-555-0901', linkedinUrl: 'https://linkedin.com/in/sophianguyen' },
+  { id: 'ct-023', companyId: 'comp-010', fullName: 'Dr. Helen Moore', position: 'Chairwoman of the Board', department: 'executive', seniorityLevel: 'c_suite', email: 'h.moore@pharmavita.com', phone: '+1 215-555-1001', linkedinUrl: 'https://linkedin.com/in/drhelenmoore' },
+  // Contactos anteriores al análisis de perfil: están en company_contacts y no tienen rol
+  // normalizado ni nivel de decisión. Es el estado real de todo lo cargado antes de FPEA-2.
+  { id: 'ct-003', companyId: 'comp-001', fullName: 'Linda Park', position: 'HR Manager', department: 'hr', seniorityLevel: 'manager', email: 'l.park@techcorp.com', phone: '+1 305-555-0103', linkedinUrl: 'https://linkedin.com/in/lindapark' },
+  { id: 'ct-006', companyId: 'comp-002', fullName: 'Marcus Webb', position: 'Executive Assistant to the CEO', department: 'executive', seniorityLevel: 'entry', email: 'm.webb@globalhealth.com', phone: null, linkedinUrl: null }
+];
+
+function getContactsForCompany(companyId) {
+  return MOCK_CONTACTS.filter(c => c.companyId === companyId);
+}
+
+// `source` es el pipeline que detectó la vacante (vacancies.source_project) y `sourcePortal`,
+// el portal del que salió el aviso (vacancies.source). `detectedAt` (created_at) y `publishedDate`
+// son dos fechas distintas y las siembra seedDetectionDates().
+const MOCK_VACANCIES = [
+  { id: 'vac-001', title: 'Senior Software Engineer', companyId: 'comp-001', status: 'contacted', source: 'general-us-openings', sourcePortal: 'linkedin', stateCode: 'FL', location: 'Miami, FL', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3901247115', remoteViable: true, salary: '$120K - $150K', salaryBucket: '100-150', seniorityLevel: 'senior', department: 'Engineering', skills: 'Node.js, AWS, PostgreSQL, Docker', description: 'Build scalable microservices using Node.js and AWS.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-002', title: 'DevOps Lead', companyId: 'comp-001', status: 'proposal', source: 'general-us-openings', sourcePortal: 'indeed', stateCode: 'FL', location: 'Miami, FL', workModality: 'hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=8b1f4c02ad77e310', remoteViable: true, salary: '$130K - $160K', salaryBucket: '100-150', seniorityLevel: 'lead', department: 'Engineering', skills: 'Kubernetes, Terraform, CI/CD, Azure', description: 'Lead CI/CD pipeline architecture for cloud infrastructure.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-003', title: 'Product Manager', companyId: 'comp-001', status: 'detected', source: 'current-client-us-openings', sourcePortal: 'linkedin', stateCode: 'FL', location: 'Miami, FL', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3899014772', remoteViable: true, salary: '$110K - $140K', salaryBucket: '100-150', seniorityLevel: 'mid', department: 'Product', skills: 'Roadmapping, Discovery, SQL, Agile', description: 'Drive product strategy for SaaS platform.', comercialId: 'uuid-staff-002', comercialType: 'direct', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-004', title: 'Data Scientist', companyId: 'comp-002', status: 'detected', source: 'general-us-openings', sourcePortal: 'linkedin', stateCode: 'NY', location: 'New York, NY', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3902663841', remoteViable: true, salary: '$140K - $170K', salaryBucket: '150+', seniorityLevel: 'senior', department: 'Data', skills: 'Python, scikit-learn, MLflow, SQL', description: 'ML models for patient outcome prediction.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-005', title: 'Financial Analyst', companyId: 'comp-003', status: 'contacted', source: 'general-us-openings', sourcePortal: 'indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=2fd903b7c1e845aa', remoteViable: true, salary: '$80K - $100K', salaryBucket: '50-100', seniorityLevel: 'mid', department: 'Finance', skills: 'Excel, Financial modeling, Power BI', description: 'Financial modeling and forecasting for investment portfolio.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-006', title: 'React Developer', companyId: 'comp-004', status: 'detected', source: 'general-us-openings', sourcePortal: 'linkedin', stateCode: 'TX', location: 'Austin, TX', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3903771208', remoteViable: true, salary: '$90K - $120K', salaryBucket: '50-100', seniorityLevel: 'mid', department: 'Engineering', skills: 'React, TypeScript, GraphQL', description: 'Frontend development with React and TypeScript.', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-007', title: 'Supply Chain Manager', companyId: 'comp-005', status: 'won', source: 'current-client-us-openings', sourcePortal: 'indeed', stateCode: 'TX', location: 'Dallas, TX', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=71ac4e9d0b3f6612', remoteViable: false, salary: '$95K - $115K', salaryBucket: '50-100', seniorityLevel: 'lead', department: 'Operations', skills: 'S&OP, SAP, Demand planning', description: 'End-to-end supply chain optimization.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-008', title: 'QA Automation Engineer', companyId: 'comp-006', status: 'contacted', source: 'general-us-openings', sourcePortal: 'linkedin', stateCode: 'WA', location: 'Seattle, WA', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3897520946', remoteViable: true, salary: '$100K - $130K', salaryBucket: '100-150', seniorityLevel: 'mid', department: 'Engineering', skills: 'Playwright, Python, CI/CD', description: 'Build automated test suites for manufacturing control systems.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-009', title: 'UX Researcher', companyId: 'comp-009', status: 'detected', source: 'general-us-openings', sourcePortal: 'linkedin', stateCode: 'CA', location: 'San Francisco, CA', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3904118530', remoteViable: true, salary: '$105K - $130K', salaryBucket: '100-150', seniorityLevel: 'mid', department: 'Design', skills: 'User interviews, Usability testing, Figma', description: 'User research for B2B SaaS products.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-010', title: 'Marketing Coordinator', companyId: 'comp-008', status: 'lost', source: 'general-us-openings', sourcePortal: 'indeed', stateCode: 'CA', location: 'Los Angeles, CA', workModality: 'hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=5c08a26fb914d773', remoteViable: true, salary: '$55K - $70K', salaryBucket: '50-100', seniorityLevel: 'entry', department: 'Marketing', skills: 'HubSpot, Paid media, Copywriting', description: 'Manage digital marketing campaigns for retail brand.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' }
+];
+
+// === ON-DEMAND OPENINGS (ODO) ===
+// Seed last_scraped_at per company (base for the cooldown). null = never scraped on-demand.
+(function seedOdState() {
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+  var seed = { 'comp-001': daysAgo(2), 'comp-003': daysAgo(1), 'comp-006': daysAgo(18), 'comp-009': daysAgo(40) };
+  MOCK_COMPANIES.forEach(function (c) { c.lastScrapedAt = seed[c.id] || null; });
+})();
+
+// Seed portal URLs per company (base de los badges LinkedIn/Indeed). Reutiliza company.linkedinId / indeedId,
+// que la base guarda como slug: las direcciones navegables se rearman con los helpers del final del archivo.
+(function seedPortalUrls() {
+  MOCK_COMPANIES.forEach(function (c) {
+    c.linkedinUrl = companyLinkedinUrl(c) || null;
+    c.indeedUrl = companyIndeedUrl(c) || null;
+  });
+})();
+
+// On-demand vacancies (origin = on_demand) returned by a previous on-demand run
+MOCK_VACANCIES.push(
+  { id: 'vac-od-001', title: 'Bilingual Customer Service Rep', companyId: 'comp-006', status: 'detected', source: 'on_demand_openings', sourcePortal: 'linkedin', stateCode: 'WA', location: 'Seattle, WA', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3906442017', remoteViable: true, salary: '$45K - $55K', salaryBucket: '50-100', seniorityLevel: 'entry', department: 'Customer Service', skills: 'English C1, CRM, Inbound support', description: 'Inbound/outbound support for US customers, English C1+.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-od-002', title: 'Collections Specialist', companyId: 'comp-006', status: 'detected', source: 'on_demand_openings', sourcePortal: 'indeed', stateCode: 'WA', location: 'Seattle, WA', workModality: 'remote', jobUrl: 'https://www.indeed.com/viewjob?jk=93bd1170e5c2a408', remoteViable: true, salary: '$50K - $62K', salaryBucket: '50-100', seniorityLevel: 'mid', department: 'Finance', skills: 'B2B collections, Bilingual, ERP', description: 'B2B collections, bilingual.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-od-003', title: 'Virtual Assistant', companyId: 'comp-009', status: 'detected', source: 'on_demand_openings', sourcePortal: 'linkedin', stateCode: 'CA', location: 'San Francisco, CA', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3905880134', remoteViable: true, salary: '$40K - $50K', salaryBucket: '0-50', seniorityLevel: 'entry', department: 'Operations', skills: 'Calendar management, English C1, Google Workspace', description: 'Executive assistant, fully remote.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
+);
+
+// === FECHAS DE DETECCIÓN Y PUBLICACIÓN (HUSPL-1.1) ===
+// Se siembran relativas a hoy para que el rango "Detected" siempre tenga material que recortar.
+// El offset de publicación es mayor o igual al de detección: el aviso se publicó antes de que el
+// sistema lo detectara, y `vac-007` es el caso extremo —publicada hace meses, detectada esta semana—
+// que es justo lo que el criterio anterior sobre la fecha de publicación dejaba fuera.
+(function seedDetectionDates() {
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+  var companyOffsets = {
+    'comp-001': 120, 'comp-002': 96, 'comp-003': 74, 'comp-004': 41, 'comp-005': 63,
+    'comp-006': 133, 'comp-007': 17, 'comp-008': 52, 'comp-009': 9, 'comp-010': 148, 'comp-011': 3
+  };
+  MOCK_COMPANIES.forEach(function (c) {
+    c.createdAt = daysAgo(companyOffsets[c.id] !== undefined ? companyOffsets[c.id] : 90);
+    c.lastContactedAt = c.lastContactedAt || null;
+  });
+  // [detección, publicación] en días atrás
+  var vacancyOffsets = {
+    'vac-001': [28, 34], 'vac-002': [26, 30], 'vac-003': [12, 15], 'vac-004': [11, 13],
+    'vac-005': [19, 26], 'vac-006': [6, 8], 'vac-007': [4, 97], 'vac-008': [33, 38],
+    'vac-009': [8, 9], 'vac-010': [45, 51],
+    'vac-od-001': [2, 2], 'vac-od-002': [2, 3], 'vac-od-003': [5, 6]
+  };
+  MOCK_VACANCIES.forEach(function (v) {
+    var o = vacancyOffsets[v.id] || [30, 35];
+    v.detectedAt = daysAgo(o[0]);
+    v.publishedDate = daysAgo(o[1]);
+  });
+  // Última vez contactada de las empresas que ya entraron en conversación.
+  var contactedOffsets = { 'comp-001': 7, 'comp-002': 21, 'comp-003': 14, 'comp-005': 45, 'comp-006': 5, 'comp-010': 112 };
+  MOCK_COMPANIES.forEach(function (c) {
+    if (contactedOffsets[c.id] !== undefined) c.lastContactedAt = daysAgo(contactedOffsets[c.id]) + ' 09:30';
+  });
+  MOCK_CONTACTS.forEach(function (ct) {
+    var company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    ct.createdAt = company ? company.createdAt : daysAgo(60);
+  });
+})();
+
+// === MEMORIA DE EXPORTACIÓN (HUSPL-0.2) ===
+// Cada empresa, vacante y contacto recuerda quién lo exportó por última vez, cuándo, y cuántas
+// veces salió en total. Es un único juego de campos por registro: la última exportación sea de quien
+// sea, no una marca por usuario. Se siembra parte del universo como ya repartido para que el filtro
+// por estado de exportación arranque con contenido en sus tres valores.
+(function seedExportState() {
+  function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+  var seed = {
+    // Ana Rodríguez (coordinadora, usuario demo) — aparecen bajo "Exported by me" en su sesión
+    'comp-002': ['uuid-staff-004', 2, 1],
+    'vac-002': ['uuid-staff-004', 2, 1],
+    'vac-od-001': ['uuid-staff-004', 1, 1],
+    // Roberto Vargas y Patricia Morales — aparecen bajo "Exported by others"
+    'comp-006': ['uuid-staff-008', 5, 2],
+    'comp-010': ['uuid-staff-009', 9, 1],
+    'vac-005': ['uuid-staff-008', 5, 3],
+    'vac-007': ['uuid-staff-009', 12, 1]
+  };
+  function apply(record) {
+    var mark = seed[record.id];
+    record.lastExportedBy = mark ? mark[0] : null;
+    record.lastExportedAt = mark ? daysAgo(mark[1]) + ' 16:45' : null;
+    record.exportCount = mark ? mark[2] : 0;
+  }
+  MOCK_COMPANIES.forEach(apply);
+  MOCK_VACANCIES.forEach(apply);
+  // Los contactos salen en el archivo junto a su empresa: heredan su marca.
+  MOCK_CONTACTS.forEach(function (ct) {
+    var company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    ct.lastExportedBy = company ? company.lastExportedBy : null;
+    ct.lastExportedAt = company ? company.lastExportedAt : null;
+    ct.exportCount = company ? company.exportCount : 0;
+  });
+})();
+
+// ODO config (single window) — persisted in localStorage. La ventana es a la vez cool-down y antigüedad máx. de vacantes.
+var ODO_DEFAULTS = { windowDays: 1, minWindowDays: 1 };
+function getOdConfig() {
+  try { var s = JSON.parse(localStorage.getItem('odoConfig')) || {}; return Object.assign({}, ODO_DEFAULTS, s); }
+  catch (e) { return Object.assign({}, ODO_DEFAULTS); }
+}
+function setOdConfig(patch) {
+  var merged = Object.assign(getOdConfig(), patch || {});
+  localStorage.setItem('odoConfig', JSON.stringify({ windowDays: merged.windowDays }));
+  return merged;
+}
+// Cooldown evaluation for one company against the current window.
+// inCooldown = scrapeada dentro de la ventana; el cool-down siempre bloquea (blocked = inCooldown).
+function getCooldownInfo(company) {
+  var cfg = getOdConfig();
+  if (!company || !company.lastScrapedAt) return { inCooldown: false, blocked: false, lastScrapedAt: null, daysSince: null, eligibleInDays: 0, windowDays: cfg.windowDays };
+  var last = new Date(company.lastScrapedAt);
+  var daysSince = Math.floor((Date.now() - last.getTime()) / 86400000);
+  var inCooldown = daysSince < cfg.windowDays;
+  return { inCooldown: inCooldown, blocked: inCooldown, lastScrapedAt: company.lastScrapedAt, daysSince: daysSince, eligibleInDays: Math.max(0, cfg.windowDays - daysSince), windowDays: cfg.windowDays };
+}
+
+// === ROLE-BASED ACCESS FUNCTIONS ===
+
+function getCurrentUser() {
+  const data = localStorage.getItem('user');
+  return data ? JSON.parse(data) : null;
+}
+
+function getCurrentRole() {
+  const user = getCurrentUser();
+  return user ? user.role : null;
+}
+
+function getRoleName() {
+  const role = getCurrentRole();
+  return role && ROLES[role] ? ROLES[role].name : '';
+}
+
+// Can see all records — coordinador, supervisor and admin
+function canViewAll() {
+  const role = getCurrentRole();
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// Can assign — only coordinador and supervisor
+function canAssign() {
+  const role = getCurrentRole();
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+function canDelete() {
+  const role = getCurrentRole();
+  return role === 'administrador' || role === 'coordinador';
+}
+
+// Can access admin section — only admin
+function canAccessAdmin() {
+  return getCurrentRole() === 'administrador';
+}
+
+// Can see team KPIs — coordinador, supervisor and admin
+function canViewTeamKPIs() {
+  const role = getCurrentRole();
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// Is a personal-view role (sees only own assignments)
+function isPersonalRole() {
+  const role = getCurrentRole();
+  return role === 'comercial' || role === 'sdr';
+}
+
+// Can export CSV — only coordinador, supervisor, admin
+function canExport() {
+  const role = getCurrentRole();
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+function getActiveByRole(roleKey) {
+  return TEAM_MEMBERS.filter(m => m.roleKey === roleKey && m.isActive);
+}
+
+function getActiveCommercials() { return getActiveByRole('comercial'); }
+function getActiveSDRs() { return getActiveByRole('sdr'); }
+
+function getMemberById(id) {
+  return TEAM_MEMBERS.find(m => m.id === id) || null;
+}
+
+// Email del staff asignado a un slot. Es lo que entregan las columnas de asignación de los archivos.
+function staffEmail(id) {
+  const member = id ? getMemberById(id) : null;
+  return member ? member.email : '';
+}
+
+// === ENLACES CORPORATIVOS ===
+// company.linkedin_id y company.indeed_id guardan el slug, no la dirección: el flujo de investigación
+// les quita el protocolo, el www. y el path antes de persistirlos. Acá se rearma la dirección navegable.
+// El dato viene inconsistente entre flujos, así que un valor que ya trae el dominio se entrega tal cual.
+function rebuildPortalUrl(id, prefix, domain) {
+  if (!id) return '';
+  const raw = String(id).trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw) || raw.toLowerCase().indexOf(domain) !== -1) return raw;
+  return prefix + raw;
+}
+
+function companyLinkedinUrl(company) {
+  return company ? rebuildPortalUrl(company.linkedinId, 'https://www.linkedin.com/company/', 'linkedin.com') : '';
+}
+
+function companyIndeedUrl(company) {
+  return company ? rebuildPortalUrl(company.indeedId, 'https://www.indeed.com/cmp/', 'indeed.com') : '';
+}
+
+// === ESTADO DE EXPORTACIÓN (HUSPL-2.3 / HUSPL-2.4) ===
+const EXPORT_STATUS_OPTIONS = [
+  { value: 'not_exported', label: 'Not exported' },
+  { value: 'exported_by_me', label: 'Exported by me' },
+  { value: 'exported_by_others', label: 'Exported by others' },
+  { value: 'all', label: 'All' }
+];
+
+// Los cuatro valores del filtro solo aplican a los roles de coordinación; para Sales Rep y SDR
+// el listado se comporta como antes de la épica.
+function canFilterByExportStatus() {
+  return canViewAll();
+}
+
+function getExportStatus(record) {
+  const user = getCurrentUser();
+  if (!record || !record.lastExportedBy) return 'not_exported';
+  return user && record.lastExportedBy === user.id ? 'exported_by_me' : 'exported_by_others';
+}
+
+// Marca los registros entregados con quién los exportó y cuándo, e incrementa su conteo.
+// Se ejecuta después de componer el archivo: el contenido entregado no depende de esta marca.
+function markExported(records) {
+  const user = getCurrentUser();
+  if (!user || !records || !records.length) return;
+  const now = new Date();
+  const stamp = now.toISOString().slice(0, 10) + ' ' +
+    String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  records.forEach(r => {
+    r.lastExportedBy = user.id;
+    r.lastExportedAt = stamp;
+    r.exportCount = (r.exportCount || 0) + 1;
+  });
+}
+
+// Cuántos registros del recorte ya salieron alguna vez — alimenta el aviso de solapamiento del popup.
+function countAlreadyExported(records) {
+  return (records || []).filter(r => r && r.lastExportedBy).length;
+}
+
+// Get companies visible to current user
+function getVisibleCompanies() {
+  const user = getCurrentUser();
+  if (!user) return [];
+  if (canViewAll()) return MOCK_COMPANIES;
+  if (user.role === 'comercial') return MOCK_COMPANIES.filter(c => c.comercialId === user.id);
+  if (user.role === 'sdr') return MOCK_COMPANIES.filter(c => c.sdrId === user.id);
+  return [];
+}
+
+// Get vacancies visible to current user
+function getVisibleVacancies() {
+  const user = getCurrentUser();
+  if (!user) return [];
+  if (canViewAll()) return MOCK_VACANCIES;
+  if (user.role === 'comercial') return MOCK_VACANCIES.filter(v => v.comercialId === user.id);
+  if (user.role === 'sdr') return MOCK_VACANCIES.filter(v => v.sdrId === user.id);
+  return [];
+}
+
+// === SESSION MANAGEMENT ===
+
+function initSession() {
+  const user = getCurrentUser();
+  if (!user) { window.location.href = 'index.html'; return null; }
+  return user;
+}
+
+function logout() {
+  localStorage.removeItem('user');
+  window.location.href = 'index.html';
+}
+
+// === SIDEBAR RENDERING ===
+
+/* === Header: título de producto + controles ===
+   La plataforma es en inglés; el prototipo no tiene selector de idioma. El único control
+   del header, además del colapso del menú, es el toggle de tema, que monta theme.js
+   dentro de #header-controls. */
+function renderHeaderControls() {
+  const header = document.querySelector('.header');
+  if (!header || document.getElementById('header-controls')) return;
+
+  /* boton para ocultar/mostrar el sidebar (desktop) */
+  const hb = document.createElement('button');
+  hb.type = 'button';
+  hb.className = 'header-icon-btn sidebar-collapse-btn';
+  hb.title = 'Hide/show menu';
+  hb.setAttribute('aria-label', 'Hide/show menu');
+  hb.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>';
+  hb.addEventListener('click', function () {
+    const collapsed = document.body.classList.toggle('sidebar-collapsed');
+    try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+  });
+  header.insertBefore(hb, header.firstChild);
+  try {
+    if (localStorage.getItem('sidebarCollapsed') === '1') document.body.classList.add('sidebar-collapsed');
+  } catch (e) {}
+  const wrap = document.createElement('div');
+  wrap.id = 'header-controls';
+  wrap.className = 'header-controls';
+  header.appendChild(wrap);
+
+  /* theme.js monta el toggle apenas el DOM está listo. Una página que llama a esta
+     función desde su propio DOMContentLoaded llega tarde y el botón ya quedó flotando
+     sobre el body: se reubica en el header en vez de dejarlo suelto. */
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) wrap.appendChild(toggle);
+}
+
+function renderSidebar(activePage) {
+  const user = getCurrentUser();
+  if (!user) return;
+
+  const roleName = getRoleName();
+  const initials = user.name.split(' ').map(n => n[0]).join('');
+  const showAdmin = canAccessAdmin();
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', href: 'dashboard.html', icon: '<rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect>' },
+    { id: 'vacancies', label: 'Open Positions', href: 'open-positions.html', icon: '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect>' },
+    { id: 'companies', label: 'Companies', href: 'prospects.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' },
+    // Release 4: solicitudes a pedido (búsquedas e investigaciones) y su avance.
+    { id: 'requests', label: 'Requests', href: 'requests.html', icon: '<path d="M21 12a9 9 0 1 1-6.22-8.56"></path><path d="M21 3v6h-6"></path><path d="M12 7v5l3 2"></path>' }
+  ];
+  const adminItems = [
+    { id: 'admin-users', label: 'Users', href: 'admin-users.html', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' },
+    // Release 4: ejecuciones de los triggers e invocaciones de cada servicio, con su consumo.
+    { id: 'executions', label: 'Engine activity', href: 'executions.html', icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>' },
+    { id: 'settings', label: 'Settings', href: 'settings.html', icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle>' }
+  ];
+
+  function renderNavItem(item) {
+    const isActive = activePage === item.id ? ' active' : '';
+    return `<a href="${item.href}" class="nav-item${isActive}">
+      <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+      <span>${item.label}</span>
+    </a>`;
+  }
+
+  let adminSection = '';
+  if (showAdmin) {
+    adminSection = `<div class="nav-section"><span class="nav-section-title">Administration</span>${adminItems.map(renderNavItem).join('')}</div>`;
+  }
+
+  const sidebarHTML = `
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo" class="sidebar-logo-img" /></div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">${navItems.map(renderNavItem).join('')}</div>
+        ${adminSection}
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="user-avatar">${initials}</div>
+          <div class="user-info">
+            <span class="user-name">${user.name}</span>
+            <span class="badge badge-role badge-role-${user.role}">${roleName}</span>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="Sign out">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </aside>`;
+
+  const container = document.getElementById('sidebar-container');
+  if (container) container.innerHTML = sidebarHTML;
+
+  renderHeaderControls();
+}
+
+// === SIDEBAR MOBILE TOGGLE ===
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('show');
+}
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
+
+// === TOAST NOTIFICATIONS ===
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const icons = {
+    success: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>',
+    error: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" x2="9" y1="9" y2="15"></line><line x1="9" x2="15" y1="9" y2="15"></line></svg>',
+    info: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>'
+  };
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-message">${message}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+// === ACCESS GUARD ===
+function requireAdmin() {
+  if (!canAccessAdmin()) { alert('You do not have access to this section.'); window.location.href = 'dashboard.html'; return false; }
+  return true;
+}
+
+// === UNIFIED ASSIGNMENT POPUP ===
+// Opens a popup to manage Comercial + SDR assignment for an entity
+
+function openAssignmentPopup(options) {
+  const {
+    title = 'Assignment',
+    currentComercialId = null,
+    currentSdrId = null,
+    currentCoordinatorId = null,
+    // For vacancies: inheritance info
+    comercialType = null,  // 'inherited' | 'direct' | null
+    sdrType = null,
+    inheritedComercialId = null, // from parent company
+    inheritedSdrId = null,
+    showInheritance = false,
+    onSave = () => {}
+  } = options;
+
+  let selectedComercialId = currentComercialId;
+  let selectedSdrId = currentSdrId;
+  let comercialChanged = false;
+  let sdrChanged = false;
+
+  const comerciales = getActiveCommercials();
+  const sdrs = getActiveSDRs();
+  const currentComercial = currentComercialId ? getMemberById(currentComercialId) : null;
+  const currentSdr = currentSdrId ? getMemberById(currentSdrId) : null;
+  const coordinator = currentCoordinatorId ? getMemberById(currentCoordinatorId) : null;
+
+  // Build popup HTML
+  const overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) closePopup(); };
+
+  const comercialTypeLabel = comercialType === 'inherited' ? '<span class="assign-popup-type">inherited</span>' : comercialType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">direct</span></span>' : '';
+  const sdrTypeLabel = sdrType === 'inherited' ? '<span class="assign-popup-type">inherited</span>' : sdrType === 'direct' ? '<span class="assign-popup-type"><span class="badge-direct">direct</span></span>' : '';
+
+  const canRestoreComercial = showInheritance && comercialType === 'direct' && inheritedComercialId;
+  const canRestoreSdr = showInheritance && sdrType === 'direct' && inheritedSdrId;
+
+  overlay.innerHTML = `
+    <div class="assign-popup">
+      <div class="assign-popup-header">
+        <h3>Assignment — ${title}</h3>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()" style="padding:4px;">&times;</button>
+      </div>
+      <div class="assign-popup-body">
+        <div class="assign-popup-row">
+          <div class="assign-popup-label">Sales Rep ${comercialTypeLabel}</div>
+          <div class="assign-popup-field">
+            <div id="popup-comercial-search" style="flex:1; position:relative;"></div>
+            <button class="btn-clear" id="popup-comercial-clear" title="Remove assignment" ${!currentComercialId ? 'style="display:none"' : ''}>&times;</button>
+            ${canRestoreComercial ? '<button class="btn-restore" id="popup-comercial-restore">Restore inheritance</button>' : ''}
+          </div>
+          <div class="assign-popup-note" id="popup-comercial-note" style="display:none;"></div>
+        </div>
+        <div class="assign-popup-row">
+          <div class="assign-popup-label">SDR ${sdrTypeLabel}</div>
+          <div class="assign-popup-field">
+            <div id="popup-sdr-search" style="flex:1; position:relative;"></div>
+            <button class="btn-clear" id="popup-sdr-clear" title="Remove assignment" ${!currentSdrId ? 'style="display:none"' : ''}>&times;</button>
+            ${canRestoreSdr ? '<button class="btn-restore" id="popup-sdr-restore">Restore inheritance</button>' : ''}
+          </div>
+          <div class="assign-popup-note" id="popup-sdr-note" style="display:none;"></div>
+        </div>
+        ${coordinator ? `<div class="assign-popup-row" style="opacity:0.6">
+          <div class="assign-popup-label">Coordinator/Supervisor</div>
+          <div style="font-size:14px; color:var(--text-primary); padding:6px 0;">${coordinator.name} <span style="font-size:12px; color:var(--text-muted);">(auto-assigned)</span></div>
+        </div>` : ''}
+      </div>
+      <div class="assign-popup-footer">
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="popup-save-btn" disabled>Save</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Render searchboxes
+  function renderSearchbox(containerId, items, currentId, onChange) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const current = currentId ? items.find(i => i.id === currentId) : null;
+    container.innerHTML = `
+      <input type="text" class="form-input" id="${containerId}-input" placeholder="Search…" value="${current ? current.name : ''}" autocomplete="off" style="font-size:14px;" />
+      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:200px; overflow-y:auto; background:var(--bg-surface-raised); border:1px solid var(--border-color); border-radius:var(--radius-input); margin-top:4px; box-shadow:var(--shadow-lg);"></div>`;
+    const input = document.getElementById(`${containerId}-input`);
+    const results = document.getElementById(`${containerId}-results`);
+    let isOpen = false;
+
+    function render(filter) {
+      const q = (filter || '').toLowerCase();
+      const filtered = q ? items.filter(i => i.name.toLowerCase().includes(q) || i.email.toLowerCase().includes(q)) : items;
+      let html = '';
+      if (!filtered.length && q) {
+        html = '<div style="padding:8px 12px; color:var(--text-muted); font-size:13px;">No matches</div>';
+      } else {
+        filtered.forEach(i => {
+          html += `<div class="searchbox-item" data-id="${i.id}" style="padding:8px 12px; cursor:pointer;">
+            <div style="font-size:14px; color:var(--text-primary);">${i.name}</div>
+            <div style="font-size:12px; color:var(--text-muted);">${i.email}</div>
+          </div>`;
+        });
+      }
+      results.innerHTML = html;
+      results.querySelectorAll('.searchbox-item').forEach(el => {
+        el.onmouseenter = () => el.style.background = 'var(--bg-tertiary)';
+        el.onmouseleave = () => el.style.background = '';
+        el.onclick = () => {
+          const sel = items.find(i => i.id === el.dataset.id);
+          if (sel) { input.value = sel.name; onChange(sel.id); }
+          results.style.display = 'none'; isOpen = false;
+        };
+      });
+    }
+
+    input.onfocus = () => { isOpen = true; results.style.display = 'block'; render(input.value); };
+    input.oninput = () => { if (!isOpen) { isOpen = true; results.style.display = 'block'; } render(input.value); };
+    document.addEventListener('click', (e) => { if (!container.contains(e.target)) { results.style.display = 'none'; isOpen = false; } });
+  }
+
+  const saveBtn = document.getElementById('popup-save-btn');
+  function checkChanges() {
+    const changed = selectedComercialId !== currentComercialId || selectedSdrId !== currentSdrId;
+    saveBtn.disabled = !changed;
+  }
+
+  renderSearchbox('popup-comercial-search', comerciales, currentComercialId, (id) => {
+    selectedComercialId = id;
+    const prev = currentComercial ? currentComercial.name : 'nobody';
+    const next = getMemberById(id);
+    const note = document.getElementById('popup-comercial-note');
+    if (currentComercialId && id !== currentComercialId) {
+      note.textContent = `Will reassign from ${prev} to ${next ? next.name : ''}`;
+      note.style.display = 'block';
+    } else { note.style.display = 'none'; }
+    document.getElementById('popup-comercial-clear').style.display = '';
+    checkChanges();
+  });
+
+  renderSearchbox('popup-sdr-search', sdrs, currentSdrId, (id) => {
+    selectedSdrId = id;
+    const prev = currentSdr ? currentSdr.name : 'nobody';
+    const next = getMemberById(id);
+    const note = document.getElementById('popup-sdr-note');
+    if (currentSdrId && id !== currentSdrId) {
+      note.textContent = `Will reassign from ${prev} to ${next ? next.name : ''}`;
+      note.style.display = 'block';
+    } else { note.style.display = 'none'; }
+    document.getElementById('popup-sdr-clear').style.display = '';
+    checkChanges();
+  });
+
+  // Clear buttons
+  document.getElementById('popup-comercial-clear').onclick = () => {
+    selectedComercialId = null;
+    document.getElementById('popup-comercial-search-input').value = '';
+    const note = document.getElementById('popup-comercial-note');
+    if (currentComercial) { note.textContent = `Assignment of ${currentComercial.name} will be removed`; note.style.display = 'block'; }
+    document.getElementById('popup-comercial-clear').style.display = 'none';
+    checkChanges();
+  };
+  document.getElementById('popup-sdr-clear').onclick = () => {
+    selectedSdrId = null;
+    document.getElementById('popup-sdr-search-input').value = '';
+    const note = document.getElementById('popup-sdr-note');
+    if (currentSdr) { note.textContent = `Assignment of ${currentSdr.name} will be removed`; note.style.display = 'block'; }
+    document.getElementById('popup-sdr-clear').style.display = 'none';
+    checkChanges();
+  };
+
+  // Restore heritage buttons (vacancies only)
+  const restoreComBtn = document.getElementById('popup-comercial-restore');
+  if (restoreComBtn && inheritedComercialId) {
+    restoreComBtn.onclick = () => {
+      selectedComercialId = inheritedComercialId;
+      const inherited = getMemberById(inheritedComercialId);
+      document.getElementById('popup-comercial-search-input').value = inherited ? inherited.name : '';
+      const note = document.getElementById('popup-comercial-note');
+      note.textContent = `Inheritance will be restored → ${inherited ? inherited.name : ''}`;
+      note.style.display = 'block';
+      document.getElementById('popup-comercial-clear').style.display = '';
+      checkChanges();
+    };
+  }
+  const restoreSdrBtn = document.getElementById('popup-sdr-restore');
+  if (restoreSdrBtn && inheritedSdrId) {
+    restoreSdrBtn.onclick = () => {
+      selectedSdrId = inheritedSdrId;
+      const inherited = getMemberById(inheritedSdrId);
+      document.getElementById('popup-sdr-search-input').value = inherited ? inherited.name : '';
+      const note = document.getElementById('popup-sdr-note');
+      note.textContent = `Inheritance will be restored → ${inherited ? inherited.name : ''}`;
+      note.style.display = 'block';
+      document.getElementById('popup-sdr-clear').style.display = '';
+      checkChanges();
+    };
+  }
+
+  // Save
+  saveBtn.onclick = () => {
+    const changes = [];
+    if (selectedComercialId !== currentComercialId) {
+      const name = selectedComercialId ? getMemberById(selectedComercialId)?.name : null;
+      changes.push(name ? `Sales Rep: ${name}` : 'Sales Rep: unassigned');
+    }
+    if (selectedSdrId !== currentSdrId) {
+      const name = selectedSdrId ? getMemberById(selectedSdrId)?.name : null;
+      changes.push(name ? `SDR: ${name}` : 'SDR: unassigned');
+    }
+    onSave(selectedComercialId, selectedSdrId);
+    overlay.remove();
+    showToast(changes.join(' | '));
+  };
+
+  function closePopup() { overlay.remove(); }
+}
+
+// === ASSIGNMENT SECTION RENDERER ===
+// Renders the read-only assignment section in detail pages
+
+function renderAssignmentSection(containerId, options) {
+  const {
+    comercialId, sdrId, coordinatorId,
+    comercialType, sdrType,
+    companyName,               // empresa de la que hereda la vacante
+    showInheritance = false,
+    updatedAt = null,
+    onManage = null
+  } = options;
+
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const comercial = comercialId ? getMemberById(comercialId) : null;
+  const sdr = sdrId ? getMemberById(sdrId) : null;
+  const coordinator = coordinatorId ? getMemberById(coordinatorId) : null;
+
+  // Una fila por puesto: etiqueta y persona. El origen de la asignación se dice al
+  // lado del nombre, no debajo, para que no parta el nombre en columnas angostas.
+  function slot(label, member, type, title) {
+    let origin = '';
+    if (showInheritance && member && type === 'inherited') {
+      origin = '<span class="assign-origin" title="Inherited from ' + (companyName || 'the company') +
+        '. Reassigning the company changes it too.">Inherited</span>';
+    } else if (showInheritance && type === 'direct') {
+      origin = '<span class="assign-origin is-direct" title="' + (member
+        ? 'Set on this record; it no longer follows the company.'
+        : 'Left unassigned on this record; reassigning the company does not fill it.') + '">Direct</span>';
+    }
+    return '<div class="assign-slot"' + (title ? ' title="' + title + '"' : '') + '>' +
+      '<dt>' + label + '</dt>' +
+      '<dd>' + (member
+        ? '<span class="assign-name">' + member.name + '</span>' + origin
+        : '<span class="assign-name is-unassigned">Unassigned</span>' + origin) +
+      '</dd></div>';
+  }
+
+  // El tercer puesto lo ocupa un coordinador o un supervisor: se nombra por el rol
+  // de quien esté asignado, y solo cae al genérico cuando está vacío.
+  const coordLabel = coordinator && ROLES[coordinator.roleKey] ? ROLES[coordinator.roleKey].name : 'Coordinator';
+
+  container.innerHTML =
+    '<section class="assign-section">' +
+      '<div class="assign-section-head">' +
+        '<h3 class="assign-section-title">Assignment</h3>' +
+        (canAssign() && onManage ? '<button type="button" class="op-actionbtn" data-manage>Manage</button>' : '') +
+      '</div>' +
+      '<dl class="assign-slots">' +
+        slot('Sales Rep', comercial, comercialType) +
+        slot('SDR', sdr, sdrType) +
+        slot(coordLabel, coordinator, null, 'Coordinator or supervisor who owns the account internally') +
+      '</dl>' +
+      (updatedAt ? '<p class="assign-section-updated">Last modified ' + updatedAt + '</p>' : '') +
+    '</section>';
+
+  // El manejador se engancha al nodo, no se serializa dentro del HTML: así conserva
+  // su closure y no depende de que todo lo que usa sea global.
+  const btn = container.querySelector('[data-manage]');
+  if (btn) btn.addEventListener('click', onManage);
+}
+
+// === CONFIRM POPUP (borrados y acciones destructivas) ===
+const CONFIRM_ICONS = {
+  trash: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>',
+  search: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>'
+};
+
+function openConfirmPopup(options) {
+  const {
+    title = 'Confirm',
+    message = '',
+    highlight = '',            // texto destacado bajo el mensaje (ej. nombre del registro)
+    icon = 'trash',            // 'trash' | 'search' | html custom
+    confirmLabel = 'Confirm',
+    danger = false,            // true en borrados: el botón de confirmar lleva el tratamiento destructivo
+    onConfirm = () => {}
+  } = options;
+
+  const iconHTML = CONFIRM_ICONS[icon] || icon;
+  const overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.innerHTML = `
+    <div class="assign-popup" style="width:420px;">
+      <div class="assign-popup-header">
+        <h3>${title}</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="assign-popup-body" style="text-align:center;">
+        <div class="confirm-icon">${iconHTML}</div>
+        <p style="font-size:14px; color:var(--text-secondary); line-height:1.5; margin:0;">${message}</p>
+        ${highlight ? `<p style="font-size:14px; font-weight:700; color:var(--text-strong); margin:14px 0 0;">${highlight}</p>` : ''}
+      </div>
+      <div class="modal-footer" style="justify-content:center;">
+        <button class="btn btn-secondary" data-action="cancel">Cancel</button>
+        <button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="confirm">${confirmLabel}</button>
+      </div>
+    </div>`;
+
+  function close() { overlay.remove(); }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('.modal-close').addEventListener('click', close);
+  overlay.querySelector('[data-action="cancel"]').addEventListener('click', close);
+  overlay.querySelector('[data-action="confirm"]').addEventListener('click', () => { close(); onConfirm(); });
+  document.body.appendChild(overlay);
+}
+
+// === EXPORT POPUP ===
+// Confirmación previa a la descarga. Además de la entidad del listado, ofrece sumar al paquete la
+// entidad relacionada con el recorte: desde Companies, sus posiciones; desde Open Positions, sus
+// prospectos. Las casillas arrancan desmarcadas cada vez que se abre el popup y muestran el conteo
+// de su entidad antes de descargar.
+// El paquete son dos archivos y ninguno de contactos: cada uno lleva lo del otro denormalizado
+// —correos de decisores en el de posiciones, cargos publicados en el de prospectos—, así que se
+// trabajan sin cruzar planillas. Reemplaza al contrato de tres entidades de HUSPL-2.6, que se
+// entregó antes del motor nuevo.
+//
+// options: { entityLabel, entityCount, alreadyExported, companions: [{ key, label, count, note }],
+//            onExport(selectedKeys) }
+
+const EXPORT_ROW_LIMIT = 10000;   // tope de filas por archivo
+
+function openExportPopup(options) {
+  const {
+    entityLabel = 'records',
+    entityCount = 0,
+    alreadyExported = 0,
+    companions = [],
+    note = '',
+    onExport = () => {}
+  } = options;
+
+  if (entityCount === 0) {
+    showToast(`No ${entityLabel} to export with the current filters`, 'info');
+    return;
+  }
+
+  const selected = new Set();
+
+  // Aviso de solapamiento: repetir material ya repartido tiene que ser una decisión, no un descuido.
+  const overlapSection = alreadyExported > 0 ? `
+    <div class="export-overlap-note">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+        <line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line>
+      </svg>
+      <span><strong>${alreadyExported}</strong> of ${entityCount} ${entityLabel} were already exported. Exporting again will reassign them to you.</span>
+    </div>` : '';
+
+  // Una entidad sin registros deja su casilla deshabilitada; una que supera el tope por archivo
+  // queda señalada, y marcarla deshabilita el botón de exportar con el motivo a la vista.
+  const companionRows = companions.map((c, i) => {
+    const empty = c.count === 0;
+    const overLimit = c.count > EXPORT_ROW_LIMIT;
+    const reason = empty
+      ? 'none in the current selection'
+      : overLimit
+        ? `over the ${EXPORT_ROW_LIMIT.toLocaleString('en-US')}-row per-file limit`
+        : (c.note || '');
+    return `
+      <label class="export-companion${empty ? ' is-disabled' : ''}${overLimit ? ' is-over-limit' : ''}">
+        <input type="checkbox" data-companion="${i}"${empty ? ' disabled' : ''} />
+        <span class="export-companion-label">${c.label}</span>
+        <span class="export-companion-count">${c.count.toLocaleString('en-US')}</span>
+        ${reason ? `<span class="export-companion-note">${reason}</span>` : ''}
+      </label>`;
+  }).join('');
+
+  const companionsSection = companions.length ? `
+    <div class="export-companions">
+      <div class="export-companions-title">Include related data</div>
+      ${companionRows}
+    </div>` : '';
+
+  const mainOverLimit = entityCount > EXPORT_ROW_LIMIT;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  overlay.innerHTML = `
+    <div class="assign-popup" style="width:440px;">
+      <div class="assign-popup-header">
+        <h3>Export CSV</h3>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()" style="padding:4px;">&times;</button>
+      </div>
+      <div class="assign-popup-body">
+        <div style="text-align:center; margin-bottom:8px;">
+          <div style="font-size:36px; font-weight:700; color:var(--text-primary);">${entityCount.toLocaleString('en-US')}</div>
+          <div style="font-size:14px; color:var(--text-secondary);">${entityLabel} to export</div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Based on the active filters</div>
+          ${note ? `<div style="font-size:12px; color:var(--text-secondary); margin-top:6px;">${note}</div>` : ''}
+        </div>
+        ${overlapSection}
+        ${companionsSection}
+        <div class="export-limit-note" id="export-limit-note" style="display:none;"></div>
+      </div>
+      <div class="assign-popup-footer">
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('.assign-popup-overlay').remove()">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="export-confirm-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" x2="12" y1="15" y2="3"></line>
+          </svg>
+          Export
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  const confirmBtn = overlay.querySelector('#export-confirm-btn');
+  const limitNote = overlay.querySelector('#export-limit-note');
+
+  // El tope se evalúa sobre cada archivo del paquete: si alguno lo supera, no se exporta ninguno.
+  function refreshLimitState() {
+    const blocking = [];
+    if (mainOverLimit) blocking.push(entityLabel);
+    companions.forEach((c, i) => { if (selected.has(i) && c.count > EXPORT_ROW_LIMIT) blocking.push(c.label.replace(/^Include /, '')); });
+    if (blocking.length) {
+      limitNote.style.display = '';
+      limitNote.textContent = `${blocking.join(' and ')} ${blocking.length > 1 ? 'exceed' : 'exceeds'} the ${EXPORT_ROW_LIMIT.toLocaleString('en-US')}-row limit per file. Narrow the filters${blocking.length > 1 || !mainOverLimit ? ' or uncheck them' : ''}.`;
+      confirmBtn.disabled = true;
+    } else {
+      limitNote.style.display = 'none';
+      confirmBtn.disabled = false;
+    }
+  }
+
+  overlay.querySelectorAll('[data-companion]').forEach(box => {
+    box.addEventListener('change', () => {
+      const i = Number(box.dataset.companion);
+      if (box.checked) selected.add(i); else selected.delete(i);
+      refreshLimitState();
+    });
+  });
+  refreshLimitState();
+
+  confirmBtn.onclick = () => {
+    if (confirmBtn.disabled) return;
+    const keys = companions.filter((c, i) => selected.has(i)).map(c => c.key);
+    onExport(keys);
+    overlay.remove();
+  };
+}
+
+// === SOLICITUDES A PEDIDO (Release 4 · Prospect Engine Modular) ===
+// La búsqueda on-demand deja de ser un scraping con vista previa: es una solicitud al trigger
+// A pedido (`trg-on-demand`) que entra en cola y se sigue en la página Requests. No hay fase de
+// vista previa ni de confirmación, porque lo que se busca —servicios, ventana, términos— lo fija
+// la configuración del trigger y el resultado se lee del estado de las vacantes, no de un callback.
+// Se abre desde Open Positions y Companies (options = {}) y desde el detalle de una empresa
+// (options = { company }: la empresa queda preseleccionada y no se puede cambiar).
+// options: { company, mode: 'company' | 'terms', onSent(request) }
+function openScrapePopup(options) {
+  options = options || {};
+  var trigger = engineTrigger('trg-on-demand');
+  if (!trigger) { showToast('The On demand trigger is not configured.', 'error'); return; }
+  var onSent = options.onSent || function () {};
+  ensureCityListCss();
+
+  // Estilos mínimos de la lista de ciudades (.r4-citylist) para el popup: el popup se abre en
+  // páginas que no cargan r4-company.css, así que los inyecta una sola vez. Son los mismos que
+  // define r4-company.css para el filtro de Companies.
+  function ensureCityListCss() {
+    if (document.getElementById('r4-citylist-css')) return;
+    var st = document.createElement('style');
+    st.id = 'r4-citylist-css';
+    st.textContent =
+      '.r4-citylist{border:1px solid var(--border-default);border-radius:var(--radius-md);padding:8px 10px;background:var(--bg-surface);}' +
+      '.r4-citylist-search{width:100%;height:32px;padding:0 10px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font:inherit;font-size:13px;}' +
+      '.r4-citylist-search:focus{outline:none;border-color:var(--color-secondary);box-shadow:var(--focus-ring);}' +
+      '.r4-citylist-group{border-bottom:1px solid var(--border-default);}' +
+      '.r4-citylist-group:last-of-type{border-bottom:0;}' +
+      '.r4-citylist-head{display:flex;align-items:center;gap:8px;min-height:36px;}' +
+      '.r4-citylist-toggle{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 0;border:0;background:transparent;color:var(--text-strong);font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer;}' +
+      '.r4-citylist-toggle svg{flex:0 0 auto;color:var(--text-muted);transition:transform .15s ease;}' +
+      '.r4-citylist-head[aria-expanded=\'true\'] .r4-citylist-toggle svg{transform:rotate(90deg);}' +
+      '.r4-citylist-toggle:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm);}' +
+      '.r4-citylist-count{font-weight:400;font-size:12px;color:var(--text-muted);white-space:nowrap;}' +
+      '.r4-citylist-actions{display:flex;gap:2px;flex:0 0 auto;}' +
+      '.r4-citylist-actions button{border:0;background:transparent;color:var(--color-secondary);font:inherit;font-size:12px;font-weight:500;cursor:pointer;padding:2px 6px;border-radius:var(--radius-sm);}' +
+      '.r4-citylist-actions button:hover{text-decoration:underline;text-underline-offset:2px;}' +
+      '.r4-citylist-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px 12px;padding:2px 0 4px 20px;}' +
+      '.r4-citylist-item{display:flex;align-items:center;gap:6px;min-width:0;padding:3px 0;font-size:13px;color:var(--text-primary);cursor:pointer;}' +
+      '.r4-citylist-item input{margin:0;flex:0 0 auto;}' +
+      '.r4-citylist-item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+      '.r4-citylist-pager{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:2px 0 8px;font-size:12px;color:var(--text-muted);}' +
+      '.r4-citylist-pager button{height:24px;padding:0 8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer;}' +
+      '.r4-citylist-pager button:disabled{opacity:.45;cursor:default;}' +
+      '.r4-citylist-empty{padding:8px 0;font-size:12px;color:var(--text-muted);}' +
+      '@media (max-width:480px){.r4-citylist-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding-left:0;}}' +
+      '@media (prefers-reduced-motion:reduce){.r4-citylist-toggle svg{transition:none;}}';
+    document.head.appendChild(st);
+  }
+
+  function h(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function norm(s) { return String(s || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, ''); }
+  // Comparación sin tildes ni mayúsculas para el buscador de ciudades.
+  function fold(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  function looksLikeDomain(s) { return /^[^\s]+\.[a-z]{2,}$/i.test(norm(s)); }
+  // Solo los servicios activos: uno en evaluación o pausado no se ofrece aunque siga en la configuración.
+  function activeService(id) { var s = engineService(id); return !!s && s.status === 'active'; }
+
+  var locked = !!options.company;
+  var state = {
+    mode: locked ? 'company' : (options.mode === 'terms' ? 'terms' : 'company'),
+    company: options.company || null,          // empresa del catálogo elegida
+    typed: options.company ? options.company.name : '',
+    companyCountry: trigger.countries[0],      // país donde se busca una empresa que no está en el catálogo
+    country: trigger.countries[0],
+    cityIds: [],
+    positionIds: [],
+    windowDays: trigger.windowDays || 1
+  };
+
+  // La ventana arranca en la del trigger y el usuario la puede ampliar hasta su máximo.
+  var WINDOW_STEPS = [1, 3, 7, 14, 30].filter(function (d) {
+    return d >= (trigger.windowDays || 1) && d <= (trigger.maxWindowDays || trigger.windowDays || 1);
+  });
+
+  var overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.innerHTML =
+    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="odr-title" style="width:600px; max-width:95vw; display:flex; flex-direction:column; max-height:92vh;">' +
+      '<div class="assign-popup-header">' +
+        '<h3 id="odr-title">Request a search</h3>' +
+        '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
+      '</div>' +
+      '<div class="assign-popup-body" id="odr-body" style="overflow:auto; flex:1 1 auto;"></div>' +
+      '<div class="assign-popup-footer" style="align-items:center;">' +
+        '<span id="odr-sum" style="margin-right:auto; font-size:12px; color:var(--text-muted);"></span>' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-close>Cancel</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" id="odr-send">Send request</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  var body = overlay.querySelector('#odr-body');
+  var sendBtn = overlay.querySelector('#odr-send');
+  function close() { overlay.remove(); document.removeEventListener('keydown', onKey); }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay || e.target.hasAttribute('data-close')) close(); });
+
+  /* ---- Datos que dependen de la configuración del trigger ---------------- */
+  function countryOfCompany() {
+    if (state.company) return state.company.countryCode || null;
+    return state.companyCountry;
+  }
+  // Por empresa: los servicios del trigger para el país de la empresa que buscan por empresa.
+  function companyServices() {
+    var c = countryOfCompany();
+    return (trigger.vacancyServices[c] || []).filter(function (id) {
+      var s = engineService(id);
+      return activeService(id) && s.modes.indexOf('company') >= 0;
+    });
+  }
+  // Por posición y ubicación: los servicios del trigger para ese país.
+  function termServices() { return (trigger.vacancyServices[state.country] || []).filter(activeService); }
+  function tripCities(country) {
+    return trigger.locations.map(function (l) { return GEO_CITIES.find(function (c) { return c.id === l.cityId; }); })
+      .filter(function (c) { return c && c.country === country; });
+  }
+  // Términos que el trigger tiene activos en el país, de las posiciones elegidas.
+  function activeTerms(country, positionId) {
+    return ENGINE_TERMS.filter(function (t) {
+      return t.country === country && trigger.activeTerms.indexOf(t.id) >= 0 && (!positionId || t.positionId === positionId);
+    });
+  }
+  function offeredPositions() {
+    return POSITIONS_CATALOG.filter(function (p) { return activeTerms(state.country, p.id).length > 0; });
+  }
+  function selectedTerms() {
+    return state.positionIds.reduce(function (acc, pid) { return acc.concat(activeTerms(state.country, pid)); }, []);
+  }
+  function searchCities() { return state.cityIds.length ? state.cityIds : tripCities(state.country).map(function (c) { return c.id; }); }
+
+  // Guarda contra repetir la misma búsqueda por empresa dentro de la última hora.
+  function recentCompanyRequest() {
+    var key = state.company ? null : norm(state.typed);
+    return MOCK_REQUESTS.find(function (r) {
+      if (r.triggerId !== 'trg-on-demand' || r.mode !== 'company') return false;
+      if (Date.now() - parseStamp(r.at) > 3600000) return false;
+      if (state.company) return r.companyId === state.company.id;
+      return !!key && (norm(r.companyName) === key || norm(r.domain) === key);
+    }) || null;
+  }
+
+  /* ---- Pintado -------------------------------------------------------------- */
+  var labelCss = 'display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin:16px 0 6px;';
+  var hintCss = 'font-size:12px; color:var(--text-muted); margin-top:6px; line-height:1.5;';
+
+  function segBtn(value, label) {
+    var on = state.mode === value;
+    return '<button type="button" data-mode="' + value + '" aria-pressed="' + on + '" style="flex:1 1 0; min-width:0; padding:8px 10px; border:0; border-radius:var(--radius-sm); font-size:13px; cursor:pointer; ' +
+      (on ? 'background:var(--bg-surface); color:var(--text-strong); font-weight:600; box-shadow:var(--shadow-sm);' : 'background:transparent; color:var(--text-secondary);') + '">' + label + '</button>';
+  }
+
+  function render() {
+    var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">The request goes to the <strong>' + h(trigger.name) +
+      '</strong> trigger and is processed in the background. Its progress and the openings it finds are shown in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
+
+    if (!locked) {
+      html += '<div style="display:flex; gap:4px; padding:4px; margin-top:14px; border-radius:var(--radius-md); background:var(--bg-muted);">' +
+        segBtn('company', 'By company') + segBtn('terms', 'By position and location') + '</div>';
+    }
+    html += state.mode === 'company' ? companyBlock() : termsBlock();
+
+    // Ventana de publicación
+    html += '<label style="' + labelCss + '" for="odr-window">Publication window</label>' +
+      '<select class="form-select" id="odr-window" style="max-width:260px;">' +
+        WINDOW_STEPS.map(function (d) {
+          return '<option value="' + d + '"' + (d === state.windowDays ? ' selected' : '') + '>' +
+            (d === 1 ? 'Last day' : 'Last ' + d + ' days') + (d === trigger.windowDays ? ' (default)' : '') + '</option>';
+        }).join('') +
+      '</select>' +
+      '<div style="' + hintCss + '">Openings published within this window are searched. The trigger allows up to ' + (trigger.maxWindowDays || trigger.windowDays) + ' days.</div>';
+
+    // Servicios, solo lectura
+    var svc = state.mode === 'company' ? companyServices() : termServices();
+    html += '<div style="' + labelCss + '">Services that will search</div>' +
+      (svc.length
+        ? '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + svc.map(function (id) {
+            return '<span class="op-tag" title="' + h(serviceLabel(id)) + '">' + h(serviceName(id)) + '</span>';
+          }).join('') + '</div>' +
+          '<div style="' + hintCss + '">Set by the ' + h(trigger.name) + ' trigger for ' + h(countryName(state.mode === 'company' ? countryOfCompany() : state.country)) + '. An administrator changes them in Settings.</div>'
+        : '<div style="' + hintCss + '">No service is configured for this country in the ' + h(trigger.name) + ' trigger.</div>');
+
+    html += '<div id="odr-warn"></div>';
+    body.innerHTML = html;
+    wire();
+    refresh();
+  }
+
+  function companyBlock() {
+    var html = '<label style="' + labelCss + '" for="odr-company">Company</label>';
+    if (locked) {
+      var c = state.company;
+      return html + '<div style="padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-muted);">' +
+        '<div style="font-weight:600; color:var(--text-strong);">' + h(c.name) + '</div>' +
+        '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">' +
+          h([placeLabel(c, false), countryName(c.countryCode)].filter(Boolean).join(' · ')) +
+          (c.domain ? ' · ' + h(c.domain) : ' · no domain on record') + '</div></div>';
+    }
+    html += '<input type="text" class="form-input" id="odr-company" autocomplete="off" placeholder="Company name or domain, e.g. acme.com" value="' + h(state.typed) + '">' +
+      '<div id="odr-suggest"></div>' +
+      '<div id="odr-picked"></div>';
+    return html;
+  }
+
+  function pickedInfo() {
+    var el = overlay.querySelector('#odr-picked');
+    if (!el) return;
+    if (state.company) {
+      el.innerHTML = '<div style="' + hintCss + '">In Solvo Platform: ' + h([placeLabel(state.company, false), countryName(state.company.countryCode)].filter(Boolean).join(' · ')) +
+        (state.company.domain ? ' · ' + h(state.company.domain) : '') + '. The openings found are added to its record.</div>';
+      return;
+    }
+    if (!state.typed) { el.innerHTML = ''; return; }
+    // Una empresa que no está en el catálogo se busca en el país que se elija.
+    el.innerHTML = '<div style="' + hintCss + '">Not in Solvo Platform yet: it is searched by ' + (looksLikeDomain(state.typed) ? 'domain' : 'name') +
+      ' and created with the openings found.</div>' +
+      '<label style="' + labelCss + '" for="odr-ccountry">Country to search in</label>' +
+      '<select class="form-select" id="odr-ccountry" style="max-width:260px;">' +
+        trigger.countries.map(function (cc) { return '<option value="' + cc + '"' + (cc === state.companyCountry ? ' selected' : '') + '>' + h(countryName(cc)) + '</option>'; }).join('') +
+      '</select>';
+    var sel = el.querySelector('#odr-ccountry');
+    if (sel) sel.onchange = function () { state.companyCountry = sel.value; render(); };
+  }
+
+  function suggestions() {
+    var box = overlay.querySelector('#odr-suggest');
+    if (!box) return;
+    var q = norm(state.typed);
+    if (state.company || q.length < 2) { box.innerHTML = ''; return; }
+    var list = MOCK_COMPANIES.filter(function (c) {
+      return c.name.toLowerCase().indexOf(q) >= 0 || (c.domain && c.domain.indexOf(q) >= 0);
+    }).slice(0, 6);
+    if (!list.length) { box.innerHTML = ''; return; }
+    box.innerHTML = '<div style="margin-top:4px; border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; background:var(--bg-surface);">' +
+      list.map(function (c, i) {
+        return '<button type="button" data-sug="' + i + '" style="display:flex; width:100%; justify-content:space-between; gap:8px; padding:8px 10px; border:0; border-bottom:1px solid var(--border-default); background:transparent; color:var(--text-primary); text-align:left; cursor:pointer; font-size:13px;">' +
+          '<span style="font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + h(c.name) + '</span>' +
+          '<span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">' + h(c.domain || countryName(c.countryCode)) + '</span></button>';
+      }).join('') + '</div>';
+    box.querySelectorAll('[data-sug]').forEach(function (b) {
+      b.onmouseenter = function () { b.style.background = 'var(--bg-muted)'; };
+      b.onmouseleave = function () { b.style.background = 'transparent'; };
+      b.onclick = function () {
+        state.company = list[Number(b.getAttribute('data-sug'))];
+        state.typed = state.company.name;
+        render();
+      };
+    });
+  }
+
+  function termsBlock() {
+    var html = '<label style="' + labelCss + '" for="odr-country">Country</label>' +
+      '<select class="form-select" id="odr-country" style="max-width:260px;">' +
+        trigger.countries.map(function (cc) { return '<option value="' + cc + '"' + (cc === state.country ? ' selected' : '') + '>' + h(countryName(cc)) + '</option>'; }).join('') +
+      '</select>';
+
+    // Mismo patrón de lista de ciudades que el filtro de los listados (.r4-citylist): acordeón
+    // por país con buscador y grilla paginada. Ninguna marcada = todo el país.
+    html += '<div style="' + labelCss + '">Cities <span style="font-weight:400; color:var(--text-muted);">(optional)</span></div>' +
+      '<div class="r4-citylist">' +
+        '<input type="search" class="r4-citylist-search" id="odr-citysearch" placeholder="Search a city" aria-label="Search a city" autocomplete="off" value="' + h(cityUi.query) + '">' +
+        '<div id="odr-citygroups"></div>' +
+      '</div>' +
+      '<div style="' + hintCss + '" id="odr-cityhint"></div>';
+
+    var positions = offeredPositions();
+    html += '<div style="' + labelCss + '">Positions</div>' +
+      (positions.length
+        ? '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:4px 12px; max-height:220px; overflow:auto; padding:8px 10px; border:1px solid var(--border-default); border-radius:var(--radius-md);">' +
+          positions.map(function (p) {
+            var on = state.positionIds.indexOf(p.id) >= 0;
+            var n = activeTerms(state.country, p.id).length;
+            return '<label style="display:flex; align-items:flex-start; gap:8px; padding:4px 0; font-size:13px; color:var(--text-primary); cursor:pointer;">' +
+              '<input type="checkbox" data-pos="' + p.id + '"' + (on ? ' checked' : '') + ' style="margin-top:3px;">' +
+              '<span style="min-width:0;">' + h(p.name) + ' <span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">' + n + ' term' + (n === 1 ? '' : 's') + '</span></span></label>';
+          }).join('') + '</div>' +
+          '<div style="' + hintCss + '">Only positions with active terms in ' + h(countryName(state.country)) + ' for this trigger.</div>'
+        : '<div style="' + hintCss + '">The trigger has no active terms in ' + h(countryName(state.country)) + '.</div>');
+    return html;
+  }
+
+  function wire() {
+    body.querySelectorAll('[data-mode]').forEach(function (b) {
+      b.onclick = function () { state.mode = b.getAttribute('data-mode'); render(); };
+    });
+    var input = body.querySelector('#odr-company');
+    if (input) {
+      input.oninput = function () {
+        state.typed = input.value;
+        state.company = null;      // al editar se suelta la empresa elegida
+        suggestions();
+        pickedInfo();
+        refresh();
+      };
+      suggestions();
+      pickedInfo();
+      if (!state.typed) setTimeout(function () { input.focus(); }, 0);
+    }
+    var win = body.querySelector('#odr-window');
+    if (win) win.onchange = function () { state.windowDays = Number(win.value); refresh(); };
+    var country = body.querySelector('#odr-country');
+    if (country) country.onchange = function () {
+      state.country = country.value;
+      state.cityIds = [];
+      cityUi = { open: {}, page: {}, query: '', saved: null };
+      // Las posiciones elegidas que no tienen términos en el país nuevo se sueltan.
+      state.positionIds = state.positionIds.filter(function (pid) { return activeTerms(state.country, pid).length > 0; });
+      render();
+    };
+    var cs = body.querySelector('#odr-citysearch');
+    // La búsqueda solo repinta los grupos, para no perder el foco mientras se escribe. Al
+    // empezar a buscar se guarda el estado de los acordeones y al borrar la búsqueda se repone.
+    if (cs) cs.oninput = function () {
+      var q = cs.value.trim();
+      if (q && !cityUi.query) cityUi.saved = { open: Object.assign({}, cityUi.open), page: Object.assign({}, cityUi.page) };
+      if (!q && cityUi.saved) { cityUi.open = cityUi.saved.open; cityUi.page = cityUi.saved.page; cityUi.saved = null; }
+      else if (q) cityUi.page = {};
+      cityUi.query = q;
+      renderCityGroups();
+    };
+    renderCityGroups();
+    cityHint();
+    body.querySelectorAll('[data-pos]').forEach(function (cb) {
+      cb.onchange = function () {
+        var id = cb.getAttribute('data-pos');
+        state.positionIds = cb.checked ? state.positionIds.concat([id]) : state.positionIds.filter(function (x) { return x !== id; });
+        refresh();
+      };
+    });
+  }
+
+  /* ---- Lista de ciudades: acordeón por país, búsqueda y páginas de 24 ---------- */
+  var CITY_PAGE = 24;
+  var CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
+  var cityUi = { open: {}, page: {}, query: '', saved: null };
+
+  function renderCityGroups() {
+    var box = overlay.querySelector('#odr-citygroups');
+    if (!box) return;
+    var q = fold(cityUi.query);
+    // Un solo país en juego (el elegido): su grupo arranca abierto.
+    var countries = [state.country];
+    var single = countries.length === 1;
+    var html = '';
+    countries.forEach(function (cc) {
+      var all = tripCities(cc);
+      if (!all.length) return;
+      var list = q ? all.filter(function (c) { return fold(c.name + ' ' + divisionName(c.division)).indexOf(q) >= 0; }) : all;
+      if (q && !list.length) return;
+      var open = q ? true : (cityUi.open[cc] !== undefined ? cityUi.open[cc] : single);
+      var sel = all.filter(function (c) { return state.cityIds.indexOf(c.id) >= 0; }).length;
+      var pages = Math.max(1, Math.ceil(list.length / CITY_PAGE));
+      var page = Math.min(cityUi.page[cc] || 1, pages);
+      var from = (page - 1) * CITY_PAGE;
+      var slice = list.slice(from, from + CITY_PAGE);
+      html += '<div class="r4-citylist-group" data-group="' + cc + '">' +
+        '<div class="r4-citylist-head" aria-expanded="' + open + '">' +
+          '<button type="button" class="r4-citylist-toggle" data-cgtoggle="' + cc + '" aria-expanded="' + open + '">' + CHEVRON +
+            '<span>' + h(countryName(cc)) + '</span><span class="r4-citylist-count">' + sel + ' of ' + all.length + ' selected</span></button>' +
+          '<span class="r4-citylist-actions"><button type="button" data-cgall="' + cc + '">All</button><button type="button" data-cgnone="' + cc + '">None</button></span>' +
+        '</div>' +
+        (open
+          ? '<div class="r4-citylist-grid">' + slice.map(function (c) {
+              var on = state.cityIds.indexOf(c.id) >= 0;
+              return '<label class="r4-citylist-item" title="' + h(c.name + ', ' + divisionName(c.division)) + '">' +
+                '<input type="checkbox" data-city="' + c.id + '"' + (on ? ' checked' : '') + '><span>' + h(c.name) + '</span></label>';
+            }).join('') + '</div>' +
+            '<div class="r4-citylist-pager"><span>' + (from + 1) + '–' + (from + slice.length) + ' of ' + list.length + '</span>' +
+              (pages > 1
+                ? '<button type="button" data-cgpage="' + cc + '" data-step="-1"' + (page === 1 ? ' disabled' : '') + ' aria-label="Previous cities">Prev</button>' +
+                  '<button type="button" data-cgpage="' + cc + '" data-step="1"' + (page === pages ? ' disabled' : '') + ' aria-label="Next cities">Next</button>'
+                : '') + '</div>'
+          : '') +
+      '</div>';
+    });
+    box.innerHTML = html || '<div class="r4-citylist-empty">No city matches.</div>';
+
+    function visibleIds(cc) {
+      var all = tripCities(cc);
+      return (q ? all.filter(function (c) { return fold(c.name + ' ' + divisionName(c.division)).indexOf(q) >= 0; }) : all).map(function (c) { return c.id; });
+    }
+    function changed() { renderCityGroups(); cityHint(); refresh(); }
+    box.querySelectorAll('[data-city]').forEach(function (cb) {
+      cb.onchange = function () {
+        var id = cb.getAttribute('data-city');
+        state.cityIds = cb.checked ? state.cityIds.concat([id]) : state.cityIds.filter(function (x) { return x !== id; });
+        changed();
+      };
+    });
+    // All / None funcionan con el grupo cerrado; con una búsqueda activa, sobre las coincidencias.
+    box.querySelectorAll('[data-cgall]').forEach(function (b) {
+      b.onclick = function () {
+        visibleIds(b.getAttribute('data-cgall')).forEach(function (id) { if (state.cityIds.indexOf(id) < 0) state.cityIds.push(id); });
+        changed();
+      };
+    });
+    box.querySelectorAll('[data-cgnone]').forEach(function (b) {
+      b.onclick = function () {
+        var ids = visibleIds(b.getAttribute('data-cgnone'));
+        state.cityIds = state.cityIds.filter(function (id) { return ids.indexOf(id) < 0; });
+        changed();
+      };
+    });
+    box.querySelectorAll('[data-cgtoggle]').forEach(function (b) {
+      b.onclick = function () {
+        var cc = b.getAttribute('data-cgtoggle');
+        cityUi.open[cc] = b.getAttribute('aria-expanded') !== 'true';
+        renderCityGroups();
+      };
+    });
+    box.querySelectorAll('[data-cgpage]').forEach(function (b) {
+      b.onclick = function () {
+        var cc = b.getAttribute('data-cgpage');
+        cityUi.page[cc] = (cityUi.page[cc] || 1) + Number(b.getAttribute('data-step'));
+        renderCityGroups();
+      };
+    });
+  }
+
+  function cityHint() {
+    var el = overlay.querySelector('#odr-cityhint');
+    if (!el) return;
+    var total = tripCities(state.country).length;
+    el.textContent = state.cityIds.length ? state.cityIds.length + ' of ' + total + ' cities selected.'
+      : 'None selected: every city of the trigger in ' + countryName(state.country) + ' is searched (' + total + ').';
+  }
+
+  // Resumen, avisos y habilitación del envío.
+  function refresh() {
+    var warn = overlay.querySelector('#odr-warn');
+    var sum = overlay.querySelector('#odr-sum');
+    var block = null, info = '';
+    if (state.mode === 'company') {
+      var cc = countryOfCompany();
+      var svc = companyServices();
+      if (!state.company && !norm(state.typed)) block = '';
+      else if (trigger.countries.indexOf(cc) < 0) {
+        block = 'The ' + trigger.name + ' trigger does not search in ' + (countryName(cc) || 'the company’s country') + '. An administrator can add the country to the trigger in Settings.';
+      } else if (!svc.length) {
+        block = 'No service of the trigger searches by company in ' + countryName(cc) + '.';
+      } else {
+        var recent = recentCompanyRequest();
+        if (recent) {
+          var mins = Math.max(1, Math.round((Date.now() - parseStamp(recent.at)) / 60000));
+          block = 'This company was already requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). The same company can be requested again after one hour. <a href="requests.html" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
+        }
+      }
+      info = svc.length ? svc.length + ' search' + (svc.length === 1 ? '' : 'es') : '';
+    } else {
+      var terms = selectedTerms().length, cities = searchCities().length, services = termServices().length;
+      if (!state.positionIds.length) block = '';
+      else if (!services) block = 'No service is configured for ' + countryName(state.country) + ' in this trigger.';
+      info = terms ? terms + ' term' + (terms === 1 ? '' : 's') + ' × ' + cities + ' cit' + (cities === 1 ? 'y' : 'ies') + ' × ' + services + ' service' + (services === 1 ? '' : 's') + ' = ' + (terms * cities * services) + ' searches' : 'Choose at least one position';
+    }
+    if (warn) {
+      warn.innerHTML = block
+        ? '<div role="status" style="margin-top:16px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;">' + block + '</div>'
+        : '';
+    }
+    sum.textContent = info;
+    var disabled = block !== null;
+    sendBtn.disabled = disabled;
+    sendBtn.style.opacity = disabled ? '.5' : '';
+    sendBtn.style.cursor = disabled ? 'not-allowed' : '';
+  }
+
+  sendBtn.onclick = function () {
+    if (sendBtn.disabled) return;
+    var req;
+    if (state.mode === 'company') {
+      var svc = companyServices();
+      var typed = state.typed.trim();
+      req = {
+        triggerId: trigger.id, mode: 'company',
+        companyId: state.company ? state.company.id : null,
+        companyName: state.company ? state.company.name : (looksLikeDomain(typed) ? null : typed),
+        domain: state.company ? (state.company.domain || null) : (looksLikeDomain(typed) ? norm(typed) : null),
+        country: countryOfCompany(), windowDays: state.windowDays, serviceIds: svc,
+        progress: { searched: 0, toSearch: svc.length, found: 0, analyzed: 0, viable: 0 }
+      };
+    } else {
+      var termIds = selectedTerms().map(function (t) { return t.id; });
+      var services = termServices();
+      req = {
+        triggerId: trigger.id, mode: 'terms', country: state.country,
+        cityIds: state.cityIds.slice(), positionIds: state.positionIds.slice(), termIds: termIds,
+        windowDays: state.windowDays, serviceIds: services,
+        progress: { searched: 0, toSearch: termIds.length * searchCities().length * services.length, found: 0, analyzed: 0, viable: 0 }
+      };
+    }
+    // `simulate`: el prototipo avanza la solicitud con el tiempo transcurrido (página Requests).
+    req.vacancyIds = []; req.status = 'queued'; req.simulate = true;
+    addRequest(req);
+    close();
+    showToast('Search requested. Follow its progress in <a href="requests.html?id=' + req.id + '" style="color:inherit; font-weight:600; text-decoration:underline;">Requests</a>.', 'success');
+    onSent(req);
+  };
+
+  render();
+}
+
+// Investigación a pedido de una empresa: una solicitud al trigger Investigación a pedido
+// (`trg-research`). El popup describe lo que va a hacer leyendo la configuración del trigger
+// —servicios de enriquecimiento en orden con su condición de paso, análisis con el ICP del país,
+// servicios de decisores— y la envía. El resultado no vuelve al popup: queda en el estado y el
+// historial de la empresa, que se leen en su ficha y en Requests.
+// options: { onSent(request) }
+function openResearchRequestPopup(company, options) {
+  options = options || {};
+  if (!company) return;
+  var trigger = engineTrigger('trg-research');
+  if (!trigger) { showToast('The On-demand research trigger is not configured.', 'error'); return; }
+  var onSent = options.onSent || function () {};
+
+  function h(s) {
+    return String(s === null || s === undefined ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  var country = company.countryCode || 'US';
+  var covered = trigger.countries.indexOf(country) >= 0;
+  var prompt = ENGINE_PROMPTS.find(function (p) { return p.country === country && p.analysis === 'companies' && p.status === 'active'; });
+  // Una investigación en curso de la misma empresa bloquea otra: la segunda pisaría a la primera.
+  var pending = MOCK_REQUESTS.find(function (r) {
+    return r.triggerId === trigger.id && r.companyId === company.id && (r.status === 'queued' || r.status === 'running');
+  });
+
+  function svcTag(id) { return '<span class="op-tag" title="' + h(serviceLabel(id)) + '">' + h(serviceName(id)) + '</span>'; }
+  // Cadena de servicios en orden: el siguiente solo se invoca cuando el anterior cumple la condición de paso.
+  function chain(steps) {
+    return '<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px;">' +
+      steps.map(function (s, i) {
+        var next = i < steps.length - 1
+          ? '<span style="font-size:11px; color:var(--text-muted);">&rarr; if ' + h((PASS_CONDITIONS[s.pass] || 'it fails').toLowerCase()) + ' &rarr;</span>'
+          : '';
+        return svcTag(s.serviceId) + next;
+      }).join('') + '</div>';
+  }
+  function step(n, title, text, extra) {
+    return '<li style="display:flex; gap:12px; padding:10px 0; border-top:' + (n === 1 ? '0' : '1px solid var(--border-default)') + ';">' +
+      '<span aria-hidden="true" style="flex:0 0 22px; height:22px; border-radius:50%; background:var(--bg-muted); color:var(--text-secondary); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center;">' + n + '</span>' +
+      '<div style="min-width:0;"><div style="font-size:13px; font-weight:600; color:var(--text-strong);">' + title + '</div>' +
+      '<div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-top:2px;">' + text + '</div>' + (extra || '') + '</div></li>';
+  }
+
+  var essentials = ENGINE_RULES.essentials.map(function (e) { return e.label.toLowerCase(); }).join(', ');
+  var exclusions = ENGINE_RULES.exclusions.map(function (e) { return e.label.toLowerCase(); }).join(' and ');
+  var steps = '';
+  var n = 0;
+  if (trigger.enrichment.length) {
+    steps += step(++n, stageLabel('enrichment'), 'Looks the company up by its ' + (company.domain ? 'domain, ' + h(company.domain) : 'name and country') + '. The next provider is called only when the previous one does not return it or returns it without the essential data (' + h(essentials) + ').', chain(trigger.enrichment));
+  }
+  steps += step(++n, stageLabel('company_analysis'), 'Classifies the company type and scores it against the ' + h(countryName(country)) + ' ICP' +
+    (prompt && prompt.icpMinScore ? ' (minimum score ' + prompt.icpMinScore + ')' : '') + '. ' + h(exclusions.charAt(0).toUpperCase() + exclusions.slice(1)) + ' are excluded.',
+    '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">' + svcTag('svc-company-analysis') +
+      (prompt ? '<span class="op-tag">Prompt ' + h(countryName(country)) + ' · v' + prompt.version + '</span>' : '') + '</div>');
+  if (trigger.decisionMakers.length) {
+    steps += step(++n, stageLabel('decision_makers'), 'Only when the company is qualified. Searches people by domain in the areas of its openings; each person gets a role and its level from the decision-maker roles table, and the contact details are searched for the roles that receive email or phone search.',
+      chain(trigger.decisionMakers) +
+      '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">' + svcTag('svc-dm-analysis') + svcTag('svc-contact') + '</div>');
+  }
+  steps += step(++n, 'Result: ' + h((TRIGGER_ENDS[trigger.endsAt] || {}).label || 'Company record'),
+    'The state, the history and the decision makers of the company are updated. The current values are overwritten with what the research finds.');
+
+  var warn = !covered
+    ? 'The ' + h(trigger.name) + ' trigger does not run in ' + h(countryName(country)) + '. An administrator can add the country to the trigger in Settings.'
+    : pending
+      ? 'A research request for this company is already ' + h((REQUEST_STATUS[pending.status] || {}).label.toLowerCase()) + '. <a href="requests.html?id=' + h(pending.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.'
+      : '';
+
+  var overlay = document.createElement('div');
+  overlay.className = 'assign-popup-overlay';
+  overlay.innerHTML =
+    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width:560px; max-width:95vw; display:flex; flex-direction:column; max-height:92vh;">' +
+      '<div class="assign-popup-header">' +
+        '<h3 id="rr-title">Run research</h3>' +
+        '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
+      '</div>' +
+      '<div class="assign-popup-body" style="overflow:auto; flex:1 1 auto;">' +
+        '<div style="padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-muted);">' +
+          '<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;"><span style="font-weight:600; color:var(--text-strong);">' + h(company.name) + '</span>' +
+            stateBadge(COMPANY_STATES, company.entityState) + '</div>' +
+          '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">' +
+            h([placeLabel(company, false), countryName(country)].filter(Boolean).join(' · ')) + (company.domain ? ' · ' + h(company.domain) : ' · no domain on record') + '</div>' +
+        '</div>' +
+        '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:12px 0 4px;">The request goes to the <strong>' + h(trigger.name) +
+          '</strong> trigger. These are the steps it runs, as configured:</p>' +
+        '<ol style="list-style:none; margin:0; padding:0;">' + steps + '</ol>' +
+        (warn ? '<div role="status" style="margin-top:12px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;">' + warn + '</div>' : '') +
+      '</div>' +
+      '<div class="assign-popup-footer">' +
+        '<button type="button" class="btn btn-secondary btn-sm" data-close>Cancel</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" id="rr-send"' + (warn ? ' disabled style="opacity:.5; cursor:not-allowed;"' : '') + '>Send request</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  function close() { overlay.remove(); document.removeEventListener('keydown', onKey); }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay || e.target.hasAttribute('data-close')) close(); });
+
+  overlay.querySelector('#rr-send').onclick = function () {
+    if (warn) return;
+    var req = addRequest({
+      triggerId: trigger.id, companyId: company.id, companyName: company.name, country: country,
+      status: 'queued', steps: {}, simulate: true
+    });
+    close();
+    showToast('Research requested. The result is written to the company record; follow it in <a href="requests.html?id=' + req.id + '" style="color:inherit; font-weight:600; text-decoration:underline;">Requests</a>.', 'success');
+    onSent(req);
+  };
+}
+
+// === CSV EXPORT ===
+// Contrato com\u00FAn de los archivos exportados (FSPL-2): UTF-8 con BOM, separados por coma y con salto
+// de l\u00EDnea CRLF, para que abran en Excel con las tildes correctas sin limpieza previa. Los valores con
+// coma, comilla doble o salto de l\u00EDnea van entrecomillados con las comillas internas duplicadas, y una
+// celda sin dato se entrega vac\u00EDa: nunca `null`, `N/A` ni un guion.
+
+// Fecha con hora `AAAA-MM-DD HH:MM`, o solo fecha `AAAA-MM-DD`. Vac\u00EDo si no hay dato.
+function csvDate(value, withTime) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  return withTime ? raw.slice(0, 16) : raw.slice(0, 10);
+}
+
+// Nombre del archivo: <entidad>_<inicio>_<fin>.csv con los extremos del rango de fecha de detecci\u00F3n
+// cuando hay rango aplicado, y <entidad>_<AAAA-MM-DD>.csv con la fecha de generaci\u00F3n cuando no lo hay.
+function exportFilename(entity, from, to) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (from || to) return `${entity}_${from || today}_${to || today}.csv`;
+  return `${entity}_${today}.csv`;
+}
+
+// Orden de las filas: fecha de detecci\u00F3n descendente y, a igual fecha, nombre de empresa ascendente.
+function sortForExport(rows, detectedKey, companyKey) {
+  return rows.slice().sort((a, b) => {
+    const da = String(a[detectedKey] || ''), db = String(b[detectedKey] || '');
+    if (da !== db) return db.localeCompare(da);
+    return String(a[companyKey] || '').localeCompare(String(b[companyKey] || ''));
+  });
+}
+
+function csvCell(value) {
+  if (value === null || value === undefined) return '';
+  const val = String(value).replace(/"/g, '""');
+  return /[",\n\r]/.test(val) ? `"${val}"` : val;
+}
+
+// `headers` fija el set y el orden de columnas, y permite entregar el archivo con su fila de
+// encabezados aunque el recorte no devuelva ninguna fila. UTF-8 con BOM y saltos CRLF.
+function buildCSVText(rows, headers) {
+  const cols = headers || (rows.length ? Object.keys(rows[0]) : []);
+  const lines = [cols.map(csvCell).join(',')];
+  rows.forEach(r => lines.push(cols.map(h => csvCell(r[h])).join(',')));
+  return '\uFEFF' + lines.join('\r\n') + '\r\n';
+}
+
+function downloadBlob(blob, filename) {
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+// === EMPAQUETADO DE LA DESCARGA ===
+// Una exportación de un solo archivo se entrega como CSV directo; una de dos o tres, en un ZIP
+// único con los CSV adentro, cada uno con su nombre de la convención. El ZIP se arma sin comprimir
+// (método `store`), que es suficiente para entregar un paquete válido sin dependencias externas.
+
+function crc32(bytes) {
+  let table = crc32.table;
+  if (!table) {
+    table = crc32.table = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+  }
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xFF];
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function zipStore(files) {   // files: [{ name, text }]
+  const enc = new TextEncoder();
+  const parts = [], central = [];
+  let offset = 0;
+
+  files.forEach(f => {
+    const nameBytes = enc.encode(f.name);
+    const data = enc.encode(f.text);
+    const crc = crc32(data);
+
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);   // local file header
+    local.setUint16(4, 20, true);           // version needed
+    local.setUint16(6, 0x0800, true);       // nombre en UTF-8
+    local.setUint16(8, 0, true);            // método: store
+    local.setUint16(12, 0x0021, true);      // fecha DOS válida (1980-01-01)
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, nameBytes.length, true);
+    parts.push(new Uint8Array(local.buffer), nameBytes, data);
+
+    const dir = new DataView(new ArrayBuffer(46));
+    dir.setUint32(0, 0x02014b50, true);     // central directory header
+    dir.setUint16(4, 20, true);
+    dir.setUint16(6, 20, true);
+    dir.setUint16(8, 0x0800, true);
+    dir.setUint16(10, 0, true);
+    dir.setUint16(14, 0x0021, true);
+    dir.setUint32(16, crc, true);
+    dir.setUint32(20, data.length, true);
+    dir.setUint32(24, data.length, true);
+    dir.setUint16(28, nameBytes.length, true);
+    dir.setUint32(42, offset, true);
+    central.push(new Uint8Array(dir.buffer), nameBytes);
+
+    offset += 30 + nameBytes.length + data.length;
+  });
+
+  const centralSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);       // end of central directory
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, centralSize, true);
+  end.setUint32(16, offset, true);
+
+  return new Blob(parts.concat(central, [new Uint8Array(end.buffer)]), { type: 'application/zip' });
+}
+
+// files: [{ entity, rows, columns }] — el primero es el de la entidad del listado.
+function deliverExport(files, from, to) {
+  const csvFiles = files.map(f => ({
+    name: exportFilename(f.entity, from, to),
+    text: buildCSVText(f.rows, f.columns)
+  }));
+
+  if (csvFiles.length === 1) {
+    downloadBlob(new Blob([csvFiles[0].text], { type: 'text/csv;charset=utf-8;' }), csvFiles[0].name);
+    showToast(`Exported: ${csvFiles[0].name}`);
+    return;
+  }
+
+  const zipName = exportFilename('exportacion', from, to).replace(/\.csv$/, '.zip');
+  downloadBlob(zipStore(csvFiles), zipName);
+  showToast(`Exported: ${zipName} — ${csvFiles.map(f => f.name).join(', ')}`);
+}
+
+// === COMPOSICIÓN DE LOS ARCHIVOS EXPORTADOS (HUSPL-2.1 / HUSPL-2.2) ===
+// Dos archivos: posiciones y prospectos. Cada uno se basta solo — el de posiciones lleva los correos
+// de los decisores de la empresa y el de prospectos, los cargos que esa empresa tiene publicados —
+// así nadie tiene que cruzar dos planillas por ID para poder escribir. Lo accionable va primero y el
+// contexto después. Los encabezados son contrato y van en español, como los nombra la HU.
+// Ningún archivo incluye quién exportó ni cuándo: eso vive en el listado, no en el archivo.
+
+// El archivo de prospectos se importa en Apollo, que es donde los SDR trabajan los contactos.
+// Las columnas 1–31 llevan los encabezados de la exportación de contactos de Apollo para que se
+// mapeen solas al importar; el contexto que produce el motor viaja al lado con sufijo _genai,
+// que Apollo toma como campos personalizados sin pisar los suyos. Una fila por persona.
+const EXPORT_COLUMNS_PROSPECTS = [
+  'First Name', 'Last Name', 'Title', 'Company Name', 'Company Name for Emails', 'Email',
+  'Primary Email Verification Source', 'Seniority', 'Sub Departments', 'Contact Owner',
+  'Work Direct Phone', 'Mobile Phone', 'Corporate Phone', 'Do Not Call', 'Lists', 'Account Owner',
+  '# Employees', 'Industry', 'Person Linkedin Url', 'Website', 'Company Linkedin Url',
+  'Address', 'City', 'State', 'Country', 'Company Address', 'Company City', 'Company State',
+  'Company Country', 'Company Phone', 'Apollo Record Id',
+  'Email Verification_genai', 'Detected Positions_genai', 'ICP Score_genai', 'Lead Summary_genai',
+  'Pipeline Stage_genai', 'Last Contacted_genai', 'Detected_genai', 'Company ID_genai'
+];
+
+const EXPORT_COLUMNS_VACANCIES = [
+  'Empresa', 'Cargo', 'Posición del catálogo', 'Correos de decisores', 'Ubicación', 'Modalidad', 'Enlace al aviso',
+  'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Estado comercial',
+  'Viable en remoto', 'Confianza', 'Última vez contactada', 'Detectada', 'Seniority', 'Departamento',
+  'Skills', 'Idiomas', 'Rango salarial', 'Publicada', 'Fuente',
+  'Puntaje ICP', 'Industria', 'Tamaño', 'Sitio web',
+  'LinkedIn de la empresa', 'Relación', 'Etapa del embudo', 'ID de empresa'
+];
+
+// Bloque de contexto de la empresa, compartido por los tres archivos. Una empresa todavía sin
+// investigar deja vacías industria, tamaño, sitio web, LinkedIn, Indeed, investigada y pitch,
+// y la fila se entrega igual: el ID de empresa se entrega siempre.
+function companyContextCells(company) {
+  return {
+    'Industria': company ? getIndustryLabel(company.industryCode) : '',
+    'Tamaño': company && company.sizeEmployees ? company.sizeEmployees : '',
+    'Ubicación': company ? company.location : '',
+    'Sitio web': company ? company.website : '',
+    'LinkedIn de la empresa': companyLinkedinUrl(company),
+    'Indeed de la empresa': companyIndeedUrl(company),
+    'Relación': company ? company.type : '',
+    'Etapa del embudo': company ? company.pipelineStage : '',
+    'Investigada': company ? csvDate(company.researchedAt) : '',
+    'Última vez contactada': company ? csvDate(company.lastContactedAt, true) : '',
+    'Pitch de venta': company ? company.salesPitch : '',
+    // Una empresa sin calificar deja la celda vacía: el puntaje falta, no es cero.
+    'Puntaje ICP': company && company.icpScore !== null && company.icpScore !== undefined ? Math.round(company.icpScore) : '',
+    'Señales': company ? (company.leadSignals || []).map(leadSignalLabel).join(' | ') : ''
+  };
+}
+
+// Emails del staff asignado en cada slot. El slot sin asignar deja su celda vacía.
+function assignmentCells(record) {
+  return {
+    'Comercial asignado': staffEmail(record.comercialId),
+    'SDR asignado': staffEmail(record.sdrId),
+    'Coordinador/supervisor asignado': staffEmail(record.coordinatorId)
+  };
+}
+
+// Etiquetas de seniority con que Apollo las muestra; un valor fuera del vocabulario sale tal cual.
+const APOLLO_SENIORITY = { owner: 'Owner', founder: 'Founder', c_suite: 'C suite', partner: 'Partner', vp: 'Vp',
+  head: 'Head', director: 'Director', manager: 'Manager', senior: 'Senior', entry: 'Entry' };
+
+// El nombre de la empresa sin su forma societaria final, como lo usa Apollo para personalizar correos.
+function companyNameForEmails(name) {
+  return String(name || '').replace(/,?\s+(inc|llc|l\.l\.c|ltd|corp|corporation|co|pllc|llp|lp|pc)\.?$/i, '').trim();
+}
+
+function withProtocol(url) {
+  if (!url) return '';
+  return /^https?:\/\//i.test(url) ? url : 'https://' + url;
+}
+
+// Una fila por contacto de las empresas del recorte; una empresa sin contactos no aporta filas.
+// El nombre y el apellido salen de sus campos y, en un contacto que no los tiene, se parten del
+// nombre completo. `listName` es el nombre del archivo sin extensión, que Apollo usa como lista.
+function buildProspectExportRows(companies, listName) {
+  const rows = [];
+  companies.forEach(c => {
+    const ctx = companyContextCells(c);
+    const base = {
+      'Company Name': c.name,
+      'Company Name for Emails': companyNameForEmails(c.name),
+      'Corporate Phone': c.phone || '',
+      'Lists': listName || '',
+      // La asignación es por empresa, no por contacto: Contact Owner va vacía.
+      'Contact Owner': '',
+      'Account Owner': staffEmail(c.coordinatorId),
+      '# Employees': ctx['Tamaño'],
+      'Industry': ctx['Industria'],
+      'Website': withProtocol(ctx['Sitio web']),
+      'Company Linkedin Url': ctx['LinkedIn de la empresa'],
+      'Company Address': c.address || ctx['Ubicación'] || '',
+      'Company City': c.city || '',
+      'Company State': c.state || '',
+      'Company Country': c.country || '',
+      'Company Phone': c.phone || '',
+      'Detected Positions_genai': companyPositionTitles(c.id),
+      'ICP Score_genai': ctx['Puntaje ICP'],
+      'Lead Summary_genai': c.leadSummary || '',
+      'Pipeline Stage_genai': ctx['Etapa del embudo'],
+      'Last Contacted_genai': ctx['Última vez contactada'],
+      'Company ID_genai': c.id
+    };
+
+    getContactsForCompany(c.id).forEach(ct => {
+      const parts = String(ct.fullName || '').trim().split(/\s+/);
+      const city = ct.city || '', state = ct.state || '', country = ct.country || '';
+      rows.push(Object.assign({}, base, {
+        'First Name': ct.firstName || parts[0] || '',
+        'Last Name': ct.lastName || parts.slice(1).join(' '),
+        'Title': ct.position,
+        'Email': ct.email,
+        'Primary Email Verification Source': ct.emailSource === 'hunter' ? 'Hunter' : (ct.emailSource === 'apollo' ? 'Apollo' : ''),
+        'Seniority': APOLLO_SENIORITY[ct.seniorityLevel] || ct.seniorityLevel || '',
+        'Sub Departments': (ct.subdepartments || []).join(', '),
+        'Work Direct Phone': ct.directPhone || '',
+        'Mobile Phone': ct.phone || '',
+        'Do Not Call': ct.doNotCall === true ? 'true' : (ct.doNotCall === false ? 'false' : ''),
+        'Person Linkedin Url': ct.linkedinUrl,
+        'Address': [city, state, country].filter(Boolean).join(', '),
+        'City': city, 'State': state, 'Country': country,
+        'Apollo Record Id': ct.idApollo || '',
+        'Email Verification_genai': emailVerificationShort(ct.emailVerification),
+        'Detected_genai': csvDate(ct.createdAt, true)
+      }));
+    });
+  });
+  return sortForExport(rows, 'Detected_genai', 'Company Name');
+}
+
+// La etiqueta corta del estado de verificación, que es lo que decide si el ciclo de envío
+// le escribe. Un contacto anterior a la verificación deja la celda vacía.
+function emailVerificationShort(value) {
+  const v = EMAIL_VERIFICATION[value];
+  return v ? (v.short || 'Verified') : '';
+}
+
+// Los correos de los decisores de una empresa, en una celda lista para pegar en el cliente de
+// correo: separados por punto y coma y sin repetir. Solo entran los contactos que califican como
+// decisores (tienen rol y nivel); una empresa sin decisores deja la celda vacía.
+function decisionMakerEmails(companyId) {
+  const seen = [];
+  getContactsForCompany(companyId).forEach(function (ct) {
+    if (!ct.roleCode || !ct.decisionLevel || !ct.email) return;
+    if (seen.indexOf(ct.email) === -1) seen.push(ct.email);
+  });
+  return seen.join('; ');
+}
+
+// Los cargos que la empresa tiene publicados, en una celda. Se separan con barra porque un cargo
+// puede llevar coma adentro. Se repiten tal cual: dos avisos del mismo cargo son dos publicaciones.
+function companyPositionTitles(companyId) {
+  return companyVacancies(companyId).map(function (v) { return v.title; }).join(' | ');
+}
+
+// Una vacante cuya empresa esté borrada lógicamente se entrega igual, con las columnas de empresa
+// vacías y el ID de empresa informado.
+function buildVacancyExportRows(vacancies) {
+  const rows = vacancies.map(v => {
+    const company = MOCK_COMPANIES.find(c => c.id === v.companyId) || null;
+    const ctx = companyContextCells(company);
+    // El archivo de vacantes no lleva investigada ni pitch de venta: se toma del contexto de
+    // empresa solo lo que su tabla de columnas nombra.
+    return Object.assign({}, assignmentCells(v), {
+      'Empresa': company ? company.name : '',
+      'Cargo': v.title,
+      // La posición del catálogo es con lo que el barrido la encontró; las vacantes de otros
+      // pipelines no tienen ninguna y dejan la celda vacía.
+      'Posición del catálogo': v.positionId ? getPositionName(v.positionId) : '',
+      'Correos de decisores': decisionMakerEmails(v.companyId),
+      'Ubicación': v.location,
+      // Modalidad, seniority, portal y pipeline se entregan con su etiqueta, como Industria:
+      // la celda la lee una persona. Relación y Etapa del embudo sí van crudas, por contrato.
+      'Modalidad': modalityLabel(v.workModality),
+      'Enlace al aviso': v.jobUrl,
+      'Coordinador/supervisor asignado': staffEmail(company ? company.coordinatorId : null),
+      'Estado comercial': v.status,
+      // El veredicto del clasificador y su certeza. Una vacante anterior al clasificador deja
+      // las dos celdas vacías, que no es lo mismo que "no viable".
+      'Viable en remoto': v.remoteViable === true ? 'sí' : v.remoteViable === false ? 'no' : '',
+      'Confianza': v.aiConfidence === null || v.aiConfidence === undefined ? '' : Math.round(v.aiConfidence * 100) + '%',
+      'Última vez contactada': ctx['Última vez contactada'],
+      'Detectada': csvDate(v.detectedAt),
+      'Seniority': seniorityLabel(v.seniorityLevel),
+      'Departamento': v.department,
+      'Skills': v.skills,
+      'Idiomas': (v.languages || []).join(' | '),
+      // El salario anual en USD que persiste el análisis; las vacantes anteriores solo tienen
+      // el texto del portal en salary_range y se entrega ese.
+      'Rango salarial': salaryLabel(v) || v.salary || '',
+      'Publicada': csvDate(v.publishedDate),
+      'Fuente': portalLabel(v.sourcePortal),
+      'Puntaje ICP': ctx['Puntaje ICP'],
+      'Industria': ctx['Industria'],
+      'Tamaño': ctx['Tamaño'],
+      'Sitio web': ctx['Sitio web'],
+      'LinkedIn de la empresa': ctx['LinkedIn de la empresa'],
+      'Relación': ctx['Relación'],
+      'Etapa del embudo': ctx['Etapa del embudo'],
+      'ID de empresa': v.companyId
+    });
+  });
+  return sortForExport(rows, 'Detectada', 'Empresa');
+}
+
+/* ============================================================================
+   RELEASE 3 — Open Positions
+   Catálogos y campos que introduce la épica Ajustes Prospect Engine. El listado
+   deja de mostrar lo que el barrido encontró por geografía y pasa a mostrar lo
+   que el motor calificó: la vacante trae la posición del catálogo que la buscó
+   y el veredicto de viabilidad remota, la empresa su puntaje de ajuste al ICP
+   con las señales que lo sostienen, y el contacto su código de rol y su nivel
+   de decisión. Contrato: FPEA-0 (esquema), FPEA-1 (calificación), FPEA-2
+   (contactos).
+   ============================================================================ */
+
+// === ESTADOS DE ESTADOS UNIDOS ===
+// Alimenta el buscador de ubicación. `company.state_code` y `vacancies.state_code`
+// resuelven contra `code`; el buscador acepta escribir el nombre o la sigla.
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' }, { code: 'DE', name: 'Delaware' }, { code: 'DC', name: 'District of Columbia' },
+  { code: 'FL', name: 'Florida' }, { code: 'GA', name: 'Georgia' }, { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' }, { code: 'IL', name: 'Illinois' }, { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' }, { code: 'KS', name: 'Kansas' }, { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' }, { code: 'ME', name: 'Maine' }, { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' }, { code: 'MI', name: 'Michigan' }, { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' }, { code: 'MO', name: 'Missouri' }, { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' }, { code: 'NV', name: 'Nevada' }, { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' }, { code: 'NM', name: 'New Mexico' }, { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' }, { code: 'ND', name: 'North Dakota' }, { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' }, { code: 'OR', name: 'Oregon' }, { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' }, { code: 'SC', name: 'South Carolina' }, { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' }, { code: 'TX', name: 'Texas' }, { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' }, { code: 'VA', name: 'Virginia' }, { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' }, { code: 'WI', name: 'Wisconsin' }, { code: 'WY', name: 'Wyoming' }
+];
+
+// === MARCAS DE TIEMPO ===
+// Todas las fechas sembradas se leen y se escriben en el mismo marco. Mezclar
+// `new Date('2026-09-14 11:40')` —que parsea en hora local— con `toISOString()`
+// —que devuelve UTC— corría las marcas por el desfase del huso y desordenaba
+// pasos que sí ocurrieron en orden.
+function parseStamp(value) {
+  if (value instanceof Date) return value;
+  let s = String(value).trim().replace(' ', 'T');
+  if (s.length <= 10) s += 'T00:00:00Z';
+  else if (s.indexOf('Z') === -1) s += (s.length === 16 ? ':00Z' : 'Z');
+  return new Date(s);
+}
+
+function formatStamp(value) {
+  return parseStamp(value).toISOString().slice(0, 16).replace('T', ' ');
+}
+
+function stateName(code) {
+  const s = US_STATES.find(function (x) { return x.code === code; });
+  return s ? s.name : (code || '');
+}
+
+// === CATÁLOGO DE POSICIONES (public.positions_catalog · HUPEA-0.1 / 0.4) ===
+// Las 21 posiciones del ICP con sus 54 términos, tal como los carga el seed.
+// Una vacante guarda `position_id` y el `search_text` que la encontró; las que
+// detectó el barrido anterior por geografía no tienen ninguno de los dos.
+const POSITIONS_CATALOG = [
+  { id: 'pos-01', name: 'Accounting & Finance', terms: ['accounting clerk', 'accounts payable specialist', 'accounts receivable specialist', 'bookkeeper', 'staff accountant'], isActive: true },
+  { id: 'pos-02', name: 'Administrative & Executive Assistant', terms: ['executive assistant'], isActive: true },
+  { id: 'pos-03', name: 'Construction Estimating & Support', terms: ['estimator'], isActive: true },
+  { id: 'pos-04', name: 'Customer Service & Intake', terms: ['bilingual customer service representative', 'collections specialist', 'customer service representative', 'intake specialist'], isActive: true },
+  { id: 'pos-05', name: 'Data & Analytics', terms: ['data analyst'], isActive: true },
+  { id: 'pos-06', name: 'Data Entry & Back Office', terms: ['data entry clerk'], isActive: true },
+  { id: 'pos-07', name: 'E-commerce Support', terms: ['ecommerce customer support', 'order processing specialist'], isActive: true },
+  { id: 'pos-08', name: 'Engineering & Technical Design', terms: ['drafter'], isActive: true },
+  { id: 'pos-09', name: 'HR & Recruiting', terms: ['hr coordinator', 'payroll specialist', 'recruiter', 'recruiting coordinator'], isActive: true },
+  { id: 'pos-10', name: 'Healthcare Administrative Support', terms: ['scheduling coordinator', 'staffing coordinator'], isActive: true },
+  { id: 'pos-11', name: 'IT Support', terms: ['help desk technician', 'it support specialist'], isActive: true },
+  { id: 'pos-12', name: 'Inside Sales & Business Development', terms: ['appointment setter', 'business development representative', 'inside sales representative', 'sales development representative'], isActive: true },
+  { id: 'pos-13', name: 'Insurance & Benefits Operations', terms: ['claims processor', 'insurance account manager', 'insurance customer service representative', 'policy processor'], isActive: true },
+  { id: 'pos-14', name: 'Legal Support', terms: ['legal assistant', 'legal intake specialist', 'medical records clerk', 'paralegal'], isActive: true },
+  { id: 'pos-15', name: 'Logistics & Supply Chain Support', terms: ['carrier sales representative', 'dispatcher', 'freight billing specialist', 'logistics coordinator'], isActive: true },
+  { id: 'pos-16', name: 'Marketing & Content', terms: ['content writer', 'marketing coordinator', 'social media coordinator'], isActive: true },
+  { id: 'pos-17', name: 'Medical Billing & RCM', terms: ['medical biller', 'medical coder', 'prior authorization specialist', 'revenue cycle specialist'], isActive: true },
+  { id: 'pos-18', name: 'Mortgage Processing', terms: ['loan processor', 'mortgage loan processor'], isActive: true },
+  { id: 'pos-19', name: 'Project Management & PMO', terms: ['project coordinator'], isActive: true },
+  { id: 'pos-20', name: 'Property Management Coordination', terms: ['leasing coordinator', 'property management assistant'], isActive: true },
+  { id: 'pos-21', name: 'Software Development', terms: ['.net developer', 'qa engineer'], isActive: true }
+];
+
+function getPositionName(positionId) {
+  const p = POSITIONS_CATALOG.find(function (x) { return x.id === positionId; });
+  return p ? p.name : '';
+}
+
+// === SEÑALES DE LEAD (company.lead_signals · FPEA-1) ===
+// Vocabulario cerrado que devuelve la calificación. Las dos últimas descalifican:
+// cuando aparecen, la empresa queda excluida y no se trabaja.
+const LEAD_SIGNALS = [
+  { code: 'repeated_posting', label: 'Repeated posting' },
+  { code: 'multiple_openings', label: 'Multiple openings' },
+  { code: 'urgent_hiring', label: 'Urgent hiring' },
+  { code: 'growth', label: 'Growth' },
+  { code: 'recent_acquisition', label: 'Recent acquisition' },
+  { code: 'recent_funding', label: 'Recent funding' },
+  { code: 'new_location', label: 'New location' },
+  { code: 'spanish_speaking_market', label: 'Spanish-speaking market' },
+  { code: 'ai_adoption', label: 'AI adoption' },
+  { code: 'founder_led', label: 'Founder-led' },
+  { code: 'size_fit', label: 'Size fit' },
+  { code: 'staffing_agency', label: 'Staffing agency', disqualifying: true },
+  { code: 'government_entity', label: 'Government entity', disqualifying: true }
+];
+
+function leadSignalLabel(code) {
+  const s = LEAD_SIGNALS.find(function (x) { return x.code === code; });
+  return s ? s.label : code;
+}
+
+// === PUNTAJE DE AJUSTE AL ICP (company.icp_score · FPEA-1) ===
+// La calificación entrega un entero de 0 a 100 y su propio criterio de aceptación
+// lo lee por tercios, así que la plataforma lo muestra igual. Una empresa sin
+// `qualified_at` no tiene puntaje todavía: el dato falta, no es un cero.
+function icpTier(company) {
+  if (!company) return 'pending';
+  if (company.isExcluded) return 'excluded';
+  if (company.icpScore === null || company.icpScore === undefined) return 'pending';
+  if (company.icpScore >= 67) return 'strong';
+  if (company.icpScore >= 34) return 'moderate';
+  return 'weak';
+}
+
+// === DEPARTAMENTO Y SENIORITY DEL CONTACTO (company_contacts · FPEA-2) ===
+// Las dos columnas son TEXT en la base, pero el valor es cerrado: `seniority_level` guarda la
+// seniority tal como la reporta Apollo y `department`, su área. La plataforma ofrece el mismo
+// vocabulario para que lo que carga una persona y lo que escribe el motor sean comparables.
+const CONTACT_DEPARTMENTS = [
+  { code: 'executive', label: 'Executive' },
+  { code: 'operations', label: 'Operations' },
+  { code: 'finance', label: 'Finance' },
+  { code: 'sales', label: 'Sales' },
+  { code: 'marketing', label: 'Marketing' },
+  { code: 'hr', label: 'HR' },
+  { code: 'it', label: 'IT' },
+  { code: 'legal', label: 'Legal' },
+  { code: 'customer_service', label: 'Customer Service' },
+  { code: 'other', label: 'Other' }
+];
+
+const CONTACT_SENIORITIES = [
+  { code: 'owner', label: 'Owner' },
+  { code: 'founder', label: 'Founder' },
+  { code: 'c_suite', label: 'C-Suite' },
+  { code: 'partner', label: 'Partner' },
+  { code: 'vp', label: 'VP' },
+  { code: 'head', label: 'Head' },
+  { code: 'director', label: 'Director' },
+  { code: 'manager', label: 'Manager' },
+  { code: 'senior', label: 'Senior' },
+  { code: 'entry', label: 'Entry' }
+];
+
+function departmentLabel(code) {
+  const d = CONTACT_DEPARTMENTS.find(function (x) { return x.code === code; });
+  return d ? d.label : (code || '');
+}
+
+function contactSeniorityLabel(code) {
+  const x = CONTACT_SENIORITIES.find(function (y) { return y.code === code; });
+  return x ? x.label : (code || '');
+}
+
+// === CÓDIGOS DE ROL Y NIVEL DE DECISIÓN (company_contacts · FPEA-2) ===
+// El análisis de perfil normaliza el cargo a uno de estos códigos y de ahí,
+// cruzado con la banda de tamaño de la empresa, sale el nivel de decisión.
+const ROLE_CODES = [
+  { code: 'ceo', label: 'CEO' },
+  { code: 'president', label: 'President' },
+  { code: 'chairman', label: 'Chairman' },
+  { code: 'cfo', label: 'CFO' },
+  { code: 'cro', label: 'CRO' },
+  { code: 'vp_sales', label: 'VP Sales' },
+  { code: 'owner_founder', label: 'Owner / Founder' },
+  { code: 'coo', label: 'COO' },
+  { code: 'vp_operations', label: 'VP Operations' },
+  { code: 'director_operations', label: 'Director of Operations' },
+  { code: 'managing_director', label: 'Managing Director' },
+  { code: 'executive_director', label: 'Executive Director' }
+];
+
+// Redacciones que son la expansión literal del código de rol. Un cargo que cae acá
+// repite lo que ya dice el rol normalizado; uno que no —"President & CEO",
+// "Owner / COO"— muestra qué resolvió el clasificador y vale mostrarlo.
+const ROLE_CANONICAL = {
+  ceo: ['ceo', 'chief executive officer'],
+  president: ['president'],
+  chairman: ['chairman', 'chairwoman', 'chairperson', 'board chair'],
+  cfo: ['cfo', 'chief financial officer'],
+  cro: ['cro', 'chief revenue officer'],
+  vp_sales: ['vp sales', 'vp of sales', 'vice president of sales', 'svp sales', 'evp sales'],
+  owner_founder: ['owner', 'founder', 'co-founder'],
+  coo: ['coo', 'chief operating officer', 'chief operations officer'],
+  vp_operations: ['vp operations', 'vp of operations', 'vice president of operations'],
+  director_operations: ['director of operations', 'operations director'],
+  managing_director: ['managing director', 'managing partner'],
+  executive_director: ['executive director']
+};
+
+// Normaliza un cargo escrito a mano al código de rol, con las mismas reglas que el
+// análisis de perfil: coincide por significado, un cargo que combina varios toma el
+// más alto de la lista, y lo que no está en el catálogo no califica.
+const ROLE_PATTERNS = [
+  { code: 'ceo', re: /chief executive|\bceo\b/i },
+  { code: 'president', re: /\bpresident\b/i, not: /vice|assistant|deputy|associate/i },
+  { code: 'chairman', re: /chair(man|woman|person)?\b|board chair/i, not: /vice/i },
+  { code: 'cfo', re: /chief financial|\bcfo\b/i },
+  { code: 'cro', re: /chief revenue|\bcro\b/i },
+  { code: 'vp_sales', re: /(vice president|\bvp\b|\bsvp\b|\bevp\b)[^,]*\bsales\b/i },
+  { code: 'owner_founder', re: /\bowner\b|\bco-?founder\b|\bfounder\b/i },
+  { code: 'coo', re: /chief operat(ing|ions)|\bcoo\b/i },
+  { code: 'vp_operations', re: /(vice president|\bvp\b)[^,]*\boperations\b/i },
+  { code: 'director_operations', re: /director of operations|operations director/i },
+  { code: 'managing_director', re: /managing (director|partner)/i },
+  { code: 'executive_director', re: /executive director/i }
+];
+
+// Cargos que nunca califican, aunque contengan una palabra del catálogo.
+const ROLE_DISQUALIFIERS = /assistant|chief of staff|advisor|adviser|consultant|secretar|former|retired|interim/i;
+
+function normalizeRoleCode(title) {
+  const t = String(title || '').trim();
+  if (!t || ROLE_DISQUALIFIERS.test(t)) return null;
+  const hit = ROLE_PATTERNS.find(function (r) { return r.re.test(t) && !(r.not && r.not.test(t)); });
+  return hit ? hit.code : null;
+}
+
+function rawPositionAddsInfo(contact) {
+  const raw = String((contact && contact.position) || '').trim().toLowerCase();
+  if (!raw) return false;
+  return (ROLE_CANONICAL[contact.roleCode] || []).indexOf(raw) === -1;
+}
+
+function roleCodeLabel(code) {
+  const r = ROLE_CODES.find(function (x) { return x.code === code; });
+  return r ? r.label : (code || '');
+}
+
+// Banda de tamaño con que la derivación del nivel lee a la empresa.
+function companySizeBand(company) {
+  const n = company && Number(company.sizeEmployees);
+  if (!n || !isFinite(n) || n < 1) return 'unknown';
+  if (n >= 20 && n <= 300) return 'high';
+  if (n > 1000) return 'low';
+  return 'medium';
+}
+
+// Tabla de derivación de FPEA-2. `null` es "no califica": esa persona no se guarda.
+const DECISION_LEVEL_TABLE = {
+  ceo:                 { high: 1, medium: 1, unknown: 1, low: 1 },
+  president:           { high: 1, medium: 1, unknown: 1, low: 1 },
+  chairman:            { high: 1, medium: 1, unknown: 1, low: 1 },
+  cfo:                 { high: 1, medium: 1, unknown: 1, low: 1 },
+  cro:                 { high: 1, medium: 1, unknown: 1, low: 1 },
+  vp_sales:            { high: 1, medium: 1, unknown: 1, low: 1 },
+  owner_founder:       { high: 1, medium: 2, unknown: 2, low: 2 },
+  coo:                 { high: 1, medium: 2, unknown: 2, low: 2 },
+  vp_operations:       { high: 1, medium: 2, unknown: 2, low: null },
+  director_operations: { high: 1, medium: 2, unknown: 2, low: null },
+  managing_director:   { high: 2, medium: 2, unknown: 2, low: 2 },
+  executive_director:  { high: 2, medium: 2, unknown: 2, low: 2 }
+};
+
+function decisionLevelFor(roleCode, company) {
+  const row = DECISION_LEVEL_TABLE[roleCode];
+  if (!row) return null;
+  const level = row[companySizeBand(company)];
+  return level === undefined ? null : level;
+}
+
+// === VERIFICACIÓN DEL EMAIL (company_contacts.email_verification · FPEA-2) ===
+// `short` es la marca que se muestra al lado de la dirección. Es nula en `valid`
+// porque ese es el caso esperado y anunciarlo solo agrega ruido: la ficha se calla
+// cuando todo está bien y habla cuando hay un pero.
+const EMAIL_VERIFICATION = {
+  valid: {
+    label: 'Verified email', tone: 'success', short: null,
+    note: 'Hunter verified the address exists.'
+  },
+  accept_all: {
+    label: 'Catch-all domain', tone: 'warning', short: 'Catch-all',
+    note: 'The domain accepts every address, so it cannot be verified. The send cycle still writes to it.'
+  },
+  risky: {
+    label: 'Risky email', tone: 'error', short: 'Risky',
+    note: 'The send cycle will not write to this address. Reaching this person takes a manual email or a call.'
+  },
+  unknown: {
+    label: 'Unverified email', tone: 'neutral', short: 'Unverified',
+    note: 'Hunter could not verify the address. The send cycle will not write to it.'
+  }
+};
+
+// === PORTAL Y PIPELINE DE ORIGEN ===
+// `vacancies.source` es el portal (indeed | linkedin | website | manual) y
+// `vacancies.source_project` el pipeline que la detectó. Los dos se guardan con el
+// valor de la base y se muestran con su etiqueta.
+const PORTAL_LABELS = { indeed: 'Indeed', linkedin: 'LinkedIn', website: 'Website', manual: 'Manual' };
+
+function portalLabel(value) {
+  return PORTAL_LABELS[String(value || '').toLowerCase()] || value || '';
+}
+
+// Pipelines que escriben en `public.vacancies`. `prospect_engine` es el barrido por
+// posición del ICP que introduce la épica Ajustes Prospect Engine (HUPEA-1.5).
+const SOURCE_PROJECT_LABELS = {
+  'prospect_engine': 'Prospect Engine',
+  'general-us-openings': 'US General Openings',
+  'current-client-us-openings': 'Current Client Openings',
+  'on_demand_openings': 'On-Demand Openings'
+};
+
+function sourceProjectLabel(value) {
+  return SOURCE_PROJECT_LABELS[value] || value || '';
+}
+
+// === SENIORITY ===
+// El análisis devuelve entry | mid | senior | lead | executive | unspecified
+// (HUPEA-1.4); las vacantes anteriores quedaron normalizadas al mismo vocabulario.
+const SENIORITY_LEVELS = [
+  { value: 'entry', label: 'Entry' }, { value: 'mid', label: 'Mid' },
+  { value: 'senior', label: 'Senior' }, { value: 'lead', label: 'Lead' },
+  { value: 'executive', label: 'Executive' }, { value: 'unspecified', label: 'Unspecified' }
+];
+
+function seniorityLabel(value) {
+  const hit = SENIORITY_LEVELS.find(function (x) { return x.value === String(value || '').toLowerCase(); });
+  return hit ? hit.label : (value || '');
+}
+
+// === MODALIDAD ===
+// El análisis persiste `work_modality` en minúsculas; los registros del barrido
+// anterior lo guardaron con la redacción del portal. Se muestran igual.
+// `unknown` es un valor del análisis, no un dato faltante: el aviso no dice cómo se trabaja.
+function modalityLabel(value) {
+  const map = { onsite: 'On-site', 'on-site': 'On-site', hybrid: 'Hybrid', remote: 'Remote', unknown: 'Not stated' };
+  return map[String(value || '').toLowerCase()] || value || '';
+}
+
+// === SEÑALES DEL AVISO (vacancies.ai_signals · HUPEA-1.4) ===
+// Vocabulario cerrado que el análisis etiqueta sobre la descripción. Es lo que el
+// correo usa como gancho (FPEA-3) y lo que distingue dos avisos del mismo puesto.
+const VACANCY_SIGNALS = [
+  { code: 'urgent_hire', label: 'Urgent hire', tone: 'hot' },
+  { code: 'multiple_openings', label: 'Multiple openings', tone: 'hot' },
+  { code: 'shift_work', label: 'Shift work' },
+  { code: 'client_facing', label: 'Client facing' },
+  { code: 'back_office', label: 'Back office' },
+  { code: 'supports_licensed_role', label: 'Supports a licensed role' },
+  { code: 'competitive_pay', label: 'Competitive pay' },
+  { code: 'company_growing', label: 'Company growing', tone: 'hot' },
+  { code: 'us_work_authorization', label: 'US work authorization', tone: 'caution' },
+  { code: 'no_visa_sponsorship', label: 'No visa sponsorship', tone: 'caution' },
+  { code: 'state_restricted', label: 'State restricted', tone: 'caution' }
+];
+
+function vacancySignalLabel(code) {
+  const s = VACANCY_SIGNALS.find(function (x) { return x.code === code; });
+  return s ? s.label : code;
+}
+
+function vacancySignalTone(code) {
+  const s = VACANCY_SIGNALS.find(function (x) { return x.code === code; });
+  return (s && s.tone) || 'plain';
+}
+
+// Salario anual en USD, como lo persiste el análisis. Sin dato no se inventa nada.
+function salaryLabel(vacancy) {
+  const min = vacancy && vacancy.salaryMinUsd;
+  const max = vacancy && vacancy.salaryMaxUsd;
+  if (!min && !max) return '';
+  function k(n) { return '$' + (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, '') + 'K'; }
+  if (min && max) return k(min) + '–' + k(max) + '/yr';
+  return k(min || max) + '/yr';
+}
+
+/* ---- Calificación de las empresas (FPEA-1) ------------------------------- */
+// Cada empresa investigada queda con su puntaje, sus señales y su resumen de lead.
+// Harbor Point nunca pasó por investigación: sin `qualified_at` no tiene puntaje.
+(function seedQualification() {
+  const q = {
+    'comp-001': { stateCode: 'FL', icpScore: 68, leadSignals: ['repeated_posting', 'multiple_openings', 'ai_adoption'], leadSummary: 'Mid-size Florida software firm running its own support desk. Posts the same back-office and helpdesk roles every quarter and has started automating tier-1 tickets, leaving exception handling to people. Already a client; expanding coverage into finance operations.' },
+    'comp-002': { stateCode: 'NY', icpScore: 54, leadSignals: ['multiple_openings', 'spanish_speaking_market', 'new_location'], leadSummary: 'Clinic network opening sites across the boroughs, hiring billing and prior-authorization staff in volume. Large patient base requires Spanish. Over 1,000 employees, so an internal recruiting function already exists.' },
+    'comp-003': { stateCode: 'IL', icpScore: 76, leadSignals: ['repeated_posting', 'growth', 'founder_led'], leadSummary: 'Founder-run advisory firm scaling its back office. Has reposted accounting and legal-support roles three times this quarter without filling them, and is adding a second office.' },
+    'comp-004': { stateCode: 'TX', icpScore: 84, leadSignals: ['size_fit', 'recent_funding', 'urgent_hiring', 'founder_led'], leadSummary: 'Series A analytics startup, 85 people, no internal recruiting. Hiring sales development and recruiting coordination at once after a funding round, with postings marked immediate start.' },
+    'comp-005': { stateCode: 'TX', icpScore: 41, leadSignals: ['repeated_posting'], leadSummary: 'Regional carrier with steady dispatch and billing demand. Most roles are tied to the terminal and cannot be covered remotely, which caps the opportunity to the billing side.' },
+    'comp-006': { stateCode: 'WA', icpScore: 47, leadSignals: ['multiple_openings', 'ai_adoption'], leadSummary: 'Established manufacturing client with shared-services demand. Over 2,000 employees and a staffed HR function, so the fit rests on specific back-office overflow rather than volume hiring.' },
+    'comp-007': { stateCode: 'MA', icpScore: 58, leadSignals: ['size_fit', 'spanish_speaking_market'], leadSummary: 'Charter network of 14 schools with seasonal admissions peaks and a largely Spanish-speaking family base. Right size, but hiring is concentrated in a few months of the year.' },
+    'comp-008': { stateCode: 'CA', icpScore: 29, leadSignals: ['multiple_openings'], leadSummary: 'National retailer with high-volume seasonal customer care hiring. At 5,400 employees it runs its own recruiting and BPO contracts, which makes displacement unlikely.' },
+    'comp-009': { stateCode: 'CA', icpScore: 71, leadSignals: ['size_fit', 'growth', 'ai_adoption'], leadSummary: 'B2B SaaS extending support coverage to US business hours as its account base grows. 210 employees, no offshore presence yet, and already routing tier-1 through automation.' },
+    'comp-010': { stateCode: 'PA', icpScore: 33, leadSignals: [], leadSummary: 'Pharmaceutical lab whose open roles are lab- and site-bound. The cycle closed without moving forward; revisit next budget season.' },
+    'comp-011': { stateCode: 'FL', icpScore: null, leadSignals: null, leadSummary: null }
+  };
+  MOCK_COMPANIES.forEach(function (c) {
+    const row = q[c.id] || {};
+    c.stateCode = row.stateCode || null;
+    c.icpScore = row.icpScore !== undefined ? row.icpScore : null;
+    c.leadSignals = row.leadSignals || null;
+    c.leadSummary = row.leadSummary || null;
+    c.isExcluded = false;
+    c.exclusionReason = null;
+    // La investigación y la calificación ocurren en la misma cadena, al día siguiente
+    // de que el barrido creó la empresa: fecharlas antes de `createdAt` sería imposible.
+    if (c.icpScore === null) {
+      c.researchedAt = null; c.qualifiedAt = null; c.contactsSearchedAt = null;
+    } else {
+      const day = function (n) { return new Date(new Date(c.createdAt).getTime() + n * 86400000).toISOString().slice(0, 10); };
+      c.researchedAt = day(1);
+      c.qualifiedAt = day(1);
+      // El barrido de contactos corre sobre las empresas calificadas por encima del umbral.
+      c.contactsSearchedAt = c.icpScore >= 50 ? day(2) : null;
+    }
+  });
+})();
+
+// Una agencia de staffing compite con Solvo: la calificación la descalifica y queda
+// excluida. Es el caso que el listado tiene que mostrar sin ambigüedad.
+MOCK_COMPANIES.push({
+  id: 'comp-012', name: 'Bridgeway Staffing Partners', industry: 'Staffing & Recruiting', industryCode: 'staffing_recruiting',
+  location: 'Atlanta, GA', stateCode: 'GA', website: 'https://bridgewaystaffing.com', linkedinId: 'bridgeway-staffing-partners', indeedId: null,
+  sizeEmployees: 180, lastContactedAt: null,
+  salesPitch: null, pipelineStage: 'lead', type: 'prospect', remoteViable: true,
+  icpScore: 0, leadSignals: ['staffing_agency'], isExcluded: true, exclusionReason: 'staffing_agency',
+  leadSummary: 'Regional staffing agency placing administrative and light industrial workers. Competes directly with Solvo; disqualified.',
+  contactsSearchedAt: null, comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0,
+  createdAt: new Date(Date.now() - 26 * 86400000).toISOString().slice(0, 10),
+  researchedAt: new Date(Date.now() - 25 * 86400000).toISOString().slice(0, 10),
+  qualifiedAt: new Date(Date.now() - 25 * 86400000).toISOString().slice(0, 10),
+  lastScrapedAt: null,
+  linkedinUrl: 'https://www.linkedin.com/company/bridgeway-staffing-partners', indeedUrl: null
+});
+
+/* ---- Análisis de perfil de los contactos (FPEA-2) ------------------------ */
+// El cargo crudo se normaliza a `role_code` y el nivel sale de la tabla de derivación:
+// nunca se escribe a mano, se calcula con la banda de tamaño de la empresa.
+MOCK_CONTACTS.push(
+  { id: 'ct-009', companyId: 'comp-003', fullName: 'Miguel Santos', position: 'Director of Operations', department: 'operations', seniorityLevel: 'director', email: 'm.santos@finserve.com', phone: null, directPhone: '+1 312-555-0310', linkedinUrl: 'https://linkedin.com/in/miguelsantos' },
+  { id: 'ct-022', companyId: 'comp-009', fullName: 'Daniel Okafor', position: 'Chief Operating Officer', department: 'operations', seniorityLevel: 'c_suite', email: 'd.okafor@cloudbridge.io', phone: '+1 415-555-0902', linkedinUrl: 'https://linkedin.com/in/danielokafor' }
+);
+
+(function seedContactAnalysis() {
+  const a = {
+    'ct-001': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Posts about scaling the support org into a 24/7 model.' },
+    'ct-002': { roleCode: 'vp_sales', emailVerification: 'valid', interestSignal: null },
+    'ct-005': { roleCode: 'ceo', emailVerification: 'accept_all', interestSignal: 'Announced two new clinic locations opening this year.' },
+    'ct-008': { roleCode: 'cfo', emailVerification: 'valid', interestSignal: null },
+    'ct-010': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Founder hiring across sales and recruiting after the raise.' },
+    'ct-011': { roleCode: 'coo', emailVerification: 'unknown', interestSignal: null },
+    'ct-013': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: null },
+    'ct-014': { roleCode: 'vp_sales', emailVerification: 'risky', interestSignal: null },
+    'ct-021': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Talks about extending support coverage to US business hours.' },
+    'ct-022': { roleCode: 'coo', emailVerification: 'valid', interestSignal: null },
+    'ct-023': { roleCode: 'chairman', emailVerification: 'unknown', interestSignal: null }
+  };
+  MOCK_CONTACTS.forEach(function (ct) {
+    const row = a[ct.id];
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    // Sin fila en el mapa el contacto no pasó por el análisis de perfil: los cuatro campos
+    // quedan vacíos, que es como están en la base los contactos anteriores a FPEA-2.
+    if (!row) {
+      ct.roleCode = null; ct.decisionLevel = null; ct.interestSignal = null;
+      ct.emailVerification = null; ct.analyzedAt = null;
+      return;
+    }
+    ct.roleCode = row.roleCode || null;
+    ct.decisionLevel = decisionLevelFor(ct.roleCode, company);
+    ct.interestSignal = row.interestSignal || null;
+    ct.emailVerification = row.emailVerification || 'unknown';
+    ct.analyzedAt = company ? company.contactsSearchedAt : null;
+    // El teléfono se revela solo para nivel 1: a nivel 2 no se pide y por eso no existe.
+    if (ct.decisionLevel !== 1) ct.phone = null;
+  });
+})();
+
+// Contactos guardados que no pasaron por el análisis de perfil: no son decisores, pero siguen
+// siendo el único canal de varias empresas. El detalle los muestra aparte.
+function getUnanalyzedContacts(companyId) {
+  return getContactsForCompany(companyId).filter(function (c) { return !c.roleCode || !c.decisionLevel; });
+}
+
+// Decisores de una empresa, agrupados por código de rol: dos personas con el mismo
+// rol cuentan como un badge y el título los nombra a los dos. Nivel 1 primero.
+function getDecisionMakers(companyId) {
+  const out = [];
+  getContactsForCompany(companyId).forEach(function (c) {
+    if (!c.roleCode || !c.decisionLevel) return;
+    const existing = out.find(function (x) { return x.roleCode === c.roleCode; });
+    if (existing) existing.people.push(c);
+    else out.push({ roleCode: c.roleCode, label: roleCodeLabel(c.roleCode), level: c.decisionLevel, people: [c] });
+  });
+  return out.sort(function (a, b) { return a.level - b.level; });
+}
+
+/* ---- Vacantes detectadas y calificadas (FPEA-1) -------------------------- */
+// El listado convive con dos generaciones. Las que trajo el barrido por geografía
+// no tienen posición del catálogo ni término de búsqueda, y se muestran sin ellos.
+// Las que trae el barrido por posición llevan las dos cosas, más el veredicto de
+// viabilidad remota con su confianza y su razón, el salario anual en USD y los
+// idiomas que el aviso pide.
+// Nota de nombres: en la base `vacancies.source` es el portal; el prototipo conserva
+// `source` para el pipeline que la detectó y `sourcePortal` para el portal, porque es
+// lo que leen el detalle de vacante y el de empresa.
+(function seedLegacyClassification() {
+  const legacy = {
+    'vac-001': { conf: 0.91, reason: 'Fully remote posting; the work is software delivery that does not require presence.', langs: ['English'] },
+    'vac-002': { conf: 0.78, reason: 'Hybrid schedule stated, but the infrastructure work itself is remote-capable.', langs: ['English'] },
+    'vac-003': { conf: 0.86, reason: 'Remote posting; discovery and roadmap work done over calls and documents.', langs: ['English'] },
+    'vac-004': { conf: 0.74, reason: 'Hybrid, with modelling work that can be done off-site.', langs: ['English'] },
+    'vac-006': { conf: 0.93, reason: 'Remote posting; frontend development requires no presence.', langs: ['English'] },
+    'vac-007': { conf: 0.31, reason: 'Requires presence at the distribution centre for daily floor coordination.', langs: ['English'] },
+    'vac-008': { conf: 0.88, reason: 'Hybrid; test automation runs against systems reachable remotely.', langs: ['English'] },
+    'vac-009': { conf: 0.84, reason: 'Remote posting; research sessions run over video.', langs: ['English'] },
+    'vac-010': { conf: 0.72, reason: 'Hybrid; campaign work is executed in software.', langs: ['English'] },
+    'vac-od-001': { conf: 0.95, reason: 'Remote posting; inbound and outbound support handled by phone and CRM.', langs: ['English', 'Spanish'] },
+    'vac-od-002': { conf: 0.9, reason: 'Remote posting; B2B collections run over phone, email and the ERP.', langs: ['English', 'Spanish'] },
+    'vac-od-003': { conf: 0.4, reason: 'Already posted as remote, so there is no on-site work to convert.', langs: ['English'] }
+  };
+  // `salary` venía como texto con miles; el análisis persiste el anual en USD.
+  function parseK(text) {
+    if (!text) return [null, null];
+    const nums = String(text).match(/\d+/g);
+    if (!nums) return [null, null];
+    const v = nums.map(function (n) { return Number(n) * 1000; });
+    return [v[0] || null, v[1] || v[0] || null];
+  }
+  MOCK_VACANCIES.forEach(function (v) {
+    const row = legacy[v.id];
+    // Una vacante muy vieja puede no tener veredicto: el clasificador es posterior.
+    if (!row) return;
+    const s = parseK(v.salary);
+    v.salaryMinUsd = s[0];
+    v.salaryMaxUsd = s[1];
+    v.languages = row.langs;
+    v.aiConfidence = row.conf;
+    v.aiReasons = [row.reason];
+    v.positionId = row.pos || null;
+    v.searchText = row.term || null;
+  });
+})();
+
+// Lo que trae el barrido por posición: cada una asociada a su posición del catálogo
+// y al término que la encontró.
+MOCK_VACANCIES.push(
+  { id: 'vac-011', title: 'Accounts Payable Specialist', companyId: 'comp-001', positionId: 'pos-01', searchText: 'accounts payable specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'FL', location: 'Miami, FL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=aa17c3b90e2d5f41', remoteViable: true, aiConfidence: 0.92, aiReasons: ['Invoice processing and reconciliation run entirely in NetSuite; nothing requires presence.'], salaryMinUsd: 47840, salaryMaxUsd: 56160, languages: ['English'], seniorityLevel: 'mid', department: 'Finance', skills: 'NetSuite, Reconciliation, Excel', description: 'Process high-volume vendor invoices and run month-end reconciliation across a 12-entity structure.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-012', title: 'Help Desk Technician', companyId: 'comp-001', positionId: 'pos-11', searchText: 'help desk technician', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'FL', location: 'Miami, FL', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3907331200', remoteViable: true, aiConfidence: 0.87, aiReasons: ['Tier-1 ticket handling over Zendesk and remote sessions; on-site days are for asset handover only.'], salaryMinUsd: 45760, salaryMaxUsd: 54080, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'IT', skills: 'Zendesk, Active Directory, Remote support', description: 'First-line support for 700 internal users across US business hours, with escalation to platform teams.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-013', title: 'Medical Biller', companyId: 'comp-002', positionId: 'pos-17', searchText: 'medical biller', status: 'contacted', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'NY', location: 'New York, NY', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=c4e81b2079f3ad65', remoteViable: true, aiConfidence: 0.94, aiReasons: ['Claims submission and denial follow-up are performed in Epic; no patient contact is required.'], salaryMinUsd: 45760, salaryMaxUsd: 52000, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Operations', skills: 'ICD-10, CPT coding, Epic', description: 'Submit claims and work the denial queue for a 40-clinic network.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-014', title: 'Prior Authorization Specialist', companyId: 'comp-002', positionId: 'pos-17', searchText: 'prior authorization specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'NY', location: 'Brooklyn, NY', workModality: 'onsite', jobUrl: 'https://www.linkedin.com/jobs/view/3908124093', remoteViable: true, aiConfidence: 0.89, aiReasons: ['Authorization requests are submitted through payer portals and followed up by phone.'], salaryMinUsd: 49920, salaryMaxUsd: 58240, languages: ['English', 'Spanish'], seniorityLevel: 'mid', department: 'Operations', skills: 'Payer portals, Benefits verification, Epic', description: 'Obtain and track payer authorizations ahead of scheduled procedures.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-015', title: 'Staff Accountant', companyId: 'comp-003', positionId: 'pos-01', searchText: 'staff accountant', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'IL', location: 'Chicago, IL', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3908773311', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Close, reconciliations and audit support are performed in the accounting system.'], salaryMinUsd: 62400, salaryMaxUsd: 74880, languages: ['English'], seniorityLevel: 'mid', department: 'Finance', skills: 'GAAP, QuickBooks, Close process', description: 'Own the monthly close for two advisory entities and support the annual audit.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-016', title: 'Legal Intake Specialist', companyId: 'comp-003', positionId: 'pos-14', searchText: 'legal intake specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=d2f70a1c6b98e304', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Intake calls and case qualification are handled by phone and in the case management system.'], salaryMinUsd: 43680, salaryMaxUsd: 52000, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Legal', skills: 'Client intake, Clio, Bilingual', description: 'Take first calls from prospective clients, qualify the matter and open the file.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-017', title: 'Paralegal', companyId: 'comp-003', positionId: 'pos-14', searchText: 'paralegal', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'IL', location: 'Chicago, IL', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3911880254', remoteViable: true, aiConfidence: 0.85, aiReasons: ['Contract review and discovery support are document work; no bar licence is required.'], salaryMinUsd: 56160, salaryMaxUsd: 68640, languages: ['English'], seniorityLevel: 'mid', department: 'Legal', skills: 'Contract review, Discovery, Clio', description: 'Contract review and discovery support for the in-house legal team.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-018', title: 'Sales Development Representative', companyId: 'comp-004', positionId: 'pos-12', searchText: 'sales development representative', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'TX', location: 'Austin, TX', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3909441277', remoteViable: true, aiConfidence: 0.91, aiReasons: ['Outbound prospecting runs on phone, email and HubSpot; inside sales, not field sales.'], salaryMinUsd: 45760, salaryMaxUsd: 58240, languages: ['English'], seniorityLevel: 'entry', department: 'Sales', skills: 'Outbound, HubSpot, English C1', description: 'Outbound prospecting into mid-market data teams; base plus commission.', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-019', title: 'Recruiting Coordinator', companyId: 'comp-004', positionId: 'pos-09', searchText: 'recruiting coordinator', status: 'contacted', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'TX', location: 'Austin, TX', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=1b8407fd39c2ea60', remoteViable: true, aiConfidence: 0.88, aiReasons: ['Scheduling, candidate communication and ATS upkeep are all software and calls.'], salaryMinUsd: 47840, salaryMaxUsd: 56160, languages: ['English'], seniorityLevel: 'entry', department: 'HR', skills: 'Greenhouse, Scheduling, Candidate comms', description: 'Coordinate interview loops and keep the ATS current for a team hiring fast.', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-020', title: 'Logistics Coordinator', companyId: 'comp-005', positionId: 'pos-15', searchText: 'logistics coordinator', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'TX', location: 'Dallas, TX', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=6e3b9014f7ac2d58', remoteViable: true, aiConfidence: 0.81, aiReasons: ['Load planning and carrier communication are done in the TMS and by phone.'], salaryMinUsd: 47840, salaryMaxUsd: 58240, languages: ['English', 'Spanish'], seniorityLevel: 'mid', department: 'Operations', skills: 'TMS, Route planning, Carrier comms', description: 'Plan and track regional freight movements and keep carriers updated.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-021', title: 'Freight Billing Specialist', companyId: 'comp-005', positionId: 'pos-15', searchText: 'freight billing specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'TX', location: 'Dallas, TX', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3909887120', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Carrier invoice audit and rate disputes are handled in SAP and over email.'], salaryMinUsd: 49920, salaryMaxUsd: 60320, languages: ['English'], seniorityLevel: 'mid', department: 'Finance', skills: 'Freight audit, Excel, SAP', description: 'Audit carrier invoices and resolve rate discrepancies before settlement.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-022', title: 'Dispatcher', companyId: 'comp-005', positionId: 'pos-15', searchText: 'dispatcher', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'TX', location: 'Dallas, TX', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=3c9812aef07b4d55', remoteViable: false, aiConfidence: 0.86, aiReasons: ['Posting is for a fleet technician role at the terminal, not a remote dispatch desk.'], salaryMinUsd: 43680, salaryMaxUsd: 49920, languages: ['English'], seniorityLevel: 'entry', department: 'Operations', skills: 'Fleet, Dispatch, DOT', description: 'Terminal-based dispatch and yard coordination on a rotating shift.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-023', title: 'Data Entry Clerk', companyId: 'comp-006', positionId: 'pos-06', searchText: 'data entry clerk', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'WA', location: 'Seattle, WA', workModality: 'onsite', jobUrl: 'https://www.linkedin.com/jobs/view/3910114552', remoteViable: true, aiConfidence: 0.95, aiReasons: ['Record keying and validation happen entirely in the ERP.'], salaryMinUsd: 39520, salaryMaxUsd: 45760, languages: ['English'], seniorityLevel: 'entry', department: 'Operations', skills: 'Data entry, SAP, Excel', description: 'Key and validate production and inventory records into the ERP.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-024', title: 'Scheduling Coordinator', companyId: 'comp-006', positionId: 'pos-10', searchText: 'scheduling coordinator', status: 'proposal', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'WA', location: 'Seattle, WA', workModality: 'hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=52d0a7f1c9b38e64', remoteViable: true, aiConfidence: 0.92, aiReasons: ['Shift planning and confirmations are done by phone and in the scheduling system.'], salaryMinUsd: 45760, salaryMaxUsd: 54080, languages: ['English'], seniorityLevel: 'mid', department: 'Operations', skills: 'Scheduling, Workforce planning', description: 'Build and maintain the shared-services shift plan for three sites.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-025', title: 'Bilingual Customer Service Representative', companyId: 'comp-007', positionId: 'pos-04', searchText: 'bilingual customer service representative', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'MA', location: 'Boston, MA', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=90ce2a417b3f8d12', remoteViable: true, aiConfidence: 0.96, aiReasons: ['Family communication is by phone and email; Spanish is required, presence is not.'], salaryMinUsd: 41600, salaryMaxUsd: 49920, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Bilingual, CRM, Family communication', description: 'Answer enrolment and attendance questions from families in English and Spanish.', comercialId: null, comercialType: null, sdrId: null, sdrType: null },
+  { id: 'vac-026', title: 'Intake Specialist', companyId: 'comp-007', positionId: 'pos-04', searchText: 'intake specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'MA', location: 'Boston, MA', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3910556703', remoteViable: true, aiConfidence: 0.88, aiReasons: ['Application review and follow-up calls run through the enrolment CRM.'], salaryMinUsd: 43680, salaryMaxUsd: 52000, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Operations', skills: 'Enrollment, CRM, Bilingual', description: 'Process admission applications and follow up with families during the spring peak.', comercialId: null, comercialType: null, sdrId: null, sdrType: null },
+  { id: 'vac-027', title: 'Ecommerce Customer Support', companyId: 'comp-008', positionId: 'pos-07', searchText: 'ecommerce customer support', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'CA', location: 'Los Angeles, CA', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=4a72e05c1839bfd7', remoteViable: true, aiConfidence: 0.94, aiReasons: ['Order and returns inquiries are handled across chat, email and voice in Shopify.'], salaryMinUsd: 37440, salaryMaxUsd: 43680, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Omnichannel, Shopify, English C1', description: 'Handle order, shipping and returns inquiries across chat, email and voice.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' },
+  { id: 'vac-028', title: 'Order Processing Specialist', companyId: 'comp-008', positionId: 'pos-07', searchText: 'order processing specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'CA', location: 'Los Angeles, CA', workModality: 'onsite', jobUrl: 'https://www.linkedin.com/jobs/view/3910990418', remoteViable: true, aiConfidence: 0.91, aiReasons: ['Order entry and exception handling are performed in the OMS.'], salaryMinUsd: 39520, salaryMaxUsd: 47840, languages: ['English'], seniorityLevel: 'entry', department: 'Operations', skills: 'OMS, Order entry, Excel', description: 'Enter wholesale orders and resolve exceptions before fulfilment.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' },
+  { id: 'vac-029', title: 'Insurance Customer Service Representative', companyId: 'comp-009', positionId: 'pos-13', searchText: 'insurance customer service representative', status: 'contacted', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'CA', location: 'San Francisco, CA', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3911233806', remoteViable: true, aiConfidence: 0.87, aiReasons: ['Policy servicing calls and endorsements are handled in the agency management system.'], salaryMinUsd: 47840, salaryMaxUsd: 58240, languages: ['English', 'Spanish'], seniorityLevel: 'mid', department: 'Customer Service', skills: 'Policy servicing, AMS, Bilingual', description: 'Service commercial policies: endorsements, certificates and renewal follow-up.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-030', title: 'Bookkeeper', companyId: 'comp-011', positionId: 'pos-01', searchText: 'bookkeeper', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'FL', location: 'Tampa, FL', workModality: 'unknown', jobUrl: 'https://www.linkedin.com/jobs/view/3911604927', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Day-to-day books, AP/AR and payroll prep are done in QuickBooks Online.'], salaryMinUsd: 41600, salaryMaxUsd: 49920, languages: ['English'], seniorityLevel: 'entry', department: 'Finance', skills: 'QuickBooks, AP/AR, Payroll', description: 'Keep the books for a two-location services business; QuickBooks Online.', comercialId: null, comercialType: null, sdrId: null, sdrType: null },
+  { id: 'vac-031', title: 'Policy Processor', companyId: 'comp-012', positionId: 'pos-13', searchText: 'policy processor', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'GA', location: 'Atlanta, GA', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=77e1c09b4a2d5f38', remoteViable: true, aiConfidence: 0.89, aiReasons: ['Policy issuance and endorsements are system work with no client-facing presence.'], salaryMinUsd: 43680, salaryMaxUsd: 52000, languages: ['English'], seniorityLevel: 'unspecified', department: 'Operations', skills: 'Policy issuance, AMS, Data entry', description: 'Issue and endorse commercial policies for placed staff.', comercialId: null, comercialType: null, sdrId: null, sdrType: null },
+  { id: 'vac-032', title: 'Mortgage Loan Processor', companyId: 'comp-003', positionId: 'pos-18', searchText: 'mortgage loan processor', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=6b04f8d1739ca2e5', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Document collection, verification and underwriter coordination run in Encompass.'], salaryMinUsd: 52000, salaryMaxUsd: 64480, languages: ['English'], seniorityLevel: 'mid', department: 'Finance', skills: 'Encompass, Document review, Underwriting support', description: 'Collect and verify borrower documentation and prepare files for underwriting.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
+);
+
+/* ---- Señales del aviso (vacancies.ai_signals · HUPEA-1.4) ---------------- */
+// Las etiqueta el análisis leyendo la descripción. Se siembran solo donde el texto del aviso
+// las sostiene; una vacante sin señales es lo normal, no un dato faltante.
+const VACANCY_SIGNAL_SEED = {
+  'vac-011': ['back_office', 'competitive_pay'],
+  'vac-012': ['client_facing', 'shift_work'],
+  'vac-013': ['back_office', 'multiple_openings'],
+  'vac-014': ['back_office', 'multiple_openings', 'company_growing'],
+  'vac-015': ['back_office'],
+  'vac-016': ['client_facing', 'urgent_hire'],
+  'vac-017': ['back_office', 'supports_licensed_role'],
+  'vac-018': ['client_facing', 'competitive_pay', 'company_growing'],
+  'vac-019': ['urgent_hire', 'company_growing'],
+  'vac-020': ['client_facing'],
+  'vac-021': ['back_office'],
+  'vac-022': ['shift_work', 'state_restricted'],
+  'vac-023': ['back_office', 'multiple_openings'],
+  'vac-024': ['back_office'],
+  'vac-025': ['client_facing', 'multiple_openings'],
+  'vac-026': ['client_facing', 'urgent_hire'],
+  'vac-027': ['client_facing', 'shift_work', 'multiple_openings'],
+  'vac-028': ['back_office'],
+  'vac-029': ['client_facing', 'supports_licensed_role'],
+  'vac-030': ['back_office', 'us_work_authorization'],
+  'vac-031': ['back_office'],
+  'vac-032': ['back_office', 'supports_licensed_role'],
+  'vac-033': ['back_office', 'multiple_openings'],
+  'vac-034': ['back_office', 'multiple_openings'],
+  'vac-035': ['back_office', 'supports_licensed_role'],
+  'vac-036': ['back_office'],
+  'vac-037': ['back_office', 'company_growing'],
+  'vac-038': ['client_facing', 'multiple_openings'],
+  'vac-039': ['client_facing', 'no_visa_sponsorship']
+};
+
+// Se llama después de cada tanda de vacantes: el bloque de Companies agrega más abajo las que
+// sostienen las señales de empresa, y también tienen que quedar etiquetadas.
+function applyVacancySignals() {
+  MOCK_VACANCIES.forEach(function (v) {
+    if (v.aiSignals === undefined) v.aiSignals = VACANCY_SIGNAL_SEED[v.id] || [];
+  });
+}
+applyVacancySignals();
+
+/* ---- Cierre de la siembra ------------------------------------------------ */
+// Las funciones de siembra del listado anterior corrieron antes de que Release 3
+// agregara empresa, contactos y vacantes. Esto completa lo que les faltó y suma
+// la hora de detección, que la card necesita para leer la antigüedad en horas
+// mientras la vacante es del día.
+(function seedRelease3State() {
+  function hoursAgo(h) { return new Date(Date.now() - h * 3600000); }
+  function daysAgoStr(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+
+  // Detectadas hoy: la antigüedad se lee en horas.
+  const fresh = {
+    'vac-011': 3, 'vac-018': 5, 'vac-025': 8, 'vac-012': 11, 'vac-030': 14,
+    'vac-023': 16, 'vac-015': 19, 'vac-029': 22
+  };
+  // El resto de las que agregó Release 3, en días atrás [detección, publicación].
+  const offsets = {
+    'vac-013': [1, 2], 'vac-014': [1, 3], 'vac-016': [2, 3], 'vac-017': [2, 4],
+    'vac-019': [3, 4], 'vac-020': [3, 6], 'vac-021': [4, 5], 'vac-022': [5, 7],
+    'vac-024': [6, 8], 'vac-026': [7, 9], 'vac-027': [9, 11], 'vac-028': [11, 13],
+    'vac-031': [13, 15], 'vac-032': [16, 19]
+  };
+
+  MOCK_VACANCIES.forEach(function (v) {
+    if (fresh[v.id] !== undefined) {
+      const d = hoursAgo(fresh[v.id]);
+      v.detectedAtTs = d.toISOString();
+      v.detectedAt = d.toISOString().slice(0, 10);
+      v.publishedDate = daysAgoStr(1);
+    } else if (offsets[v.id]) {
+      v.detectedAt = daysAgoStr(offsets[v.id][0]);
+      v.publishedDate = daysAgoStr(offsets[v.id][1]);
+      v.detectedAtTs = v.detectedAt + 'T14:20:00.000Z';
+    } else {
+      v.detectedAtTs = v.detectedAt + 'T09:00:00.000Z';
+    }
+    // Lo que no pasó por el análisis nuevo queda sin veredicto, no en cero.
+    if (v.aiConfidence === undefined) v.aiConfidence = null;
+    if (v.aiReasons === undefined) v.aiReasons = null;
+    if (v.positionId === undefined) v.positionId = null;
+    if (v.searchText === undefined) v.searchText = null;
+    if (v.languages === undefined) v.languages = null;
+    if (v.salaryMinUsd === undefined) { v.salaryMinUsd = null; v.salaryMaxUsd = null; }
+    if (v.aiSignals === undefined) v.aiSignals = [];
+    // staff_vacancy_assignment.assigned_at — la fecha que muestra la sección de asignación.
+    if (!v.assignmentUpdatedAt && (v.comercialId || v.sdrId)) v.assignmentUpdatedAt = formatStamp(v.detectedAtTs || v.detectedAt);
+    // Sin marca de exportación: el registro no salió en ningún archivo todavía.
+    if (v.lastExportedBy === undefined) { v.lastExportedBy = null; v.lastExportedAt = null; v.exportCount = 0; }
+  });
+
+  MOCK_COMPANIES.forEach(function (c) {
+    if (c.lastExportedBy === undefined) { c.lastExportedBy = null; c.lastExportedAt = null; c.exportCount = 0; }
+    // staff_company_assignment.assigned_at
+    if (!c.assignmentUpdatedAt && (c.comercialId || c.sdrId)) c.assignmentUpdatedAt = formatStamp(c.createdAt + ' 10:00');
+  });
+
+  MOCK_CONTACTS.forEach(function (ct) {
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    if (!ct.createdAt) ct.createdAt = company ? company.createdAt : daysAgoStr(60);
+    if (ct.lastExportedBy === undefined) {
+      ct.lastExportedBy = company ? company.lastExportedBy : null;
+      ct.lastExportedAt = company ? company.lastExportedAt : null;
+      ct.exportCount = company ? company.exportCount : 0;
+    }
+  });
+
+  // El conteo de contactos se deriva de los contactos guardados, no se escribe a mano.
+  MOCK_COMPANIES.forEach(function (c) { c.contactsCount = getContactsForCompany(c.id).length; });
+})();
+
+// Antigüedad de la detección: horas mientras es del día, días la primera semana,
+// semanas hasta la quinta y meses después. Es la lectura que la card pone junto al título.
+// `agoPhrase` es la misma lectura en frase, para los detalles: "Detected just now" en vez
+// del "Detected now ago" que salía de concatenar la forma corta.
+function agoPhrase(prefix, value) {
+  const label = agoLabel(value);
+  if (!label) return '';
+  return label === 'now' ? prefix + ' just now' : prefix + ' ' + label + ' ago';
+}
+
+function detectedAge(vacancy) {
+  const ts = vacancy && (vacancy.detectedAtTs || vacancy.detectedAt);
+  if (!ts) return '';
+  const diffH = Math.max(0, Math.floor((Date.now() - parseStamp(ts).getTime()) / 3600000));
+  if (diffH < 1) return 'now';
+  if (diffH < 24) return diffH + 'h';
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return diffD + 'd';
+  const diffW = Math.floor(diffD / 7);
+  if (diffW < 5) return diffW + 'w';
+  return Math.floor(diffD / 30) + 'mo';
+}
+
+/* ============================================================================
+   RELEASE 3 — Companies
+   Lo que el listado de empresas necesita y no existía como pieza compartida.
+   ============================================================================ */
+
+// === ETAPAS DEL EMBUDO ===
+const PIPELINE_STAGES = [
+  { code: 'lead', label: 'Lead' },
+  { code: 'prospecting', label: 'Prospecting' },
+  { code: 'engaged', label: 'Engaged' },
+  { code: 'initial appointment held', label: 'Initial appointment held' },
+  { code: 'onboarding started', label: 'Onboarding started' },
+  { code: 'client', label: 'Client' },
+  { code: 'lost', label: 'Lost' }
+];
+
+function pipelineLabel(stage) {
+  const s = PIPELINE_STAGES.find(function (x) { return x.code === stage; });
+  return s ? s.label : (stage || '');
+}
+
+// Etiquetas de company.relationship_type. Los códigos son los de la base: client | prospect | inactive.
+const RELATIONSHIP_LABELS = { client: 'Client', prospect: 'Prospect', inactive: 'Inactive' };
+
+// === POSICIONES DE UNA EMPRESA ===
+// El listado cuenta lo detectado y, aparte, lo que el análisis dio por viable en remoto:
+// son dos números distintos y el segundo es el accionable.
+function companyVacancies(companyId) {
+  return MOCK_VACANCIES.filter(function (v) { return v.companyId === companyId; });
+}
+
+function companyOpenPositions(companyId) {
+  const all = companyVacancies(companyId);
+  return { total: all.length, viable: all.filter(function (v) { return v.remoteViable === true; }).length };
+}
+
+// === NOMBRE CORTO DE UNA PERSONA ===
+// "Dr. Robert Kim" → "Robert K.". Los tratamientos no aportan al escaneo y se descartan;
+// un nombre de una sola palabra se muestra tal cual.
+const HONORIFICS = ['dr.', 'dr', 'mr.', 'mr', 'ms.', 'ms', 'mrs.', 'mrs', 'prof.', 'prof'];
+
+// El nombre completo sin el tratamiento: "Dr. Robert Kim" → "Robert Kim".
+function personName(fullName) {
+  return String(fullName || '').trim().split(/\s+/)
+    .filter(function (p, i) { return !(i === 0 && HONORIFICS.indexOf(p.toLowerCase()) !== -1); })
+    .join(' ');
+}
+
+// === ANTIGÜEDAD LEGIBLE ===
+// Misma lectura que usa la card de Open Positions, sobre cualquier fecha.
+function agoLabel(value) {
+  if (!value) return '';
+  const t = parseStamp(value).getTime();
+  if (!isFinite(t)) return '';
+  const diffH = Math.max(0, Math.floor((Date.now() - t) / 3600000));
+  if (diffH < 1) return 'now';
+  if (diffH < 24) return diffH + 'h';
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return diffD + 'd';
+  const diffW = Math.floor(diffD / 7);
+  if (diffW < 5) return diffW + 'w';
+  return Math.floor(diffD / 30) + 'mo';
+}
+
+// Días transcurridos, para los criterios que se expresan en días.
+function daysSince(value) {
+  if (!value) return null;
+  const t = parseStamp(value).getTime();
+  return isFinite(t) ? Math.floor((Date.now() - t) / 86400000) : null;
+}
+
+// === VOLUMEN REAL DE LAS EMPRESAS QUE REPITEN AVISO ===
+// FinServe y GlobalHealth llevan las señales `repeated_posting` y `multiple_openings`,
+// que la calificación define sobre hechos contables: dos o más vacantes con la misma
+// posición del catálogo. Con tres avisos cada una la señal no se sostenía; estas las
+// llevan al volumen que su propio resumen de lead describe.
+MOCK_VACANCIES.push(
+  { id: 'vac-033', title: 'Accounting Clerk', companyId: 'comp-003', positionId: 'pos-01', searchText: 'accounting clerk', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=2ae70b19cf4d3806', remoteViable: true, aiConfidence: 0.94, aiReasons: ['Invoice coding and ledger entry are done in the accounting system.'], salaryMinUsd: 41600, salaryMaxUsd: 49920, languages: ['English'], seniorityLevel: 'entry', department: 'Finance', skills: 'QuickBooks, Data entry, Excel', description: 'Code invoices and maintain the general ledger for two advisory entities.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-034', title: 'Accounts Receivable Specialist', companyId: 'comp-003', positionId: 'pos-01', searchText: 'accounts receivable specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'IL', location: 'Chicago, IL', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3912117640', remoteViable: true, aiConfidence: 0.92, aiReasons: ['Collections and cash application run in the ERP and over email.'], salaryMinUsd: 45760, salaryMaxUsd: 54080, languages: ['English'], seniorityLevel: 'entry', department: 'Finance', skills: 'AR, Cash application, NetSuite', description: 'Apply payments, chase overdue balances and reconcile the AR ledger.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-035', title: 'Legal Assistant', companyId: 'comp-003', positionId: 'pos-14', searchText: 'legal assistant', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'IL', location: 'Chicago, IL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=8d41f0c2b9736ae5', remoteViable: true, aiConfidence: 0.88, aiReasons: ['Document preparation and calendaring are performed in the case system.'], salaryMinUsd: 43680, salaryMaxUsd: 52000, languages: ['English'], seniorityLevel: 'entry', department: 'Legal', skills: 'Document prep, Calendaring, Clio', description: 'Prepare filings and manage the matter calendar for the in-house team.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-036', title: 'Medical Coder', companyId: 'comp-002', positionId: 'pos-17', searchText: 'medical coder', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'NY', location: 'New York, NY', workModality: 'onsite', jobUrl: 'https://www.linkedin.com/jobs/view/3912443071', remoteViable: true, aiConfidence: 0.95, aiReasons: ['Chart coding is performed against the record; no patient contact.'], salaryMinUsd: 49920, salaryMaxUsd: 58240, languages: ['English'], seniorityLevel: 'mid', department: 'Operations', skills: 'ICD-10, CPT, Chart review', description: 'Code outpatient encounters and resolve coding queries from billing.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-037', title: 'Revenue Cycle Specialist', companyId: 'comp-002', positionId: 'pos-17', searchText: 'revenue cycle specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'NY', location: 'New York, NY', workModality: 'hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=5f92c0e7134ab68d', remoteViable: true, aiConfidence: 0.91, aiReasons: ['Denial analysis and payer follow-up run through the billing platform.'], salaryMinUsd: 54080, salaryMaxUsd: 64480, languages: ['English', 'Spanish'], seniorityLevel: 'mid', department: 'Operations', skills: 'RCM, Denials, Payer relations', description: 'Own denial trends and payer follow-up across the clinic network.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-038', title: 'Scheduling Coordinator', companyId: 'comp-002', positionId: 'pos-10', searchText: 'scheduling coordinator', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: 'NY', location: 'Queens, NY', workModality: 'onsite', jobUrl: 'https://www.linkedin.com/jobs/view/3912770185', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Appointment booking and confirmations are phone and system work.'], salaryMinUsd: 43680, salaryMaxUsd: 52000, languages: ['English', 'Spanish'], seniorityLevel: 'entry', department: 'Operations', skills: 'Scheduling, Epic, Bilingual', description: 'Book and confirm patient appointments across four clinic sites.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' }
+);
+
+// Las que agrega este bloque entran con la misma siembra que las anteriores.
+// TechCorp lleva `repeated_posting` entre sus señales, y ese hecho la calificación lo
+// calcula contando vacantes con la misma posición del catálogo. Sin un segundo aviso de
+// IT Support la señal no se sostenía.
+MOCK_VACANCIES.push(
+  { id: 'vac-039', title: 'IT Support Specialist', companyId: 'comp-001', positionId: 'pos-11', searchText: 'it support specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'FL', location: 'Miami, FL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=c20f84a17be3d95', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Ticket triage and remote sessions cover the work; on-site time is for hardware handover only.'], salaryMinUsd: 49920, salaryMaxUsd: 58240, languages: ['English'], seniorityLevel: 'mid', department: 'IT', skills: 'Zendesk, Intune, Windows, Networking', description: 'Second-line support for internal users, owning escalations from the help desk.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
+);
+
+(function seedRelease3Extra() {
+  function daysAgoStr(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+  const offsets = { 'vac-033': [2, 4], 'vac-034': [4, 6], 'vac-035': [8, 10], 'vac-036': [1, 2], 'vac-037': [5, 7], 'vac-038': [10, 12], 'vac-039': [3, 5] };
+  MOCK_VACANCIES.forEach(function (v) {
+    if (!offsets[v.id]) return;
+    v.detectedAt = daysAgoStr(offsets[v.id][0]);
+    v.publishedDate = daysAgoStr(offsets[v.id][1]);
+    v.detectedAtTs = v.detectedAt + 'T11:40:00.000Z';
+    v.lastExportedBy = null; v.lastExportedAt = null; v.exportCount = 0;
+    if (!v.assignmentUpdatedAt && (v.comercialId || v.sdrId)) v.assignmentUpdatedAt = formatStamp(v.detectedAtTs);
+  });
+  applyVacancySignals();
+  // El conteo de contactos y la marca de principal se rehacen con el universo completo.
+  MOCK_COMPANIES.forEach(function (c) { c.contactsCount = getContactsForCompany(c.id).length; });
+})();
+
+// === SELECTOR DE LA BARRA DE BÚSQUEDA (Release 3) ===
+// Desplegable de selección múltiple que acompaña al campo de búsqueda. Aplica al
+// instante: no espera al botón de buscar, que es solo del campo de texto. El valor
+// vive en el estado de la página; el selector solo lo refleja.
+// `search: false` lo deja sin buscador interno, para listas cortas.
+function renderShellPicker(containerId, options) {
+  const opts = options || {};
+  const items = opts.items || [];
+  const withSearch = opts.search !== false;
+  const container = document.getElementById(containerId);
+  if (!container) return null;
+  let value = (opts.value || []).slice();
+
+  container.innerHTML =
+    '<div class="op-states" id="' + containerId + '-wrap">' +
+      '<button type="button" class="op-states-toggle" id="' + containerId + '-toggle" aria-expanded="false" aria-haspopup="true">' +
+        (opts.icon || '') +
+        '<span class="op-states-value" id="' + containerId + '-value"></span>' +
+        '<svg class="op-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>' +
+      '</button>' +
+      '<div class="op-states-panel" id="' + containerId + '-panel" role="dialog" aria-label="' + (opts.allLabel || 'Filter') + '">' +
+        (withSearch ? '<input type="text" class="op-states-search" id="' + containerId + '-search" autocomplete="off" placeholder="' + (opts.searchPlaceholder || 'Search') + '">' : '') +
+        '<div class="op-states-list" id="' + containerId + '-list"></div>' +
+        '<div class="op-states-foot">' +
+          '<button type="button" class="op-btn-text" id="' + containerId + '-clear">Clear</button>' +
+          '<button type="button" class="op-btn-text" id="' + containerId + '-done">Done</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const wrap = document.getElementById(containerId + '-wrap');
+  const toggle = document.getElementById(containerId + '-toggle');
+  const valueEl = document.getElementById(containerId + '-value');
+  const search = withSearch ? document.getElementById(containerId + '-search') : null;
+  const list = document.getElementById(containerId + '-list');
+
+  function label() {
+    if (!value.length) { valueEl.textContent = opts.allLabel || 'All'; return; }
+    if (value.length === 1) {
+      const hit = items.find(function (i) { return i.value === value[0]; });
+      valueEl.textContent = hit ? hit.label : value[0];
+      return;
+    }
+    valueEl.textContent = value.length + ' ' + (opts.plural || 'selected');
+  }
+
+  function emit() { if (opts.onChange) opts.onChange(value.slice()); }
+
+  function paint() {
+    const q = search ? (search.value || '').toLowerCase() : '';
+    const shown = items.filter(function (i) {
+      return !q || i.label.toLowerCase().indexOf(q) !== -1 || String(i.note || '').toLowerCase().indexOf(q) !== -1;
+    });
+    list.innerHTML = shown.length
+      ? shown.map(function (i) {
+          return '<label><input type="checkbox" value="' + i.value + '"' +
+            (value.indexOf(i.value) !== -1 ? ' checked' : '') + '>' +
+            '<span>' + i.label + '</span>' +
+            (i.note ? '<span class="op-state-code">' + i.note + '</span>' : '') + '</label>';
+        }).join('')
+      : '<div class="op-hint" style="padding:8px 10px;">Nothing matches that.</div>';
+
+    list.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+      cb.onchange = function () {
+        if (cb.checked) value.push(cb.value);
+        else value = value.filter(function (v) { return v !== cb.value; });
+        label();
+        emit();
+      };
+    });
+    label();
+  }
+
+  toggle.onclick = function (e) {
+    e.stopPropagation();
+    const open = wrap.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) { paint(); if (search) search.focus(); }
+  };
+  if (search) search.oninput = paint;
+  document.getElementById(containerId + '-clear').onclick = function () { value = []; paint(); emit(); };
+  document.getElementById(containerId + '-done').onclick = function () { wrap.classList.remove('open'); };
+  document.addEventListener('click', function (e) { if (!container.contains(e.target)) wrap.classList.remove('open'); });
+
+  label();
+
+  return {
+    getValue: function () { return value.slice(); },
+    setValue: function (v) { value = (v || []).slice(); if (wrap.classList.contains('open')) paint(); else label(); },
+    close: function () { wrap.classList.remove('open'); }
+  };
+}
+
+// === BUSCADOR DE UN SOLO VALOR PARA LA BARRA ===
+// No despliega nada hasta que se escribe, sugiere las coincidencias y deja elegir una.
+// La × la suelta. Aplica al instante, como el resto de los filtros de la barra.
+function renderShellSearchbox(containerId, options) {
+  const opts = options || {};
+  const items = opts.items || [];
+  const limit = opts.limit || 8;
+  const container = document.getElementById(containerId);
+  if (!container) return null;
+  let value = (opts.value || []).slice(0, 1);
+
+  container.innerHTML =
+    '<div class="op-sbox" id="' + containerId + '-wrap">' +
+      (opts.icon || '') +
+      '<input type="text" class="op-sbox-input" id="' + containerId + '-input" autocomplete="off" placeholder="' + (opts.placeholder || 'Search') + '">' +
+      '<button type="button" class="op-sbox-x" id="' + containerId + '-x" aria-label="Clear" hidden>' +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>' +
+      '</button>' +
+      '<div class="op-sbox-suggest" id="' + containerId + '-suggest"></div>' +
+    '</div>';
+
+  const wrap = document.getElementById(containerId + '-wrap');
+  const input = document.getElementById(containerId + '-input');
+  const clearBtn = document.getElementById(containerId + '-x');
+  const suggest = document.getElementById(containerId + '-suggest');
+
+  function selected() { return value.length ? items.find(function (i) { return i.value === value[0]; }) : null; }
+
+  function reflect() {
+    const hit = selected();
+    input.value = hit ? hit.label : '';
+    clearBtn.hidden = !hit;
+    suggest.innerHTML = '';
+    suggest.classList.remove('open');
+  }
+
+  function emit() { if (opts.onChange) opts.onChange(value.slice()); }
+
+  function paint() {
+    const q = (input.value || '').trim().toLowerCase();
+    const hit = selected();
+    // Con algo elegido y el texto sin tocar, no hay nada que sugerir.
+    if (!q || (hit && input.value === hit.label)) { suggest.innerHTML = ''; suggest.classList.remove('open'); return; }
+    const shown = items.filter(function (i) {
+      return i.label.toLowerCase().indexOf(q) !== -1 || String(i.note || '').toLowerCase().indexOf(q) !== -1;
+    }).slice(0, limit);
+    suggest.innerHTML = shown.length
+      ? shown.map(function (i) {
+          return '<button type="button" class="op-pickitem" data-pick="' + i.value + '">' +
+            '<span class="op-pickitem-label">' + i.label + '</span>' +
+            (i.note ? '<span class="op-option-note">' + i.note + '</span>' : '') + '</button>';
+        }).join('')
+      : '<div class="op-hint" style="padding:10px 12px;">Nothing matches that.</div>';
+    suggest.classList.add('open');
+    suggest.querySelectorAll('[data-pick]').forEach(function (b) {
+      b.onclick = function () { value = [b.dataset.pick]; reflect(); emit(); };
+    });
+  }
+
+  input.oninput = paint;
+  input.onfocus = paint;
+  clearBtn.onclick = function () { value = []; reflect(); input.focus(); emit(); };
+  document.addEventListener('click', function (e) {
+    if (!container.contains(e.target)) { suggest.classList.remove('open'); reflect(); }
+  });
+
+  reflect();
+
+  return {
+    getValue: function () { return value.slice(); },
+    setValue: function (v) { value = (v || []).slice(0, 1); reflect(); },
+    close: function () { suggest.classList.remove('open'); }
+  };
+}
+
+// Íconos de los selectores de la barra.
+const SHELL_ICONS = {
+  company: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
+  position: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+  location: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>'
+};
+
+// Cuántos decisores tiene guardados la empresa. Cuenta personas, no roles: dos
+// contactos con el mismo cargo son dos puertas de entrada distintas.
+function countDecisionMakers(companyId) {
+  return getContactsForCompany(companyId).filter(function (c) { return c.roleCode && c.decisionLevel; }).length;
+}
+
+/* ============================================================================
+   HISTORIAL DE ESTADOS (public.states_history)
+   La traza real de la actividad: cada cambio de estado de una vacante o de una
+   empresa, con quién lo hizo, desde y hacia qué estado, su nota y sus etiquetas.
+   La alimentan los triggers de detección y, después, cada cambio desde la
+   plataforma. Es lo que lee el tab de seguimiento.
+   ============================================================================ */
+const MOCK_STATE_HISTORY = [];
+
+const STATE_NOTES = {
+  contacted: [
+    'First email sent to the CEO with the two openings we can cover.',
+    'Reached the VP of Sales by phone; asked us to send a one-pager.',
+    'Sequence started. Opened the email twice, no reply yet.'
+  ],
+  proposal: [
+    'Proposal sent for two bilingual support seats, 90-day ramp.',
+    'Sent pricing for three back-office seats after the discovery call.'
+  ],
+  won: [
+    'Signed for two seats starting next month. Handing over to onboarding.'
+  ],
+  lost: [
+    'Filled the role internally before we could present candidates.',
+    'Budget frozen until the next fiscal year; revisit in Q1.'
+  ]
+};
+
+(function seedStateHistory() {
+  let seq = 0;
+  function push(entry) {
+    MOCK_STATE_HISTORY.push(Object.assign({ id: 'sh-' + (++seq).toString().padStart(3, '0'), tags: [] }, entry));
+  }
+  function pick(list, n) { return list[n % list.length]; }
+  // Suma días conservando la hora del origen; una fecha sin hora toma la que se indique.
+  function daysAfter(iso, n, fallbackTime) {
+    const base = String(iso).length <= 10 ? iso + ' ' + (fallbackTime || '09:00') : iso;
+    return formatStamp(new Date(parseStamp(base).getTime() + n * 86400000));
+  }
+
+  // Detección: la escribe el trigger, no una persona.
+  MOCK_COMPANIES.forEach(function (c, i) {
+    push({
+      companyId: c.id, vacancyId: null, changedBy: 'system',
+      statusFrom: null, statusTo: 'lead',
+      note: 'Company registered in system.', tags: ['#new-lead'],
+      createdAt: c.createdAt + ' 06:14'
+    });
+    // La investigación es lo que mueve la empresa a `prospecting`, y solo desde `lead`.
+    // La calificación no registra: su resultado vive en los campos de la empresa.
+    if (c.researchedAt) {
+      push({
+        companyId: c.id, vacancyId: null, changedBy: 'system',
+        statusFrom: 'lead', statusTo: 'prospecting',
+        note: 'Company researched and enriched.',
+        tags: ['#research'],
+        createdAt: c.researchedAt + ' 07:12'
+      });
+    }
+    // Lo que movió una persona después, hasta la etapa en que está hoy.
+    const path = ['lead', 'prospecting', 'engaged', 'initial appointment held', 'onboarding started', 'client'];
+    const target = path.indexOf(c.pipelineStage);
+    if (target > 1 && c.lastContactedAt) {
+      const owner = getMemberById(c.comercialId) || getMemberById(c.sdrId);
+      const moves = target - 1;
+      const spanDays = Math.max(1, daysSince(c.lastContactedAt));
+      for (let step = 2; step <= target; step++) {
+        push({
+          companyId: c.id, vacancyId: null,
+          // El paso a `engaged` lo hace el envío, no una persona.
+          changedBy: step === 2 ? 'system' : (owner ? owner.name : 'system'),
+          statusFrom: path[step - 1], statusTo: path[step],
+          note: step === 2
+            ? 'Cold outreach email sent.'
+            : 'Moved forward after the call with the decision maker.',
+          tags: step === 2 ? ['#outreach'] : [],
+          // Repartidos entre el primer contacto y hoy, nunca después de hoy.
+          createdAt: daysAfter(c.lastContactedAt, Math.floor(spanDays * (step - 2) / moves))
+        });
+      }
+    }
+    if (c.pipelineStage === 'lost') {
+      push({
+        companyId: c.id, vacancyId: null, changedBy: (getMemberById(c.comercialId) || {}).name || 'system',
+        statusFrom: 'engaged', statusTo: 'lost', note: pick(STATE_NOTES.lost, i),
+        createdAt: daysAfter(c.lastContactedAt || c.createdAt, 12, '10:00')
+      });
+    }
+  });
+
+  // Vacantes: la detección y, si avanzó, cada movimiento con su nota.
+  MOCK_VACANCIES.forEach(function (v, i) {
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === v.companyId; });
+    push({
+      vacancyId: v.id, companyId: v.companyId, changedBy: 'system',
+      statusFrom: null, statusTo: 'detected',
+      note: 'Vacancy detected automatically.', tags: ['#auto'],
+      createdAt: formatStamp(v.detectedAtTs || v.detectedAt + 'T09:00')
+    });
+
+    const owner = getMemberById(v.comercialId) || getMemberById(v.sdrId);
+    const chain = { contacted: ['contacted'], proposal: ['contacted', 'proposal'], won: ['contacted', 'proposal', 'won'], lost: ['contacted', 'lost'] };
+    const steps = chain[v.status];
+    if (!steps) return;
+    let prev = 'detected';
+    // Repartidos entre la detección y hoy: con saltos fijos, una vacante detectada
+    // esta semana terminaba con movimientos fechados en el futuro.
+    const span = Math.max(1, daysSince(v.detectedAt));
+    steps.forEach(function (to, n) {
+      push({
+        vacancyId: v.id, companyId: v.companyId,
+        changedBy: owner ? owner.name : 'system',
+        statusFrom: prev, statusTo: to,
+        note: pick(STATE_NOTES[to] || ['Status updated.'], i + n),
+        tags: to === 'contacted' ? ['#email'] : [],
+        createdAt: daysAfter(v.detectedAt, Math.floor(span * (n + 1) / (steps.length + 1)), '11:20')
+      });
+      prev = to;
+    });
+  });
+
+  MOCK_STATE_HISTORY.sort(function (a, b) { return parseStamp(b.createdAt) - parseStamp(a.createdAt); });
+})();
+
+function getVacancyHistory(vacancyId) {
+  return MOCK_STATE_HISTORY.filter(function (h) { return h.vacancyId === vacancyId; });
+}
+
+function getCompanyHistory(companyId) {
+  return MOCK_STATE_HISTORY.filter(function (h) { return h.companyId === companyId && !h.vacancyId; });
+}
+
+// Un cambio nuevo entra al frente: el historial se lee de lo más reciente a lo más viejo.
+function addStateHistory(entry) {
+  const row = Object.assign({
+    id: 'sh-' + (MOCK_STATE_HISTORY.length + 1),
+    tags: [],
+    createdAt: formatStamp(new Date())
+  }, entry);
+  MOCK_STATE_HISTORY.unshift(row);
+  return row;
+}
+
+/* ============================================================================
+   TRAZA DE EJECUCIÓN (public.execution_logs)
+   Cada paso de los flujos deja acá su registro, con el flujo y el nodo que lo
+   emitió, su mensaje y el consumo que causó. Para una vacante son los cuatro
+   pasos que la trajeron: el encolado desde el barrido, la consulta del detalle,
+   la clasificación y la persistencia. Es lo que el seguimiento muestra antes de
+   que una persona la toque.
+   ============================================================================ */
+const MOCK_EXECUTION_LOGS = [];
+
+(function seedExecutionLogs() {
+  let seq = 0;
+  function push(row) {
+    MOCK_EXECUTION_LOGS.push(Object.assign({ id: 'ex-' + (++seq).toString().padStart(3, '0'), logLevel: 'info' }, row));
+  }
+  function minutesBefore(iso, n) {
+    return formatStamp(new Date(parseStamp(iso).getTime() - n * 60000));
+  }
+
+  MOCK_VACANCIES.forEach(function (v, i) {
+    const at = formatStamp(v.detectedAtTs || v.detectedAt + 'T09:00');
+    const portal = v.sourcePortal;
+    const execId = 'exec-' + v.id;
+    const city = String(v.location || '').split(',')[0];
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === v.companyId; });
+
+    // 1. El lanzador encola el aviso. El costo de la consulta es de la consulta, que
+    //    devuelve muchos avisos, así que no se le carga a ninguno en particular.
+    push({
+      executionId: execId, vacancyId: v.id, step: 'queue',
+      workflowName: portal === 'LinkedIn' ? '01_SWEEP_LINKEDIN' : '01_SWEEP_INDEED',
+      nodeName: 'Enqueue vacancy',
+      message: v.searchText
+        ? 'Queued from the ' + portal + ' sweep of ' + city + ', ' + v.stateCode + ', searching “' + v.searchText + '”.'
+        : 'Queued from the ' + portal + ' sweep of ' + city + ', ' + v.stateCode + '.',
+      createdAt: minutesBefore(at, 7)
+    });
+
+    // 2. El detalle del aviso, que sí cuesta una consulta a la fuente.
+    push({
+      executionId: execId, vacancyId: v.id, step: 'detail',
+      workflowName: '02_VACANCY_WORKER', nodeName: 'Fetch job detail',
+      message: 'Fetched the posting detail from ' + portal + '.' +
+        (v.description ? '' : ' The source did not expose a description.'),
+      usageType: 'requests', usageAmount: 1, usageUnit: 'count',
+      createdAt: minutesBefore(at, 5)
+    });
+
+    // 3. La clasificación. Las vacantes anteriores al clasificador no la tienen.
+    if (v.aiConfidence !== null && v.aiConfidence !== undefined) {
+      push({
+        executionId: execId, vacancyId: v.id, step: 'classify',
+        workflowName: '02_VACANCY_WORKER', nodeName: 'Classify remote viability',
+        message: 'Classified ' + (v.remoteViable ? 'remote viable' : 'not remote viable') +
+          ' with ' + Math.round(v.aiConfidence * 100) + '% confidence.',
+        usageType: 'tokens', usageAmount: 1680 + (i * 137) % 2600, usageUnit: 'count',
+        createdAt: minutesBefore(at, 3)
+      });
+    }
+
+    // 4. La persistencia, que además resuelve o crea la empresa.
+    push({
+      executionId: execId, vacancyId: v.id, step: 'persist',
+      workflowName: '02_VACANCY_WORKER', nodeName: 'Persist vacancy',
+      message: 'Saved to the platform and matched to ' + (company ? company.name : 'its company') +
+        ' by its ' + portal + ' company id.',
+      createdAt: at
+    });
+  });
+
+  MOCK_EXECUTION_LOGS.sort(function (a, b) { return parseStamp(b.createdAt) - parseStamp(a.createdAt); });
+})();
+
+function getVacancyExecutionLogs(vacancyId) {
+  return MOCK_EXECUTION_LOGS.filter(function (l) { return l.vacancyId === vacancyId; });
+}
+
+// === ACTIVIDAD DE UN REGISTRO ===
+// El seguimiento es el recorrido por el embudo: los cambios de estado de `states_history`,
+// de lo más reciente a lo más viejo. Cada entrada declara su `kind` por si más adelante
+// convive con otra cosa.
+// Los pasos de los flujos (`public.execution_logs`) quedan sembrados y consultables con
+// getVacancyExecutionLogs / getCompanyExecutionLogs, pero no se muestran acá: van a tener
+// su propia página de consulta y filtrado del registro de ejecución.
+function stageEntries(history) {
+  return history.map(function (h) {
+    return {
+      kind: 'stage', at: h.createdAt, by: h.changedBy,
+      statusFrom: h.statusFrom, statusTo: h.statusTo,
+      note: h.note, tags: h.tags
+    };
+  });
+}
+
+function byNewest(a, b) { return parseStamp(b.at) - parseStamp(a.at); }
+
+function getVacancyActivity(vacancyId) {
+  return stageEntries(getVacancyHistory(vacancyId)).sort(byNewest);
+}
+
+/* ============================================================================
+   ENRIQUECIMIENTO DE LA EMPRESA (HUPEA-1.6)
+   Lo que el flujo consolida de Apollo, del sitio web y del modelo: firmografía en
+   `public.company` y la investigación en `public.company_research`. Una empresa que
+   ninguna fuente devolvió queda con `is_researched = true` y sin campos.
+   La tabla admite además `mission`, `vision` y `company_history`, que el motor nuevo
+   no escribe: los dejaba el pipeline anterior de Company Decision Maker.
+   ============================================================================ */
+(function seedCompanyResearch() {
+  const research = {
+    'comp-001': { revenue: 140000000, founded: 2009, apollo: '5f2a91b0c4e7',
+      value: 'Builds and operates order-management software for mid-market distributors in the US, sold as a subscription with implementation and ongoing support included.',
+      strengths: 'Owns the full stack, from the platform to the support desk. Long client tenure and a published uptime record. Runs its own tier-1 support instead of outsourcing it, which is the cost it is now trying to bring down.' },
+    'comp-002': { revenue: 310000000, founded: 1998, apollo: '7c04e2f19a3d',
+      value: 'Operates a network of 40 outpatient clinics across New York City, billing commercial insurers and Medicaid, with primary care and specialty services under one administrative structure.',
+      strengths: 'Density in the boroughs and contracts with every major regional payer. Largely Spanish-speaking patient base served by bilingual front-desk and billing staff.' },
+    'comp-003': { revenue: 62000000, founded: 2011, apollo: '3b8de5710c92',
+      value: 'Advisory firm for mid-market companies in the Midwest, covering financial planning, transaction support and outsourced controller services.',
+      strengths: 'Founder-led with a partner model that keeps senior people on accounts. Grew by adding services rather than headcount, which is why the back office is the bottleneck.' },
+    'comp-004': { revenue: 11000000, founded: 2021, apollo: '9a17c3e0d5b4',
+      value: 'Analytics platform that ingests operational data from mid-market manufacturers and returns scheduled reporting and anomaly alerts.',
+      strengths: 'Series A funded, 85 people, no internal recruiting function. Engineering-heavy team that hires commercial and coordination roles through agencies.' },
+    'comp-005': { revenue: 88000000, founded: 1994, apollo: '2e6b04a9f18c',
+      value: 'Regional less-than-truckload carrier covering Texas and the surrounding states, with its own fleet and three terminals.',
+      strengths: 'Owns its equipment and terminals, which keeps service predictable on regional lanes. Dispatch and billing are handled in-house on a legacy TMS.' },
+    'comp-006': { revenue: 420000000, founded: 1977, apollo: '8d31f7c20b45',
+      value: 'Designs and manufactures industrial automation equipment for food processing and packaging lines, with installation and maintenance contracts.',
+      strengths: 'Fifty years of installed base and a service contract attached to most of it. Over 2,000 employees with an established HR function, so hiring is centralised.' },
+    'comp-007': { revenue: 39000000, founded: 2006, apollo: '4f90a2c8e731',
+      value: 'Charter school network of 14 campuses in the Boston area, publicly funded and enrolling by lottery, with blended in-person and online instruction.',
+      strengths: 'Waitlisted enrolment and a largely Spanish-speaking family base. Administrative load concentrates in the spring admissions window rather than spreading across the year.' },
+    'comp-008': { revenue: 1200000000, founded: 1985, apollo: '6a25c93f08de',
+      value: 'National apparel and home goods retailer with 340 stores and an e-commerce channel, selling own-label and third-party brands.',
+      strengths: 'Scale and a store footprint that supports buy-online-pick-up-in-store. Customer care is already split between an internal team and two BPO contracts.' },
+    'comp-009': { revenue: 26000000, founded: 2017, apollo: '1c74b08e5d2a',
+      value: 'B2B software for insurance brokers that automates policy servicing and renewal workflows, sold per seat to agencies in the US.',
+      strengths: 'Growing account base with no offshore presence yet. Routes tier-1 tickets through automation and escalates exceptions to people, which is the work it is looking to cover.' },
+    'comp-010': { revenue: 190000000, founded: 1989, apollo: '0b53e1a7c964',
+      value: 'Contract pharmaceutical laboratory running formulation, stability testing and small-batch manufacturing for branded and generic clients.',
+      strengths: 'FDA-registered facilities and a regulatory affairs team in-house. Most roles are lab- or site-bound, which limits what can be covered remotely.' },
+    'comp-011': null,
+    'comp-012': { revenue: 24000000, founded: 2013, apollo: 'd47f1c90a3b6',
+      value: 'Regional staffing agency placing administrative, clerical and light industrial workers on temporary and temp-to-hire contracts across the Southeast.',
+      strengths: 'Local branch network and same-week placement on clerical roles. Competes directly with Solvo on the same buyers.' }
+  };
+
+  MOCK_COMPANIES.forEach(function (c) {
+    const r = research[c.id];
+    c.isResearched = !!c.researchedAt;
+    if (!r) {
+      c.revenueUsd = null; c.yearFounded = null; c.apolloOrganizationId = null;
+      c.valueProposition = null; c.strengthsDifferentiators = null; c.lastResearchAt = null;
+      return;
+    }
+    c.revenueUsd = r.revenue;
+    c.yearFounded = r.founded;
+    c.apolloOrganizationId = r.apollo;
+    c.valueProposition = r.value;
+    c.strengthsDifferentiators = r.strengths;
+    c.lastResearchAt = c.researchedAt;
+  });
+})();
+
+// `mission`, `vision` y `company_history` no las escribe el motor nuevo: las dejó el
+// pipeline anterior de Company Decision Maker y hoy las llena una persona. Están en
+// unas pocas empresas, que es como se ven en la base: algunas completas y la mayoría no.
+(function seedLegacyResearch() {
+  const legacy = {
+    'comp-001': {
+      mission: 'Give mid-market distributors the same order-management tooling that enterprise buyers take for granted.',
+      vision: 'Be the default order platform for distribution in North America by the end of the decade.',
+      history: 'Founded in 2009 by two former ERP implementers in Miami. Bootstrapped until 2016, took growth equity in 2019, and has grown through renewals rather than new logos.'
+    },
+    'comp-003': {
+      mission: 'Give growing Midwest companies the financial function they cannot yet hire in full.',
+      vision: 'Become the outsourced finance department of choice for companies between $10M and $100M in revenue.',
+      history: 'Started in 2011 as a two-partner tax practice and moved into advisory and outsourced controllership. Opened a second office in 2024.'
+    },
+    'comp-006': {
+      mission: 'Keep food and packaging lines running with automation that plant teams can maintain themselves.',
+      vision: 'Lead industrial automation for food processing in the Pacific Northwest and beyond.',
+      history: 'Family-owned since 1977, now in its second generation. Added a service division in 1998, which today carries most of the recurring revenue.'
+    }
+  };
+  MOCK_COMPANIES.forEach(function (c) {
+    const r = legacy[c.id];
+    c.mission = r ? r.mission : null;
+    c.vision = r ? r.vision : null;
+    c.companyHistory = r ? r.history : null;
+  });
+})();
+
+// Ingresos anuales como los guarda el enriquecimiento: un entero en USD.
+function revenueLabel(company) {
+  const n = company && Number(company.revenueUsd);
+  if (!n || !isFinite(n)) return '';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6) return '$' + Math.round(n / 1e6) + 'M';
+  return '$' + Math.round(n / 1e3) + 'K';
+}
+
+// Los dos hechos que la calificación calcula sobre datos ya persistidos, antes de
+// llamar al modelo. `size_fit` tiene tres valores: fuera de rango no es lo mismo
+// que sin dato, y tratarlos igual penalizaría justo al perfil objetivo.
+function repeatedPosting(companyId) {
+  const byPosition = {};
+  let repeated = false;
+  companyVacancies(companyId).forEach(function (v) {
+    if (!v.positionId) return;
+    byPosition[v.positionId] = (byPosition[v.positionId] || 0) + 1;
+    if (byPosition[v.positionId] >= 2) repeated = true;
+  });
+  return repeated;
+}
+
+function sizeFit(company) {
+  const n = company && Number(company.sizeEmployees);
+  if (!n || !isFinite(n)) return 'unknown';
+  return (n >= 20 && n <= 300) ? 'true' : 'false';
+}
+
+/* ============================================================================
+   TRAZA DE EJECUCIÓN DE LA EMPRESA
+   Los pasos que la trajeron a su estado actual: el enriquecimiento, la calificación
+   y, cuando el puntaje superó el umbral, la búsqueda y el análisis de contactos.
+   Cada uno con el consumo que causó, como lo registra `public.execution_logs`.
+   ============================================================================ */
+(function seedCompanyExecutionLogs() {
+  let seq = 0;
+  function push(row) {
+    MOCK_EXECUTION_LOGS.push(Object.assign(
+      { id: 'exc-' + (++seq).toString().padStart(3, '0'), logLevel: 'info' }, row));
+  }
+  function at(date, time) { return formatStamp(date + ' ' + time); }
+
+  MOCK_COMPANIES.forEach(function (c, i) {
+    const execId = 'exec-' + c.id;
+
+    if (c.isResearched) {
+      const sources = c.valueProposition ? ['apollo', 'model'] : ['apollo', 'brightdata', 'model'];
+      push({
+        executionId: execId, companyId: c.id, step: 'enrich',
+        workflowName: '03_COMPANY_WORKER', nodeName: 'Enrich company',
+        message: c.valueProposition
+          ? 'Enriched from Apollo and consolidated with the model. Classified as ' +
+            (getIndustryLabel(c.industryCode) || 'unclassified') + '.'
+          : 'No source returned the company. Marked as researched with no fields updated, so it is not qualified.',
+        usageType: 'tokens', usageAmount: 2400 + (i * 211) % 1900, usageUnit: 'count',
+        metadata: { sources: sources },
+        createdAt: at(c.researchedAt, '07:12')
+      });
+    }
+
+    if (c.qualifiedAt) {
+      push({
+        executionId: execId, companyId: c.id, step: 'qualify',
+        workflowName: '03_COMPANY_WORKER', nodeName: 'Qualify lead',
+        message: c.isExcluded
+          ? 'Scored 0 and disqualified: ' + leadSignalLabel(c.exclusionReason) + '. Not queued for contacts.'
+          : 'Scored ' + Math.round(c.icpScore) + ' out of 100 with ' + (c.leadSignals || []).length +
+            ' signal' + ((c.leadSignals || []).length === 1 ? '' : 's') + '. ' +
+            (c.contactsSearchedAt ? 'Queued for the contact search.' : 'Below the threshold, so no contact search.'),
+        usageType: 'tokens', usageAmount: 1900 + (i * 173) % 1500, usageUnit: 'count',
+        createdAt: at(c.qualifiedAt, '07:31')
+      });
+    }
+
+    if (c.contactsSearchedAt) {
+      const kept = countDecisionMakers(c.id);
+      const analyzed = kept + 3 + (i % 4);
+      push({
+        executionId: execId, companyId: c.id, step: 'contacts_search',
+        workflowName: '04_CONTACTS_WORKER', nodeName: 'Search people',
+        message: 'Found ' + analyzed + ' people at the company through Apollo.',
+        usageType: 'credits', usageAmount: 1, usageUnit: 'count',
+        createdAt: at(c.contactsSearchedAt, '08:04')
+      });
+      push({
+        executionId: execId, companyId: c.id, step: 'contacts_analyze',
+        workflowName: '04_CONTACTS_WORKER', nodeName: 'Analyze profiles',
+        message: 'Normalised ' + analyzed + ' titles into role codes and kept ' + kept +
+          ' as decision maker' + (kept === 1 ? '' : 's') + '; the rest did not qualify.',
+        usageType: 'tokens', usageAmount: 320 * analyzed, usageUnit: 'count',
+        createdAt: at(c.contactsSearchedAt, '08:09')
+      });
+      if (kept) {
+        push({
+          executionId: execId, companyId: c.id, step: 'contacts_reveal',
+          workflowName: '04_CONTACTS_WORKER', nodeName: 'Reveal and verify',
+          message: 'Revealed ' + kept + ' email' + (kept === 1 ? '' : 's') + ' and verified them with Hunter.',
+          usageType: 'credits', usageAmount: kept, usageUnit: 'count',
+          createdAt: at(c.contactsSearchedAt, '08:15')
+        });
+      }
+    }
+  });
+
+  MOCK_EXECUTION_LOGS.sort(function (a, b) { return parseStamp(b.createdAt) - parseStamp(a.createdAt); });
+})();
+
+function getCompanyExecutionLogs(companyId) {
+  return MOCK_EXECUTION_LOGS.filter(function (l) { return l.companyId === companyId && !l.vacancyId; });
+}
+
+// Actividad de una empresa: los pasos de los flujos, los cambios de etapa y la marca
+// de exportación, en una sola línea de lo más reciente a lo más viejo.
+const COMPANY_STEP_TITLES = {
+  enrich: 'Enriched', qualify: 'Qualified',
+  contacts_search: 'Contacts searched', contacts_analyze: 'Profiles analyzed', contacts_reveal: 'Emails revealed'
+};
+
+function getCompanyActivity(companyId) {
+  return stageEntries(getCompanyHistory(companyId)).sort(byNewest);
+}
+
+/* ============================================================================
+   SERIE DIARIA DE MÉTRICAS
+   Los listados muestran registros uno por uno; el tablero muestra volumen, que es
+   otra escala. Esta serie representa lo que el motor produce corriendo a diario:
+   el barrido cubre los estados del día, cada aviso se clasifica, y de ahí salen
+   empresas y decisores. Los órdenes de magnitud vienen de lo medido en la épica —
+   152 ciudades en 50 estados, una página por consulta, y un rendimiento por ciudad
+   que va de 13 vacantes útiles en Dallas a 1 en Orlando.
+   Es determinista: la misma fecha da siempre el mismo número.
+   ============================================================================ */
+const DAILY_WINDOW_DAYS = 30;
+
+// Generador reproducible: sin él, cada recarga movería los gráficos y ninguna
+// comparación entre dos lecturas de la misma pantalla sería válida.
+function seededNoise(seed) {
+  let x = Math.sin(seed * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+const MOCK_DAILY_METRICS = (function buildDailyMetrics() {
+  const rows = [];
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  for (let i = DAILY_WINDOW_DAYS - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 86400000);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = d.getUTCDay();
+    const n = seededNoise(d.getTime() / 86400000);
+
+    // El barrido corre de lunes a viernes: el fin de semana cae a una fracción.
+    const weekend = (dow === 0 || dow === 6);
+    const base = weekend ? 34 : 168;
+    const positions = Math.round(base * (0.78 + n * 0.5));
+    // El clasificador da por viable algo más de la mitad de lo que el barrido por
+    // posición trae; el barrido por geografía rendía mucho menos.
+    const viable = Math.round(positions * (0.49 + seededNoise(d.getTime() / 86400000 + 7) * 0.16));
+    // Una empresa aparece varias veces: no hay una empresa nueva por vacante.
+    const companies = Math.round(positions * (0.19 + seededNoise(d.getTime() / 86400000 + 13) * 0.07));
+    // Solo se buscan contactos de las que superan el umbral, y no todas devuelven.
+    const withDm = Math.round(companies * (0.31 + seededNoise(d.getTime() / 86400000 + 23) * 0.14));
+    const decisionMakers = Math.round(withDm * (1.4 + seededNoise(d.getTime() / 86400000 + 31) * 0.8));
+    const viableCompanies = Math.round(companies * (0.55 + seededNoise(d.getTime() / 86400000 + 41) * 0.18));
+
+    rows.push({
+      date: iso, weekend: weekend,
+      positions: positions, viablePositions: viable,
+      companies: companies, viableCompanies: viableCompanies,
+      companiesWithDm: withDm, decisionMakers: decisionMakers
+    });
+  }
+  return rows;
+})();
+
+// Recorte de la serie a la ventana pedida, desde el día más viejo al más nuevo.
+function dailyMetrics(days) {
+  return MOCK_DAILY_METRICS.slice(Math.max(0, MOCK_DAILY_METRICS.length - days));
+}
+
+function sumMetric(rows, key) {
+  return rows.reduce(function (n, r) { return n + r[key]; }, 0);
+}
+
+/* ---- Funnel de agendamiento (public.funnel_events) -------------------------
+   El embudo del cold outreach hasta la reserva. Los eventos los escribe el webhook
+   de Brevo (entrega, apertura, click) y el backend de la landing (visita, franja,
+   reserva). La depuración del tracking demostró que el 98% de los clicks del mes
+   ocurre a ≤5 minutos de la entrega —escáneres antispam corporativos—, así que la
+   serie separa la interacción humana verificada del tráfico automático.
+   `availability_shown` y `visible_error` se registran pero no son etapas: viven en
+   el registro de abajo.
+   --------------------------------------------------------------------------- */
+const BOOKING_FUNNEL_STAGES = [
+  { key: 'email_delivered', label: 'Delivered', note: 'Brevo accepted the send' },
+  { key: 'email_opened', label: 'Opened', note: 'Tracking pixel fired' },
+  { key: 'email_click', label: 'Clicked', note: 'Followed the link to the landing' },
+  { key: 'landing_view', label: 'Landing viewed', note: 'The booking page rendered' },
+  { key: 'slot_selected', label: 'Slot selected', note: 'Picked a time from the calendar' },
+  { key: 'booking_confirmed', label: 'Booked', note: 'The server confirmed the meeting' }
+];
+
+const MOCK_BOOKING_FUNNEL = (function buildBookingFunnel() {
+  const rows = [];
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  for (let i = DAILY_WINDOW_DAYS - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 86400000);
+    const iso = d.toISOString().slice(0, 10);
+    const dow = d.getUTCDay();
+    const n = seededNoise(d.getTime() / 86400000 + 101);
+    const weekend = (dow === 0 || dow === 6);
+
+    const delivered = weekend ? 0 : Math.round(210 * (0.8 + n * 0.45));
+    const opened = Math.round(delivered * (0.28 + seededNoise(d.getTime() / 86400000 + 103) * 0.12));
+    // Humanos, ya descontados los escáneres.
+    const clicked = Math.round(opened * (0.07 + seededNoise(d.getTime() / 86400000 + 107) * 0.05));
+    const automated = Math.round(delivered * (0.21 + seededNoise(d.getTime() / 86400000 + 109) * 0.09));
+    const landing = Math.round(clicked * (0.86 + seededNoise(d.getTime() / 86400000 + 113) * 0.12));
+    const availability = Math.round(landing * (0.9 + seededNoise(d.getTime() / 86400000 + 127) * 0.09));
+    const slot = Math.round(landing * (0.32 + seededNoise(d.getTime() / 86400000 + 131) * 0.2));
+    const booked = Math.round(slot * (0.52 + seededNoise(d.getTime() / 86400000 + 137) * 0.3));
+    const errors = seededNoise(d.getTime() / 86400000 + 139) > 0.86 ? 1 : 0;
+
+    rows.push({
+      date: iso, weekend: weekend,
+      email_delivered: delivered, email_opened: opened, email_click: clicked,
+      landing_view: landing, availability_shown: availability,
+      slot_selected: slot, booking_confirmed: booked,
+      automated_clicks: automated, visible_error: errors
+    });
+  }
+  return rows;
+})();
+
+function bookingFunnel(days) {
+  return MOCK_BOOKING_FUNNEL.slice(Math.max(0, MOCK_BOOKING_FUNNEL.length - days));
+}
+
+/* ============================================================================
+   20. RELEASE 4 — PROSPECT ENGINE MODULAR (épica PEM, HUPEM-1.1)
+   El motor pasa a ser un conjunto de servicios independientes que la
+   configuración de cada trigger combina. Esta sección siembra el modelo de
+   HUPEM-1.1 —geografía de tres niveles, catálogo de servicios, términos por país,
+   triggers, roles de decisor, prompts por país, reglas, envíos programados,
+   ejecuciones e invocaciones— y completa las entidades de Release 3 con los
+   campos nuevos: país y división, trigger, fuentes, estado e historial, salario
+   publicado con su moneda y periodo.
+
+   Índice
+    20.1 GEOGRAFÍA ............... ENGINE_COUNTRIES, GEO_DIVISIONS, GEO_CITIES, GEO_REVIEW
+    20.2 SERVICIOS ............... ENGINE_STAGES, ENGINE_SERVICES, SERVICE_MODES
+    20.3 TÉRMINOS POR PAÍS ....... ENGINE_TERMS, POSITION_AREAS
+    20.4 TRIGGERS ................ ENGINE_TRIGGERS
+    20.5 ROLES DE DECISOR ........ DECISION_ROLES
+    20.6 PROMPTS Y REGLAS ........ ENGINE_PROMPTS, ENGINE_RULES
+    20.7 ENVÍOS DE COLD OUTREACH . OUTREACH_SCHEDULES
+    20.8 ENTIDADES NUEVAS ........ empresas, vacantes y decisores de España y de
+                                   los países de contratación
+    20.9 ESTADO DE LAS ENTIDADES . VACANCY_STATES, COMPANY_STATES, DM_STATES,
+                                   seedRelease4 (país, trigger, fuentes, salario)
+   20.10 HISTORIAL DE ESTADO ..... ENTITY_HISTORY, getEntityHistory
+   20.11 EJECUCIONES ............. ENGINE_EXECUTIONS, getInvocations
+   20.12 SOLICITUDES ............. MOCK_REQUESTS (A pedido e Investigación a pedido)
+   20.13 ETIQUETAS Y HELPERS ..... countryName, triggerName, serviceName, salary…
+
+   Estado editable en localStorage: `r4Triggers`, `r4Services`, `r4Terms`,
+   `r4Roles`, `r4Prompts`, `r4Outreach`, `r4Requests` (ver engineLoad/engineSave).
+   Los valores son de ejemplo: los reales salen del seed de la épica PEM.
+   ============================================================================ */
+
+/* ---- 20.1 Geografía: país, división y ciudad ------------------------------ */
+// Un solo nivel de división por país. La división se identifica con su código
+// ISO 3166-2, que incluye el país: US-MA (Massachusetts) no choca con MA de otro país.
+const ENGINE_COUNTRIES = [
+  { code: 'US', name: 'United States', divisionLabel: 'State', divisionsTotal: 51, language: 'English', currency: 'USD', timezone: 'America/New_York', group: 'sales' },
+  { code: 'ES', name: 'Spain', divisionLabel: 'Province', divisionsTotal: 52, language: 'Spanish', currency: 'EUR', timezone: 'Europe/Madrid', group: 'sales' },
+  { code: 'CO', name: 'Colombia', divisionLabel: 'Department', divisionsTotal: 33, language: 'Spanish', currency: 'COP', timezone: 'America/Bogota', group: 'hiring' },
+  { code: 'MX', name: 'Mexico', divisionLabel: 'State', divisionsTotal: 32, language: 'Spanish', currency: 'MXN', timezone: 'America/Mexico_City', group: 'hiring' },
+  { code: 'AR', name: 'Argentina', divisionLabel: 'Province', divisionsTotal: 24, language: 'Spanish', currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires', group: 'hiring' },
+  { code: 'PE', name: 'Peru', divisionLabel: 'Department', divisionsTotal: 25, language: 'Spanish', currency: 'PEN', timezone: 'America/Lima', group: 'hiring' },
+  { code: 'GT', name: 'Guatemala', divisionLabel: 'Department', divisionsTotal: 22, language: 'Spanish', currency: 'GTQ', timezone: 'America/Guatemala', group: 'hiring' },
+  { code: 'KE', name: 'Kenya', divisionLabel: 'County', divisionsTotal: 47, language: 'English', currency: 'KES', timezone: 'Africa/Nairobi', group: 'hiring' },
+  { code: 'PH', name: 'Philippines', divisionLabel: 'Region', divisionsTotal: 17, language: 'English', currency: 'PHP', timezone: 'Asia/Manila', group: 'hiring' }
+];
+// Filtro por defecto de los listados: los países donde Solvo vende. Los países de
+// contratación siguen siendo vacantes; se ven cambiando el filtro.
+const DEFAULT_LIST_COUNTRIES = ['US', 'ES'];
+
+const GEO_DIVISIONS = US_STATES.map(function (s) { return { code: 'US-' + s.code, country: 'US', name: s.name }; }).concat([
+  { code: 'ES-M', country: 'ES', name: 'Madrid' }, { code: 'ES-B', country: 'ES', name: 'Barcelona' },
+  { code: 'ES-V', country: 'ES', name: 'Valencia' }, { code: 'ES-SE', country: 'ES', name: 'Sevilla' },
+  { code: 'ES-BI', country: 'ES', name: 'Bizkaia' }, { code: 'ES-MA', country: 'ES', name: 'Málaga' },
+  { code: 'ES-Z', country: 'ES', name: 'Zaragoza' },
+  { code: 'CO-DC', country: 'CO', name: 'Bogotá, D.C.' }, { code: 'CO-ANT', country: 'CO', name: 'Antioquia' },
+  { code: 'CO-VAC', country: 'CO', name: 'Valle del Cauca' }, { code: 'CO-ATL', country: 'CO', name: 'Atlántico' },
+  { code: 'MX-CMX', country: 'MX', name: 'Ciudad de México' }, { code: 'MX-JAL', country: 'MX', name: 'Jalisco' },
+  { code: 'MX-NLE', country: 'MX', name: 'Nuevo León' },
+  { code: 'AR-C', country: 'AR', name: 'Ciudad Autónoma de Buenos Aires' }, { code: 'AR-X', country: 'AR', name: 'Córdoba' },
+  { code: 'AR-S', country: 'AR', name: 'Santa Fe' },
+  { code: 'PE-LIM', country: 'PE', name: 'Lima' }, { code: 'PE-ARE', country: 'PE', name: 'Arequipa' },
+  { code: 'GT-GU', country: 'GT', name: 'Guatemala' },
+  { code: 'KE-30', country: 'KE', name: 'Nairobi City' }, { code: 'KE-28', country: 'KE', name: 'Mombasa' },
+  { code: 'PH-00', country: 'PH', name: 'National Capital Region' }, { code: 'PH-07', country: 'PH', name: 'Central Visayas' },
+  { code: 'PH-11', country: 'PH', name: 'Davao Region' }
+]);
+
+// Ciudades del catálogo. `aliases` es cómo nombra cada servicio la ciudad (alias de ubicación).
+const GEO_CITIES = [
+  ['us-miami', 'Miami', 'US-FL'], ['us-tampa', 'Tampa', 'US-FL'], ['us-new-york', 'New York', 'US-NY'],
+  ['us-chicago', 'Chicago', 'US-IL'], ['us-austin', 'Austin', 'US-TX'], ['us-dallas', 'Dallas', 'US-TX'],
+  ['us-houston', 'Houston', 'US-TX'], ['us-seattle', 'Seattle', 'US-WA'], ['us-boston', 'Boston', 'US-MA'],
+  ['us-los-angeles', 'Los Angeles', 'US-CA'], ['us-san-francisco', 'San Francisco', 'US-CA'],
+  ['us-philadelphia', 'Philadelphia', 'US-PA'], ['us-atlanta', 'Atlanta', 'US-GA'],
+  ['es-madrid', 'Madrid', 'ES-M'], ['es-barcelona', 'Barcelona', 'ES-B'], ['es-valencia', 'Valencia', 'ES-V'],
+  ['es-sevilla', 'Sevilla', 'ES-SE'], ['es-bilbao', 'Bilbao', 'ES-BI'], ['es-malaga', 'Málaga', 'ES-MA'],
+  ['es-zaragoza', 'Zaragoza', 'ES-Z'],
+  ['co-bogota', 'Bogotá', 'CO-DC'], ['co-medellin', 'Medellín', 'CO-ANT'], ['co-cali', 'Cali', 'CO-VAC'],
+  ['co-barranquilla', 'Barranquilla', 'CO-ATL'],
+  ['mx-cdmx', 'Ciudad de México', 'MX-CMX'], ['mx-guadalajara', 'Guadalajara', 'MX-JAL'], ['mx-monterrey', 'Monterrey', 'MX-NLE'],
+  ['ar-buenos-aires', 'Buenos Aires', 'AR-C'], ['ar-cordoba', 'Córdoba', 'AR-X'], ['ar-rosario', 'Rosario', 'AR-S'],
+  ['pe-lima', 'Lima', 'PE-LIM'], ['pe-arequipa', 'Arequipa', 'PE-ARE'],
+  ['gt-guatemala', 'Ciudad de Guatemala', 'GT-GU'],
+  ['ke-nairobi', 'Nairobi', 'KE-30'], ['ke-mombasa', 'Mombasa', 'KE-28'],
+  ['ph-manila', 'Manila', 'PH-00'], ['ph-quezon', 'Quezon City', 'PH-00'], ['ph-cebu', 'Cebu City', 'PH-07'],
+  ['ph-davao', 'Davao City', 'PH-11']
+].map(function (r) {
+  const country = r[2].split('-')[0];
+  const div = r[2].split('-')[1];
+  const aliases = { 'svc-indeed': country === 'US' ? r[1] + ', ' + div : r[1] };
+  if (country === 'US') aliases['svc-linkedin'] = r[1] + ', ' + US_STATES.find(function (s) { return s.code === div; }).name + ', United States';
+  if (['CO', 'MX', 'AR', 'PE', 'GT'].indexOf(country) >= 0) aliases['svc-computrabajo'] = r[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ ,.]+/g, '-');
+  return { id: r[0], name: r[1], division: r[2], country: country, aliases: aliases };
+});
+
+// Ciudades que trajo un servicio y no están en el catálogo: la vacante se guarda con
+// su país y su división y queda marcada para revisión, hasta que alguien suma la
+// ciudad o la asigna a una existente.
+const GEO_REVIEW = [
+  { id: 'gr-1', name: 'Makati', country: 'PH', division: 'PH-00', serviceId: 'svc-indeed', vacancies: 4, firstSeenDays: 6, suggestion: 'ph-manila' },
+  { id: 'gr-2', name: 'Zapopan', country: 'MX', division: 'MX-JAL', serviceId: 'svc-computrabajo', vacancies: 2, firstSeenDays: 3, suggestion: 'mx-guadalajara' },
+  { id: 'gr-4', name: 'Brooklyn', country: 'US', division: 'US-NY', serviceId: 'svc-indeed', vacancies: 2, firstSeenDays: 9, suggestion: 'us-new-york' },
+  { id: 'gr-5', name: 'Queens', country: 'US', division: 'US-NY', serviceId: 'svc-linkedin', vacancies: 1, firstSeenDays: 10, suggestion: 'us-new-york' },
+  { id: 'gr-3', name: 'Alcobendas', country: 'ES', division: 'ES-M', serviceId: 'svc-indeed', vacancies: 1, firstSeenDays: 1, suggestion: 'es-madrid' }
+];
+
+/* ---- 20.2 Catálogo de servicios ------------------------------------------- */
+// Cada servicio cumple una sola tarea y no invoca a otro. Qué servicios usa un
+// trigger, en qué orden y en qué países, lo dice su configuración (20.4).
+const ENGINE_STAGES = [
+  { key: 'vacancies', label: 'Vacancies', short: 'Vacancies' },
+  { key: 'vacancy_analysis', label: 'Vacancy analysis', short: 'Analysis' },
+  { key: 'enrichment', label: 'Company enrichment', short: 'Companies' },
+  { key: 'company_analysis', label: 'Company analysis', short: 'Analysis' },
+  { key: 'decision_makers', label: 'Decision makers', short: 'Decision makers' },
+  { key: 'dm_analysis', label: 'Decision-maker analysis', short: 'Analysis' },
+  { key: 'contact', label: 'Contact details', short: 'Contact' },
+  { key: 'outreach', label: 'Cold outreach', short: 'Outreach' }
+];
+const SERVICE_MODES = {
+  terms_city: 'Terms + city', terms_country: 'Terms + country', terms_location: 'Terms + location',
+  company: 'Company', domain: 'Company domain', listing: 'Listing from any service',
+  company_data: 'Company data from any source', people: 'People from any provider',
+  person: 'Decision maker', lead_list: 'Filtered lead list'
+};
+const SERVICE_STATUS = {
+  active: { label: 'Active', tone: 'success' },
+  evaluation: { label: 'In evaluation', tone: 'warning' },
+  paused: { label: 'Paused', tone: 'neutral' }
+};
+const HIRING_COUNTRIES = ['CO', 'MX', 'AR', 'PE', 'GT', 'KE', 'PH'];
+const ALL_COUNTRIES = ENGINE_COUNTRIES.map(function (c) { return c.code; });
+const ENGINE_SERVICES_SEED = [
+  { id: 'svc-indeed', stage: 'vacancies', name: 'Indeed', provider: 'Oxylabs', modes: ['terms_city', 'company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'requests', unitCostUsd: 0.0022 },
+  { id: 'svc-linkedin', stage: 'vacancies', name: 'LinkedIn', provider: 'Apify', modes: ['terms_location', 'company'], countries: ['US', 'CO', 'MX', 'AR', 'PE', 'KE', 'PH'], status: 'active', unit: 'results', unitCostUsd: 0.001 },
+  { id: 'svc-computrabajo', stage: 'vacancies', name: 'Computrabajo', provider: 'Firecrawl', modes: ['terms_city'], countries: ['CO', 'MX', 'AR', 'PE', 'GT'], status: 'active', unit: 'credits', unitCostUsd: 0.00083 },
+  { id: 'svc-theirstack', stage: 'vacancies', name: 'TheirStack', provider: 'TheirStack', modes: ['terms_country', 'company'], countries: ['US', 'ES'], status: 'evaluation', unit: 'credits', unitCostUsd: 0.0059 },
+  { id: 'svc-vacancy-analysis', stage: 'vacancy_analysis', name: 'Vacancy analysis', provider: 'OpenAI', modes: ['listing'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-apollo-company', stage: 'enrichment', name: 'Apollo', provider: 'Apollo', modes: ['company'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-brightdata', stage: 'enrichment', name: 'Bright Data', provider: 'Bright Data', modes: ['company'], countries: ['US', 'ES'], status: 'active', unit: 'records', unitCostUsd: 0.0015 },
+  { id: 'svc-company-analysis', stage: 'company_analysis', name: 'Company analysis', provider: 'OpenAI', modes: ['company_data'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-apollo-people', stage: 'decision_makers', name: 'Apollo', provider: 'Apollo', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-hunter', stage: 'decision_makers', name: 'Hunter', provider: 'Hunter', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'requests', unitCostUsd: 0.0 },
+  { id: 'svc-dm-analysis', stage: 'dm_analysis', name: 'Decision-maker analysis', provider: 'OpenAI', modes: ['people'], countries: ['US', 'ES'], status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-contact', stage: 'contact', name: 'Contact details', provider: 'Apollo · Hunter', modes: ['person'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-outreach-us', stage: 'outreach', name: 'Cold email · United States', provider: 'Brevo', modes: ['lead_list'], countries: ['US'], status: 'active', unit: 'emails', unitCostUsd: 0.0 }
+];
+
+/* ---- Estado editable de la configuración ---------------------------------- */
+// Settings escribe aquí; borrar las claves r4* devuelve el prototipo al seed.
+function engineLoad(key, seed) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* sin almacenamiento: queda el seed */ }
+  return JSON.parse(JSON.stringify(seed));
+}
+function engineSave(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* sin almacenamiento */ }
+}
+const ENGINE_SERVICES = engineLoad('r4Services', ENGINE_SERVICES_SEED);
+
+/* ---- 20.3 Términos por país ----------------------------------------------- */
+// El catálogo de posiciones es global (POSITIONS_CATALOG, el actual). Cada término
+// pertenece a una sola posición y a un país. Un término nuevo entra inactivo en
+// todos los triggers. Las áreas de cada posición son las de HUSPL-13.1.
+const POSITION_AREAS = {
+  'pos-01': ['finance', 'operations'], 'pos-02': ['operations'], 'pos-03': ['operations'],
+  'pos-04': ['operations', 'sales', 'finance'], 'pos-05': ['technology', 'finance', 'operations'],
+  'pos-06': ['operations', 'finance'], 'pos-07': ['operations', 'sales'], 'pos-08': ['operations', 'technology'],
+  'pos-09': ['human_resources', 'operations', 'finance'], 'pos-10': ['operations'], 'pos-11': ['technology', 'operations'],
+  'pos-12': ['sales'], 'pos-13': ['operations', 'sales'], 'pos-14': ['legal', 'operations'],
+  'pos-15': ['operations', 'sales', 'finance'], 'pos-16': ['marketing', 'sales'], 'pos-17': ['finance', 'operations'],
+  'pos-18': ['operations', 'finance'], 'pos-19': ['operations', 'technology'], 'pos-20': ['operations', 'sales'],
+  'pos-21': ['technology']
+};
+const AREA_LABELS = {
+  finance: 'Finance', sales: 'Sales', marketing: 'Marketing', operations: 'Operations',
+  human_resources: 'Human resources', technology: 'Technology', legal: 'Legal'
+};
+const ENGINE_TERMS_SEED = (function buildTerms() {
+  const out = [];
+  let n = 0;
+  function add(positionId, country, text) {
+    n += 1;
+    out.push({ id: 'term-' + String(n).padStart(3, '0'), positionId: positionId, country: country, text: text });
+  }
+  POSITIONS_CATALOG.forEach(function (p) { p.terms.forEach(function (t) { add(p.id, 'US', t); }); });
+  const byCountry = {
+    ES: {
+      'pos-01': ['contable', 'administrativo contable', 'gestor de cobros'], 'pos-02': ['auxiliar administrativo', 'asistente de dirección'],
+      'pos-04': ['atención al cliente', 'teleoperador'], 'pos-05': ['analista de datos', 'data analyst'],
+      'pos-06': ['data entry clerk'], 'pos-09': ['técnico de nóminas', 'talent acquisition', 'recruiter'],
+      'pos-12': ['sdr', 'comercial telefónico', 'inside sales'], 'pos-14': ['secretaria jurídica', 'paralegal'],
+      'pos-15': ['técnico de tráfico', 'jefe de tráfico'], 'pos-16': ['community manager', 'marketing specialist'],
+      'pos-19': ['project manager'], 'pos-21': ['desarrollador', 'programador', 'qa engineer']
+    },
+    CO: { 'pos-01': ['auxiliar contable', 'analista contable'], 'pos-04': ['asesor de servicio al cliente', 'agente bilingüe'], 'pos-21': ['desarrollador de software'] },
+    MX: { 'pos-01': ['auxiliar contable', 'analista contable'], 'pos-04': ['ejecutivo de atención a clientes'], 'pos-05': ['analista de datos'] },
+    AR: { 'pos-01': ['liquidación de sueldos', 'analista contable'], 'pos-21': ['desarrollador full stack'] },
+    PE: { 'pos-01': ['asistente contable'], 'pos-04': ['asesor de atención al cliente'] },
+    GT: { 'pos-04': ['agente de call center bilingüe'] },
+    KE: { 'pos-04': ['customer service representative'], 'pos-21': ['software developer'] },
+    PH: { 'pos-01': ['accounting assistant', 'bookkeeper'], 'pos-02': ['virtual assistant'], 'pos-04': ['customer service representative', 'call center agent'] }
+  };
+  Object.keys(byCountry).forEach(function (c) {
+    Object.keys(byCountry[c]).forEach(function (pid) { byCountry[c][pid].forEach(function (t) { add(pid, c, t); }); });
+  });
+  return out;
+})();
+const ENGINE_TERMS = engineLoad('r4Terms', ENGINE_TERMS_SEED);
+
+/* ---- 20.4 Triggers -------------------------------------------------------- */
+// Un trigger es configuración: cómo se activa, la ventana de publicación, sus países
+// y ubicaciones, los términos activos de cada país, los servicios de cada etapa con
+// su orden y la condición para pasar al siguiente, y hasta qué etapa llega.
+const WEEKDAYS = [
+  { key: 'mon', short: 'Mon' }, { key: 'tue', short: 'Tue' }, { key: 'wed', short: 'Wed' },
+  { key: 'thu', short: 'Thu' }, { key: 'fri', short: 'Fri' }, { key: 'sat', short: 'Sat' }, { key: 'sun', short: 'Sun' }
+];
+const PASS_CONDITIONS = {
+  not_found: 'Not found',
+  missing_essential: 'Not found or missing essential data'
+};
+const TRIGGER_ENDS = {
+  leads_ready: { label: 'Leads ready for cold outreach', stage: 'contact' },
+  seller_alert: { label: 'Alert to the account Sales Rep', stage: 'vacancy_analysis' },
+  platform: { label: 'Results in the platform', stage: 'vacancy_analysis' },
+  company_record: { label: 'Company record', stage: 'contact' }
+};
+const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
+  const usTerms = ENGINE_TERMS_SEED.filter(function (t) { return t.country === 'US'; }).map(function (t) { return t.id; });
+  const esTerms = ENGINE_TERMS_SEED.filter(function (t) { return t.country === 'ES'; }).map(function (t) { return t.id; });
+  const hiringTerms = ENGINE_TERMS_SEED.filter(function (t) { return HIRING_COUNTRIES.indexOf(t.country) >= 0; }).map(function (t) { return t.id; });
+  const wk = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  function cities(country) { return GEO_CITIES.filter(function (c) { return c.country === country; }); }
+  // Calendario por ciudad: cada ciudad de Clientes nuevos se barre un día de la semana.
+  const usCal = cities('US').map(function (c, i) { return { cityId: c.id, days: [wk[i % 5]] }; });
+  const esCal = cities('ES').map(function (c, i) { return { cityId: c.id, days: [wk[i % 5]] }; });
+  return [
+    {
+      id: 'trg-new-clients', name: 'New clients', description: 'Companies that are not clients yet, detected by the positions Solvo fills.',
+      activation: { mode: 'cron', days: wk.slice(), time: '07:00', perCity: true }, windowDays: 1, searchBy: 'terms',
+      countries: ['US', 'ES'], locations: usCal.concat(esCal), activeTerms: usTerms.concat(esTerms.slice(0, 18)),
+      vacancyServices: { US: ['svc-indeed'], ES: ['svc-indeed'] },
+      enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
+      decisionMakers: [{ serviceId: 'svc-apollo-people', pass: 'not_found' }, { serviceId: 'svc-hunter', pass: null }],
+      endsAt: 'leads_ready', isActive: true, requestable: false
+    },
+    {
+      id: 'trg-current-clients', name: 'Current clients', description: 'Every new opening of the client companies. The Sales Rep of the account only gets the viable ones.',
+      activation: { mode: 'cron', days: wk.slice(), time: '08:00', perCity: false }, windowDays: 1, searchBy: 'company',
+      countries: ['US'], locations: [], activeTerms: [], companyScope: 'clients',
+      vacancyServices: { US: ['svc-indeed', 'svc-linkedin'] },
+      enrichment: [], decisionMakers: [], endsAt: 'seller_alert', isActive: true, requestable: false
+    },
+    {
+      id: 'trg-on-demand', name: 'On demand', description: 'A search a user requests from the platform, by company or by position and location.',
+      activation: { mode: 'request' }, windowDays: 1, maxWindowDays: 30, searchBy: 'both',
+      countries: ['US', 'ES'], locations: cities('US').concat(cities('ES')).map(function (c) { return { cityId: c.id }; }),
+      activeTerms: usTerms.concat(esTerms),
+      vacancyServices: { US: ['svc-indeed', 'svc-linkedin'], ES: ['svc-indeed'] },
+      enrichment: [], decisionMakers: [], endsAt: 'platform', isActive: true, requestable: true
+    },
+    {
+      id: 'trg-research', name: 'On-demand research', description: 'Research of one company requested from its record: enrichment, qualification and decision makers.',
+      activation: { mode: 'request' }, windowDays: null, searchBy: 'none',
+      countries: ['US', 'ES'], locations: [], activeTerms: [], vacancyServices: {},
+      enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
+      decisionMakers: [{ serviceId: 'svc-apollo-people', pass: 'not_found' }, { serviceId: 'svc-hunter', pass: null }],
+      endsAt: 'company_record', isActive: true, requestable: true
+    },
+    {
+      id: 'trg-hiring-countries', name: 'Hiring countries', description: 'Openings in the countries where Solvo sources and hires talent.',
+      activation: { mode: 'cron', days: wk.slice(), time: '06:00', perCity: false }, windowDays: 1, searchBy: 'terms',
+      countries: HIRING_COUNTRIES.slice(),
+      locations: GEO_CITIES.filter(function (c) { return HIRING_COUNTRIES.indexOf(c.country) >= 0; }).map(function (c) { return { cityId: c.id }; }),
+      activeTerms: hiringTerms,
+      vacancyServices: { CO: ['svc-indeed', 'svc-computrabajo'], MX: ['svc-indeed', 'svc-computrabajo'], AR: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], PE: ['svc-indeed', 'svc-computrabajo'], GT: ['svc-indeed', 'svc-computrabajo'], KE: ['svc-indeed', 'svc-linkedin'], PH: ['svc-indeed', 'svc-linkedin'] },
+      enrichment: [], decisionMakers: [], endsAt: 'platform', isActive: true, requestable: false
+    }
+  ];
+})();
+const ENGINE_TRIGGERS = engineLoad('r4Triggers', ENGINE_TRIGGERS_SEED);
+
+/* ---- 20.5 Roles de decisor (public.decision_role_catalog, extendido) ------ */
+// El nivel sale del rol, no del tamaño de la empresa. Los de dirección general
+// aplican a todas las áreas. Los niveles de owner_founder, coo, vp_operations y
+// director_operations son de ejemplo: están pendientes de fijar.
+const DECISION_ROLES_SEED = [
+  { code: 'ceo', label: 'CEO', level: 1, general: true, areas: [], titles: ['ceo', 'chief executive officer'], sendsEmail: true, findsPhone: true },
+  { code: 'president', label: 'President', level: 1, general: true, areas: [], titles: ['president'], sendsEmail: true, findsPhone: true },
+  { code: 'chairman', label: 'Chairman', level: 1, general: true, areas: [], titles: ['chairman', 'chairwoman', 'board chair'], sendsEmail: false, findsPhone: false },
+  { code: 'owner_founder', label: 'Owner / Founder', level: 1, general: true, areas: [], titles: ['owner', 'founder', 'co-founder'], sendsEmail: true, findsPhone: true },
+  { code: 'managing_director', label: 'Managing Director', level: 2, general: true, areas: [], titles: ['managing director', 'managing partner'], sendsEmail: true, findsPhone: false },
+  { code: 'executive_director', label: 'Executive Director', level: 2, general: true, areas: [], titles: ['executive director'], sendsEmail: true, findsPhone: false },
+  { code: 'cfo', label: 'CFO', level: 1, general: false, areas: ['finance'], titles: ['cfo', 'chief financial officer'], sendsEmail: true, findsPhone: true },
+  { code: 'cro', label: 'CRO', level: 1, general: false, areas: ['sales', 'marketing'], titles: ['cro', 'chief revenue officer'], sendsEmail: true, findsPhone: false },
+  { code: 'vp_sales', label: 'VP Sales', level: 1, general: false, areas: ['sales'], titles: ['vp sales', 'vice president of sales'], sendsEmail: true, findsPhone: false },
+  { code: 'coo', label: 'COO', level: 1, general: false, areas: ['operations'], titles: ['coo', 'chief operating officer'], sendsEmail: true, findsPhone: true },
+  { code: 'vp_operations', label: 'VP Operations', level: 2, general: false, areas: ['operations'], titles: ['vp operations', 'vice president of operations'], sendsEmail: true, findsPhone: false },
+  { code: 'director_operations', label: 'Director of Operations', level: 2, general: false, areas: ['operations'], titles: ['director of operations', 'operations director'], sendsEmail: true, findsPhone: false },
+  { code: 'cto', label: 'CTO', level: 1, general: false, areas: ['technology'], titles: ['cto', 'chief technology officer'], sendsEmail: true, findsPhone: false }
+];
+const DECISION_ROLES = engineLoad('r4Roles', DECISION_ROLES_SEED);
+function decisionRole(code) { return DECISION_ROLES.find(function (r) { return r.code === code; }) || null; }
+
+/* ---- 20.6 Prompts por país y reglas --------------------------------------- */
+// Cada país tiene un prompt por análisis. El de empresas lleva el ICP del país con su
+// puntaje mínimo. Un país sin sus tres prompts activos no se puede activar en un trigger.
+const PROMPT_ANALYSES = [
+  { key: 'vacancies', label: 'Vacancy analysis' },
+  { key: 'companies', label: 'Company analysis' },
+  { key: 'decision_makers', label: 'Decision-maker analysis' }
+];
+const ENGINE_PROMPTS_SEED = (function buildPrompts() {
+  const out = [];
+  const icp = { US: { min: 60, size: '20–300 employees' }, ES: { min: 55, size: '10–1,000 employees' } };
+  ENGINE_COUNTRIES.forEach(function (c, ci) {
+    PROMPT_ANALYSES.forEach(function (a, ai) {
+      const sales = c.group === 'sales';
+      const version = sales ? (a.key === 'vacancies' ? 4 : 3) : 1;
+      const p = {
+        id: 'prm-' + c.code.toLowerCase() + '-' + a.key, country: c.code, analysis: a.key,
+        model: 'gpt-4.1-mini', version: version, status: 'active',
+        updatedDays: 3 + ((ci * 3 + ai * 5) % 24), updatedBy: 'uuid-staff-005',
+        text: a.key === 'vacancies'
+          ? 'Normalize the posting from ' + c.name + ' (' + c.language + '): map it to a catalog position, read the location, modality, seniority, languages and up to 10 skills. When the posting states a salary, keep it with its currency (' + c.currency + ') and period, and calculate the annual salary in USD. Decide whether the role can be filled with remote talent and give your confidence and reason.'
+          : a.key === 'companies'
+            ? 'Normalize the company data from any source, verify it is the company that published the opening, classify its type (direct employer, staffing agency or government) and score it against the ' + c.name + ' ICP' + (icp[c.code] ? ' (' + icp[c.code].size + ')' : '') + '.'
+            : 'Assign each person a role from the decision-maker roles table and its level. Discard people outside the areas of the company openings, unless the role is general management.'
+      };
+      if (a.key === 'companies') p.icpMinScore = icp[c.code] ? icp[c.code].min : 50;
+      out.push(p);
+    });
+  });
+  return out;
+})();
+const ENGINE_PROMPTS = engineLoad('r4Prompts', ENGINE_PROMPTS_SEED);
+function countryPromptsComplete(country) {
+  return PROMPT_ANALYSES.every(function (a) {
+    return ENGINE_PROMPTS.some(function (p) { return p.country === country && p.analysis === a.key && p.status === 'active'; });
+  });
+}
+
+const ENGINE_RULES = {
+  exclusions: [
+    { code: 'staffing_agency', label: 'Staffing agencies', note: 'They compete with Solvo.' },
+    { code: 'government', label: 'Government entities', note: 'Public procurement does not hire through Solvo.' }
+  ],
+  essentials: [
+    { code: 'domain', label: 'Domain', note: 'Key of the company and input of the decision-maker services.' },
+    { code: 'size', label: 'Size', note: 'Number of employees, used by the ICP.' },
+    { code: 'industry', label: 'Industry', note: 'Code from the industry catalog.' }
+  ],
+  validityDays: 30
+};
+
+/* ---- 20.7 Envíos programados de cold outreach ----------------------------- */
+// Cada servicio de cold outreach recibe un listado de leads ya filtrado.
+const OUTREACH_SCHEDULES_SEED = [
+  {
+    id: 'out-us-email', name: 'Cold email · United States', serviceId: 'svc-outreach-us', days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    filter: { companyCountries: ['US'], companyStates: ['qualified'], onlyRolesWithEmail: true, notContacted: true },
+    isActive: true, lastRunDays: 0, lastCount: 50
+  }
+];
+const OUTREACH_SCHEDULES = engineLoad('r4Outreach', OUTREACH_SCHEDULES_SEED);
+
+/* ---- 20.8 Entidades nuevas: España y países de contratación --------------- */
+(function seedRelease4Entities() {
+  function daysAgoStr(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+  function hoursAgoIso(h) { return new Date(Date.now() - h * 3600000).toISOString(); }
+  const base = { lastContactedAt: null, lastScrapedAt: null, salesPitch: null, pipelineStage: 'lead', type: 'prospect', coordinatorId: null, lastExportedBy: null, lastExportedAt: null, exportCount: 0, linkedinId: null, indeedId: null, linkedinUrl: null, indeedUrl: null };
+  function company(o) { MOCK_COMPANIES.push(Object.assign({}, base, o)); }
+  // España: llegan por Clientes nuevos y pasan por todas las etapas.
+  company({ id: 'comp-101', name: 'Grupo Lumen Servicios', industry: 'Servicios profesionales', industryCode: 'professional_services', location: 'Madrid, Madrid', countryCode: 'ES', divisionCode: 'ES-M', city: 'Madrid', website: 'https://lumenservicios.es', phone: '+34 910 555 210', sizeEmployees: 240, revenueUsd: '38000000', yearFounded: '2006', icpScore: 71, leadSignals: ['multiple_openings', 'repeated_posting'], qualifiedAt: daysAgoStr(1), researchedAt: daysAgoStr(1), lastResearchAt: daysAgoStr(1), isResearched: true, contactsSearchedAt: daysAgoStr(1), isExcluded: false, exclusionReason: null, leadSummary: 'Madrid back-office services firm for insurers and utilities. Hires payroll and accounting staff every quarter and runs its own customer care desk.', valueProposition: 'Outsourced administrative, payroll and customer-care operations for mid-size insurers and utilities in Spain.', strengthsDifferentiators: 'Long contracts with regional insurers; bilingual Spanish–English desk.', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', createdAt: daysAgoStr(2), contactsCount: 0 });
+  company({ id: 'comp-102', name: 'Nexa Logística', industry: 'Logística', industryCode: 'logistics_transportation', location: 'Barcelona, Barcelona', countryCode: 'ES', divisionCode: 'ES-B', city: 'Barcelona', website: 'https://nexalogistica.com', phone: '+34 932 555 118', sizeEmployees: 95, revenueUsd: null, yearFounded: '2014', icpScore: null, leadSignals: [], qualifiedAt: null, researchedAt: daysAgoStr(0), lastResearchAt: daysAgoStr(0), isResearched: true, contactsSearchedAt: null, isExcluded: false, exclusionReason: null, industryMissing: false, leadSummary: null, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(0), contactsCount: 0 });
+  // Países de contratación: Hiring countries termina en la plataforma, sin pasar por
+  // los servicios de empresas; la empresa queda detectada, con el nombre del aviso.
+  company({ id: 'comp-201', name: 'Andes Contact Center', industry: '', industryCode: null, location: 'Bogotá, Bogotá, D.C.', countryCode: 'CO', divisionCode: 'CO-DC', city: 'Bogotá', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(1), contactsCount: 0 });
+  company({ id: 'comp-202', name: 'Pacífica BPO', industry: '', industryCode: null, location: 'Makati, National Capital Region', countryCode: 'PH', divisionCode: 'PH-00', city: null, website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(2), contactsCount: 0 });
+  company({ id: 'comp-203', name: 'Grupo Ferrara', industry: '', industryCode: null, location: 'Ciudad de México, Ciudad de México', countryCode: 'MX', divisionCode: 'MX-CMX', city: 'Ciudad de México', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(3), contactsCount: 0 });
+  company({ id: 'comp-204', name: 'Kilima Software', industry: '', industryCode: null, location: 'Nairobi, Nairobi City', countryCode: 'KE', divisionCode: 'KE-30', city: 'Nairobi', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(4), contactsCount: 0 });
+  company({ id: 'comp-205', name: 'Córdoba Dev Studio', industry: '', industryCode: null, location: 'Córdoba, Córdoba', countryCode: 'AR', divisionCode: 'AR-X', city: 'Córdoba', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(5), contactsCount: 0 });
+
+  MOCK_CONTACTS.push(
+    { id: 'ct-101', companyId: 'comp-101', fullName: 'Lucía Fernández', position: 'Directora General', department: 'executive', seniorityLevel: 'c_suite', email: 'lucia.fernandez@lumenservicios.es', phone: '+34 610 555 301', linkedinUrl: 'https://linkedin.com/in/luciafernandez', roleCode: 'ceo', decisionLevel: 1, emailVerification: 'valid', analyzedAt: daysAgoStr(1), createdAt: daysAgoStr(1), providers: { person: 'svc-apollo-people', email: 'svc-hunter', phone: 'svc-apollo-people' } },
+    { id: 'ct-102', companyId: 'comp-101', fullName: 'Javier Ortega', position: 'Director Financiero', department: 'finance', seniorityLevel: 'c_suite', email: 'j.ortega@lumenservicios.es', phone: null, linkedinUrl: 'https://linkedin.com/in/javierortega', roleCode: 'cfo', decisionLevel: 1, emailVerification: 'accept_all', analyzedAt: daysAgoStr(1), createdAt: daysAgoStr(1), providers: { person: 'svc-hunter', email: 'svc-hunter' } }
+  );
+
+  const vbase = { status: 'detected', comercialId: null, comercialType: null, sdrId: null, sdrType: null, lastExportedBy: null, lastExportedAt: null, exportCount: 0, aiSignals: [], salary: null };
+  function vacancy(o) {
+    const v = Object.assign({}, vbase, o);
+    const ts = hoursAgoIso(o.hoursAgo);
+    v.detectedAtTs = ts; v.detectedAt = ts.slice(0, 10); v.publishedDate = daysAgoStr(Math.ceil(o.hoursAgo / 24) + 1);
+    delete v.hoursAgo;
+    if (v.comercialId || v.sdrId) v.assignmentUpdatedAt = formatStamp(ts);
+    MOCK_VACANCIES.push(v);
+  }
+  vacancy({ id: 'vac-101', title: 'Técnico de nóminas', companyId: 'comp-101', positionId: 'pos-09', searchText: 'técnico de nóminas', sourcePortal: 'indeed', countryCode: 'ES', divisionCode: 'ES-M', cityId: 'es-madrid', location: 'Madrid', workModality: 'hybrid', jobUrl: 'https://es.indeed.com/viewjob?jk=4c1e90ab77d2f310', remoteViable: true, aiConfidence: 0.88, aiReasons: ['Payroll runs on A3Nom and the posting allows two remote days; nothing requires a fixed presence.'], salaryPublished: { min: 26000, max: 30000, currency: 'EUR', period: 'year' }, salaryMinUsd: 28080, salaryMaxUsd: 32400, languages: ['Spanish', 'English'], seniorityLevel: 'mid', department: 'Human Resources', skills: 'Payroll, A3Nom, Social security', description: 'Gestión de nóminas, seguros sociales y finiquitos para una plantilla de 240 personas.', triggerIds: ['trg-new-clients'], comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited', hoursAgo: 30 });
+  vacancy({ id: 'vac-102', title: 'Administrativo contable', companyId: 'comp-101', positionId: 'pos-01', searchText: 'administrativo contable', sourcePortal: 'indeed', countryCode: 'ES', divisionCode: 'ES-M', cityId: 'es-madrid', location: 'Madrid', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=9b2d01fe34a7c615', remoteViable: true, aiConfidence: 0.81, aiReasons: ['Ledger and invoicing work in SAP Business One; the office presence is a preference, not a requirement.'], salaryPublished: { min: 1800, max: 2100, currency: 'EUR', period: 'month' }, salaryMinUsd: 23328, salaryMaxUsd: 27216, languages: ['Spanish'], seniorityLevel: 'entry', department: 'Finance', skills: 'SAP Business One, Invoicing, Reconciliation', description: 'Registro contable, conciliaciones bancarias y facturación de clientes.', triggerIds: ['trg-new-clients'], comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited', hoursAgo: 28 });
+  vacancy({ id: 'vac-103', title: 'Técnico de tráfico', companyId: 'comp-102', positionId: 'pos-15', searchText: 'técnico de tráfico', sourcePortal: 'indeed', countryCode: 'ES', divisionCode: 'ES-B', cityId: 'es-barcelona', location: 'Barcelona', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=51aa9c3e0f8b2d47', remoteViable: true, aiConfidence: 0.74, aiReasons: ['Route planning and carrier coordination run on a TMS; the role does not handle goods.'], salaryPublished: null, salaryMinUsd: null, salaryMaxUsd: null, languages: ['Spanish', 'Catalan'], seniorityLevel: 'mid', department: 'Operations', skills: 'TMS, Route planning', description: 'Planificación de rutas y coordinación con transportistas nacionales.', triggerIds: ['trg-new-clients'], hoursAgo: 6 });
+  vacancy({ id: 'vac-201', title: 'Asesor de servicio al cliente bilingüe', companyId: 'comp-201', positionId: 'pos-04', searchText: 'asesor de servicio al cliente', sourcePortal: 'computrabajo', countryCode: 'CO', divisionCode: 'CO-DC', cityId: 'co-bogota', location: 'Bogotá', workModality: 'onsite', jobUrl: 'https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-asesor-bilingue-3F1A9C', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Inbound English support for a US client over voice and chat.'], salaryPublished: { min: 3200000, max: 3800000, currency: 'COP', period: 'month' }, salaryMinUsd: 9600, salaryMaxUsd: 11400, languages: ['Spanish', 'English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'English C1, CRM, Chat support', description: 'Atención de clientes de EE. UU. por voz y chat en inglés.', triggerIds: ['trg-hiring-countries'], extraSources: ['svc-indeed'], hoursAgo: 9 });
+  vacancy({ id: 'vac-202', title: 'Customer Service Representative', companyId: 'comp-202', positionId: 'pos-04', searchText: 'customer service representative', sourcePortal: 'indeed', countryCode: 'PH', divisionCode: 'PH-00', cityId: null, cityRaw: 'Makati', needsReview: true, location: 'Makati', workModality: 'onsite', jobUrl: 'https://ph.indeed.com/viewjob?jk=0e7b5c11d9a4f862', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Voice support for a US healthcare account; fully systems-based.'], salaryPublished: { min: 25000, max: 30000, currency: 'PHP', period: 'month' }, salaryMinUsd: 5200, salaryMaxUsd: 6240, languages: ['English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Voice support, Healthcare accounts', description: 'Handle inbound calls for a US healthcare provider.', triggerIds: ['trg-hiring-countries'], hoursAgo: 40 });
+  vacancy({ id: 'vac-203', title: 'Analista contable', companyId: 'comp-203', positionId: 'pos-01', searchText: 'analista contable', sourcePortal: 'computrabajo', countryCode: 'MX', divisionCode: 'MX-CMX', cityId: 'mx-cdmx', location: 'Ciudad de México', workModality: 'hybrid', jobUrl: 'https://mx.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-analista-contable-8B21D0', remoteViable: true, aiConfidence: 0.85, aiReasons: ['Month-end close and reconciliations on CONTPAQi; hybrid by choice.'], salaryPublished: { min: 18000, max: 22000, currency: 'MXN', period: 'month' }, salaryMinUsd: 11900, salaryMaxUsd: 14540, languages: ['Spanish'], seniorityLevel: 'mid', department: 'Finance', skills: 'CONTPAQi, Month-end close', description: 'Cierre contable mensual, conciliaciones y declaraciones.', triggerIds: ['trg-hiring-countries'], hoursAgo: 55 });
+  vacancy({ id: 'vac-204', title: 'Software Developer', companyId: 'comp-204', positionId: 'pos-21', searchText: 'software developer', sourcePortal: 'linkedin', countryCode: 'KE', divisionCode: 'KE-30', cityId: 'ke-nairobi', location: 'Nairobi', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3911824405', remoteViable: true, aiConfidence: 0.95, aiReasons: ['Fully remote product team.'], salaryPublished: { min: 150000, max: 220000, currency: 'KES', period: 'month' }, salaryMinUsd: 13950, salaryMaxUsd: 20460, languages: ['English'], seniorityLevel: 'mid', department: 'Engineering', skills: 'Python, Django, PostgreSQL', description: 'Build payment features for a pan-African fintech.', triggerIds: ['trg-hiring-countries'], extraSources: ['svc-indeed'], hoursAgo: 70 });
+  vacancy({ id: 'vac-205', title: 'Desarrollador full stack', companyId: 'comp-205', positionId: 'pos-21', searchText: 'desarrollador full stack', sourcePortal: 'linkedin', countryCode: 'AR', divisionCode: 'AR-X', cityId: 'ar-cordoba', location: 'Córdoba', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3912003571', remoteViable: true, aiConfidence: 0.91, aiReasons: ['Remote-first studio working for US clients.'], salaryPublished: { min: 1800, max: 2400, currency: 'USD', period: 'month' }, salaryMinUsd: 21600, salaryMaxUsd: 28800, languages: ['Spanish', 'English'], seniorityLevel: 'senior', department: 'Engineering', skills: 'React, Node.js, AWS', description: 'Desarrollo de producto para clientes de EE. UU., en dólares.', triggerIds: ['trg-hiring-countries'], hoursAgo: 96 });
+  vacancy({ id: 'vac-206', title: 'Agente de call center bilingüe', companyId: 'comp-201', positionId: 'pos-04', searchText: 'agente de call center bilingüe', sourcePortal: 'computrabajo', countryCode: 'CO', divisionCode: 'CO-ANT', cityId: 'co-medellin', location: 'Medellín', workModality: 'onsite', jobUrl: 'https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-agente-bilingue-77C0E2', remoteViable: false, aiConfidence: 0.78, aiReasons: ['Requires on-site badge access for a regulated bank account.'], salaryPublished: { min: 2600000, max: null, currency: 'COP', period: 'month' }, salaryMinUsd: 7800, salaryMaxUsd: null, languages: ['Spanish', 'English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'English B2, Banking', description: 'Atención bilingüe para un banco, en sede.', triggerIds: ['trg-hiring-countries'], hoursAgo: 20 });
+})();
+
+/* ---- 20.9 Estado de las entidades ----------------------------------------- */
+// Un estado único por entidad, con el historial de los triggers que la trajeron.
+const VACANCY_STATES = {
+  detected: { label: 'Detected', tone: 'neutral' },
+  analyzed: { label: 'Analyzed', tone: 'info' },
+  viable: { label: 'Viable', tone: 'success' },
+  discarded: { label: 'Discarded', tone: 'danger' },
+  closed: { label: 'Closed', tone: 'neutral' }
+};
+const COMPANY_STATES = {
+  detected: { label: 'Detected', tone: 'neutral', note: 'Known from a posting; not enriched yet.' },
+  enriched: { label: 'Enriched', tone: 'info', note: 'A provider returned the company with its essential data.' },
+  missing_data: { label: 'Missing data', tone: 'warning', note: 'No provider returned all the essential data: domain, size and industry.' },
+  qualified: { label: 'Qualified', tone: 'success', note: 'Scored against the ICP of its country.' },
+  excluded: { label: 'Excluded', tone: 'danger', note: 'A staffing agency or a government entity.' }
+};
+const DM_STATES = {
+  found: { label: 'Found', tone: 'neutral' },
+  analyzed: { label: 'Analyzed', tone: 'neutral' },
+  with_contact: { label: 'With contact', tone: 'success' },
+  discarded: { label: 'Discarded', tone: 'danger' },
+  contacted: { label: 'Contacted', tone: 'info' }
+};
+const COMPANY_TYPES = {
+  direct_employer: 'Direct employer', staffing_agency: 'Staffing agency', government: 'Government'
+};
+const SOURCE_TRIGGER = {
+  'general-us-openings': 'trg-new-clients', prospect_engine: 'trg-new-clients',
+  'current-client-us-openings': 'trg-current-clients', on_demand_openings: 'trg-on-demand'
+};
+const PORTAL_SERVICE = { indeed: 'svc-indeed', linkedin: 'svc-linkedin', computrabajo: 'svc-computrabajo', website: 'svc-indeed', manual: null };
+
+(function seedRelease4() {
+  function parseK(text) {
+    const m = String(text || '').match(/\$(\d+)K\s*-\s*\$(\d+)K/);
+    return m ? [Number(m[1]) * 1000, Number(m[2]) * 1000] : null;
+  }
+  MOCK_COMPANIES.forEach(function (c) {
+    if (!c.countryCode) {
+      c.countryCode = 'US';
+      c.divisionCode = c.stateCode ? 'US-' + c.stateCode : null;
+      if (!c.city && c.location) c.city = c.location.split(',')[0];
+    }
+    c.domain = c.website ? c.website.replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/^www\./, '') : null;
+    c.companyType = c.exclusionReason === 'staffing_agency' ? 'staffing_agency' : (c.exclusionReason === 'government' ? 'government' : (c.isResearched || c.sizeEmployees ? 'direct_employer' : null));
+    if (c.isExcluded) c.entityState = 'excluded';
+    else if (c.icpScore !== null && c.icpScore !== undefined) c.entityState = 'qualified';
+    else if (c.sizeEmployees && c.industryCode && c.domain) c.entityState = 'enriched';
+    else if (c.isResearched || c.sizeEmployees) c.entityState = 'missing_data';
+    else c.entityState = 'detected';
+    c.stateChangedAt = c.qualifiedAt || c.researchedAt || c.createdAt;
+  });
+  MOCK_VACANCIES.forEach(function (v) {
+    if (!v.countryCode) {
+      v.countryCode = 'US';
+      v.divisionCode = v.stateCode ? 'US-' + v.stateCode : null;
+      const name = (v.location || '').split(',')[0];
+      const city = GEO_CITIES.find(function (g) { return g.country === 'US' && g.name === name; });
+      v.cityId = city ? city.id : null;
+      if (!city && name) { v.cityRaw = name; }
+    }
+    if (!v.triggerIds) v.triggerIds = [SOURCE_TRIGGER[v.source] || 'trg-new-clients'];
+    if (v.salaryMinUsd === null || v.salaryMinUsd === undefined) {
+      const k = parseK(v.salary);
+      if (k) { v.salaryMinUsd = k[0]; v.salaryMaxUsd = k[1]; }
+    }
+    if (v.salaryPublished === undefined) {
+      v.salaryPublished = v.salaryMinUsd ? { min: v.salaryMinUsd, max: v.salaryMaxUsd, currency: 'USD', period: 'year' } : null;
+    }
+    // Fuentes: cada vez que un servicio trajo la vacante, con su término e invocación.
+    const main = PORTAL_SERVICE[v.sourcePortal] || 'svc-indeed';
+    const at = v.detectedAtTs || (v.detectedAt + 'T09:00:00.000Z');
+    v.sources = [{ serviceId: main, term: v.searchText || null, triggerId: v.triggerIds[0], invocationId: 'inv-' + v.id.replace('vac-', '') + 'a', at: at }];
+    (v.extraSources || []).forEach(function (s, i) {
+      v.sources.push({ serviceId: s, term: v.searchText || null, triggerId: v.triggerIds[0], invocationId: 'inv-' + v.id.replace('vac-', '') + 'b' + i, at: new Date(parseStamp(at).getTime() + (i + 1) * 3600000).toISOString() });
+    });
+    // Dos vacantes de Release 3 llegaron también por un segundo servicio.
+    if (v.id === 'vac-011' || v.id === 'vac-004') {
+      v.sources.push({ serviceId: v.id === 'vac-011' ? 'svc-linkedin' : 'svc-indeed', term: v.searchText || null, triggerId: v.triggerIds[0], invocationId: 'inv-' + v.id.replace('vac-', '') + 'c', at: new Date(parseStamp(at).getTime() + 5400000).toISOString() });
+    }
+    if (v.status === 'lost') v.entityState = 'closed';
+    else if (v.remoteViable === false) v.entityState = 'discarded';
+    else if (v.aiConfidence === null || v.aiConfidence === undefined) v.entityState = 'analyzed';
+    else v.entityState = 'viable';
+    v.promptVersion = v.aiConfidence !== null && v.aiConfidence !== undefined ? 'v' + (v.countryCode === 'US' || v.countryCode === 'ES' ? 4 : 1) : null;
+    // Ciudad fuera del catálogo: la vacante queda con su país y su división, marcada para revisión.
+    if (v.needsReview === undefined) v.needsReview = !v.cityId && !!v.cityRaw;
+  });
+  // El trigger de la empresa es la unión de los de sus vacantes.
+  MOCK_COMPANIES.forEach(function (c) {
+    const set = {};
+    MOCK_VACANCIES.forEach(function (v) { if (v.companyId === c.id) v.triggerIds.forEach(function (t) { set[t] = true; }); });
+    c.triggerIds = Object.keys(set);
+    if (c.lastResearchAt && c.triggerIds.indexOf('trg-research') < 0 && c.id === 'comp-011') c.triggerIds.push('trg-research');
+  });
+  MOCK_CONTACTS.forEach(function (ct) {
+    const role = ct.roleCode ? decisionRole(ct.roleCode) : null;
+    if (role) ct.decisionLevel = role.level;
+    const company = MOCK_COMPANIES.find(function (c) { return c.id === ct.companyId; });
+    if (!ct.providers) ct.providers = ct.roleCode ? { person: 'svc-apollo-people', email: ct.emailVerification === 'valid' ? 'svc-hunter' : 'svc-apollo-people', phone: ct.phone ? 'svc-apollo-people' : null } : null;
+    if (!ct.roleCode) ct.dmState = null;
+    else if (company && company.lastContactedAt && ct.emailVerification === 'valid') ct.dmState = 'contacted';
+    else if (ct.emailVerification === 'valid' || ct.emailVerification === 'accept_all') ct.dmState = 'with_contact';
+    else ct.dmState = 'analyzed';
+    ct.emailsSent = ct.dmState === 'contacted' ? 1 : 0;
+    ct.unsubscribed = false;
+  });
+  MOCK_COMPANIES.forEach(function (c) { c.contactsCount = getContactsForCompany(c.id).length; });
+})();
+
+/* ---- 20.10 Historial de estado -------------------------------------------- */
+// Estado anterior y nuevo, servicio, trigger, versión de prompt y fecha.
+const ENTITY_HISTORY = [];
+(function seedEntityHistory() {
+  function push(entity, id, from, to, serviceId, triggerId, at, promptVersion, note) {
+    ENTITY_HISTORY.push({ entity: entity, entityId: id, from: from, to: to, serviceId: serviceId, triggerId: triggerId, promptVersion: promptVersion || null, at: at, note: note || null });
+  }
+  function plus(iso, minutes) { return new Date(parseStamp(iso).getTime() + minutes * 60000).toISOString(); }
+  MOCK_VACANCIES.forEach(function (v) {
+    const s0 = v.sources[0];
+    push('vacancy', v.id, null, 'detected', s0.serviceId, s0.triggerId, s0.at);
+    if (v.entityState === 'detected') return;
+    const t1 = plus(s0.at, 12);
+    if (v.entityState === 'analyzed') { push('vacancy', v.id, 'detected', 'analyzed', 'svc-vacancy-analysis', s0.triggerId, t1, null, 'Analyzed before the remote-viability verdict existed.'); return; }
+    push('vacancy', v.id, 'detected', 'analyzed', 'svc-vacancy-analysis', s0.triggerId, t1, v.promptVersion);
+    const verdict = v.entityState === 'closed' ? (v.remoteViable === false ? 'discarded' : 'viable') : v.entityState;
+    push('vacancy', v.id, 'analyzed', verdict, 'svc-vacancy-analysis', s0.triggerId, plus(t1, 1), v.promptVersion, (v.aiReasons || [])[0] || null);
+    v.sources.slice(1).forEach(function (s) { push('vacancy', v.id, verdict, verdict, s.serviceId, s.triggerId, s.at, null, 'Also found by ' + serviceName(s.serviceId) + '; kept as one opening.'); });
+    if (v.entityState === 'closed') push('vacancy', v.id, verdict, 'closed', s0.serviceId, s0.triggerId, plus(s0.at, 60 * 24 * 30), null, 'Not seen again in 30 days.');
+  });
+  MOCK_COMPANIES.forEach(function (c) {
+    const first = MOCK_VACANCIES.filter(function (v) { return v.companyId === c.id; }).sort(function (a, b) { return parseStamp(a.sources[0].at) - parseStamp(b.sources[0].at); })[0];
+    const trg = first ? first.sources[0].triggerId : (c.triggerIds[0] || 'trg-research');
+    const t0 = first ? plus(first.sources[0].at, 13) : (c.createdAt + 'T10:00:00.000Z');
+    push('company', c.id, null, 'detected', first ? 'svc-vacancy-analysis' : null, trg, t0, null, first ? 'Detected with the opening ' + first.title + '.' : 'Created in the platform.');
+    if (c.entityState === 'detected') return;
+    const t1 = plus(t0, 4);
+    const essentials = c.sizeEmployees && c.industryCode && c.domain;
+    push('company', c.id, 'detected', essentials ? 'enriched' : 'missing_data', 'svc-apollo-company', trg, t1, null, essentials ? null : 'Apollo returned the company without ' + (!c.domain ? 'domain' : !c.sizeEmployees ? 'size' : 'industry') + '.');
+    if (!essentials && c.entityState !== 'missing_data') push('company', c.id, 'missing_data', 'enriched', 'svc-brightdata', trg, plus(t1, 3), null, 'Bright Data completed the essential data.');
+    if (c.entityState === 'qualified' || c.entityState === 'excluded') {
+      push('company', c.id, 'enriched', c.entityState, 'svc-company-analysis', trg, plus(t1, 8), 'v3', c.entityState === 'excluded' ? 'Staffing agency: competes with Solvo.' : 'ICP score ' + c.icpScore + '.');
+    }
+  });
+  MOCK_CONTACTS.forEach(function (ct) {
+    if (!ct.roleCode) return;
+    const at = (ct.analyzedAt || ct.createdAt || daysAgoIso(5)) + (String(ct.analyzedAt || '').length === 10 ? 'T12:00:00.000Z' : '');
+    push('decision_maker', ct.id, null, 'found', (ct.providers && ct.providers.person) || 'svc-apollo-people', 'trg-new-clients', at);
+    push('decision_maker', ct.id, 'found', 'analyzed', 'svc-dm-analysis', 'trg-new-clients', plus(at, 2), 'v3', 'Role ' + (decisionRole(ct.roleCode) || { label: ct.roleCode }).label + '.');
+    if (ct.dmState === 'with_contact' || ct.dmState === 'contacted') push('decision_maker', ct.id, 'analyzed', 'with_contact', 'svc-contact', 'trg-new-clients', plus(at, 3));
+    if (ct.dmState === 'contacted') push('decision_maker', ct.id, 'with_contact', 'contacted', 'svc-outreach-us', null, plus(at, 60 * 20), null, 'Cold email · United States.');
+  });
+  function daysAgoIso(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+})();
+function getEntityHistory(entity, id) {
+  return ENTITY_HISTORY.filter(function (h) { return h.entity === entity && h.entityId === id; })
+    .sort(function (a, b) { return parseStamp(b.at) - parseStamp(a.at); });
+}
+
+/* ---- 20.11 Ejecuciones e invocaciones ------------------------------------- */
+// Una ejecución por cada activación de un trigger; cada una con sus invocaciones.
+const EXECUTION_STATUS = {
+  completed: { label: 'Completed', tone: 'success' },
+  running: { label: 'Running', tone: 'info' },
+  with_retries: { label: 'Completed with retries', tone: 'warning' },
+  failed: { label: 'Failed', tone: 'danger' }
+};
+const ENGINE_EXECUTIONS = (function buildExecutions() {
+  const out = [];
+  let n = 0;
+  const shape = {
+    'trg-new-clients': { searches: 180, vacancies: 340, viable: 190, companies: 120, qualified: 46, dms: 61, cost: 6.4, hours: 5.2 },
+    'trg-current-clients': { searches: 158, vacancies: 95, viable: 58, companies: 0, qualified: 0, dms: 0, cost: 0.9, hours: 1.1 },
+    'trg-hiring-countries': { searches: 96, vacancies: 410, viable: 260, companies: 0, qualified: 0, dms: 0, cost: 1.7, hours: 2.4 }
+  };
+  for (let d = 0; d < 14; d++) {
+    const day = new Date(Date.now() - d * 86400000);
+    const wd = day.getDay();
+    if (wd === 0 || wd === 6) continue;
+    Object.keys(shape).forEach(function (tid, ti) {
+      const s = shape[tid];
+      const trig = ENGINE_TRIGGERS_SEED.find(function (t) { return t.id === tid; });
+      const start = new Date(day); const hh = Number(trig.activation.time.split(':')[0]);
+      start.setHours(hh, 0, 0, 0);
+      if (start.getTime() > Date.now()) return;
+      const f = 0.8 + seededNoise(d * 7 + ti) * 0.4;
+      n += 1;
+      const running = d === 0 && tid === 'trg-new-clients' && Date.now() - start.getTime() < s.hours * 3600000;
+      const status = running ? 'running' : (d === 3 && tid === 'trg-new-clients' ? 'with_retries' : 'completed');
+      out.push({
+        id: 'ex-' + String(n).padStart(4, '0'), triggerId: tid, requestedBy: 'cron', startedAt: start.toISOString(),
+        endedAt: running ? null : new Date(start.getTime() + s.hours * f * 3600000).toISOString(), status: status,
+        counts: { searches: Math.round(s.searches * (running ? 0.6 : 1)), vacancies: Math.round(s.vacancies * f * (running ? 0.6 : 1)), viable: Math.round(s.viable * f * (running ? 0.5 : 1)), companies: Math.round(s.companies * f), qualified: Math.round(s.qualified * f), decisionMakers: Math.round(s.dms * f * (running ? 0.3 : 1)) },
+        costUsd: Math.round(s.cost * f * 100) / 100,
+        note: status === 'with_retries' ? 'Bright Data answered with errors for 40 minutes; 23 companies waited and were retried without being charged twice.' : null
+      });
+    });
+  }
+  return out;
+})();
+// Invocaciones de una ejecución: deterministas por id, para que la vista no cambie al recargar.
+function getInvocations(executionId) {
+  const ex = ENGINE_EXECUTIONS.find(function (e) { return e.id === executionId; }) || (typeof MOCK_REQUESTS !== 'undefined' ? MOCK_REQUESTS.find(function (r) { return r.executionId === executionId; }) : null);
+  if (!ex) return [];
+  const trig = ENGINE_TRIGGERS.find(function (t) { return t.id === ex.triggerId; });
+  const seed = Number(String(executionId).replace(/\D/g, '')) || 1;
+  const out = [];
+  const startTs = parseStamp(ex.startedAt || ex.at).getTime();
+  let k = 0;
+  function inv(serviceId, params, result, amount, minutes) {
+    const svc = ENGINE_SERVICES.find(function (s) { return s.id === serviceId; });
+    k += 1;
+    out.push({ id: executionId + '-' + k, serviceId: serviceId, params: params, result: result, amount: amount, unit: svc ? svc.unit : '', costUsd: svc ? Math.round(amount * svc.unitCostUsd * 10000) / 10000 : 0, at: new Date(startTs + minutes * 60000).toISOString(), requestedBy: ex.requestedBy || 'cron' });
+  }
+  const cities = (trig && trig.locations || []).slice(0, 6);
+  cities.forEach(function (l, i) {
+    const city = GEO_CITIES.find(function (c) { return c.id === l.cityId; });
+    if (!city) return;
+    (trig.vacancyServices[city.country] || []).forEach(function (sid, j) {
+      const terms = ENGINE_TERMS.filter(function (t) { return t.country === city.country && trig.activeTerms.indexOf(t.id) >= 0; });
+      const term = terms[(seed + i) % Math.max(terms.length, 1)];
+      inv(sid, (term ? '"' + term.text + '" · ' : '') + city.name + ' · last ' + (trig.windowDays || 1) + ' day', i === 2 && j === 0 && seed % 3 === 0 ? 'retried' : 'ok', 1 + ((seed + i + j) % 3), 2 + i * 3 + j);
+    });
+  });
+  if (trig && trig.searchBy === 'company') {
+    ['TechCorp Solutions', 'NovaTech Industries', 'GlobalHealth Inc'].forEach(function (name, i) {
+      (trig.vacancyServices.US || []).forEach(function (sid, j) { inv(sid, name + ' · last 1 day', 'ok', 1, 1 + i * 2 + j); });
+    });
+  }
+  inv('svc-vacancy-analysis', (ex.counts ? ex.counts.vacancies : 3) + ' postings', 'ok', 1800 * Math.max(1, ex.counts ? ex.counts.vacancies : 3), 25);
+  if (trig && trig.enrichment.length) {
+    inv('svc-apollo-company', 'Meridian Logistics · meridianlog.com', 'ok', 1, 31);
+    inv('svc-apollo-company', 'Harbor Point Services · no domain · US', 'not_found', 1, 32);
+    inv('svc-brightdata', 'Harbor Point Services · US', ex.status === 'with_retries' ? 'retried' : 'ok', 1, 33);
+    inv('svc-company-analysis', '3 companies', 'ok', 5400, 36);
+  }
+  if (trig && trig.decisionMakers.length) {
+    inv('svc-apollo-people', 'meridianlog.com · operations, finance', 'ok', 2, 41);
+    inv('svc-apollo-people', 'summitedu.org · operations', 'not_found', 1, 42);
+    inv('svc-hunter', 'summitedu.org · operations', 'ok', 1, 43);
+    inv('svc-dm-analysis', '5 people', 'ok', 3200, 46);
+    inv('svc-contact', 'Karen White · COO', 'ok', 1, 48);
+  }
+  return out;
+}
+
+/* ---- 20.12 Solicitudes de los usuarios ------------------------------------ */
+// A pedido (vacantes por empresa o por posición y ubicación) e Investigación a pedido.
+// La respuesta se lee del estado de las entidades: no hay un callback que esperar.
+const REQUEST_STATUS = {
+  queued: { label: 'Queued', tone: 'neutral' },
+  running: { label: 'In progress', tone: 'info' },
+  done: { label: 'Done', tone: 'success' },
+  no_results: { label: 'No results', tone: 'warning' },
+  failed: { label: 'Failed', tone: 'danger' }
+};
+const MOCK_REQUESTS_SEED = (function buildRequests() {
+  function hoursAgo(h) { return new Date(Date.now() - h * 3600000).toISOString(); }
+  return [
+    { id: 'req-0007', executionId: 'rx-0007', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-006', at: hoursAgo(0.4), mode: 'terms', country: 'ES', cityIds: ['es-valencia'], positionIds: ['pos-01', 'pos-09'], windowDays: 7, status: 'running', progress: { searched: 4, toSearch: 6, found: 9, analyzed: 5, viable: 4 }, vacancyIds: [] },
+    { id: 'req-0006', executionId: 'rx-0006', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-006', at: hoursAgo(3), mode: 'company', companyId: 'comp-004', windowDays: 1, status: 'done', progress: { searched: 2, toSearch: 2, found: 2, analyzed: 2, viable: 2 }, vacancyIds: ['vac-006'] },
+    { id: 'req-0005', executionId: 'rx-0005', triggerId: 'trg-research', requestedBy: 'uuid-staff-006', at: hoursAgo(0.2), companyId: 'comp-011', status: 'running', steps: { enrichment: 'running' } },
+    { id: 'req-0004', executionId: 'rx-0004', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-007', at: hoursAgo(30), mode: 'company', companyName: 'Blue Harbor Dental Group', windowDays: 14, status: 'no_results', progress: { searched: 2, toSearch: 2, found: 0, analyzed: 0, viable: 0 }, vacancyIds: [] },
+    { id: 'req-0003', executionId: 'rx-0003', triggerId: 'trg-research', requestedBy: 'uuid-staff-007', at: hoursAgo(50), companyId: 'comp-102', status: 'done', outcome: 'ok', steps: { enrichment: 'enriched', qualification: 'pending', decisionMakers: 0 } },
+    { id: 'req-0002', executionId: 'rx-0002', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-001', at: hoursAgo(75), mode: 'terms', country: 'US', cityIds: ['us-austin', 'us-dallas'], positionIds: ['pos-12'], windowDays: 3, status: 'done', progress: { searched: 6, toSearch: 6, found: 14, analyzed: 14, viable: 9 }, vacancyIds: [] },
+    { id: 'req-0001', executionId: 'rx-0001', triggerId: 'trg-research', requestedBy: 'uuid-staff-006', at: hoursAgo(98), companyName: 'Corvid Analytics', status: 'failed', outcome: 'company_not_found', steps: { enrichment: 'not_found' } }
+  ];
+})();
+const MOCK_REQUESTS = engineLoad('r4Requests', MOCK_REQUESTS_SEED);
+function saveRequests() { engineSave('r4Requests', MOCK_REQUESTS); }
+function addRequest(req) {
+  const max = MOCK_REQUESTS.reduce(function (m, r) { return Math.max(m, Number(r.id.replace(/\D/g, ''))); }, 0);
+  req.id = 'req-' + String(max + 1).padStart(4, '0');
+  req.executionId = 'rx-' + String(max + 1).padStart(4, '0');
+  req.at = new Date().toISOString();
+  req.requestedBy = (getCurrentUser() || {}).id || null;
+  if (!req.status) req.status = 'queued';
+  MOCK_REQUESTS.unshift(req);
+  saveRequests();
+  return req;
+}
+function getVisibleRequests() {
+  if (canViewAll()) return MOCK_REQUESTS.slice();
+  const me = (getCurrentUser() || {}).id;
+  return MOCK_REQUESTS.filter(function (r) { return r.requestedBy === me; });
+}
+
+/* ---- 20.13 Etiquetas y helpers -------------------------------------------- */
+function engineCountry(code) { return ENGINE_COUNTRIES.find(function (c) { return c.code === code; }) || null; }
+function countryName(code) { const c = engineCountry(code); return c ? c.name : (code || ''); }
+function divisionName(code) { const d = GEO_DIVISIONS.find(function (x) { return x.code === code; }); return d ? d.name : (code || ''); }
+function cityName(id) { const c = GEO_CITIES.find(function (x) { return x.id === id; }); return c ? c.name : ''; }
+function engineTrigger(id) { return ENGINE_TRIGGERS.find(function (t) { return t.id === id; }) || null; }
+function triggerName(id) { const t = engineTrigger(id); return t ? t.name : (id || ''); }
+function engineService(id) { return ENGINE_SERVICES.find(function (s) { return s.id === id; }) || null; }
+function serviceName(id) { const s = engineService(id); return s ? s.name : (id || ''); }
+function serviceLabel(id) { const s = engineService(id); return s ? (s.provider && s.provider !== s.name ? s.name + ' · ' + s.provider : s.name) : (id || ''); }
+function stageLabel(key) { const s = ENGINE_STAGES.find(function (x) { return x.key === key; }); return s ? s.label : key; }
+function servicesForStage(stage, country) {
+  return ENGINE_SERVICES.filter(function (s) { return s.stage === stage && (!country || s.countries.indexOf(country) >= 0); });
+}
+function termsFor(country, positionId) {
+  return ENGINE_TERMS.filter(function (t) { return t.country === country && (!positionId || t.positionId === positionId); });
+}
+// "Bogotá, Bogotá, D.C. · Colombia": ciudad, división y país; la ciudad fuera del
+// catálogo se muestra con lo que trajo el aviso.
+function placeLabel(record, withCountry) {
+  const city = record.cityId ? cityName(record.cityId) : (record.cityRaw || record.city || '');
+  const parts = [];
+  if (city) parts.push(city);
+  if (record.divisionCode) parts.push(record.countryCode === 'US' ? record.divisionCode.split('-')[1] : divisionName(record.divisionCode));
+  let out = parts.join(', ');
+  if (withCountry !== false && record.countryCode && record.countryCode !== 'US') out += (out ? ' · ' : '') + countryName(record.countryCode);
+  return out;
+}
+const SALARY_PERIODS = { hour: 'hour', month: 'month', year: 'year' };
+function moneyShort(n, currency) {
+  if (n === null || n === undefined) return '';
+  const sym = { USD: '$', EUR: '€' }[currency];
+  const abs = Math.abs(n);
+  let txt;
+  if (abs >= 1000000) txt = (Math.round(n / 100000) / 10).toString().replace(/\.0$/, '') + 'M';
+  else if (abs >= 1000) txt = (Math.round(n / 100) / 10).toString().replace(/\.0$/, '') + 'K';
+  else txt = String(n);
+  return sym ? sym + txt : currency + ' ' + txt;
+}
+function moneyBare(n) { return moneyShort(n, 'XXX').replace('XXX ', ''); }
+// Salario anual en USD: el dato principal del listado, el filtro y el orden.
+function salaryUsdLabel(v) {
+  if (!v || (!v.salaryMinUsd && !v.salaryMaxUsd)) return '';
+  if (v.salaryMinUsd && v.salaryMaxUsd) return moneyShort(v.salaryMinUsd, 'USD') + '–' + moneyBare(v.salaryMaxUsd) + '/yr';
+  return moneyShort(v.salaryMinUsd || v.salaryMaxUsd, 'USD') + '/yr';
+}
+// Salario publicado: se muestra con menos jerarquía cuando no es USD anual.
+function salaryPublishedLabel(v) {
+  const p = v && v.salaryPublished;
+  if (!p) return '';
+  if (p.currency === 'USD' && p.period === 'year') return '';
+  const range = p.min && p.max ? moneyShort(p.min, p.currency) + '–' + moneyBare(p.max) : moneyShort(p.min || p.max, p.currency);
+  return range + '/' + ({ hour: 'hr', month: 'mo', year: 'yr' }[p.period] || p.period);
+}
+// Compatibilidad: las páginas de Release 3 llaman salaryLabel().
+salaryLabel = function (v) { return salaryUsdLabel(v); };
+function stateBadge(map, key) {
+  const s = map[key];
+  if (!s) return '';
+  return '<span class="badge badge-' + s.tone + '">' + s.label + '</span>';
+}
