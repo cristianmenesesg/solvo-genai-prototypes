@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Solvo Platform</title>
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="f1-config.css">
+  <style>
+    .settings-layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; }
+    .settings-content { flex: 1; min-width: 320px; }
+    .settings-section { display: none; }
+    .settings-section.active { display: block; }
+    /* Scraping window y Showcase conservan el ancho de Release 3; los catálogos usan el de f1-config.css */
+    #section-ondemand, #section-showcase { max-width: 760px; }
+
+    /* modal: tags editor */
+    .tags-input { cursor: text; }
+    .tags-input .tag-chip { font-size: 12px; padding: 5px 9px; gap: 6px;
+      background: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+      border-color: var(--color-secondary); color: var(--text-primary); }
+    .tags-input .tag-chip-remove { font-size: 13px; line-height: 1; padding-left: 2px; }
+    .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .field-error { display: none; color: var(--color-error); font-size: 13px; margin-top: 4px; }
+    .modal-row { display: flex; align-items: center; gap: 10px; }
+    .tags-input .tag-chip.is-flagged { border-color: var(--color-error); background: color-mix(in srgb, var(--color-error) 12%, transparent); }
+    .modal-footer .btn:disabled,
+    .modal-footer .btn:disabled:hover { opacity: .45; cursor: not-allowed; background-color: var(--color-primary); border-color: var(--color-primary); }
+
+    /* ── Showcase ── */
+    .sc-row .st-rowhead { gap: var(--space-3); }
+    .sc-photo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+      background: var(--bg-muted); border: 1px solid var(--border-default); }
+    .sc-photo.is-empty { display: inline-flex; align-items: center; justify-content: center;
+      color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--font-semibold); }
+    .sc-title { display: flex; flex-direction: column; min-width: 0; }
+    .sc-flag { display: inline-flex; align-items: center; padding: 1px var(--space-2); border-radius: 20px;
+      font-size: 11px; font-weight: var(--font-semibold); white-space: nowrap;
+      color: var(--color-warning-dark, #92400e); background: color-mix(in srgb, var(--color-warning, #f59e0b) 16%, transparent); }
+    .sc-body { padding-left: 104px; margin-top: var(--space-2); }
+    .sc-short { font-size: var(--text-sm); line-height: 1.5; color: var(--text-secondary);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sc-row.is-off .sc-short { color: var(--text-muted); }
+    .sc-skills { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-2); }
+    .sc-limit { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); color: var(--text-secondary); }
+    .sc-limit .op-states-search { width: 70px; }
+    .sc-full { color: var(--color-warning-dark, #92400e); font-weight: var(--font-semibold); }
+    /* popup */
+    .sc-photoedit { display: flex; align-items: center; gap: var(--space-4); }
+    .sc-photoedit .sc-photo { width: 88px; height: 88px; font-size: var(--text-sm); }
+    .sc-photobtns { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+    .sc-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 150px; gap: var(--space-3); }
+    .sc-grid .form-label { white-space: nowrap; }
+    .sc-counter { float: right; font-size: 11px; color: var(--text-muted); font-weight: var(--font-regular); }
+    .sc-section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-default); }
+    .sc-section:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+    .sc-sectiontitle { font-size: var(--text-xs); font-weight: var(--font-semibold); color: var(--text-muted); margin-bottom: var(--space-3); }
+    .sc-modal .modal-body { max-height: min(70vh, 720px); overflow-y: auto; }
+    @media (max-width: 640px) {
+      .sc-grid { grid-template-columns: 1fr; }
+      .sc-body { padding-left: 0; }
+    }
+  </style>
+  <script src="theme.js"></script>
+</head>
+<body>
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Open menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="mobile-logo">
+      <div class="logo-icon">S</div>
+      <span class="logo-text">Solvo Platform</span>
+    </div>
+  </header>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <div class="app-container">
+    <!-- Sidebar (rendered by RBAC) -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <h1 class="header-title">Solvo Sales Platform</h1>
+      </header>
+
+      <div class="page-content">
+        <div class="page-header">
+          <div class="page-header-left">
+            <h2 class="page-header-title">Settings</h2>
+            <p class="page-header-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
+              Prospect engine catalogs, on-demand scraping and the booking landing
+            </p>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <aside class="st-nav" id="settingsNav">
+            <div class="st-navgroup">Prospect engine</div>
+            <button class="st-navitem is-on" data-section="terms" onclick="showSection('terms', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              Positions &amp; terms
+              <span class="st-navcount" id="navCountTerms"></span>
+            </button>
+            <button class="st-navitem" data-section="geography" onclick="showSection('geography', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              Geography
+              <span class="st-navcount" id="navCountGeo"></span>
+            </button>
+            <button class="st-navitem" data-section="roles" onclick="showSection('roles', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="m16 11 2 2 4-4"></path></svg>
+              Decision-maker roles
+              <span class="st-navcount" id="navCountRoles"></span>
+            </button>
+
+            <div class="st-navgroup">On-demand</div>
+            <button class="st-navitem" data-section="ondemand" onclick="showSection('ondemand', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
+              </svg>
+              Scraping window
+            </button>
+
+            <div class="st-navgroup">Booking landing</div>
+            <button class="st-navitem" data-section="showcase" onclick="showSection('showcase', this)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="3" rx="2"></rect><circle cx="12" cy="10" r="3"></circle><path d="M7 21v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Showcase
+              <span class="st-navcount" id="navCountShowcase"></span>
+            </button>
+          </aside>
+
+          <div class="settings-content">
+            <!-- Section: Positions & terms -->
+            <div class="settings-section active" id="section-terms">
+              <div class="st-sectionhead">
+                <div>
+                  <h3 class="st-sectiontitle">Positions &amp; terms</h3>
+                  <p class="st-sectionsub">The position catalog and its search terms by country.</p>
+                </div>
+                <button class="op-btn-apply" onclick="openPositionModal()">New position</button>
+              </div>
+              <div class="st-toolbar">
+                <select class="form-select" id="termCountry" onchange="posPage = 1; renderTerms()" aria-label="Country"></select>
+                <input type="search" class="op-states-search st-search" id="termSearch" placeholder="Search by title or term" oninput="posPage = 1; renderTerms()">
+              </div>
+              <p class="st-count" id="termSummary"></p>
+              <div class="f1-tablewrap" id="termList"></div>
+              <div class="op-pagination" id="termPagination"></div>
+            </div>
+
+            <!-- Section: Geography (lista de países o detalle de uno) -->
+            <div class="settings-section" id="section-geography"><div id="geoMount"></div></div>
+
+            <!-- Section: Decision-maker roles -->
+            <div class="settings-section" id="section-roles">
+              <div class="st-sectionhead">
+                <div>
+                  <h3 class="st-sectiontitle">Decision-maker roles</h3>
+                  <p class="st-sectionsub">Decision-maker roles with their level, areas, search titles and contact channels.</p>
+                </div>
+                <button class="op-btn-apply" onclick="openRoleModal()">New role</button>
+              </div>
+              <input type="search" class="op-states-search st-search" id="roleSearch" placeholder="Search role or title" oninput="renderRoles()" style="margin-bottom: var(--space-3);">
+              <div class="f1-tablewrap" id="roleTable"></div>
+            </div>
+
+            <!-- Section: Scraping On-Demand -->
+            <div class="settings-section" id="section-ondemand">
+              <div class="st-sectionhead">
+                <div>
+                  <h3 class="st-sectiontitle">Scraping window</h3>
+                  <p class="st-sectionsub">Governs on-demand scraping: a company scraped inside the window is not scraped again, and only postings published inside it are fetched.</p>
+                </div>
+              </div>
+              <div class="st-panel">
+                <label class="form-label" for="windowDays">Window in days</label>
+                <input type="number" class="op-states-search" id="windowDays" min="1" style="max-width:140px;">
+                <p class="st-hint">Minimum <span id="minWindow">1</span> day.</p>
+                <div class="form-error" id="windowError" style="display:none; color:var(--color-error); font-size:13px; margin-top:4px;"></div>
+                <div style="display:flex; gap:var(--space-2); margin-top:var(--space-4);">
+                  <button class="op-btn-apply" onclick="saveOndemandConfig()">Save changes</button>
+                  <button class="op-actionbtn" onclick="loadOndemandConfig()">Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section: Showcase -->
+            <div class="settings-section" id="section-showcase">
+              <div class="st-sectionhead">
+                <div>
+                  <h3 class="st-sectiontitle">Showcase</h3>
+                  <p class="st-sectionsub">The talent the booking landing shows below the calendar. Each role carries its own résumé; only roles in the showcase appear, up to the limit.</p>
+                </div>
+                <button class="op-btn-apply" onclick="openShowcaseModal()">New role</button>
+              </div>
+
+              <div class="st-toolbar">
+                <input type="search" class="op-states-search st-search" id="scSearch" placeholder="Search role, country or skill" oninput="renderShowcase()">
+                <div class="kp-window" role="group" aria-label="Status">
+                  <button type="button" class="is-on" data-scfilter="all" onclick="setScFilter('all', this)">All</button>
+                  <button type="button" data-scfilter="on" onclick="setScFilter('on', this)">In showcase</button>
+                  <button type="button" data-scfilter="off" onclick="setScFilter('off', this)">Hidden</button>
+                </div>
+                <label class="sc-limit" for="scLimit">Showcase limit
+                  <input type="number" class="op-states-search" id="scLimit" min="1" onchange="saveShowcaseLimit()">
+                </label>
+                <button class="op-clearall st-reset" onclick="resetShowcase()">Restore the seeded showcase</button>
+              </div>
+
+              <p class="st-count" id="scSummary"></p>
+              <div class="st-list" id="scList"></div>
+              <div class="op-pagination" id="scPagination"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal genérico de configuración: título, cuerpo y botones los arma openCfgModal() -->
+  <div class="modal-overlay" id="cfgModal">
+    <div class="modal f1-modal" id="cfgModalBox" style="max-width: 640px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="cfgModalTitle"></h2>
+        <button class="modal-close" onclick="closeCfgModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="cfgModalBody"></div>
+      <div class="modal-footer" id="cfgModalFooter"></div>
+    </div>
+  </div>
+
+  <!-- Modal: create / edit showcase role -->
+  <div class="modal-overlay" id="showcaseModal">
+    <div class="modal sc-modal" style="max-width: 680px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="scModalTitle">New role</h2>
+        <button class="modal-close" onclick="closeShowcaseModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="sc-section">
+          <div class="sc-sectiontitle">Card</div>
+          <div class="sc-photoedit">
+            <span class="sc-photo is-empty" id="scPhotoPreview">No photo</span>
+            <div class="sc-photobtns">
+              <div style="display:flex; gap: var(--space-2);">
+                <button type="button" class="op-actionbtn" onclick="document.getElementById('scPhotoFile').click()">Upload photo</button>
+                <button type="button" class="op-clearall" style="margin-left: 0;" id="scPhotoRemove" onclick="removeDraftPhoto()">Remove</button>
+              </div>
+              <div class="field-hint">Square JPG or PNG, at least 400 × 400 px, up to 2 MB. It shows as a circle.</div>
+              <div class="field-error" id="scPhotoError"></div>
+              <input type="file" id="scPhotoFile" accept="image/jpeg,image/png,image/webp" hidden onchange="onPhotoChosen(this)">
+            </div>
+          </div>
+          <div class="sc-grid" style="margin-top: 14px;">
+            <div class="form-group">
+              <label class="form-label" for="scTitleInput">Title on the landing</label>
+              <input type="text" class="form-input" id="scTitleInput" maxlength="80" placeholder="e.g. Customer Service Representative">
+              <div class="field-error" id="scTitleError"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="scCountryInput">Country</label>
+              <input type="text" class="form-input" id="scCountryInput" maxlength="40" list="scCountries" placeholder="e.g. Colombia">
+              <datalist id="scCountries"><option value="Colombia"><option value="Mexico"><option value="Guatemala"><option value="Honduras"><option value="Philippines"><option value="Argentina"><option value="Peru"></datalist>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="scYearsInput">Years of experience</label>
+              <input type="number" class="form-input" id="scYearsInput" min="0" max="50">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label" for="scShortInput">Short profile <span class="sc-counter" id="scShortCount"></span></label>
+            <textarea class="form-textarea" id="scShortInput" rows="3" maxlength="240" style="min-height: 72px;" oninput="updateCounters()"></textarea>
+            <div class="field-hint">Opens the card on the landing.</div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Hard skills</label>
+            <div class="tags-input" id="scHardEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="Type a skill and press Enter…" autocomplete="off"></div>
+            <div class="field-hint">The first five show on the card; the rest, in the detail panel.</div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <div class="sc-sectiontitle">Detail panel</div>
+          <div class="form-group">
+            <label class="form-label" for="scFullInput">Full profile</label>
+            <textarea class="form-textarea" id="scFullInput" rows="7" style="min-height: 150px;"></textarea>
+            <div class="field-hint">Read in the detail panel. A blank line starts a new paragraph.</div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Languages</label>
+            <div class="tags-input" id="scLangEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="e.g. English (C1) and press Enter…" autocomplete="off"></div>
+          </div>
+          <div class="form-group" style="margin-top: 14px;">
+            <label class="form-label">Soft skills</label>
+            <div class="tags-input" id="scSoftEditor" onclick="this.querySelector('input').focus()"><input type="text" placeholder="Type a skill and press Enter…" autocomplete="off"></div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <div class="form-group modal-row">
+            <label class="toggle-switch"><input type="checkbox" id="scShowInput"><span class="toggle-slider"></span></label>
+            <span class="text-sm" style="color: var(--text-secondary);">Show in the showcase</span>
+          </div>
+          <div class="field-hint" id="scShowHint"></div>
+          <div class="field-error" id="scShowError"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeShowcaseModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveShowcaseRole()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: delete showcase role -->
+  <div class="modal-overlay" id="scDeleteModal">
+    <div class="modal" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Delete role</h2>
+        <button class="modal-close" onclick="closeScDeleteModal()" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="scDeleteText" style="color: var(--text-primary);"></p>
+        <p class="text-muted text-sm" style="margin-top: 8px;">The résumé and its photo are removed. The landing stops showing this role.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeScDeleteModal()">Cancel</button>
+        <button class="btn btn-primary" style="background: var(--color-error); border-color: var(--color-error);" onclick="confirmDeleteShowcase()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="rbac.js"></script>
+  <script src="fase1-config.js"></script>
+  <script>
+    /* ------------------------------------------------------------------------
+       Settings — Configuración (solo Administrador; requireAdmin()).
+       Fase 1 (FSPL-1 · Habilitación Solvo Platform Prospect Engine Modular Fase-1).
+
+       Secciones por hash: #terms · #geography (y #geography/<país> abre el detalle)
+       · #roles · #ondemand (también #window) · #showcase.
+       · Positions & terms, Geography y Decision-maker roles — catálogos del motor
+         modular, portados de solvo-platform-ui-release-4 sin triggers, prompts ni
+         envíos programados (Fase 2). Reemplazan a "Search positions" y "Search
+         cities" de Release 3. Datos en fase1-config.js (F1_*), persistidos en
+         `f1Positions`, `f1Terms`, `f1Geo` y `f1Roles`.
+       · Scraping window y Showcase — iguales a Release 3 (getOdConfig /
+         setOdConfig en `odoConfig`; `showcaseRoles` y `showcaseLimit`).
+
+       Reglas que la interfaz hace cumplir:
+       · Cada término es de una posición y un país, y no se repite dentro del país.
+         Borrar una posición borra sus términos.
+       · Los países de los términos son los del catálogo de Geography.
+       · Un país con divisiones no se borra. Desactivar una división desactiva sus
+         ciudades; activar una ciudad activa su división.
+       · Un rol que tienen decisores guardados no se borra.
+
+       Contratos: los de estos catálogos están por definir en FSPL-1; los de
+       Release 3 (/api/v1/settings/positions, /cities) quedan reemplazados.
+       ------------------------------------------------------------------------ */
+    // === Session & Access Guard (admin only) ===
+    const user = initSession();
+    if (!user) throw new Error('No session');
+    if (!requireAdmin()) throw new Error('Access denied');
+    renderSidebar('settings');
+
+    // === Utilidades comunes ===
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    // Las búsquedas no distinguen mayúsculas ni acentos, como el parámetro `q` de la API.
+    const fold = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const checked = id => { const el = document.getElementById(id); return !!(el && el.checked); };
+    const plural = (n, one, many) => n + ' ' + (n === 1 ? one : (many || one + 's'));
+    const divPlural = label => String(label || 'division').toLowerCase().replace(/y$/, 'ie') + 's';
+    const slug = s => fold(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const PAGE_SIZE = 12;
+    const CITY_PAGE = 24;
+    const CHEVRON = '<svg class="f1-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
+
+    function renderPager(mountId, total, page, go, size) {
+      size = size || PAGE_SIZE;
+      const el = document.getElementById(mountId);
+      const pages = Math.max(1, Math.ceil(total / size));
+      if (total <= size) { el.innerHTML = ''; return; }
+      const from = (page - 1) * size + 1;
+      const to = Math.min(page * size, total);
+      const nums = [];
+      for (let i = 1; i <= pages; i++) {
+        if (i === 1 || i === pages || Math.abs(i - page) <= 1) nums.push(i);
+        else if (nums[nums.length - 1] !== '…') nums.push('…');
+      }
+      el.innerHTML =
+        '<div class="op-pag-info">Showing ' + from + '–' + to + ' of ' + total + '</div>' +
+        '<div class="op-pag-controls">' +
+          '<button class="op-pag-btn" ' + (page === 1 ? 'disabled' : '') + ' data-page="' + (page - 1) + '">Previous</button>' +
+          nums.map(function (n) {
+            return n === '…' ? '<span class="op-pag-gap">…</span>'
+              : '<button class="op-pag-btn' + (n === page ? ' is-current' : '') + '" data-page="' + n + '">' + n + '</button>';
+          }).join('') +
+          '<button class="op-pag-btn" ' + (page === pages ? 'disabled' : '') + ' data-page="' + (page + 1) + '">Next</button>' +
+        '</div>';
+      el.querySelectorAll('[data-page]').forEach(function (b) { b.onclick = function () { go(Number(b.dataset.page)); }; });
+    }
+
+    // === Modal genérico ===
+    function openCfgModal(title, body, buttons, width) {
+      document.getElementById('cfgModalTitle').textContent = title;
+      document.getElementById('cfgModalBody').innerHTML = body;
+      document.getElementById('cfgModalBox').style.maxWidth = (width || 640) + 'px';
+      const f = document.getElementById('cfgModalFooter');
+      f.innerHTML = '';
+      (buttons || []).forEach(b => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'btn ' + (b.kind === 'primary' ? 'btn-primary' : b.kind === 'danger' ? 'btn-danger' : 'btn-secondary');
+        if (b.left) el.style.marginRight = 'auto';
+        el.textContent = b.label;
+        if (b.disabled) { el.disabled = true; el.title = b.title || ''; }
+        el.onclick = b.action || closeCfgModal;
+        f.appendChild(el);
+      });
+      document.getElementById('cfgModal').classList.add('active');
+      document.getElementById('cfgModalBody').scrollTop = 0;
+    }
+    function closeCfgModal() { document.getElementById('cfgModal').classList.remove('active'); }
+    const modalErr = msg => { const e = document.getElementById('cfgErr'); if (e) { e.textContent = msg; e.style.display = 'block'; } else showToast(msg, 'error'); };
+    function checks(name, items, isOn) {
+      return '<div class="f1-checks">' + items.map(it =>
+        '<label class="f1-check"><input type="checkbox" name="' + name + '" value="' + esc(it.value) + '"' +
+          (isOn(it.value) ? ' checked' : '') + '><span>' + esc(it.label) + '</span></label>').join('') + '</div>';
+    }
+    const checkedValues = name => Array.from(document.querySelectorAll('input[name="' + name + '"]')).filter(i => i.checked).map(i => i.value);
+    const areaItems = () => Object.keys(F1_AREA_LABELS).map(k => ({ value: k, label: F1_AREA_LABELS[k] }));
+    const saveTerms = () => f1Save('f1Terms', F1_TERMS);
+    const savePositions = () => f1Save('f1Positions', F1_POSITIONS);
+    const saveRoles = () => f1Save('f1Roles', F1_DECISION_ROLES);
+
+    /* ========================================================================
+       POSITIONS & TERMS — catálogo global de posiciones
+       La lista muestra áreas y, por país, cuántos términos tiene cada posición. La
+       edición trabaja sobre una copia (posDraft): título, activa, áreas y términos por
+       país en acordeón; un país nuevo de Geography aparece ahí listo para recibir
+       términos. Una posición pausada no se busca en ningún país.
+       ======================================================================== */
+    const POS_PAGE = 15;
+    let posPage = 1, posDraft = null, posOpen = {};
+    function fillTermCountry() {
+      const sel = document.getElementById('termCountry');
+      const cur = sel.value || 'all';
+      sel.innerHTML = '<option value="all">All countries</option>' + F1_COUNTRIES.map(c => '<option value="' + c.code + '">' + esc(c.name) + '</option>').join('');
+      sel.value = cur === 'all' || F1_COUNTRIES.some(c => c.code === cur) ? cur : 'all';
+    }
+    const termsOfPos = (pid, code) => F1_TERMS.filter(t => t.positionId === pid && (!code || t.country === code));
+    function renderTerms() {
+      fillTermCountry();
+      const code = val('termCountry'), cc = code === 'all' ? null : code;
+      const q = fold(val('termSearch').trim());
+      const rows = F1_POSITIONS.filter(p => {
+        const pt = termsOfPos(p.id, cc);
+        if (cc && !pt.length) return false;
+        return !q || fold(p.name).indexOf(q) >= 0 || pt.some(t => fold(t.text).indexOf(q) >= 0);
+      }).sort((a, b) => a.name.localeCompare(b.name));
+      const nTerms = rows.reduce((n, p) => n + termsOfPos(p.id, cc).length, 0);
+      document.getElementById('termSummary').textContent = plural(rows.length, 'position') + ' · ' + plural(nTerms, 'term') + (cc ? ' in ' + f1CountryName(cc) : '');
+      const pages = Math.max(1, Math.ceil(rows.length / POS_PAGE));
+      posPage = Math.min(posPage, pages);
+      const slice = rows.slice((posPage - 1) * POS_PAGE, posPage * POS_PAGE);
+      document.getElementById('termList').innerHTML = rows.length
+        ? '<table class="f1-table"><thead><tr><th style="width: 56px;">Active</th><th>Position</th><th>Areas</th><th>Countries</th><th class="num">Terms</th><th></th></tr></thead><tbody>' +
+          slice.map(p => {
+            const all = termsOfPos(p.id);
+            const byCountry = F1_COUNTRIES.map(c => ({ c: c, n: all.filter(t => t.country === c.code).length })).filter(x => x.n);
+            const hit = q && fold(p.name).indexOf(q) < 0 ? termsOfPos(p.id, cc).find(t => fold(t.text).indexOf(q) >= 0) : null;
+            return '<tr class="is-click' + (p.isActive === false ? ' is-off' : '') + '" onclick="openPositionModal(\'' + p.id + '\')">' +
+              '<td onclick="event.stopPropagation()"><label class="toggle-switch" title="' + (p.isActive === false ? 'Paused' : 'Active') + '"><input type="checkbox" aria-label="' + esc(p.name) + ' active"' + (p.isActive === false ? '' : ' checked') + ' onchange="setPositionActive(\'' + p.id + '\', this.checked)"><span class="toggle-slider"></span></label></td>' +
+              '<td><span class="f1-cellname">' + esc(p.name) + '</span>' + (hit ? '<span class="f1-cellsub">Term: ' + esc(hit.text) + ' · ' + esc(hit.country) + '</span>' : '') + '</td>' +
+              '<td><span class="f1-chips">' + (p.areas || []).map(a => '<span class="f1-chip is-plain">' + esc(F1_AREA_LABELS[a] || a) + '</span>').join('') + '</span></td>' +
+              '<td><span class="f1-chips">' + (byCountry.length ? byCountry.map(x => '<span class="f1-chip' + (cc === x.c.code ? '' : ' is-plain') + '" title="' + esc(x.c.name + ' · ' + plural(x.n, 'term')) + '">' + esc(x.c.code) + ' · ' + x.n + '</span>').join('') : '<span class="f1-muted f1-small">No terms</span>') + '</span></td>' +
+              '<td class="num">' + termsOfPos(p.id, cc).length + '</td>' +
+              '<td class="nowrap"><button class="op-actionbtn" onclick="event.stopPropagation(); openPositionModal(\'' + p.id + '\')">Edit</button></td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<div class="op-empty"><h3>No position matches</h3><p>Try another position, term or country.</p></div>';
+      renderPager('termPagination', rows.length, posPage, n => { posPage = n; renderTerms(); }, POS_PAGE);
+      renderNavCounts();
+    }
+    function setPositionActive(id, on) {
+      const p = F1_POSITIONS.find(x => x.id === id); if (!p) return;
+      p.isActive = on; savePositions(); renderTerms();
+      showToast(p.name + (on ? ' active' : ' paused'), 'success');
+    }
+    function nextTermId() {
+      const max = F1_TERMS.reduce((m, t) => Math.max(m, Number(String(t.id).replace(/\D/g, '')) || 0), 0);
+      return 'term-' + String(max + 1).padStart(3, '0');
+    }
+    function openPositionModal(id) {
+      const p = id ? F1_POSITIONS.find(x => x.id === id) : null;
+      posDraft = { id: id || null, name: p ? p.name : '', terms: p ? termsOfPos(p.id).map(t => ({ id: t.id, country: t.country, text: t.text })) : [] };
+      posOpen = {};
+      const cc = val('termCountry');
+      if (cc && cc !== 'all') posOpen[cc] = true;
+      const areas = p ? (p.areas || []) : [];
+      const body =
+        '<div class="form-group"><label class="form-label" for="psName">Title</label><input class="form-input" id="psName" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Payroll Specialist"></div>' +
+        '<div class="form-group" style="margin-top: 12px;"><label class="f1-check"><input type="checkbox" id="psActive"' + (!p || p.isActive !== false ? ' checked' : '') + '><span>Active</span></label></div>' +
+        '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Areas</span>' +
+          checks('psArea', areaItems(), v => areas.indexOf(v) >= 0) + '</div>' +
+        '<div class="form-group" style="margin-top: 16px;"><span class="form-label">Terms by country</span>' +
+          '<div class="f1-citylist-groups" id="psTerms">' + posTermsHtml() + '</div></div>' +
+        '<div class="f1-err" id="cfgErr" style="display:none"></div>';
+      const buttons = [];
+      if (p) buttons.push({ label: 'Delete', kind: 'danger', left: true, action: () => deletePosition(p.id) });
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: savePosition });
+      openCfgModal(p ? 'Edit position' : 'New position', body, buttons, 720);
+    }
+    function posTermsHtml() {
+      return F1_COUNTRIES.map(c => {
+        const list = posDraft.terms.map((t, i) => ({ text: t.text, country: t.country, i: i })).filter(t => t.country === c.code);
+        const open = !!posOpen[c.code];
+        const head = '<div class="f1-citylist-head" role="button" tabindex="0" aria-expanded="' + open + '" onclick="posToggle(\'' + c.code + '\')" onkeydown="if ((event.key === \'Enter\' || event.key === \' \') && event.target === this) { event.preventDefault(); posToggle(\'' + c.code + '\'); }">' +
+          CHEVRON + '<strong>' + esc(c.name) + '</strong><span class="f1-citylist-count">' + (list.length ? plural(list.length, 'term') : 'No terms') + '</span></div>';
+        if (!open) return '<div class="f1-citylist-group">' + head + '</div>';
+        return '<div class="f1-citylist-group">' + head +
+          '<div class="f1-psterms">' + (list.length ? list.map(t =>
+            '<span class="f1-chip is-plain">' + esc(t.text) + '<button type="button" aria-label="Remove ' + esc(t.text) + '" onclick="removePosTerm(' + t.i + ')">×</button></span>').join('') : '<span class="f1-small f1-muted">No terms in ' + esc(c.name) + '.</span>') + '</div>' +
+          '<div class="f1-psadd"><input class="form-input" id="psNew_' + c.code + '" maxlength="80" placeholder="New term in ' + esc(c.name) + '" aria-label="New term in ' + esc(c.name) + '" onkeydown="if (event.key === \'Enter\') { event.preventDefault(); addPosTerm(\'' + c.code + '\'); }">' +
+            '<button type="button" class="op-actionbtn" onclick="addPosTerm(\'' + c.code + '\')">Add</button></div></div>';
+      }).join('');
+    }
+    function refreshPosTerms(focusCode) {
+      document.getElementById('psTerms').innerHTML = posTermsHtml();
+      if (focusCode) { const i = document.getElementById('psNew_' + focusCode); if (i) i.focus(); }
+    }
+    function posToggle(code) { posOpen[code] = !posOpen[code]; refreshPosTerms(); }
+    // Un término vive en una sola posición dentro de su país: con dos dueños, la vacante
+    // que encuentra no sabría a cuál asociarse. El error nombra la posición que lo tiene.
+    function addPosTerm(code) {
+      const input = document.getElementById('psNew_' + code);
+      const text = (input ? input.value : '').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!text) return;
+      const own = val('psName').trim() || posDraft.name || 'this position';
+      if (posDraft.terms.some(t => t.country === code && fold(t.text) === fold(text))) return modalErr('"' + text + '" is already a term of ' + own + ' in ' + f1CountryName(code) + '.');
+      const other = F1_TERMS.find(t => t.country === code && t.positionId !== posDraft.id && fold(t.text) === fold(text));
+      if (other) return modalErr('"' + text + '" is a term of ' + ((F1_POSITIONS.find(p => p.id === other.positionId) || {}).name || 'another position') + ' in ' + f1CountryName(code) + '.');
+      document.getElementById('cfgErr').style.display = 'none';
+      posDraft.terms.push({ id: null, country: code, text: text });
+      refreshPosTerms(code);
+    }
+    function removePosTerm(i) {
+      posDraft.terms.splice(i, 1);
+      refreshPosTerms();
+    }
+    function savePosition() {
+      const name = val('psName').trim();
+      const areas = checkedValues('psArea');
+      const id = posDraft.id;
+      if (!name) return modalErr('The title is required.');
+      if (F1_POSITIONS.some(p => p.id !== id && fold(p.name) === fold(name))) return modalErr('A position with that title already exists.');
+      if (!areas.length) return modalErr('Choose at least one area.');
+      let pid = id;
+      if (id) Object.assign(F1_POSITIONS.find(p => p.id === id), { name: name, isActive: checked('psActive'), areas: areas });
+      else {
+        const max = F1_POSITIONS.reduce((m, p) => Math.max(m, Number(p.id.replace(/\D/g, '')) || 0), 0);
+        pid = 'pos-' + String(max + 1).padStart(2, '0');
+        F1_POSITIONS.push({ id: pid, name: name, isActive: checked('psActive'), areas: areas });
+      }
+      // Términos: se quitan los que ya no están y se suman los nuevos.
+      const keep = posDraft.terms.filter(t => t.id).map(t => t.id);
+      for (let i = F1_TERMS.length - 1; i >= 0; i--) if (F1_TERMS[i].positionId === pid && keep.indexOf(F1_TERMS[i].id) < 0) F1_TERMS.splice(i, 1);
+      posDraft.terms.filter(t => !t.id).forEach(t => F1_TERMS.push({ id: nextTermId(), positionId: pid, country: t.country, text: t.text }));
+      savePositions(); saveTerms();
+      closeCfgModal(); renderTerms();
+      showToast(name + (id ? ' saved' : ' created'), 'success');
+    }
+    function deletePosition(id) {
+      const p = F1_POSITIONS.find(x => x.id === id); if (!p) return;
+      const n = termsOfPos(id).length;
+      closeCfgModal();
+      openConfirmPopup({ title: 'Delete position', message: n ? 'Its ' + plural(n, 'term') + ' are deleted too.' : 'The position leaves the catalog.', highlight: esc(p.name), confirmLabel: 'Delete', danger: true,
+        onConfirm: () => {
+          for (let i = F1_TERMS.length - 1; i >= 0; i--) if (F1_TERMS[i].positionId === id) F1_TERMS.splice(i, 1);
+          F1_POSITIONS.splice(F1_POSITIONS.indexOf(p), 1);
+          savePositions(); saveTerms(); renderTerms();
+          showToast(p.name + ' deleted', 'success');
+        } });
+    }
+
+    /* ========================================================================
+       GEOGRAPHY — países; en el detalle de cada uno, sus divisiones y ciudades
+       Tres niveles: país, división y ciudad. Cada división y cada ciudad está activa
+       o inactiva. Desactivar una división desactiva sus ciudades; activar una ciudad
+       activa su división. Un país con divisiones no se borra.
+       ======================================================================== */
+    const DIV_PAGE = 20;
+    let geoCountry = null, geoFilter = 'active', geoQ = '', geoDivPage = 1, geoOpen = {}, geoCityPage = {};
+    const divsOf = code => F1_DIVISIONS.filter(d => d.country === code).sort((a, b) => a.name.localeCompare(b.name));
+    const citiesOfDiv = dcode => F1_CITIES.filter(c => c.division === dcode).sort((a, b) => a.name.localeCompare(b.name));
+    const groupLabel = c => c.group === 'hiring' ? 'Hiring country' : 'Sales country';
+    function setGeoHash() { const h = geoCountry ? '#geography/' + geoCountry : '#geography'; if (location.hash !== h) history.replaceState(null, '', h); }
+    function renderGeo() {
+      const m = document.getElementById('geoMount');
+      if (geoCountry && !f1Country(geoCountry)) geoCountry = null;
+      m.innerHTML = geoCountry ? geoDetailHtml() : geoListHtml();
+      if (geoCountry) renderGeoGroups();
+      renderNavCounts();
+    }
+    function geoListHtml() {
+      return '<div class="st-sectionhead"><div><h3 class="st-sectiontitle">Geography</h3>' +
+          '<p class="st-sectionsub">Countries with their divisions and cities.</p></div>' +
+          '<button class="op-btn-apply" onclick="openCountryModal()">New country</button></div>' +
+        (F1_COUNTRIES.length
+          ? '<div class="f1-tablewrap"><table class="f1-table"><thead><tr><th>Country</th><th>Divisions</th><th>Cities</th><th>Language</th><th>Time zone</th><th></th></tr></thead><tbody>' +
+            F1_COUNTRIES.map(c => {
+              const divs = divsOf(c.code), cities = F1_CITIES.filter(x => x.country === c.code);
+              return '<tr class="is-click" onclick="openGeoCountry(\'' + c.code + '\')">' +
+                '<td class="nowrap"><span class="f1-cellname">' + esc(c.name) + '</span><span class="f1-cellsub">' + esc(c.code) + ' · ' + groupLabel(c) + '</span></td>' +
+                '<td class="f1-small">' + divs.filter(d => d.isActive).length + ' of ' + divs.length + ' active<span class="f1-cellsub">' + esc(divPlural(c.divisionLabel)) + '</span></td>' +
+                '<td class="f1-small">' + cities.filter(x => x.isActive).length + ' of ' + cities.length + ' active</td>' +
+                '<td class="f1-small">' + esc(c.language) + '<span class="f1-cellsub">' + esc(c.currency) + '</span></td>' +
+                '<td class="f1-small">' + esc(c.timezone) + '</td>' +
+                '<td class="nowrap"><button class="op-actionbtn" onclick="event.stopPropagation(); openCountryModal(\'' + c.code + '\')">Edit</button></td></tr>';
+            }).join('') + '</tbody></table></div>'
+          : '<div class="op-empty"><h3>No countries yet</h3><p>Add the first country of the catalog.</p></div>');
+    }
+    function openGeoCountry(code) { geoCountry = code; geoFilter = 'active'; geoQ = ''; geoDivPage = 1; geoOpen = {}; geoCityPage = {}; setGeoHash(); renderGeo(); window.scrollTo(0, 0); }
+    function closeGeoCountry() { geoCountry = null; setGeoHash(); renderGeo(); }
+    function geoDetailHtml() {
+      const c = f1Country(geoCountry);
+      const divs = divsOf(c.code);
+      const n = { active: divs.filter(d => d.isActive).length, inactive: divs.filter(d => !d.isActive).length, all: divs.length };
+      const label = c.divisionLabel || 'Division';
+      return '<button class="f1-back" onclick="closeGeoCountry()">← All countries</button>' +
+        '<div class="f1-edhead"><div>' +
+          '<div class="f1-edtitle"><h3 class="st-sectiontitle">' + esc(c.name) + '</h3><span class="badge badge-neutral">' + groupLabel(c) + '</span></div>' +
+          '<p class="st-sectionsub">' + esc([c.code, c.language, c.currency, c.timezone].join(' · ')) + '</p>' +
+        '</div><div class="f1-edactions">' +
+          '<button class="op-actionbtn" onclick="openCountryModal(\'' + c.code + '\')">Edit country</button>' +
+          '<button class="op-actionbtn" onclick="openDivisionModal(\'' + c.code + '\')">Add ' + esc(label.toLowerCase()) + '</button>' +
+          '<button class="op-btn-apply" onclick="openCityModal(null, \'' + c.code + '\')"' + (divs.length ? '' : ' disabled title="Add a ' + esc(label.toLowerCase()) + ' first"') + '>Add city</button>' +
+        '</div></div>' +
+        '<div class="st-toolbar">' +
+          '<div class="kp-window" role="group" aria-label="Status">' + [['active', 'Active'], ['inactive', 'Inactive'], ['all', 'All']].map(x =>
+            '<button type="button" class="' + (geoFilter === x[0] ? 'is-on' : '') + '" onclick="geoFilter = \'' + x[0] + '\'; geoDivPage = 1; renderGeo()">' + x[1] + ' · ' + n[x[0]] + '</button>').join('') + '</div>' +
+          '<input type="search" class="op-states-search st-search" id="geoSearch" placeholder="Search ' + esc(label.toLowerCase()) + ' or city" value="' + esc(geoQ) + '" oninput="geoQ = this.value; geoDivPage = 1; renderGeoGroups()">' +
+        '</div>' +
+        '<div class="f1-citylist-groups" id="geoGroups"></div>' +
+        '<div class="op-pagination" id="geoDivPager"></div>';
+    }
+    function renderGeoGroups() {
+      const c = f1Country(geoCountry);
+      const q = fold(geoQ.trim());
+      let list = divsOf(c.code).filter(d => geoFilter === 'all' || (geoFilter === 'active' ? d.isActive : !d.isActive));
+      if (q) list = list.filter(d => fold(d.name).indexOf(q) >= 0 || citiesOfDiv(d.code).some(x => fold(x.name).indexOf(q) >= 0));
+      const pages = Math.max(1, Math.ceil(list.length / DIV_PAGE));
+      geoDivPage = Math.min(geoDivPage, pages);
+      const el = document.getElementById('geoGroups');
+      el.innerHTML = list.length ? list.slice((geoDivPage - 1) * DIV_PAGE, geoDivPage * DIV_PAGE).map(d => {
+        const all = citiesOfDiv(d.code);
+        const divHit = q && fold(d.name).indexOf(q) >= 0;
+        const cities = q && !divHit ? all.filter(x => fold(x.name).indexOf(q) >= 0) : all;
+        const open = q ? true : !!geoOpen[d.code];
+        const head = '<div class="f1-citylist-head" role="button" tabindex="0" aria-expanded="' + open + '" onclick="geoDivToggle(\'' + d.code + '\')" onkeydown="if ((event.key === \'Enter\' || event.key === \' \') && event.target === this) { event.preventDefault(); geoDivToggle(\'' + d.code + '\'); }">' +
+          CHEVRON +
+          '<label class="toggle-switch" onclick="event.stopPropagation()" title="' + (d.isActive ? 'Active' : 'Inactive') + '"><input type="checkbox" aria-label="' + esc(d.name) + ' active"' + (d.isActive ? ' checked' : '') + ' onchange="setDivActive(\'' + d.code + '\', this.checked)"><span class="toggle-slider"></span></label>' +
+          '<strong>' + esc(d.name) + '</strong><span class="f1-citylist-count">' + esc(d.code) + ' · ' + all.filter(x => x.isActive).length + ' of ' + plural(all.length, 'city', 'cities') + ' active</span>' +
+          '<span class="f1-citylist-actions" onclick="event.stopPropagation()"><button type="button" class="f1-linkbtn" onclick="openCityModal(null, \'' + c.code + '\', \'' + d.code + '\')">Add city</button>' +
+            '<button type="button" class="f1-linkbtn" onclick="openDivisionModal(\'' + c.code + '\', \'' + d.code + '\')">Edit</button></span></div>';
+        if (!open) return '<div class="f1-citylist-group' + (d.isActive ? '' : ' is-off') + '">' + head + '</div>';
+        const pages2 = Math.max(1, Math.ceil(cities.length / CITY_PAGE));
+        const page = Math.min(geoCityPage[d.code] || 1, pages2);
+        geoCityPage[d.code] = page;
+        const items = cities.slice((page - 1) * CITY_PAGE, page * CITY_PAGE).map(x =>
+          '<div class="f1-citylist-item' + (x.isActive ? '' : ' is-off') + '">' +
+            '<input type="checkbox" aria-label="' + esc(x.name) + ' active"' + (x.isActive ? ' checked' : '') + ' onchange="setCityActive(\'' + x.id + '\', this.checked)">' +
+            '<button type="button" class="f1-citybtn f1-cityname" onclick="openCityModal(\'' + x.id + '\')" title="Edit ' + esc(x.name) + '">' + esc(x.name) + '</button></div>').join('');
+        const pager = cities.length > CITY_PAGE
+          ? '<div class="f1-citylist-pager"><span>' + ((page - 1) * CITY_PAGE + 1) + '–' + Math.min(page * CITY_PAGE, cities.length) + ' of ' + cities.length + '</span>' +
+            '<button type="button" class="op-actionbtn" aria-label="Previous cities"' + (page === 1 ? ' disabled' : '') + ' onclick="geoCityPage[\'' + d.code + '\'] = ' + (page - 1) + '; renderGeoGroups()">‹</button>' +
+            '<button type="button" class="op-actionbtn" aria-label="Next cities"' + (page === pages2 ? ' disabled' : '') + ' onclick="geoCityPage[\'' + d.code + '\'] = ' + (page + 1) + '; renderGeoGroups()">›</button></div>'
+          : '';
+        return '<div class="f1-citylist-group' + (d.isActive ? '' : ' is-off') + '">' + head +
+          (cities.length ? '<div class="f1-citylist-grid">' + items + '</div>' + pager : '<div class="f1-citylist-empty">No cities.</div>') + '</div>';
+      }).join('') : '<div class="f1-citylist-empty">' + (q ? 'Nothing matches the search.' : 'No ' + esc(divPlural(c.divisionLabel)) + ' here.') + '</div>';
+      renderPager('geoDivPager', list.length, geoDivPage, p => { geoDivPage = p; renderGeoGroups(); window.scrollTo(0, 0); }, DIV_PAGE);
+    }
+    function geoDivToggle(code) { if (fold(geoQ.trim())) return; geoOpen[code] = !geoOpen[code]; renderGeoGroups(); }
+    function setDivActive(code, on) {
+      const d = F1_DIVISIONS.find(x => x.code === code); if (!d) return;
+      d.isActive = on;
+      if (!on) F1_CITIES.forEach(c => { if (c.division === code) c.isActive = false; });
+      f1SaveGeo(); renderGeo();
+      showToast(d.name + (on ? ' active' : ' inactive, with its cities'), 'success');
+    }
+    function setCityActive(id, on) {
+      const c = F1_CITIES.find(x => x.id === id); if (!c) return;
+      c.isActive = on;
+      const d = F1_DIVISIONS.find(x => x.code === c.division);
+      if (on && d && !d.isActive) { d.isActive = true; f1SaveGeo(); renderGeo(); showToast(d.name + ' active', 'success'); return; }
+      f1SaveGeo(); renderGeoGroups();
+      // Los conteos del filtro de estado se actualizan sin redibujar el buscador.
+      const tabs = document.querySelectorAll('#geoMount .kp-window button');
+      if (tabs.length) { const divs = divsOf(c.country); const n = [divs.filter(x => x.isActive).length, divs.filter(x => !x.isActive).length, divs.length]; tabs.forEach((b, i) => { b.textContent = b.textContent.replace(/ · \d+$/, ' · ' + n[i]); }); }
+    }
+    function openDivisionModal(countryCode, code) {
+      const country = f1Country(countryCode);
+      const d = code ? F1_DIVISIONS.find(x => x.code === code) : null;
+      const label = (country && country.divisionLabel) || 'Division';
+      const body = '<div class="f1-grid2">' +
+          '<div class="form-group"><label class="form-label" for="dvName">Name</label><input class="form-input" id="dvName" maxlength="60" value="' + esc(d ? d.name : '') + '"></div>' +
+          '<div class="form-group"><label class="form-label" for="dvCode">Code</label><input class="form-input" id="dvCode" maxlength="8" value="' + esc(d ? d.code : countryCode + '-') + '"' + (d ? ' disabled' : '') + '></div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-top: 12px;"><label class="f1-check"><input type="checkbox" id="dvActive"' + (!d || d.isActive ? ' checked' : '') + '><span>Active</span></label></div>' +
+        '<div class="f1-err" id="cfgErr" style="display:none"></div>';
+      const buttons = [];
+      if (d) { const n = citiesOfDiv(d.code).length; buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: n > 0, title: 'Delete its ' + plural(n, 'city', 'cities') + ' first', action: () => deleteDivision(d.code) }); }
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveDivision(countryCode, code) });
+      openCfgModal(d ? d.name : 'New ' + label.toLowerCase() + ' · ' + f1CountryName(countryCode), body, buttons, 520);
+    }
+    function saveDivision(countryCode, code) {
+      const name = val('dvName').trim(), dcode = code || val('dvCode').trim().toUpperCase(), on = checked('dvActive');
+      if (!name) return modalErr('The name is required.');
+      if (!code) {
+        if (dcode.indexOf(countryCode + '-') !== 0 || dcode.length < countryCode.length + 2) return modalErr('The code starts with ' + countryCode + '-.');
+        if (F1_DIVISIONS.some(x => x.code === dcode)) return modalErr(dcode + ' already exists.');
+        F1_DIVISIONS.push({ code: dcode, country: countryCode, name: name, isActive: on });
+      } else {
+        const d = F1_DIVISIONS.find(x => x.code === code);
+        d.name = name; d.isActive = on;
+        if (!on) F1_CITIES.forEach(c => { if (c.division === code) c.isActive = false; });
+      }
+      f1SaveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + (code ? ' saved' : ' added'), 'success');
+    }
+    function deleteDivision(code) {
+      const i = F1_DIVISIONS.findIndex(x => x.code === code); if (i < 0 || citiesOfDiv(code).length) return;
+      const name = F1_DIVISIONS[i].name;
+      F1_DIVISIONS.splice(i, 1); f1SaveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + ' deleted', 'success');
+    }
+    function openCityModal(id, countryCode, divCode) {
+      const c = id ? F1_CITIES.find(x => x.id === id) : null;
+      const code = c ? c.country : countryCode;
+      const country = f1Country(code);
+      const divs = divsOf(code);
+      const curDiv = c ? c.division : (divCode || '');
+      const body =
+        '<div class="f1-grid2">' +
+          '<div class="form-group"><label class="form-label" for="ctName">City</label><input class="form-input" id="ctName" maxlength="60" value="' + esc(c ? c.name : '') + '"></div>' +
+          '<div class="form-group"><label class="form-label" for="ctDiv">' + esc(country ? country.divisionLabel : 'Division') + '</label><select class="form-select" id="ctDiv">' +
+            '<option value="">Select…</option>' + divs.map(d => '<option value="' + d.code + '"' + (d.code === curDiv ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select></div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-top: 12px;"><label class="f1-check"><input type="checkbox" id="ctActive"' + (!c || c.isActive ? ' checked' : '') + '><span>Active</span></label></div>' +
+        '<div class="f1-err" id="cfgErr" style="display:none"></div>';
+      const buttons = [];
+      if (c) buttons.push({ label: 'Delete', kind: 'danger', left: true, action: () => deleteCity(c.id) });
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveCity(id, code) });
+      openCfgModal(c ? c.name + ' · ' + f1CountryName(code) : 'New city · ' + f1CountryName(code), body, buttons, 560);
+    }
+    function saveCity(id, code) {
+      const name = val('ctName').trim().replace(/\s+/g, ' '), div = val('ctDiv'), on = checked('ctActive');
+      if (!name) return modalErr('The city name is required.');
+      if (!div) return modalErr('Choose the ' + ((f1Country(code) || {}).divisionLabel || 'division').toLowerCase() + '.');
+      // La unicidad es por división: Portland existe en Maine y en Oregon.
+      if (F1_CITIES.some(c => c.id !== id && c.country === code && fold(c.name) === fold(name) && c.division === div)) return modalErr(name + ' already exists there.');
+      if (id) Object.assign(F1_CITIES.find(c => c.id === id), { name: name, division: div, isActive: on });
+      else {
+        let nid = 'city-' + code.toLowerCase() + '-' + slug(name), k = 2;
+        while (F1_CITIES.some(c => c.id === nid)) nid = 'city-' + code.toLowerCase() + '-' + slug(name) + '-' + (k++);
+        F1_CITIES.push({ id: nid, name: name, division: div, country: code, isActive: on });
+      }
+      const d = F1_DIVISIONS.find(x => x.code === div);
+      if (on && d) d.isActive = true;
+      geoOpen[div] = true;
+      f1SaveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + (id ? ' saved' : ' added'), 'success');
+    }
+    function deleteCity(id) {
+      const i = F1_CITIES.findIndex(c => c.id === id); if (i < 0) return;
+      const name = F1_CITIES[i].name;
+      F1_CITIES.splice(i, 1); f1SaveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + ' deleted', 'success');
+    }
+    function openCountryModal(code) {
+      const c = code ? f1Country(code) : null;
+      const d = c || { code: '', name: '', divisionLabel: 'State', language: '', currency: '', timezone: 'America/New_York', group: 'sales' };
+      const zones = F1_TIMEZONES.indexOf(d.timezone) >= 0 || !d.timezone ? F1_TIMEZONES : [d.timezone].concat(F1_TIMEZONES);
+      const body =
+        '<div class="f1-grid3">' +
+          '<div class="form-group"><label class="form-label" for="coCode">ISO code</label><input class="form-input" id="coCode" maxlength="2" value="' + esc(d.code) + '"' + (c ? ' disabled' : '') + ' placeholder="MX"></div>' +
+          '<div class="form-group" style="grid-column: span 2;"><label class="form-label" for="coName">Name</label><input class="form-input" id="coName" maxlength="60" value="' + esc(d.name) + '"></div>' +
+        '</div>' +
+        '<div class="f1-grid3" style="margin-top: 12px;">' +
+          '<div class="form-group"><label class="form-label" for="coDiv">Division name</label><input class="form-input" id="coDiv" maxlength="30" value="' + esc(d.divisionLabel) + '" placeholder="State"></div>' +
+          '<div class="form-group"><label class="form-label" for="coGroup">Use</label><select class="form-select" id="coGroup"><option value="sales"' + (d.group === 'sales' ? ' selected' : '') + '>Sales country</option><option value="hiring"' + (d.group === 'hiring' ? ' selected' : '') + '>Hiring country</option></select></div>' +
+          '<div class="form-group"><label class="form-label" for="coLang">Language</label><input class="form-input" id="coLang" maxlength="30" value="' + esc(d.language) + '"></div>' +
+        '</div>' +
+        '<div class="f1-grid3" style="margin-top: 12px;">' +
+          '<div class="form-group"><label class="form-label" for="coCur">Currency</label><input class="form-input" id="coCur" maxlength="3" value="' + esc(d.currency) + '" placeholder="MXN"></div>' +
+          '<div class="form-group" style="grid-column: span 2;"><label class="form-label" for="coTz">Time zone</label><select class="form-select" id="coTz">' +
+            zones.map(z => '<option' + (z === d.timezone ? ' selected' : '') + '>' + esc(z) + '</option>').join('') + '</select></div>' +
+        '</div>' +
+        '<div class="f1-err" id="cfgErr" style="display:none"></div>';
+      const buttons = [];
+      if (c) {
+        const n = divsOf(c.code).length;
+        buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: n > 0, title: 'Delete its ' + plural(n, String(c.divisionLabel || 'division').toLowerCase(), divPlural(c.divisionLabel)) + ' first', action: () => deleteCountry(c.code) });
+      }
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveCountry(code) });
+      openCfgModal(c ? 'Edit ' + c.name : 'New country', body, buttons, 620);
+    }
+    function saveCountry(code) {
+      const iso = (code || val('coCode').trim()).toUpperCase();
+      const data = { name: val('coName').trim(), divisionLabel: val('coDiv').trim(), language: val('coLang').trim(), currency: val('coCur').trim().toUpperCase(), timezone: val('coTz'), group: val('coGroup') };
+      if (!/^[A-Z]{2}$/.test(iso)) return modalErr('The ISO code has two letters.');
+      if (!code && f1Country(iso)) return modalErr(iso + ' is already in the catalog.');
+      if (!data.name || !data.divisionLabel || !data.language || !data.currency || !data.timezone) return modalErr('Every field is required.');
+      if (code) Object.assign(f1Country(code), data);
+      else F1_COUNTRIES.push(Object.assign({ code: iso }, data));
+      f1SaveGeo(); closeCfgModal(); renderGeo(); renderTerms();
+      showToast(data.name + (code ? ' saved' : ' added'), 'success');
+    }
+    // Un país sin divisiones se borra con sus términos: un término sin país no se busca.
+    function deleteCountry(code) {
+      const c = f1Country(code); if (!c || divsOf(code).length) return;
+      const n = F1_TERMS.filter(t => t.country === code).length;
+      closeCfgModal();
+      openConfirmPopup({ title: 'Delete country', message: n ? 'Its ' + plural(n, 'term') + ' are deleted too.' : 'The country leaves the catalog.', highlight: esc(c.name), confirmLabel: 'Delete', danger: true,
+        onConfirm: () => {
+          for (let i = F1_TERMS.length - 1; i >= 0; i--) if (F1_TERMS[i].country === code) F1_TERMS.splice(i, 1);
+          F1_COUNTRIES.splice(F1_COUNTRIES.indexOf(c), 1);
+          if (geoCountry === code) geoCountry = null;
+          f1SaveGeo(); saveTerms(); setGeoHash(); renderGeo(); renderTerms();
+          showToast(c.name + ' deleted', 'success');
+        } });
+    }
+
+    /* ========================================================================
+       DECISION-MAKER ROLES
+       El nivel sale del rol, no del tamaño de la empresa. Un rol que tienen
+       decisores guardados (MOCK_CONTACTS.roleCode) no se borra.
+       ======================================================================== */
+    // Niveles de ejemplo pendientes de fijar (comentario de F1_DECISION_ROLES_SEED).
+    const LEVEL_TO_CONFIRM = ['owner_founder', 'coo', 'vp_operations', 'director_operations'];
+    function renderRoles() {
+      const q = fold(val('roleSearch').trim());
+      const rows = F1_DECISION_ROLES.filter(r => !q || fold(r.label).indexOf(q) >= 0 || fold(r.code).indexOf(q) >= 0 || r.titles.some(t => fold(t).indexOf(q) >= 0));
+      document.getElementById('roleTable').innerHTML = rows.length
+        ? '<table class="f1-table"><thead><tr><th>Role</th><th>Level</th><th>Areas</th><th>Search titles</th><th>Sends email</th><th>Phone search</th><th></th></tr></thead><tbody>' +
+          rows.map(r => '<tr>' +
+            '<td><span class="f1-cellname">' + esc(r.label) + '</span><span class="f1-cellsub">' + esc(r.code) + '</span></td>' +
+            '<td class="nowrap">Level ' + r.level + (LEVEL_TO_CONFIRM.indexOf(r.code) >= 0 ? ' <span class="f1-chip is-warn" title="Example level, pending confirmation">To confirm</span>' : '') + '</td>' +
+            '<td class="f1-small">' + (r.general ? 'All areas<span class="f1-cellsub">General management</span>' : esc(r.areas.map(a => F1_AREA_LABELS[a] || a).join(', '))) + '</td>' +
+            '<td><span class="f1-chips">' + r.titles.map(t => '<span class="f1-chip is-plain">' + esc(t) + '</span>').join('') + '</span></td>' +
+            '<td><label class="toggle-switch"><input type="checkbox" aria-label="Sends email to ' + esc(r.label) + '"' + (r.sendsEmail ? ' checked' : '') + ' onchange="setRoleFlag(\'' + r.code + '\', \'sendsEmail\', this.checked)"><span class="toggle-slider"></span></label></td>' +
+            '<td><label class="toggle-switch"><input type="checkbox" aria-label="Phone search for ' + esc(r.label) + '"' + (r.findsPhone ? ' checked' : '') + ' onchange="setRoleFlag(\'' + r.code + '\', \'findsPhone\', this.checked)"><span class="toggle-slider"></span></label></td>' +
+            '<td class="nowrap"><button class="op-actionbtn" onclick="openRoleModal(\'' + r.code + '\')">Edit</button></td></tr>').join('') + '</tbody></table>'
+        : '<div class="op-empty"><h3>No role matches</h3><p>Try another role or title.</p></div>';
+      renderNavCounts();
+    }
+    function setRoleFlag(code, field, on) {
+      const r = f1DecisionRole(code); if (!r) return;
+      r[field] = on; saveRoles();
+      showToast(r.label + ': ' + (field === 'sendsEmail' ? (on ? 'receives cold email' : 'no cold email') : (on ? 'phone is searched' : 'phone is not searched')), 'success');
+    }
+    function openRoleModal(code) {
+      const r = code ? f1DecisionRole(code) : null;
+      const d = r || { code: '', label: '', level: 2, general: false, areas: [], titles: [], sendsEmail: true, findsPhone: false };
+      const body =
+        '<div class="f1-grid3">' +
+          '<div class="form-group" style="grid-column: span 2;"><label class="form-label" for="roLabel">Role</label><input class="form-input" id="roLabel" maxlength="60" value="' + esc(d.label) + '" placeholder="e.g. VP Finance"></div>' +
+          '<div class="form-group"><label class="form-label" for="roLevel">Level</label><select class="form-select" id="roLevel">' + [1, 2, 3].map(n => '<option value="' + n + '"' + (d.level === n ? ' selected' : '') + '>Level ' + n + '</option>').join('') + '</select></div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-top: 14px;"><label class="f1-check"><input type="checkbox" id="roGeneral"' + (d.general ? ' checked' : '') + ' onchange="document.querySelectorAll(\'input[name=roArea]\').forEach(i => i.disabled = this.checked)"><span>General management: applies to every area</span></label></div>' +
+        '<div class="form-group" style="margin-top: 10px;"><span class="form-label">Areas</span>' + checks('roArea', areaItems(), v => d.areas.indexOf(v) >= 0) + '</div>' +
+        '<div class="form-group" style="margin-top: 14px;"><label class="form-label" for="roTitles">Search titles</label><textarea class="form-textarea" id="roTitles" rows="3" style="min-height: 72px;">' + esc(d.titles.join('\n')) + '</textarea><p class="st-hint">One per line.</p></div>' +
+        '<div class="f1-fieldrow" style="margin-top: 10px;"><label class="f1-check"><input type="checkbox" id="roEmail"' + (d.sendsEmail ? ' checked' : '') + '><span>Sends email</span></label><label class="f1-check"><input type="checkbox" id="roPhone"' + (d.findsPhone ? ' checked' : '') + '><span>Phone search</span></label></div>' +
+        '<div class="f1-err" id="cfgErr" style="display:none"></div>';
+      const inUse = r ? MOCK_CONTACTS.filter(c => c.roleCode === r.code).length : 0;
+      const buttons = [];
+      if (r) buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: inUse > 0, title: plural(inUse, 'decision maker') + (inUse === 1 ? ' has' : ' have') + ' this role', action: () => deleteRole(r.code) });
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveRole(code) });
+      openCfgModal(r ? 'Edit role' : 'New role', body, buttons, 600);
+      if (d.general) document.querySelectorAll('input[name=roArea]').forEach(i => { i.disabled = true; });
+      if (inUse) document.getElementById('cfgModalBody').insertAdjacentHTML('beforeend', '<p class="st-hint">' + plural(inUse, 'decision maker') + (inUse === 1 ? ' has' : ' have') + ' this role.</p>');
+    }
+    function saveRole(code) {
+      const label = val('roLabel').trim();
+      const general = checked('roGeneral');
+      const areas = general ? [] : checkedValues('roArea');
+      const titles = val('roTitles').split('\n').map(s => s.trim().toLowerCase()).filter(Boolean);
+      if (!label) return modalErr('The role name is required.');
+      if (!general && !areas.length) return modalErr('Choose at least one area, or mark it as general management.');
+      if (!titles.length) return modalErr('Add at least one search title.');
+      const data = { label: label, level: parseInt(val('roLevel'), 10), general: general, areas: areas, titles: titles, sendsEmail: checked('roEmail'), findsPhone: checked('roPhone') };
+      if (code) Object.assign(f1DecisionRole(code), data);
+      else {
+        const c = slug(label).replace(/-/g, '_');
+        if (f1DecisionRole(c)) return modalErr('A role with that code already exists.');
+        F1_DECISION_ROLES.push(Object.assign({ code: c }, data));
+      }
+      saveRoles(); closeCfgModal(); renderRoles();
+      showToast(label + (code ? ' saved' : ' added'), 'success');
+    }
+    function deleteRole(code) {
+      const i = F1_DECISION_ROLES.findIndex(r => r.code === code); if (i < 0) return;
+      if (MOCK_CONTACTS.some(c => c.roleCode === code)) return;
+      const label = F1_DECISION_ROLES[i].label;
+      F1_DECISION_ROLES.splice(i, 1); saveRoles(); closeCfgModal(); renderRoles();
+      showToast(label + ' deleted', 'success');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfgModal(); });
+    document.getElementById('cfgModal').addEventListener('click', e => { if (e.target.id === 'cfgModal') closeCfgModal(); });
+
+    // === Section: On-Demand scraping config ===
+    function loadOndemandConfig() {
+      const cfg = getOdConfig();
+      document.getElementById('windowDays').value = cfg.windowDays;
+      document.getElementById('minWindow').textContent = cfg.minWindowDays;
+      document.getElementById('windowError').style.display = 'none';
+    }
+    function showFieldError(id, msg) {
+      const el = document.getElementById(id);
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function saveOndemandConfig() {
+      const cfg = getOdConfig();
+      const windowDays = parseInt(document.getElementById('windowDays').value, 10);
+      document.getElementById('windowError').style.display = 'none';
+      if (isNaN(windowDays) || windowDays < cfg.minWindowDays) {
+        showFieldError('windowError', 'Debe ser un número ≥ ' + cfg.minWindowDays + ' día(s).');
+        return;
+      }
+      setOdConfig({ windowDays: windowDays });
+      showToast('Settings saved', 'success');
+    }
+
+    // === Section: Showcase ===
+    // Catálogo propio de la vitrina: cada rol es un currículo de `profile_curriculum`, sin
+    // asociarse a perfiles de búsqueda ni a posiciones, y la landing lo lee tal cual por el
+    // servicio de talento. El seed son los doce currículos del paquete inicial (HUECO-0.2/0.3),
+    // con retratos ficticios. Estado en localStorage `showcaseRoles` y `showcaseLimit`;
+    // "Restore the seeded showcase" es solo del prototipo.
+    // Reglas (HUECO-4.1-BE): completo = foto, título, país, perfil corto y perfil completo;
+    // solo un rol completo entra a la vitrina; no se habilita por encima del tope; dejar
+    // incompleto un rol habilitado lo saca de la vitrina.
+    const SHOWCASE_SEED = [{"id":"cv-01","display_title":"Customer Service Representative","country":"Mexico","photo_url":"assets/talent/customer-service-representative.jpg","years_experience":5,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Zendesk & Freshdesk","Live chat & voice support","CRM ticketing","SLA management","Order & returns handling","De-escalation","Quality scorecards"],"soft_skills":["Empathy","Patience","Clear communication"],"short_profile":"Front-line support professional who resolves customer issues across phone, email and chat, and keeps satisfaction high on high-volume queues.","full_profile":"Customer support professional with five years handling US customers across phone, email and live chat. Works high-volume queues in retail, e-commerce, subscription services and healthcare support, resolving issues on first contact wherever the policy allows it and escalating cleanly when it does not.\n\nFluent in the tools US support teams run on — Zendesk, Freshdesk and Salesforce Service Cloud — and used to working inside SLAs, macros and quality scorecards. Sustains satisfaction above 95% and keeps first response times on chat under a few minutes. Strong at de-escalation: takes an angry customer through the fix without handing the problem to a supervisor.\n\nBuilt for remote work with a US team: quiet dedicated workspace, backup connectivity, and comfort with rotating shifts and peak-season volume. Neutral accent on calls, clean written English, and steady enough with process changes to be productive within the first weeks.","showcase":true},{"id":"cv-02","display_title":"Sales Representative","country":"Colombia","photo_url":"assets/talent/sales-representative.jpg","years_experience":7,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Full-cycle B2B sales","Discovery calls","HubSpot & Salesforce","Proposal & negotiation","Pipeline forecasting","Account planning","Objection handling"],"soft_skills":["Resilience","Active listening","Commercial judgment"],"short_profile":"Full-cycle B2B seller who runs discovery, demos, proposal and negotiation end to end for US companies, carrying an individual quota.","full_profile":"Commercial closer with seven years selling for US companies across software, business services and distribution. Owns the cycle from first discovery call through demo, proposal, negotiation and close, and is used to carrying an individual quota rather than supporting someone else's.\n\nWorks the way US sales teams expect: disciplined CRM hygiene in HubSpot or Salesforce, a forecast that holds up, and multi-threaded deals that bring in operations, finance and procurement instead of leaning on a single champion. Runs discovery without a script and adapts the pitch to whoever is in the room.\n\nSet up for remote work with a US team: dedicated home office, full overlap with US business hours, and confident, unhurried English on calls and in writing. Ramps on a new product fast and asks for coaching instead of waiting for it.","showcase":true},{"id":"cv-03","display_title":"Sales Development Representative","country":"Guatemala","photo_url":"assets/talent/sales-development-representative.jpg","years_experience":4,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Outbound prospecting","Cold calling","Email sequencing","Salesforce & Outreach","Lead qualification (BANT/MEDDIC)","List building & research","LinkedIn Sales Navigator"],"soft_skills":["Persistence","Coachability","Curiosity"],"short_profile":"Pipeline generator who prospects, cold calls and sequences outbound to book qualified meetings for US sales teams.","full_profile":"Sales development representative with four years building pipeline for US companies in software, professional services and staffing. Owns the top of the funnel end to end — list building, account research, cold calling, email sequences and LinkedIn outreach — against a target of qualified meetings booked, not activity for its own sake.\n\nRuns high call volume without losing tone, and writes sequences that get replies because they reference something real about the account. Disciplined in Salesforce, Outreach and Apollo, and consistent with qualification frameworks such as BANT or MEDDIC, so what reaches an account executive is actually workable.\n\nCoachable by design: takes call reviews well, adjusts the approach the same week, and tracks their own conversion rates. Clear, energetic English on the phone, full US business-hours coverage, and enough resilience to keep dialing through a bad morning.","showcase":true},{"id":"cv-04","display_title":"Sales Specialist","country":"Colombia","photo_url":"assets/talent/sales-specialist.jpg","years_experience":6,"languages":["Spanish (native)","English (C2)"],"hard_skills":["Consultative selling","Product demos","Upsell & expansion","Renewal negotiation","Account planning","Quarterly business reviews","Pipeline management"],"soft_skills":["Product depth","Patience","Storytelling"],"short_profile":"Product-focused seller who grows existing accounts through tailored demos, upsells, renewals and expansion rather than net-new logos.","full_profile":"Specialist seller with six years growing existing accounts for US companies. Owns product-specific pitches, tailored demos, renewals and expansion plans, working the installed base rather than chasing net-new logos — the seller you put on an account once it is signed.\n\nLearns a product deeply enough to sell it without a script, and translates a feature into what it saves a particular customer. Comfortable running quarterly business reviews, building expansion plans alongside customer success, and handling pricing conversations at renewal without discounting on reflex. Works fluently in HubSpot, Salesforce and the usual demo tooling.\n\nComposed on video with senior stakeholders and polished in writing, in fully fluent English. Overlaps completely with US business hours, keeps account notes another person could pick up, and is used to being the one who knows the product best on the call.","showcase":true},{"id":"cv-05","display_title":"Legal Assistant","country":"Honduras","photo_url":"assets/talent/legal-assistant.jpg","years_experience":5,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Document drafting","Court & client calendaring","E-filing portals","Clio & MyCase","File and records management","Deadline tracking","Client correspondence"],"soft_skills":["Organization","Discretion","Follow-through"],"short_profile":"Legal support professional who drafts correspondence, manages filings and keeps attorney calendars and case files organized.","full_profile":"Legal assistant with five years supporting US attorneys across litigation, immigration, family and corporate practices. Handles the administrative spine of a matter: correspondence and routine document drafting, court and client calendars, file organization, and follow-up on everything still outstanding.\n\nFamiliar with US e-filing portals and with case-management platforms such as Clio and MyCase, and precise with deadlines that carry consequences. Prepares document packets, tracks hearing dates and filing windows, and flags what needs an attorney's attention instead of letting it sit in an inbox.\n\nHandles confidential material without being reminded to, and writes clean, professional English to clients, courts and opposing counsel. Works US business hours from a private, secure workspace, and is comfortable being the person who knows where everything is.","showcase":true},{"id":"cv-06","display_title":"Paralegal","country":"Colombia","photo_url":"assets/talent/paralegal.jpg","years_experience":6,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Legal research (Westlaw/LexisNexis)","Pleadings & motion drafting","Discovery support","Case management","E-filing","Medical record summaries","Deposition summaries"],"soft_skills":["Attention to detail","Confidentiality","Time management"],"short_profile":"Paralegal who runs legal research, drafts pleadings and manages discovery and case files for US litigation teams.","full_profile":"Paralegal with six years doing substantive work for US law firms across personal injury, employment and general civil litigation. Runs legal research, drafts pleadings, motions and discovery responses, assembles exhibits, and manages cases from intake through resolution.\n\nComfortable in Westlaw and LexisNexis, with US court e-filing, and with the case-management platforms firms run on. Summarizes medical records and depositions, builds chronologies an attorney can walk into a hearing with, and keeps discovery deadlines from turning into emergencies.\n\nDetail-obsessed in a way that shows up in the work product, and trusted with privileged material. Written English strong enough for court-facing documents, full US business-hours coverage, and used to a caseload whose priorities change without notice.","showcase":true},{"id":"cv-07","display_title":"Intake Specialist","country":"Mexico","photo_url":"assets/talent/intake-specialist.jpg","years_experience":4,"languages":["Spanish (native)","English (C1)"],"hard_skills":["Client intake & screening","Case qualification","CRM data entry","Appointment setting","HIPAA-aware handling","Lead follow-up","Intake documentation"],"soft_skills":["Empathy","Active listening","Composure"],"short_profile":"First point of contact for new clients who screens inbound leads, captures case details and books the consultation.","full_profile":"Intake specialist with four years as the first voice new clients hear at US law firms and healthcare practices. Screens inbound leads against intake criteria, captures the details that decide whether a case is viable, and books the consultation while the person is still on the line.\n\nBalances empathy with the discipline of a script: gets through a full intake form without making it feel like an interrogation, and records it accurately in the CRM so nothing has to be asked twice. Used to HIPAA-aware handling of sensitive information and to working leads that go quiet until they answer.\n\nSteady in emotionally charged conversations — an accident, an illness, a dispute — and warm without over-promising what the firm can do. Fluent, reassuring English on the phone, US business-hours coverage, and a conversion rate they can speak to.","showcase":true},{"id":"cv-08","display_title":"Executive Assistant","country":"Colombia","photo_url":"assets/talent/executive-assistant.jpg","years_experience":9,"languages":["Spanish (native)","English (C2)"],"hard_skills":["Complex calendar management","International travel planning","Inbox triage","Expense reporting (Concur)","Board & meeting prep","Google Workspace & Microsoft 365","Stakeholder liaison"],"soft_skills":["Discretion","Anticipation","Organization"],"short_profile":"Executive-level support that owns complex calendars, travel, expenses and board preparation for US leadership.","full_profile":"Executive assistant with nine years supporting C-level leaders at US companies, from venture-backed startups to established mid-market firms. Owns complex calendars across time zones, international travel, expense reporting, board and leadership meeting preparation, and the follow-through afterwards.\n\nProtects an executive's time by making decisions instead of forwarding them: triages the inbox, declines what should not be on the calendar, prepares the briefing before the meeting and chases the action items after it. Fluent in Google Workspace and Microsoft 365, plus Notion, Concur and the usual scheduling tools.\n\nTrusted with information that is not shared widely, and known for anticipating what is needed before it is asked for. Polished English in writing and on calls with external stakeholders, full US business-hours availability, and the judgment to know when to interrupt.","showcase":true},{"id":"cv-09","display_title":"Administrative Assistant","country":"Philippines","photo_url":"assets/talent/administrative-assistant.jpg","years_experience":6,"languages":["Filipino (native)","English (C1)"],"hard_skills":["Scheduling & coordination","Document management","Data entry & reporting","Microsoft 365 & Google Workspace","Expense processing","Vendor coordination","Process documentation"],"soft_skills":["Reliability","Multitasking","Proactivity"],"short_profile":"Operations support that keeps a US team running — scheduling, documents, data entry and vendor coordination.","full_profile":"Administrative assistant with six years supporting US teams remotely across operations, HR and finance functions. Handles scheduling, document management, data entry, expense processing and vendor coordination — the work that keeps a team's week from falling apart.\n\nStrong in Microsoft 365 and Google Workspace, including the spreadsheet work most administrative roles avoid: reconciliations, trackers and reports that stay current. Builds simple systems where there were none — a shared folder structure, a recurring checklist — and keeps them alive past the first month.\n\nReliable in the specific sense that things get done without a reminder, and proactive about small problems before they become someone's emergency. Clear written English, US business-hours coverage, and comfortable supporting several people at once with competing priorities.","showcase":true},{"id":"cv-10","display_title":"Collections Specialist","country":"Guatemala","photo_url":"assets/talent/collections-specialist.jpg","years_experience":5,"languages":["Spanish (native)","English (B2)"],"hard_skills":["AR collections","Payment plan negotiation","Aging report analysis","QuickBooks & NetSuite","Dispute resolution","Invoice reconciliation","Collection documentation"],"soft_skills":["Tact","Persistence","Numeracy"],"short_profile":"Accounts-receivable specialist who recovers overdue balances through payment negotiation without damaging the customer relationship.","full_profile":"Collections specialist with five years managing accounts receivable for US businesses across professional services, healthcare billing and B2B distribution. Works the aging report from the top down, makes the calls, negotiates payment plans and gets balances closed.\n\nReads an aging report as a priority list rather than a queue, and tells a genuine billing error apart from a delay tactic. Hands-on with QuickBooks, NetSuite and standard AR modules, and consistent with documentation, so every promise to pay is on record. Brings days-sales-outstanding down in a way that shows up in the month-end numbers.\n\nFirm but tactful on collection calls — the customer usually stays a customer. Professional English by phone and in writing, US business-hours coverage, and comfortable operating within FDCPA-aware practice and each client's escalation rules.","showcase":true},{"id":"cv-11","display_title":"Scheduler","country":"Philippines","photo_url":"assets/talent/scheduler.jpg","years_experience":4,"languages":["Filipino (native)","English (C1)"],"hard_skills":["Appointment setting","Calendar & capacity management","Confirmation & reminder calls","Rescheduling & dispatch","CRM scheduling tools","Route & territory planning","No-show recovery"],"soft_skills":["Punctuality","Diplomacy","Clarity"],"short_profile":"Scheduling coordinator who books, confirms and reshuffles appointments to keep US service calendars full and on time.","full_profile":"Scheduling coordinator with four years running appointment calendars for US service operations — home services, healthcare practices and field teams. Books and confirms visits, absorbs cancellations and reschedules, and keeps technicians, providers and clients pointed at the same calendar.\n\nTreats the calendar as a capacity problem: fills the gap a cancellation leaves, groups appointments sensibly by geography or provider, and calls ahead so no-shows stay rare. Comfortable in scheduling and dispatch software, in CRMs, and in the reminder workflows that keep confirmation rates high.\n\nCalm through high call volume and last-minute changes, and precise with the notes the next person will read. Clear, friendly English on the phone, coverage across US time zones including early-morning starts, and the follow-through that makes a schedule hold.","showcase":true},{"id":"cv-12","display_title":"CAD Designer","country":"Colombia","photo_url":"assets/talent/cad-designer.jpg","years_experience":7,"languages":["Spanish (native)","English (B2)"],"hard_skills":["AutoCAD","Revit / BIM","2D construction drawings","3D modeling","Shop drawings","Redline & markup interpretation","Drawing standards & title blocks"],"soft_skills":["Precision","Spatial reasoning","Coordination"],"short_profile":"Technical designer who turns markups and field notes into precise 2D drawings and 3D models for US engineering and construction teams.","full_profile":"CAD designer with seven years producing drawings and models for US engineering, architecture and construction firms. Takes redlines, field measurements and engineer sketches and turns them into clean, dimensioned documentation — plans, sections, details and shop drawings ready to issue.\n\nWorks daily in AutoCAD and Revit, with SolidWorks and SketchUp as the job requires, and holds to the client's layer standards, title blocks and sheet conventions instead of inventing their own. Catches conflicts on the drawing rather than on site, where the cost of the same mistake changes by an order of magnitude.\n\nCoordinates asynchronously without needing to be chased: sends questions batched and specific, versions files predictably, and hits issue dates. Reads and writes technical English comfortably, overlaps with US business hours, and works from a workstation built for the software.","showcase":true}];
+    const SC_KEY = 'showcaseRoles', SC_LIMIT_KEY = 'showcaseLimit', SC_LIMIT_DEFAULT = 12;
+    // Las filas de la vitrina son más altas que las de los catálogos: 10 por página.
+    const SC_PAGE_SIZE = 10;
+    function loadShowcase() {
+      try { const s = JSON.parse(localStorage.getItem(SC_KEY)); if (Array.isArray(s)) return s; } catch (e) {}
+      return JSON.parse(JSON.stringify(SHOWCASE_SEED));
+    }
+    function saveShowcase(list) { localStorage.setItem(SC_KEY, JSON.stringify(list)); }
+    let showcase = loadShowcase();
+    function getScLimit() { const v = parseInt(localStorage.getItem(SC_LIMIT_KEY), 10); return isNaN(v) || v < 1 ? SC_LIMIT_DEFAULT : v; }
+    const scOnCount = () => showcase.filter(r => r.showcase).length;
+
+    const SC_REQUIRED = [['photo_url', 'photo'], ['display_title', 'title'], ['country', 'country'], ['short_profile', 'short profile'], ['full_profile', 'full profile']];
+    const scMissing = r => SC_REQUIRED.filter(([k]) => !String(r[k] || '').trim()).map(([, label]) => label);
+    const initials = t => String(t || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
+    const photoHtml = r => r.photo_url
+      ? '<img class="sc-photo" src="' + esc(r.photo_url) + '" alt="">'
+      : '<span class="sc-photo is-empty">' + esc(initials(r.display_title)) + '</span>';
+
+    function resetShowcase() {
+      showcase = JSON.parse(JSON.stringify(SHOWCASE_SEED)); saveShowcase(showcase);
+      localStorage.removeItem(SC_LIMIT_KEY); renderShowcase(); showToast('Showcase restored to seed', 'success');
+    }
+    function saveShowcaseLimit() {
+      const input = document.getElementById('scLimit');
+      const v = parseInt(input.value, 10), on = scOnCount();
+      if (isNaN(v) || v < 1) { input.value = getScLimit(); return; }
+      if (v < on) { input.value = getScLimit(); showToast('There are ' + on + ' roles in the showcase: hide some before lowering the limit to ' + v, 'error'); return; }
+      localStorage.setItem(SC_LIMIT_KEY, String(v)); renderShowcase(true); showToast('Showcase limit saved', 'success');
+    }
+
+    let scFilter = 'all', scPage = 1;
+    function setScFilter(value, btn) {
+      scFilter = value; scPage = 1;
+      document.querySelectorAll('[data-scfilter]').forEach(b => b.classList.remove('is-on'));
+      btn.classList.add('is-on'); renderShowcase();
+    }
+    function goScPage(n) { scPage = n; renderShowcase(true); }
+
+    function renderShowcase(keepPage) {
+      if (!keepPage) scPage = 1;
+      renderNavCounts();
+      const limit = getScLimit(), on = scOnCount();
+      document.getElementById('scLimit').value = limit;
+      const q = document.getElementById('scSearch').value.trim().toLowerCase();
+      const rows = showcase.filter(r => {
+        if (scFilter === 'on' && !r.showcase) return false;
+        if (scFilter === 'off' && r.showcase) return false;
+        if (!q) return true;
+        return [r.display_title, r.country].concat(r.hard_skills || []).some(t => String(t || '').toLowerCase().includes(q));
+      });
+      const incomplete = showcase.filter(r => scMissing(r).length).length;
+      document.getElementById('scSummary').innerHTML =
+        rows.length + ' of ' + showcase.length + ' roles · ' +
+        (on >= limit ? '<span class="sc-full">' + on + ' of ' + limit + ' in the showcase — limit reached</span>' : on + ' of ' + limit + ' in the showcase') +
+        (incomplete ? ' · ' + incomplete + ' incomplete' : '');
+      const list = document.getElementById('scList');
+      if (!rows.length) {
+        list.innerHTML = '<div class="op-empty"><h3>' + (showcase.length ? 'No role matches' : 'No roles yet') + '</h3><p>' +
+          (showcase.length ? 'Try another role, country or skill.' : 'Create the first one to fill the showcase.') + '</p></div>';
+        document.getElementById('scPagination').innerHTML = '';
+        return;
+      }
+      const pages = Math.max(1, Math.ceil(rows.length / SC_PAGE_SIZE));
+      if (scPage > pages) scPage = pages;
+      list.innerHTML = rows.slice((scPage - 1) * SC_PAGE_SIZE, scPage * SC_PAGE_SIZE).map(r => {
+        const miss = scMissing(r);
+        const meta = [r.country, r.years_experience != null && r.years_experience !== '' ? r.years_experience + ' yrs' : ''].filter(Boolean).join(' · ');
+        const skills = (r.hard_skills || []).slice(0, 5).map(t => '<span class="st-term">' + esc(t) + '</span>').join('');
+        return '<article class="st-row sc-row' + (r.showcase ? '' : ' is-off') + '" data-id="' + r.id + '">' +
+          '<div class="st-rowhead">' +
+            '<label class="toggle-switch" title="' + (r.showcase ? 'In the showcase' : 'Hidden') + '">' +
+              '<input type="checkbox" ' + (r.showcase ? 'checked' : '') + ' onchange="toggleShowcase(\'' + r.id + '\', this)">' +
+              '<span class="toggle-slider"></span></label>' +
+            photoHtml(r) +
+            '<div class="sc-title"><span class="st-rowname">' + esc(r.display_title || 'Untitled role') + '</span>' +
+              (meta ? '<span class="st-rowmeta">' + esc(meta) + '</span>' : '') + '</div>' +
+            (miss.length ? '<span class="sc-flag" title="Missing: ' + esc(miss.join(', ')) + '">Incomplete</span>' : '') +
+            '<div class="st-rowactions">' +
+              '<button class="op-actionbtn" onclick="openShowcaseModal(\'' + r.id + '\')">Edit</button>' +
+              '<button class="cd-iconbtn" title="Delete role" onclick="openScDeleteModal(\'' + r.id + '\')">' +
+                '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="sc-body">' +
+            (r.short_profile ? '<p class="sc-short">' + esc(r.short_profile) + '</p>' : '<p class="sc-short">No short profile yet.</p>') +
+            (skills ? '<div class="sc-skills">' + skills + '</div>' : '') +
+          '</div>' +
+        '</article>';
+      }).join('');
+      renderPager('scPagination', rows.length, scPage, goScPage, SC_PAGE_SIZE);
+    }
+
+    // Habilitar desde la lista pide un currículo completo y lugar bajo el tope; si no, el
+    // control vuelve a su estado y se avisa qué falta.
+    function canEnable(r) {
+      const miss = scMissing(r);
+      if (miss.length) return 'Complete the résumé first — missing ' + miss.join(', ') + '.';
+      if (!r.showcase && scOnCount() >= getScLimit()) return 'The showcase is full (' + getScLimit() + ' roles). Hide one or raise the limit.';
+      return '';
+    }
+    function toggleShowcase(id, box) {
+      const r = showcase.find(x => x.id === id); if (!r) return;
+      if (box.checked) {
+        const why = canEnable(r);
+        if (why) { box.checked = false; showToast(why, 'error'); return; }
+      }
+      r.showcase = box.checked; saveShowcase(showcase); renderShowcase(true);
+      showToast(r.display_title + (r.showcase ? ' added to the showcase' : ' hidden from the showcase'), 'success');
+    }
+
+    // --- tag editors (languages, hard skills, soft skills) ---
+    const scTags = { scLangEditor: [], scHardEditor: [], scSoftEditor: [] };
+    function renderTagEditor(id) {
+      const editor = document.getElementById(id), input = editor.querySelector('input');
+      editor.querySelectorAll('.tag-chip').forEach(c => c.remove());
+      scTags[id].forEach((t, i) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = esc(t) + '<span class="tag-chip-remove" title="Remove">×</span>';
+        chip.querySelector('.tag-chip-remove').onclick = e => { e.stopPropagation(); scTags[id].splice(i, 1); renderTagEditor(id); };
+        editor.insertBefore(chip, input);
+      });
+    }
+    function addTag(id, raw) {
+      const t = raw.trim().replace(/\s+/g, ' ');
+      if (!t) return;
+      if (scTags[id].some(x => x.toLowerCase() === t.toLowerCase())) { showToast('"' + t + '" is already in the list', 'error'); return; }
+      scTags[id].push(t); renderTagEditor(id);
+    }
+    Object.keys(scTags).forEach(id => {
+      const input = document.getElementById(id).querySelector('input');
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addTag(id, input.value); input.value = ''; }
+        else if (e.key === 'Backspace' && !input.value && scTags[id].length) { scTags[id].pop(); renderTagEditor(id); }
+      });
+      input.addEventListener('blur', () => { if (input.value.trim()) { addTag(id, input.value); input.value = ''; } });
+    });
+
+    // --- photo ---
+    let draftPhoto = '';
+    function renderDraftPhoto() {
+      const prev = document.getElementById('scPhotoPreview');
+      if (draftPhoto) {
+        prev.outerHTML = '<img class="sc-photo" id="scPhotoPreview" src="' + esc(draftPhoto) + '" alt="Photo preview">';
+      } else {
+        prev.outerHTML = '<span class="sc-photo is-empty" id="scPhotoPreview">No photo</span>';
+      }
+      document.getElementById('scPhotoRemove').style.visibility = draftPhoto ? 'visible' : 'hidden';
+    }
+    function removeDraftPhoto() { draftPhoto = ''; renderDraftPhoto(); updateShowHint(); }
+    function onPhotoChosen(input) {
+      const file = input.files && input.files[0]; input.value = '';
+      document.getElementById('scPhotoError').style.display = 'none';
+      if (!file) return;
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { showFieldError('scPhotoError', 'Use a JPG, PNG or WebP image.'); return; }
+      if (file.size > 2 * 1024 * 1024) { showFieldError('scPhotoError', 'The image weighs more than 2 MB.'); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          if (Math.min(img.width, img.height) < 400) { showFieldError('scPhotoError', 'The image is ' + img.width + ' × ' + img.height + ' px; it needs at least 400 px per side.'); return; }
+          draftPhoto = reader.result; renderDraftPhoto(); updateShowHint();
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // --- modal create / edit ---
+    let editingScId = null;
+    function draftFromForm() {
+      return {
+        photo_url: draftPhoto,
+        display_title: document.getElementById('scTitleInput').value.trim(),
+        country: document.getElementById('scCountryInput').value.trim(),
+        years_experience: document.getElementById('scYearsInput').value === '' ? null : parseInt(document.getElementById('scYearsInput').value, 10),
+        short_profile: document.getElementById('scShortInput').value.trim(),
+        full_profile: document.getElementById('scFullInput').value.trim(),
+        languages: scTags.scLangEditor.slice(), hard_skills: scTags.scHardEditor.slice(), soft_skills: scTags.scSoftEditor.slice()
+      };
+    }
+    function updateCounters() {
+      const n = document.getElementById('scShortInput').value.length;
+      document.getElementById('scShortCount').textContent = n + ' / 240';
+    }
+    function updateShowHint() {
+      const miss = scMissing(draftFromForm());
+      document.getElementById('scShowHint').textContent = miss.length
+        ? 'To show it, complete: ' + miss.join(', ') + '.'
+        : scOnCount() + ' of ' + getScLimit() + ' roles are in the showcase.';
+    }
+    ['scTitleInput', 'scCountryInput', 'scShortInput', 'scFullInput'].forEach(id => document.getElementById(id).addEventListener('input', updateShowHint));
+
+    function openShowcaseModal(id) {
+      editingScId = id || null;
+      const r = id ? showcase.find(x => x.id === id) : null;
+      document.getElementById('scModalTitle').textContent = r ? 'Edit role' : 'New role';
+      draftPhoto = r ? (r.photo_url || '') : '';
+      document.getElementById('scTitleInput').value = r ? r.display_title : '';
+      document.getElementById('scCountryInput').value = r ? r.country : '';
+      document.getElementById('scYearsInput').value = r && r.years_experience != null ? r.years_experience : '';
+      document.getElementById('scShortInput').value = r ? r.short_profile : '';
+      document.getElementById('scFullInput').value = r ? r.full_profile : '';
+      scTags.scLangEditor = r ? (r.languages || []).slice() : [];
+      scTags.scHardEditor = r ? (r.hard_skills || []).slice() : [];
+      scTags.scSoftEditor = r ? (r.soft_skills || []).slice() : [];
+      Object.keys(scTags).forEach(renderTagEditor);
+      document.getElementById('scShowInput').checked = r ? !!r.showcase : false;
+      ['scPhotoError', 'scTitleError', 'scShowError'].forEach(i => document.getElementById(i).style.display = 'none');
+      renderDraftPhoto(); updateCounters(); updateShowHint();
+      document.getElementById('showcaseModal').classList.add('active');
+      document.querySelector('#showcaseModal .modal-body').scrollTop = 0;
+      setTimeout(() => document.getElementById('scTitleInput').focus(), 50);
+    }
+    function closeShowcaseModal() { document.getElementById('showcaseModal').classList.remove('active'); editingScId = null; }
+
+    function saveShowcaseRole() {
+      const d = draftFromForm();
+      let show = document.getElementById('scShowInput').checked;
+      ['scTitleError', 'scShowError'].forEach(i => document.getElementById(i).style.display = 'none');
+      if (!d.display_title) { showFieldError('scTitleError', 'The title is required.'); return; }
+      const current = editingScId ? showcase.find(x => x.id === editingScId) : null;
+      const miss = scMissing(d);
+      let note = '';
+      if (show && miss.length) {
+        // Un rol habilitado que queda incompleto sale de la vitrina; uno nuevo no puede entrar así.
+        if (current && current.showcase) { show = false; note = ' — removed from the showcase: missing ' + miss.join(', '); }
+        else { showFieldError('scShowError', 'Complete the résumé to show it — missing ' + miss.join(', ') + '.'); return; }
+      }
+      if (show && !(current && current.showcase) && scOnCount() >= getScLimit()) {
+        showFieldError('scShowError', 'The showcase is full (' + getScLimit() + ' roles). Hide one or raise the limit.'); return;
+      }
+      if (current) { Object.assign(current, d, { showcase: show }); }
+      else { showcase.unshift(Object.assign({ id: 'cv-' + Date.now().toString(36) }, d, { showcase: show })); }
+      saveShowcase(showcase); closeShowcaseModal(); renderShowcase();
+      showToast((current ? 'Role updated' : 'Role created') + note, note ? 'error' : 'success');
+    }
+
+    // --- modal delete ---
+    let deletingScId = null;
+    function openScDeleteModal(id) {
+      const r = showcase.find(x => x.id === id); if (!r) return;
+      deletingScId = id;
+      document.getElementById('scDeleteText').innerHTML = 'Delete <strong>' + esc(r.display_title) + '</strong> from the showcase catalog?';
+      document.getElementById('scDeleteModal').classList.add('active');
+    }
+    function closeScDeleteModal() { document.getElementById('scDeleteModal').classList.remove('active'); deletingScId = null; }
+    function confirmDeleteShowcase() {
+      const r = showcase.find(x => x.id === deletingScId);
+      showcase = showcase.filter(x => x.id !== deletingScId);
+      saveShowcase(showcase); closeScDeleteModal(); renderShowcase();
+      showToast((r ? r.display_title : 'Role') + ' deleted', 'success');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeShowcaseModal(); closeScDeleteModal(); } });
+    ['showcaseModal', 'scDeleteModal'].forEach(id => document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) { closeShowcaseModal(); closeScDeleteModal(); } }));
+
+    // === Navegación de secciones ===
+    const SECTIONS = ['terms', 'geography', 'roles', 'ondemand', 'showcase'];
+    const SECTION_ALIAS = { window: 'ondemand' };
+    function showSection(sectionId, btn, keepHash) {
+      sectionId = SECTION_ALIAS[sectionId] || sectionId;
+      if (SECTIONS.indexOf(sectionId) < 0) return;
+      document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.st-navitem').forEach(b => b.classList.remove('is-on'));
+      const section = document.getElementById('section-' + sectionId);
+      if (section) section.classList.add('active');
+      (btn || document.querySelector('[data-section="' + sectionId + '"]')).classList.add('is-on');
+      if (!keepHash) {
+        const h = sectionId === 'geography' && geoCountry ? '#geography/' + geoCountry : '#' + sectionId;
+        if (location.hash !== h) history.replaceState(null, '', h);
+      }
+    }
+    // El conteo del rail: el tamaño de cada catálogo; la vitrina, ocupados sobre el tope.
+    let scReady = false;
+    function renderNavCounts() {
+      const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+      set('navCountTerms', String(F1_POSITIONS.length));
+      set('navCountGeo', String(F1_COUNTRIES.length));
+      set('navCountRoles', String(F1_DECISION_ROLES.length));
+      if (scReady) set('navCountShowcase', showcase.filter(r => r.showcase).length + ' / ' + getScLimit());
+    }
+
+    // === Initial render ===
+    scReady = true;
+    loadOndemandConfig();
+    renderTerms();
+    renderGeo();
+    renderRoles();
+    renderShowcase();
+    renderNavCounts();
+    // La sección se abre desde el hash; #geography/<país> abre el detalle del país.
+    // Sin hash arranca en Positions & terms.
+    function openFromHash() {
+      const h = decodeURIComponent((location.hash || '').replace('#', ''));
+      const parts = h.split('/');
+      const sec = SECTION_ALIAS[parts[0]] || parts[0];
+      if (SECTIONS.indexOf(sec) < 0) return;
+      if (sec === 'geography' && parts[1] && f1Country(parts[1])) { showSection('geography', null, true); if (geoCountry !== parts[1]) openGeoCountry(parts[1]); return; }
+      showSection(sec, null, true);
+    }
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+  </script>
+</body>
+</html>

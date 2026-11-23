@@ -1,0 +1,187 @@
+/* ============================================================================
+   FASE 1 — CATÁLOGOS DE CONFIGURACIÓN (settings.html)
+   Portado de r4-config.css (solvo-platform-ui-release-4) con el prefijo f1-, solo
+   con lo que usan Positions & terms, Geography y Decision-maker roles: tabla
+   compacta, chips, acordeón de divisiones con su grilla de ciudades, modal
+   genérico y casillas. Se carga después de styles.css y usa solo tokens del bridge.
+   ============================================================================ */
+/* La configuración trae tablas: el contenido gana ancho respecto de Release 3 */
+.settings-content { max-width: 1040px; min-width: 0; }
+.f1-note {
+  margin-bottom: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--color-secondary);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.f1-note strong { color: var(--text-strong); font-weight: var(--font-semibold); }
+.f1-note.is-warn { border-left-color: var(--color-warning); }
+.f1-muted { color: var(--text-muted); }
+.f1-small { font-size: var(--text-xs); }
+.f1-why { display: block; margin-top: 2px; font-size: var(--text-xs); color: var(--status-warning-fg); }
+.f1-gap { height: var(--space-4); }
+/* ---- Tablas compactas ------------------------------------------------------ */
+.f1-tablewrap {
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+}
+.f1-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.f1-table th {
+  height: auto;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border-default);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-muted);
+  cursor: default;
+  white-space: nowrap;
+}
+.f1-table td {
+  height: auto;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  vertical-align: top;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+.f1-table tr:last-child td { border-bottom: 0; }
+.f1-table tr:hover { background: transparent; }
+.f1-table tr:hover td { color: var(--text-primary); }
+.f1-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.f1-table .nowrap { white-space: nowrap; }
+.f1-table tr.is-click { cursor: pointer; }
+.f1-table tr.is-click:hover { background: var(--bg-hover); }
+.f1-table tr.is-off td { color: var(--text-muted); }
+.f1-cellname { font-weight: var(--font-semibold); color: var(--text-strong); }
+.f1-cellsub { display: block; margin-top: 2px; font-size: var(--text-xs); color: var(--text-muted); }
+/* ---- Chips pequeños --------------------------------------------------------- */
+.f1-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.f1-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-secondary-50);
+  color: var(--color-secondary-700);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  white-space: nowrap;
+}
+.f1-chip.is-plain { background: var(--bg-muted); color: var(--text-secondary); }
+.f1-chip.is-warn { background: var(--status-warning-bg); color: var(--status-warning-fg); }
+.f1-chip button {
+  border: 0; background: transparent; color: inherit; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 0 0 0 2px;
+}
+[data-theme='dark'] .f1-chip:not(.is-plain):not(.is-warn) { background: var(--bg-selected); color: var(--text-selected); }
+/* ---- Detalle de un país (Geography) ------------------------------------------ */
+.f1-back { margin-bottom: var(--space-3); padding: 0; border: 0; background: none; color: var(--text-selected); font-family: var(--font-body); font-size: var(--text-sm); cursor: pointer; }
+.f1-back:hover { text-decoration: underline; }
+.f1-edhead { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-3); }
+.f1-edtitle { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.f1-edactions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.f1-fieldrow { display: flex; align-items: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+.f1-fieldrow .form-group { margin-bottom: 0; }
+.f1-fieldrow .form-input, .f1-fieldrow .form-select { min-width: 0; }
+.f1-inline { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); }
+.f1-num { width: 96px; }
+@media (prefers-reduced-motion: reduce) {
+  .f1-citylist-head .f1-chev { transition: none; }
+}
+.f1-citylist-group {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+.f1-citylist-head {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border-default);
+  font-size: var(--text-sm);
+}
+.f1-citylist-head strong { color: var(--text-strong); font-weight: var(--font-semibold); }
+.f1-citylist-head .f1-citylist-count { font-size: var(--text-xs); color: var(--text-muted); }
+.f1-citylist-head .f1-citylist-actions { margin-left: auto; display: flex; gap: var(--space-1); align-items: center; }
+.f1-linkbtn { border: 0; background: none; padding: 0 var(--space-1); color: var(--text-selected); font-family: var(--font-body); font-size: var(--text-xs); cursor: pointer; }
+.f1-linkbtn:hover { text-decoration: underline; }
+.f1-linkbtn:disabled { color: var(--text-muted); cursor: not-allowed; text-decoration: none; }
+.f1-citylist-groups { display: flex; flex-direction: column; gap: var(--space-2); }
+.f1-citylist-head { cursor: pointer; user-select: none; }
+.f1-citylist-head:hover { background: var(--bg-hover); }
+.f1-citylist-head:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.f1-citylist-head[aria-expanded='false'] { border-bottom: 0; }
+.f1-citylist-head .f1-chev { flex: 0 0 auto; color: var(--text-muted); transition: transform 0.15s ease; }
+.f1-citylist-head[aria-expanded='true'] .f1-chev { transform: rotate(90deg); }
+.f1-citylist-pager {
+  display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-2);
+  font-size: var(--text-xs); color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.f1-citylist-pager .op-actionbtn { height: 24px; padding: 0 var(--space-2); }
+.f1-citylist-pager .op-actionbtn:disabled { opacity: .45; cursor: not-allowed; }
+.f1-citylist-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 var(--space-3);
+  padding: var(--space-1) var(--space-3);
+}
+.f1-citylist-item {
+  display: flex; align-items: center; gap: var(--space-2);
+  min-height: 30px; min-width: 0;
+  padding: 2px 0;
+  font-size: var(--text-sm); color: var(--text-primary);
+  cursor: pointer;
+}
+.f1-citylist-item input[type='checkbox'] { flex: 0 0 auto; width: 14px; height: 14px; margin: 0; accent-color: var(--color-secondary); }
+.f1-citylist-item .f1-cityname { flex: 0 0 auto; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f1-citylist-item.is-off .f1-cityname { color: var(--text-muted); }
+.f1-citylist-empty { padding: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); }
+/* ---- Modal genérico de configuración ------------------------------------------ */
+.f1-modal .modal-body { max-height: min(72vh, 760px); overflow-y: auto; }
+.f1-modal .form-group { margin-bottom: 0; }
+.f1-modal .form-label { margin-bottom: var(--space-1); }
+.f1-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-1) var(--space-3); }
+.f1-check { display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); }
+.f1-check input { margin-top: 3px; accent-color: var(--color-secondary); }
+.f1-check.is-disabled { color: var(--text-muted); }
+.f1-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.f1-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.f1-err { color: var(--status-error-fg); font-size: var(--text-xs); margin-top: var(--space-1); }
+@media (max-width: 860px) {
+  .settings-content { min-width: 0; width: 100%; }
+  .settings-layout { flex-direction: column; align-items: stretch; }
+}
+@media (max-width: 640px) {
+  .f1-grid2, .f1-grid3 { grid-template-columns: 1fr; }
+  .f1-citylist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .f1-edactions { width: 100%; }
+  .st-rowhead { flex-wrap: wrap; }
+  .st-sectionhead { flex-wrap: wrap; }
+}
+/* Las tablas anchas se desplazan dentro de su marco: ningún ancestro flex se estira con ellas */
+.main-content, .page-content, .settings-layout > .settings-content { min-width: 0; }
+.f1-tablewrap { max-width: 100%; }
+.f1-inline .toggle-switch, .st-rowhead .toggle-switch { flex: 0 0 auto; }
+.st-toolbar #termCountry { max-width: 260px; }
+/* Positions: términos por país dentro del modal de la posición */
+.f1-psterms { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; padding: var(--space-3) var(--space-3) var(--space-2); }
+.f1-psadd { display: flex; gap: var(--space-2); align-items: center; padding: 0 var(--space-3) var(--space-3); }
+.f1-psadd .form-input { max-width: 300px; height: 30px; font-size: var(--text-xs); }
+.f1-psadd .op-actionbtn { height: 30px; }
+/* Geography: divisiones en acordeón con interruptor y ciudades activas o inactivas */
+.f1-citylist-head .toggle-switch { flex: 0 0 auto; }
+.f1-citylist-group.is-off .f1-citylist-head strong { color: var(--text-muted); }
+.f1-citybtn { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.f1-citybtn:hover { text-decoration: underline; }
+.f1-citybtn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }

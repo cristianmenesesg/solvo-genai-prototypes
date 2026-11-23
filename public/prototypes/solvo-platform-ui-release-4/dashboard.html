@@ -41,14 +41,9 @@
         </div>
 
         <!-- Embudo de detección: de lo que el motor trae a lo que se puede trabajar.
-             Se puede partir por trigger o por país (Release 4). -->
+             La vista por trigger y por país quedó fuera del alcance de Release 4. -->
         <div class="r4-funnelhead">
           <p class="kp-panel-sub" id="funnelSub"></p>
-          <div class="kp-window" role="group" aria-label="Split the detection funnel" id="splitCtl">
-            <button type="button" data-split="all" class="is-on" aria-pressed="true">All</button>
-            <button type="button" data-split="trigger" aria-pressed="false">By trigger</button>
-            <button type="button" data-split="country" aria-pressed="false">By country</button>
-          </div>
         </div>
         <div class="kp-funnelstrip" id="kpFunnel"></div>
         <div class="r4-split" id="kpSplit" hidden></div>
@@ -120,23 +115,7 @@
                             landing_view → slot_selected → booking_confirmed
                             (availability_shown y visible_error se registran aparte;
                             solo interacción humana cuando FSPL-8 se entregue)
-       Release 4 — embudo partido (selector All / By trigger / By country):
-         All          las fichas de siempre, sobre la serie diaria del motor.
-         By trigger   1) registros de la plataforma (MOCK_VACANCIES) detectados en la
-                         ventana, por trigger (`triggerIds`): total y su estado actual
-                         (`entityState`), empresas distintas de esas vacantes, cuántas están
-                         calificadas (`company.entityState`) y sus decisores (contactos con
-                         rol). Una vacante con dos triggers cuenta en las dos filas; el total
-                         cuenta vacantes distintas.
-                      2) lo que reportó cada ejecución (ENGINE_EXECUTIONS, y MOCK_REQUESTS
-                         para On demand) en la ventana: ejecuciones, búsquedas, vacantes,
-                         viables, empresas, calificadas, decisores, costo y la serie diaria
-                         de vacantes desde el primer día del registro.
-         By country   la tabla 1) por país de la vacante (`countryCode`). Las ejecuciones
-                      no se parten por país: un trigger cubre varios.
-         "—" = ningún trigger de esa fila llega a esa etapa (p. ej. Hiring countries
-         termina en el análisis de vacantes): no es un cero.
-       Acciones: ventana 7 / 30 días, embudo partido y vista de tabla por gráfico (client-side).
+       Acciones: ventana 7 / 30 días y vista de tabla por gráfico (client-side).
        Contrato: sin definir; hoy existe GET /api/dashboard/kpis/{vacancies,companies}.
        ------------------------------------------------------------------------ */
     /* ========================================================================
