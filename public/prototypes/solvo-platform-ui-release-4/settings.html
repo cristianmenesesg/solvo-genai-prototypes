@@ -382,7 +382,6 @@
          GEO_DIVISIONS, GEO_CITIES) no tienen clave en rbac.js: esta página los guarda
          en `r4Positions` y `r4Geo` y los vuelve a aplicar al cargar. Las demás páginas
          leen el seed (mecanismo exclusivo del prototipo).
-       · "Run now" deja la ejecución en `r4ManualRuns` (última ejecución del trigger).
 
        Los servicios no se configuran: reciben ubicación y términos y cada uno resuelve
        si busca por ciudad, división o país. El trigger llega hasta la última etapa con
@@ -487,7 +486,7 @@
     const slug = s => fold(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
     // === Estado propio de esta página (catálogos sin clave en rbac.js) ===
-    const POS_KEY = 'r4Positions', GEO_KEY = 'r4Geo', RUNS_KEY = 'r4ManualRuns';
+    const POS_KEY = 'r4Positions', GEO_KEY = 'r4Geo';
     function replaceAll(arr, items) { arr.length = 0; items.forEach(x => arr.push(x)); }
     (function applyLocalConfig() {
       const pos = engineLoad(POS_KEY, null);
@@ -540,12 +539,11 @@
     }
     const checkedValues = name => Array.from(document.querySelectorAll('input[name="' + name + '"]')).filter(i => i.checked).map(i => i.value);
 
-    // === Ejecuciones: la última de cada trigger y las que lanza "Run now" ===
-    function manualRuns() { try { return JSON.parse(localStorage.getItem(RUNS_KEY)) || []; } catch (e) { return []; } }
+    // === Ejecuciones: la última de cada trigger ===
     const REQUEST_TO_EXEC = { queued: 'queued', running: 'running', done: 'completed', no_results: 'completed', failed: 'failed' };
     function execBadge(status) { return status === 'queued' ? '<span class="badge badge-neutral">Queued</span>' : stateBadge(EXECUTION_STATUS, status); }
     function lastExecution(tid) {
-      return ENGINE_EXECUTIONS.concat(manualRuns())
+      return ENGINE_EXECUTIONS
         .concat(MOCK_REQUESTS.map(r => ({ triggerId: r.triggerId, startedAt: r.at, status: REQUEST_TO_EXEC[r.status] })))
         .filter(e => e.triggerId === tid)
         .sort((a, b) => parseStamp(b.startedAt) - parseStamp(a.startedAt))[0] || null;
@@ -602,7 +600,6 @@
           '<span class="st-rowname">' + esc(t.name) + '</span>' +
           '<span class="badge badge-' + (isCron ? 'info' : 'neutral') + '">' + (isCron ? 'Scheduled' : 'On request') + '</span>' +
           '<div class="st-rowactions">' +
-            (isCron ? '<button class="op-actionbtn" onclick="runNow(\'' + t.id + '\')"' + (t.isActive ? '' : ' disabled title="The trigger is inactive"') + '>Run now</button>' : '') +
             '<button class="op-actionbtn" onclick="openTrigger(\'' + t.id + '\')">Configure</button>' +
           '</div>' +
         '</div>' +
@@ -619,19 +616,6 @@
       const t = engineTrigger(id); if (!t) return;
       t.isActive = on; saveTriggers(); renderTriggersSection();
       showToast(t.name + (on ? ' activated' : ' deactivated'), 'success');
-    }
-    // Ejecución manual de un trigger por cron: queda en curso como su última ejecución.
-    function runNow(id) {
-      const t = engineTrigger(id);
-      if (!t || t.activation.mode !== 'cron') return;
-      if (!t.isActive) { showToast('Activate the trigger before running it', 'error'); return; }
-      const runs = manualRuns();
-      const exId = 'ex-' + (9001 + runs.length);
-      runs.unshift({ id: exId, triggerId: id, requestedBy: user.id, startedAt: new Date().toISOString(), endedAt: null, status: 'running',
-        counts: { searches: 0, vacancies: 0, viable: 0, companies: 0, qualified: 0, decisionMakers: 0 }, costUsd: 0, note: 'Started from Settings by ' + user.name + '.' });
-      try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs)); } catch (e) { /* sin almacenamiento */ }
-      if (!trgDraft) renderTriggersSection();
-      showToast(esc(t.name) + ': execution started.', 'info');
     }
 
     function setTrgHash(id) { history.replaceState(null, '', id ? '#triggers/' + id : '#triggers'); }
@@ -698,7 +682,6 @@
         '</div>' +
         '<div class="r4-edactions">' +
           '<span class="r4-dirty">' + (trgDirty ? 'Unsaved changes' : '') + '</span>' +
-          (isCron && !t._isNew ? '<button class="op-actionbtn" onclick="runNow(\'' + t.id + '\')">Run now</button>' : '') +
           '<button class="op-actionbtn" onclick="discardTrigger()"' + (trgDirty && !t._isNew ? '' : ' disabled') + '>Discard</button>' +
           '<button class="op-btn-apply" onclick="saveTrigger()">Save changes</button>' +
         '</div></div>' +
