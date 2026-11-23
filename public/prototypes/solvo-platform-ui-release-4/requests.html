@@ -195,17 +195,17 @@
           ? stepChip(dm + ' decision maker' + (dm === 1 ? '' : 's'), dm ? 'success' : 'neutral')
           : stepChip('Decision makers', 'pending')) +
       '</div>' +
-      (v.outcome === 'company_not_found' ? '<div class="rq-outcome">No enrichment provider found the company.</div>' : '');
+      (v.outcome === 'company_not_found' ? '<div class="rq-outcome">Company not found.</div>' : '');
     }
 
     function searchProgress(v) {
       const p = v.progress || { searched: 0, toSearch: 0, found: 0, analyzed: 0, viable: 0 };
-      if (v.status === 'queued') return '<div class="rq-counts">Waiting for its turn · ' + p.toSearch + ' search' + (p.toSearch === 1 ? '' : 'es') + ' to run</div>';
+      if (v.status === 'queued') return '<div class="rq-counts">' + p.toSearch + ' search' + (p.toSearch === 1 ? '' : 'es') + ' pending</div>';
       const pct = p.toSearch ? Math.round(p.searched / p.toSearch * 100) : 0;
       return '<div class="rq-progress">' +
         '<div class="rq-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + p.toSearch + '" aria-valuenow="' + p.searched + '" aria-label="Searches run"><span style="width:' + pct + '%"></span></div>' +
         '<div class="rq-counts"><strong>' + p.searched + '</strong>/' + p.toSearch + ' searches · <strong>' + p.found + '</strong> found · <strong>' + p.analyzed + '</strong> analyzed · <strong>' + p.viable + '</strong> viable</div>' +
-        (v.status === 'no_results' ? '<div class="rq-counts">No openings published in the window.</div>' : '') +
+        (v.status === 'no_results' ? '<div class="rq-counts">No openings found.</div>' : '') +
       '</div>';
     }
 
@@ -247,7 +247,7 @@
       const trg = trigger(v);
       const c = companyOf(v);
       const adminLink = canAccessAdmin() && v.status !== 'queued'
-        ? '<a class="rq-link" href="executions.html?id=' + esc(v.executionId) + '">See the invocations in Engine activity</a>' : '';
+        ? '<a class="rq-link" href="executions.html?id=' + esc(v.executionId) + '">See in Engine activity</a>' : '';
 
       if (kind === 'research') {
         const s = v.steps || {};
@@ -255,37 +255,33 @@
           return '<li><span class="rq-dot' + (state === 'done' ? ' is-done' : state === 'fail' ? ' is-fail' : '') + '" aria-hidden="true"></span>' +
             '<div><div class="rq-tl-title">' + title + '</div><div class="rq-tl-text">' + text + '</div></div></li>';
         }
-        const chainTxt = function (list) {
-          return list.map(function (x) { return esc(serviceName(x.serviceId)); }).join(' → ');
-        };
         const enrichTxt = ENRICH[s.enrichment] ? ENRICH[s.enrichment][0] + '.' : 'Pending.';
         const qualTxt = QUALIFY[s.qualification]
-          ? QUALIFY[s.qualification][0] + (s.qualification === 'qualified' && c && c.icpScore != null ? ': ICP score ' + Math.round(c.icpScore) + ' (' + esc(countryName(c.countryCode)) + ' ICP).' : '.')
-          : (s.enrichment === 'not_found' ? 'Not run: the company was not found.' : 'Pending.');
+          ? QUALIFY[s.qualification][0] + (s.qualification === 'qualified' && c && c.icpScore != null ? ' · ICP score ' + Math.round(c.icpScore) + '.' : '.')
+          : (s.enrichment === 'not_found' ? 'Company not found.' : 'Pending.');
         const dmTxt = s.decisionMakers !== undefined && s.decisionMakers !== null
-          ? s.decisionMakers + ' decision maker' + (s.decisionMakers === 1 ? '' : 's') + ' on the record.'
-          : (s.qualification && s.qualification !== 'qualified' ? 'Not run: the company is not qualified.' : 'Pending.');
+          ? s.decisionMakers + ' decision maker' + (s.decisionMakers === 1 ? '' : 's') + '.'
+          : (s.qualification && s.qualification !== 'qualified' ? 'Not qualified.' : 'Pending.');
         return '<section><h4>Steps</h4><ol class="rq-timeline">' +
-            tl('Company enrichment', chainTxt(trg.enrichment) + ' · ' + enrichTxt, s.enrichment === 'not_found' ? 'fail' : s.enrichment ? 'done' : '') +
-            tl('Company analysis', 'Company analysis · ' + qualTxt, s.qualification ? 'done' : '') +
-            tl('Decision makers', chainTxt(trg.decisionMakers) + ' · ' + dmTxt, s.decisionMakers !== undefined && s.decisionMakers !== null ? 'done' : '') +
+            tl('Company enrichment', enrichTxt, s.enrichment === 'not_found' ? 'fail' : s.enrichment ? 'done' : '') +
+            tl('Company analysis', qualTxt, s.qualification ? 'done' : '') +
+            tl('Decision makers', dmTxt, s.decisionMakers !== undefined && s.decisionMakers !== null ? 'done' : '') +
           '</ol></section>' +
           '<section><h4>Result</h4>' +
             (c
               ? '<dl class="rq-dl"><dt>Company</dt><dd><a class="rq-link" href="company-detail.html?id=' + esc(c.id) + '">' + esc(c.name) + '</a></dd>' +
                 '<dt>Current state</dt><dd>' + stateBadge(COMPANY_STATES, c.entityState) + '</dd>' +
                 '<dt>Requested</dt><dd>' + esc(when(v.at)) + '</dd></dl>' +
-                '<p class="rq-note">The research writes its result to the company record. Its state and history show each step with the service that ran it.</p>' +
                 '<div class="rq-links"><a class="rq-link" href="company-detail.html?id=' + esc(c.id) + '&tab=history">Open the company history</a>' + adminLink + '</div>'
               : '<dl class="rq-dl"><dt>Company</dt><dd>' + esc(v.companyName || '') + '</dd><dt>Requested</dt><dd>' + esc(when(v.at)) + '</dd></dl>' +
-                '<p class="rq-note">No company record was created: no enrichment provider returned it. Check the name or request it by domain.</p>' +
+                '<p class="rq-note">Company not found.</p>' +
                 (adminLink ? '<div class="rq-links">' + adminLink + '</div>' : '')) +
           '</section>';
       }
 
       // Búsquedas: qué se buscó y qué trajo.
       const country = v.country || (c && c.countryCode) || 'US';
-      const services = v.serviceIds || (trg.vacancyServices[country] || []).filter(function (id) { const s = engineService(id); return s && s.modes.indexOf('company') >= 0; });
+      const services = v.serviceIds || trg.vacancyServices[country] || [];
       const terms = (v.termIds && v.termIds.length)
         ? v.termIds.map(function (id) { const t = ENGINE_TERMS.find(function (x) { return x.id === id; }); return t ? t.text : ''; }).filter(Boolean)
         : ENGINE_TERMS.filter(function (t) { return t.country === country && trg.activeTerms.indexOf(t.id) >= 0 && (!(v.positionIds || []).length || v.positionIds.indexOf(t.positionId) >= 0); }).map(function (t) { return t.text; });
@@ -296,8 +292,8 @@
         '<dt>Positions</dt><dd>' + ((v.positionIds || []).length ? esc(v.positionIds.map(getPositionName).join(', ')) : 'All positions') + '</dd>' +
         '<dt>Terms</dt><dd>' + ((v.positionIds || []).length
           ? (terms.length ? '<div class="rq-tags">' + terms.map(function (t) { return '<span class="op-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '<em>None active</em>')
-          : 'All ' + terms.length + ' active terms of the trigger in ' + esc(countryName(country))) + '</dd>' +
-        '<dt>Cities</dt><dd>' + ((v.cityIds || []).length ? esc(v.cityIds.map(cityName).join(', ')) : 'Whole country (' + allCities.length + ' cities of the trigger)') + '</dd>';
+          : 'All active terms (' + terms.length + ')') + '</dd>' +
+        '<dt>Cities</dt><dd>' + ((v.cityIds || []).length ? esc(v.cityIds.map(cityName).join(', ')) : 'Whole country (' + allCities.length + ' cities)') + '</dd>';
       const left = '<section><h4>What was requested</h4><dl class="rq-dl">' + what +
         '<dt>Window</dt><dd>' + esc(windowLabel(v.windowDays)) + '</dd>' +
         '<dt>Services</dt><dd>' + svcTags(services) + '</dd>' +
@@ -307,7 +303,7 @@
       const vacs = (v.vacancyIds || []).map(function (id) { return MOCK_VACANCIES.find(function (x) { return x.id === id; }); }).filter(Boolean);
       const p = v.progress || {};
       let right = '<section><h4>Openings found</h4>';
-      if (v.status === 'queued') right += '<p class="rq-note">The request is waiting in the queue. The searches start when the services take it.</p>';
+      if (v.status === 'queued') right += '<p class="rq-note">Waiting to start.</p>';
       else if (vacs.length) {
         right += '<ul class="rq-results">' + vacs.slice(0, 8).map(function (x) {
           const co = MOCK_COMPANIES.find(function (cc) { return cc.id === x.companyId; });
@@ -316,11 +312,11 @@
         }).join('') + '</ul>' +
           (vacs.length > 8 ? '<p class="rq-note">' + (vacs.length - 8) + ' more in Open Positions.</p>' : '');
       } else if (p.found) {
-        right += '<p class="rq-note">' + p.found + ' opening' + (p.found === 1 ? '' : 's') + ' found, ' + (p.viable || 0) + ' viable. They are in Open Positions with the ' + esc(trg.name) + ' trigger as their origin.</p>';
+        right += '<p class="rq-note">' + p.found + ' opening' + (p.found === 1 ? '' : 's') + ' found, ' + (p.viable || 0) + ' viable. See them in Open Positions.</p>';
       } else if (v.status === 'no_results') {
-        right += '<p class="rq-note">The services ran every search and found no opening published in the window. A wider window, fewer positions or the whole country may return results.</p>';
+        right += '<p class="rq-note">No openings found in the window.</p>';
       } else {
-        right += '<p class="rq-note">Nothing found yet. The openings appear here as the services return them.</p>';
+        right += '<p class="rq-note">No openings found yet.</p>';
       }
       right += '<div class="rq-links"><a class="rq-link" href="open-positions.html">Open Positions</a>' +
         (c ? '<a class="rq-link" href="company-detail.html?id=' + esc(c.id) + '&tab=positions">Company positions</a>' : '') + adminLink + '</div></section>';
@@ -343,13 +339,12 @@
 
       const list = document.getElementById('rqList');
       if (!all.length) {
-        list.innerHTML = '<div class="op-empty"><h3>No requests yet</h3>' +
-          '<p>A search of a company\'s openings, optionally narrowed by positions and cities, or the research of a company, appears here with its progress and results.</p>' +
+        list.innerHTML = '<div class="op-empty"><h3>No requests yet.</h3>' +
           '<button class="btn btn-primary" onclick="openScrapePopup({ onSent: render })">Request search</button></div>';
         return;
       }
       list.innerHTML = rows.length ? rows.map(renderRow).join('')
-        : '<div class="op-empty"><h3>No requests match these filters</h3><p>Change the type, the status or who requested it.</p>' +
+        : '<div class="op-empty"><h3>No requests match the filters.</h3>' +
           '<button class="btn btn-secondary" onclick="clearFilters()">Clear filters</button></div>';
       list.querySelectorAll('[data-toggle]').forEach(function (b) {
         b.onclick = function () {
@@ -372,8 +367,8 @@
       renderSidebar('requests');
 
       document.getElementById('rqIntro').textContent = canViewAll()
-        ? 'Searches and research requested from the platform by the team. A search goes to the On demand trigger; a research, to On-demand research. Each request shows its progress and links to what it produced.'
-        : 'The searches and research you requested. A search goes to the On demand trigger; a research, to On-demand research. Each request shows its progress and links to what it produced.';
+        ? 'Searches and research requested by the team.'
+        : 'Searches and research you requested.';
 
       document.getElementById('rqStatus').innerHTML = '<option value="">All statuses</option>' +
         Object.keys(REQUEST_STATUS).map(function (k) { return '<option value="' + k + '">' + esc(REQUEST_STATUS[k].label) + '</option>'; }).join('');

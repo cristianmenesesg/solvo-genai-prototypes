@@ -1249,8 +1249,6 @@ function openScrapePopup(options) {
   // Comparación sin tildes ni mayúsculas para todas las sugerencias.
   function fold(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
   function looksLikeDomain(s) { return /^[^\s]+\.[a-z]{2,}$/i.test(norm(s)); }
-  // Solo los servicios activos: uno en evaluación o pausado no se ofrece aunque siga en la configuración.
-  function activeService(id) { var s = engineService(id); return !!s && s.status === 'active'; }
 
   var locked = !!options.company;
   var state = {
@@ -1258,15 +1256,9 @@ function openScrapePopup(options) {
     typed: options.company ? options.company.name : '',
     companyCountry: trigger.countries[0],      // país donde se busca una empresa que no está en el catálogo
     positionIds: [],
-    cityIds: [],
-    windowDays: trigger.windowDays || 1
+    cityIds: []
   };
   var focusAfter = null;                       // id del campo que recupera el foco tras repintar
-
-  // La ventana arranca en la del trigger y el usuario la puede ampliar hasta su máximo.
-  var WINDOW_STEPS = [1, 3, 7, 14, 30].filter(function (d) {
-    return d >= (trigger.windowDays || 1) && d <= (trigger.maxWindowDays || trigger.windowDays || 1);
-  });
 
   var overlay = document.createElement('div');
   overlay.className = 'assign-popup-overlay';
@@ -1299,13 +1291,8 @@ function openScrapePopup(options) {
 
   /* ---- Datos que dependen de la configuración del trigger ---------------- */
   function country() { return state.company ? (state.company.countryCode || null) : state.companyCountry; }
-  // Los servicios del trigger para el país de la empresa que buscan por empresa.
-  function services() {
-    return (trigger.vacancyServices[country()] || []).filter(function (id) {
-      var s = engineService(id);
-      return activeService(id) && s.modes.indexOf('company') >= 0;
-    });
-  }
+  // Los servicios de vacantes del trigger en el país de la empresa. La ventana es la del trigger.
+  function services() { return trigger.vacancyServices[country()] || []; }
   function tripCities() {
     var cc = country();
     return trigger.locations.map(function (l) { return GEO_CITIES.find(function (c) { return c.id === l.cityId; }); })
@@ -1405,8 +1392,7 @@ function openScrapePopup(options) {
 
   function render() {
     var cc = country();
-    var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">The request goes to the <strong>' + h(trigger.name) +
-      '</strong> trigger and searches the openings of one company. Its progress and the openings it finds are shown in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
+    var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">Searches the openings of one company. Follow it in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
 
     // Empresa (obligatoria)
     html += '<label style="' + labelCss + '" for="odr-company">Company</label>';
@@ -1420,12 +1406,12 @@ function openScrapePopup(options) {
     } else {
       html += comboField('odr-company', 'Company name or domain, e.g. acme.com', state.typed, 'Company');
       if (state.company) {
-        html += '<div style="' + hintCss + '">In Solvo Platform: ' + h([placeLabel(state.company, false), countryName(state.company.countryCode)].filter(Boolean).join(' · ')) +
-          (state.company.domain ? ' · ' + h(state.company.domain) : '') + '. The openings found are added to its record.</div>';
+        html += '<div style="' + hintCss + '">' + h([placeLabel(state.company, false), countryName(state.company.countryCode)].filter(Boolean).join(' · ')) +
+          (state.company.domain ? ' · ' + h(state.company.domain) : '') + '</div>';
       } else if (norm(state.typed)) {
         // Una empresa que no está en el catálogo se busca en el país que se elija.
-        html += '<div style="' + hintCss + '">Not in Solvo Platform yet: it is searched by ' + (looksLikeDomain(state.typed) ? 'domain' : 'name') + ' and created with the openings found.</div>' +
-          '<label style="' + labelCss + '" for="odr-ccountry">Country to search in</label>' +
+        html += '<div style="' + hintCss + '">New company.</div>' +
+          '<label style="' + labelCss + '" for="odr-ccountry">Country</label>' +
           '<select class="form-select" id="odr-ccountry" style="max-width:260px;">' +
             trigger.countries.map(function (x) { return '<option value="' + x + '"' + (x === state.companyCountry ? ' selected' : '') + '>' + h(countryName(x)) + '</option>'; }).join('') +
           '</select>';
@@ -1435,43 +1421,17 @@ function openScrapePopup(options) {
     var covered = trigger.countries.indexOf(cc) >= 0;
     if (covered) {
       // Posiciones (opcional)
-      var terms = usedTerms().length;
       html += '<label style="' + labelCss + '" for="odr-pos">Positions <span style="' + optCss + '">(optional)</span></label>' +
         (state.positionIds.length ? '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">' + chips(state.positionIds, getPositionName, 'pos') + '</div>' : '') +
         comboField('odr-pos', 'Search a position', '', 'Add a position') +
-        '<div style="' + hintCss + '">' + (state.positionIds.length
-          ? terms + ' active term' + (terms === 1 ? '' : 's') + ' of the chosen positions will be used.'
-          : 'None chosen: all ' + terms + ' active terms of the trigger in ' + h(countryName(cc)) + ' are used.') + '</div>';
+        (state.positionIds.length ? '' : '<div style="' + hintCss + '">All positions.</div>');
 
       // Ciudades (opcional)
-      var total = tripCities().length;
       html += '<label style="' + labelCss + '" for="odr-city">Cities <span style="' + optCss + '">(optional)</span></label>' +
         (state.cityIds.length ? '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">' + chips(state.cityIds, cityName, 'city') + '</div>' : '') +
         comboField('odr-city', 'Search a city', '', 'Add a city') +
-        '<div style="' + hintCss + '">' + (state.cityIds.length
-          ? state.cityIds.length + ' of the ' + total + ' cities of the trigger in ' + h(countryName(cc)) + '.'
-          : 'None chosen: the whole country.') + '</div>';
+        (state.cityIds.length ? '' : '<div style="' + hintCss + '">The whole country.</div>');
     }
-
-    // Ventana de publicación
-    html += '<label style="' + labelCss + '" for="odr-window">Publication window</label>' +
-      '<select class="form-select" id="odr-window" style="max-width:260px;">' +
-        WINDOW_STEPS.map(function (d) {
-          return '<option value="' + d + '"' + (d === state.windowDays ? ' selected' : '') + '>' +
-            (d === 1 ? 'Last day' : 'Last ' + d + ' days') + (d === trigger.windowDays ? ' (default)' : '') + '</option>';
-        }).join('') +
-      '</select>' +
-      '<div style="' + hintCss + '">Openings published within this window are searched. The trigger allows up to ' + (trigger.maxWindowDays || trigger.windowDays) + ' days.</div>';
-
-    // Servicios, solo lectura
-    var svc = services();
-    html += '<div style="' + labelCss + '">Services that will search</div>' +
-      (svc.length
-        ? '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + svc.map(function (id) {
-            return '<span class="op-tag" title="' + h(serviceLabel(id)) + '">' + h(serviceName(id)) + '</span>';
-          }).join('') + '</div>' +
-          '<div style="' + hintCss + '">The services of the ' + h(trigger.name) + ' trigger that search by company in ' + h(countryName(cc)) + '. An administrator changes them in Settings.</div>'
-        : '<div style="' + hintCss + '">' + (covered ? 'No service of the trigger searches by company in ' + h(countryName(cc)) + '.' : 'Not available for this country.') + '</div>');
 
     html += '<div id="odr-warn"></div>';
     body.innerHTML = html;
@@ -1547,8 +1507,6 @@ function openScrapePopup(options) {
         render();
       };
     });
-    var win = body.querySelector('#odr-window');
-    if (win) win.onchange = function () { state.windowDays = Number(win.value); refresh(); };
   }
 
   // Cantidad de búsquedas: servicio × ciudad (o el país) × término de las posiciones elegidas
@@ -1566,14 +1524,14 @@ function openScrapePopup(options) {
     var block = null;
     if (!state.company && !norm(state.typed)) block = '';
     else if (trigger.countries.indexOf(cc) < 0) {
-      block = 'The ' + trigger.name + ' trigger does not search in ' + (countryName(cc) || 'the company’s country') + '. An administrator can add the country to the trigger in Settings.';
+      block = 'Searches are not available in ' + (countryName(cc) || 'the company’s country') + '.';
     } else if (!services().length) {
-      block = 'No service of the trigger searches by company in ' + countryName(cc) + '.';
+      block = 'Searches are not available in ' + countryName(cc) + '.';
     } else {
       var recent = recentCompanyRequest();
       if (recent) {
         var mins = Math.max(1, Math.round((Date.now() - parseStamp(recent.at)) / 60000));
-        block = 'This company was already requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). The same company can be requested again after one hour. <a href="requests.html?id=' + h(recent.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
+        block = 'This company was requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). It can be requested again after one hour. <a href="requests.html?id=' + h(recent.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
       }
     }
     if (warn) {
@@ -1582,9 +1540,8 @@ function openScrapePopup(options) {
         : '';
     }
     if (block === null) {
-      var t = usedTerms().length;
-      sum.textContent = t + ' term' + (t === 1 ? '' : 's') + ' · ' + (state.cityIds.length ? state.cityIds.length + ' cit' + (state.cityIds.length === 1 ? 'y' : 'ies') : 'whole country') +
-        ' · ' + searchCount() + ' search' + (searchCount() === 1 ? '' : 'es');
+      sum.textContent = (state.positionIds.length ? state.positionIds.length + ' position' + (state.positionIds.length === 1 ? '' : 's') : 'All positions') + ' · ' +
+        (state.cityIds.length ? state.cityIds.length + ' cit' + (state.cityIds.length === 1 ? 'y' : 'ies') : 'whole country');
     } else sum.textContent = block === '' ? 'Choose a company' : '';
     var disabled = block !== null;
     sendBtn.disabled = disabled;
@@ -1603,7 +1560,7 @@ function openScrapePopup(options) {
       country: country(),
       positionIds: state.positionIds.slice(), cityIds: state.cityIds.slice(),
       termIds: state.positionIds.length ? usedTerms().map(function (t) { return t.id; }) : [],
-      windowDays: state.windowDays, serviceIds: services(),
+      windowDays: trigger.windowDays || 1, serviceIds: services(),
       progress: { searched: 0, toSearch: searchCount(), found: 0, analyzed: 0, viable: 0 },
       // `simulate`: el prototipo avanza la solicitud con el tiempo transcurrido (página Requests).
       vacancyIds: [], status: 'queued', simulate: true
@@ -1636,23 +1593,11 @@ function openResearchRequestPopup(company, options) {
   }
   var country = company.countryCode || 'US';
   var covered = trigger.countries.indexOf(country) >= 0;
-  var prompt = ENGINE_PROMPTS.find(function (p) { return p.country === country && p.analysis === 'companies' && p.status === 'active'; });
   // Una investigación en curso de la misma empresa bloquea otra: la segunda pisaría a la primera.
   var pending = MOCK_REQUESTS.find(function (r) {
     return r.triggerId === trigger.id && r.companyId === company.id && (r.status === 'queued' || r.status === 'running');
   });
 
-  function svcTag(id) { return '<span class="op-tag" title="' + h(serviceLabel(id)) + '">' + h(serviceName(id)) + '</span>'; }
-  // Cadena de servicios en orden: el siguiente solo se invoca cuando el anterior cumple la condición de paso.
-  function chain(steps) {
-    return '<div style="display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:6px;">' +
-      steps.map(function (s, i) {
-        var next = i < steps.length - 1
-          ? '<span style="font-size:11px; color:var(--text-muted);">&rarr; if ' + h((PASS_CONDITIONS[s.pass] || 'it fails').toLowerCase()) + ' &rarr;</span>'
-          : '';
-        return svcTag(s.serviceId) + next;
-      }).join('') + '</div>';
-  }
   function step(n, title, text, extra) {
     return '<li style="display:flex; gap:12px; padding:10px 0; border-top:' + (n === 1 ? '0' : '1px solid var(--border-default)') + ';">' +
       '<span aria-hidden="true" style="flex:0 0 22px; height:22px; border-radius:50%; background:var(--bg-muted); color:var(--text-secondary); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center;">' + n + '</span>' +
@@ -1660,29 +1605,15 @@ function openResearchRequestPopup(company, options) {
       '<div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-top:2px;">' + text + '</div>' + (extra || '') + '</div></li>';
   }
 
-  var essentials = ENGINE_RULES.essentials.map(function (e) { return e.label.toLowerCase(); }).join(', ');
-  var exclusions = ENGINE_RULES.exclusions.map(function (e) { return e.label.toLowerCase(); }).join(' and ');
-  var steps = '';
-  var n = 0;
-  if (trigger.enrichment.length) {
-    steps += step(++n, stageLabel('enrichment'), 'Looks the company up by its ' + (company.domain ? 'domain, ' + h(company.domain) : 'name and country') + '. The next provider is called only when the previous one does not return it or returns it without the essential data (' + h(essentials) + ').', chain(trigger.enrichment));
-  }
-  steps += step(++n, stageLabel('company_analysis'), 'Classifies the company type and scores it against the ' + h(countryName(country)) + ' ICP' +
-    (prompt && prompt.icpMinScore ? ' (minimum score ' + prompt.icpMinScore + ')' : '') + '. ' + h(exclusions.charAt(0).toUpperCase() + exclusions.slice(1)) + ' are excluded.',
-    '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">' + svcTag('svc-company-analysis') +
-      (prompt ? '<span class="op-tag">Prompt ' + h(countryName(country)) + ' · v' + prompt.version + '</span>' : '') + '</div>');
-  if (trigger.decisionMakers.length) {
-    steps += step(++n, stageLabel('decision_makers'), 'Only when the company is qualified. Searches people by domain in the areas of its openings; each person gets a role and its level from the decision-maker roles table, and the contact details are searched for the roles that receive email or phone search.',
-      chain(trigger.decisionMakers) +
-      '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">' + svcTag('svc-dm-analysis') + svcTag('svc-contact') + '</div>');
-  }
-  steps += step(++n, 'Result: ' + h((TRIGGER_ENDS[trigger.endsAt] || {}).label || 'Company record'),
-    'The state, the history and the decision makers of the company are updated. The current values are overwritten with what the research finds.');
+  var steps =
+    step(1, 'Company data', 'Domain, size, industry and headquarters.') +
+    step(2, 'Qualification', 'Company type and ICP score for ' + h(countryName(country)) + '.') +
+    (trigger.decisionMakers.length ? step(3, 'Decision makers', 'People in decision roles, with their contact details.') : '');
 
   var warn = !covered
-    ? 'The ' + h(trigger.name) + ' trigger does not run in ' + h(countryName(country)) + '. An administrator can add the country to the trigger in Settings.'
+    ? 'Research is not available in ' + h(countryName(country)) + '.'
     : pending
-      ? 'A research request for this company is already ' + h((REQUEST_STATUS[pending.status] || {}).label.toLowerCase()) + '. <a href="requests.html?id=' + h(pending.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.'
+      ? 'This company already has a research request ' + h((REQUEST_STATUS[pending.status] || {}).label.toLowerCase()) + '. <a href="requests.html?id=' + h(pending.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.'
       : '';
 
   var overlay = document.createElement('div');
@@ -1700,8 +1631,7 @@ function openResearchRequestPopup(company, options) {
           '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">' +
             h([placeLabel(company, false), countryName(country)].filter(Boolean).join(' · ')) + (company.domain ? ' · ' + h(company.domain) : ' · no domain on record') + '</div>' +
         '</div>' +
-        '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:12px 0 4px;">The request goes to the <strong>' + h(trigger.name) +
-          '</strong> trigger. These are the steps it runs, as configured:</p>' +
+        '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:12px 0 4px;">Updates the record of the company with:</p>' +
         '<ol style="list-style:none; margin:0; padding:0;">' + steps + '</ol>' +
         (warn ? '<div role="status" style="margin-top:12px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;">' + warn + '</div>' : '') +
       '</div>' +
@@ -2357,19 +2287,19 @@ function decisionLevelFor(roleCode, company) {
 const EMAIL_VERIFICATION = {
   valid: {
     label: 'Verified email', tone: 'success', short: null,
-    note: 'Hunter verified the address exists.'
+    note: 'Verified address.'
   },
   accept_all: {
     label: 'Catch-all domain', tone: 'warning', short: 'Catch-all',
-    note: 'The domain accepts every address, so it cannot be verified. The send cycle still writes to it.'
+    note: 'The domain accepts every address.'
   },
   risky: {
     label: 'Risky email', tone: 'error', short: 'Risky',
-    note: 'The send cycle will not write to this address. Reaching this person takes a manual email or a call.'
+    note: 'Not used for cold email.'
   },
   unknown: {
     label: 'Unverified email', tone: 'neutral', short: 'Unverified',
-    note: 'Hunter could not verify the address. The send cycle will not write to it.'
+    note: 'Address not verified.'
   }
 };
 
@@ -3604,12 +3534,12 @@ function sumMetric(rows, key) {
    el registro de abajo.
    --------------------------------------------------------------------------- */
 const BOOKING_FUNNEL_STAGES = [
-  { key: 'email_delivered', label: 'Delivered', note: 'Brevo accepted the send' },
-  { key: 'email_opened', label: 'Opened', note: 'Tracking pixel fired' },
-  { key: 'email_click', label: 'Clicked', note: 'Followed the link to the landing' },
-  { key: 'landing_view', label: 'Landing viewed', note: 'The booking page rendered' },
-  { key: 'slot_selected', label: 'Slot selected', note: 'Picked a time from the calendar' },
-  { key: 'booking_confirmed', label: 'Booked', note: 'The server confirmed the meeting' }
+  { key: 'email_delivered', label: 'Delivered', note: 'Email delivered' },
+  { key: 'email_opened', label: 'Opened', note: 'Email opened' },
+  { key: 'email_click', label: 'Clicked', note: 'Link to the landing clicked' },
+  { key: 'landing_view', label: 'Landing viewed', note: 'Booking page viewed' },
+  { key: 'slot_selected', label: 'Slot selected', note: 'Time picked in the calendar' },
+  { key: 'booking_confirmed', label: 'Booked', note: 'Meeting booked' }
 ];
 
 const MOCK_BOOKING_FUNNEL = (function buildBookingFunnel() {
@@ -3654,18 +3584,18 @@ function bookingFunnel(days) {
    El motor pasa a ser un conjunto de servicios independientes que la
    configuración de cada trigger combina. Esta sección siembra el modelo de
    HUPEM-1.1 —geografía de tres niveles, catálogo de servicios, términos por país,
-   triggers, roles de decisor, prompts por país, reglas, envíos programados,
+   triggers, roles de decisor, prompts por país, envíos programados,
    ejecuciones e invocaciones— y completa las entidades de Release 3 con los
    campos nuevos: país y división, trigger, fuentes, estado e historial, salario
    publicado con su moneda y periodo.
 
    Índice
-    20.1 GEOGRAFÍA ............... ENGINE_COUNTRIES, GEO_DIVISIONS, GEO_CITIES, GEO_REVIEW
-    20.2 SERVICIOS ............... ENGINE_STAGES, ENGINE_SERVICES, SERVICE_MODES
+    20.1 GEOGRAFÍA ............... ENGINE_COUNTRIES, GEO_DIVISIONS, GEO_CITIES, TIMEZONES
+    20.2 SERVICIOS ............... ENGINE_STAGES, ENGINE_SERVICES
     20.3 TÉRMINOS POR PAÍS ....... ENGINE_TERMS, POSITION_AREAS
     20.4 TRIGGERS ................ ENGINE_TRIGGERS
     20.5 ROLES DE DECISOR ........ DECISION_ROLES
-    20.6 PROMPTS Y REGLAS ........ ENGINE_PROMPTS, ENGINE_RULES
+    20.6 PROMPTS ................. ENGINE_PROMPTS
     20.7 ENVÍOS DE COLD OUTREACH . OUTREACH_SCHEDULES
     20.8 ENTIDADES NUEVAS ........ empresas, vacantes y decisores de España y de
                                    los países de contratación
@@ -3682,22 +3612,31 @@ function bookingFunnel(days) {
    ============================================================================ */
 
 /* ---- 20.1 Geografía: país, división y ciudad ------------------------------ */
-// Un solo nivel de división por país. La división se identifica con su código
-// ISO 3166-2, que incluye el país: US-MA (Massachusetts) no choca con MA de otro país.
+// Tres niveles: país, división (estado, provincia, departamento…) y ciudad. Cada
+// división y cada ciudad está activa o inactiva; un trigger solo busca en ciudades
+// activas. El código de la división incluye el país: US-MA no choca con MA de otro país.
 const ENGINE_COUNTRIES = [
-  { code: 'US', name: 'United States', divisionLabel: 'State', divisionsTotal: 51, language: 'English', currency: 'USD', timezone: 'America/New_York', group: 'sales' },
-  { code: 'ES', name: 'Spain', divisionLabel: 'Province', divisionsTotal: 52, language: 'Spanish', currency: 'EUR', timezone: 'Europe/Madrid', group: 'sales' },
-  { code: 'CO', name: 'Colombia', divisionLabel: 'Department', divisionsTotal: 33, language: 'Spanish', currency: 'COP', timezone: 'America/Bogota', group: 'hiring' },
-  { code: 'MX', name: 'Mexico', divisionLabel: 'State', divisionsTotal: 32, language: 'Spanish', currency: 'MXN', timezone: 'America/Mexico_City', group: 'hiring' },
-  { code: 'AR', name: 'Argentina', divisionLabel: 'Province', divisionsTotal: 24, language: 'Spanish', currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires', group: 'hiring' },
-  { code: 'PE', name: 'Peru', divisionLabel: 'Department', divisionsTotal: 25, language: 'Spanish', currency: 'PEN', timezone: 'America/Lima', group: 'hiring' },
-  { code: 'GT', name: 'Guatemala', divisionLabel: 'Department', divisionsTotal: 22, language: 'Spanish', currency: 'GTQ', timezone: 'America/Guatemala', group: 'hiring' },
-  { code: 'KE', name: 'Kenya', divisionLabel: 'County', divisionsTotal: 47, language: 'English', currency: 'KES', timezone: 'Africa/Nairobi', group: 'hiring' },
-  { code: 'PH', name: 'Philippines', divisionLabel: 'Region', divisionsTotal: 17, language: 'English', currency: 'PHP', timezone: 'Asia/Manila', group: 'hiring' }
+  { code: 'US', name: 'United States', divisionLabel: 'State', language: 'English', currency: 'USD', timezone: 'America/New_York', group: 'sales' },
+  { code: 'ES', name: 'Spain', divisionLabel: 'Province', language: 'Spanish', currency: 'EUR', timezone: 'Europe/Madrid', group: 'sales' },
+  { code: 'CO', name: 'Colombia', divisionLabel: 'Department', language: 'Spanish', currency: 'COP', timezone: 'America/Bogota', group: 'hiring' },
+  { code: 'MX', name: 'Mexico', divisionLabel: 'State', language: 'Spanish', currency: 'MXN', timezone: 'America/Mexico_City', group: 'hiring' },
+  { code: 'AR', name: 'Argentina', divisionLabel: 'Province', language: 'Spanish', currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires', group: 'hiring' },
+  { code: 'PE', name: 'Peru', divisionLabel: 'Department', language: 'Spanish', currency: 'PEN', timezone: 'America/Lima', group: 'hiring' },
+  { code: 'GT', name: 'Guatemala', divisionLabel: 'Department', language: 'Spanish', currency: 'GTQ', timezone: 'America/Guatemala', group: 'hiring' },
+  { code: 'KE', name: 'Kenya', divisionLabel: 'County', language: 'English', currency: 'KES', timezone: 'Africa/Nairobi', group: 'hiring' },
+  { code: 'PH', name: 'Philippines', divisionLabel: 'Region', language: 'English', currency: 'PHP', timezone: 'Asia/Manila', group: 'hiring' }
 ];
 // Filtro por defecto de los listados: los países donde Solvo vende. Los países de
 // contratación siguen siendo vacantes; se ven cambiando el filtro.
 const DEFAULT_LIST_COUNTRIES = ['US', 'ES'];
+// Zonas horarias que ofrece el selector del país (IANA).
+const TIMEZONES = [
+  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+  'America/Mexico_City', 'America/Guatemala', 'America/Bogota', 'America/Lima',
+  'America/Argentina/Buenos_Aires', 'America/Sao_Paulo', 'America/Santiago',
+  'Europe/Madrid', 'Europe/Lisbon', 'Europe/London', 'Africa/Nairobi', 'Africa/Lagos',
+  'Asia/Manila', 'Asia/Kolkata'
+];
 
 const GEO_DIVISIONS = US_STATES.map(function (s) { return { code: 'US-' + s.code, country: 'US', name: s.name }; }).concat([
   { code: 'ES-M', country: 'ES', name: 'Madrid' }, { code: 'ES-B', country: 'ES', name: 'Barcelona' },
@@ -3717,7 +3656,7 @@ const GEO_DIVISIONS = US_STATES.map(function (s) { return { code: 'US-' + s.code
   { code: 'PH-11', country: 'PH', name: 'Davao Region' }
 ]);
 
-// Ciudades del catálogo. `aliases` es cómo nombra cada servicio la ciudad (alias de ubicación).
+// Ciudades del catálogo. Las de la segunda lista están cargadas pero inactivas.
 const GEO_CITIES = [
   ['us-miami', 'Miami', 'US-FL'], ['us-tampa', 'Tampa', 'US-FL'], ['us-new-york', 'New York', 'US-NY'],
   ['us-chicago', 'Chicago', 'US-IL'], ['us-austin', 'Austin', 'US-TX'], ['us-dallas', 'Dallas', 'US-TX'],
@@ -3736,28 +3675,26 @@ const GEO_CITIES = [
   ['ke-nairobi', 'Nairobi', 'KE-30'], ['ke-mombasa', 'Mombasa', 'KE-28'],
   ['ph-manila', 'Manila', 'PH-00'], ['ph-quezon', 'Quezon City', 'PH-00'], ['ph-cebu', 'Cebu City', 'PH-07'],
   ['ph-davao', 'Davao City', 'PH-11']
-].map(function (r) {
-  const country = r[2].split('-')[0];
-  const div = r[2].split('-')[1];
-  const aliases = { 'svc-indeed': country === 'US' ? r[1] + ', ' + div : r[1] };
-  if (country === 'US') aliases['svc-linkedin'] = r[1] + ', ' + US_STATES.find(function (s) { return s.code === div; }).name + ', United States';
-  if (['CO', 'MX', 'AR', 'PE', 'GT'].indexOf(country) >= 0) aliases['svc-computrabajo'] = r[1].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[ ,.]+/g, '-');
-  return { id: r[0], name: r[1], division: r[2], country: country, aliases: aliases };
-});
+].map(function (r) { return { id: r[0], name: r[1], division: r[2], country: r[2].split('-')[0], isActive: true }; }).concat([
+  ['us-orlando', 'Orlando', 'US-FL'], ['us-jacksonville', 'Jacksonville', 'US-FL'], ['us-buffalo', 'Buffalo', 'US-NY'],
+  ['us-albany', 'Albany', 'US-NY'], ['us-springfield-il', 'Springfield', 'US-IL'], ['us-san-antonio', 'San Antonio', 'US-TX'],
+  ['us-fort-worth', 'Fort Worth', 'US-TX'], ['us-el-paso', 'El Paso', 'US-TX'], ['us-spokane', 'Spokane', 'US-WA'],
+  ['us-worcester', 'Worcester', 'US-MA'], ['us-san-diego', 'San Diego', 'US-CA'], ['us-sacramento', 'Sacramento', 'US-CA'],
+  ['us-san-jose', 'San Jose', 'US-CA'], ['us-pittsburgh', 'Pittsburgh', 'US-PA'], ['us-savannah', 'Savannah', 'US-GA'],
+  ['us-phoenix', 'Phoenix', 'US-AZ'], ['us-tucson', 'Tucson', 'US-AZ'], ['us-denver', 'Denver', 'US-CO'],
+  ['us-charlotte', 'Charlotte', 'US-NC'], ['us-raleigh', 'Raleigh', 'US-NC'], ['us-nashville', 'Nashville', 'US-TN'],
+  ['es-getafe', 'Getafe', 'ES-M'], ['es-alcala', 'Alcalá de Henares', 'ES-M'], ['es-sabadell', 'Sabadell', 'ES-B'],
+  ['co-envigado', 'Envigado', 'CO-ANT'], ['co-soledad', 'Soledad', 'CO-ATL'],
+  ['mx-zapopan', 'Zapopan', 'MX-JAL'], ['mx-san-pedro', 'San Pedro Garza García', 'MX-NLE'],
+  ['ph-makati', 'Makati', 'PH-00'], ['ph-taguig', 'Taguig', 'PH-00']
+].map(function (r) { return { id: r[0], name: r[1], division: r[2], country: r[2].split('-')[0], isActive: false }; }));
+// Una división está activa cuando tiene al menos una ciudad activa.
+GEO_DIVISIONS.forEach(function (d) { d.isActive = GEO_CITIES.some(function (c) { return c.division === d.code && c.isActive; }); });
 
-// Ciudades que trajo un servicio y no están en el catálogo: la vacante se guarda con
-// su país y su división y queda marcada para revisión, hasta que alguien suma la
-// ciudad o la asigna a una existente.
-const GEO_REVIEW = [
-  { id: 'gr-1', name: 'Makati', country: 'PH', division: 'PH-00', serviceId: 'svc-indeed', vacancies: 4, firstSeenDays: 6, suggestion: 'ph-manila' },
-  { id: 'gr-2', name: 'Zapopan', country: 'MX', division: 'MX-JAL', serviceId: 'svc-computrabajo', vacancies: 2, firstSeenDays: 3, suggestion: 'mx-guadalajara' },
-  { id: 'gr-4', name: 'Brooklyn', country: 'US', division: 'US-NY', serviceId: 'svc-indeed', vacancies: 2, firstSeenDays: 9, suggestion: 'us-new-york' },
-  { id: 'gr-5', name: 'Queens', country: 'US', division: 'US-NY', serviceId: 'svc-linkedin', vacancies: 1, firstSeenDays: 10, suggestion: 'us-new-york' },
-  { id: 'gr-3', name: 'Alcobendas', country: 'ES', division: 'ES-M', serviceId: 'svc-indeed', vacancies: 1, firstSeenDays: 1, suggestion: 'es-madrid' }
-];
 
 /* ---- 20.2 Catálogo de servicios ------------------------------------------- */
-// Cada servicio cumple una sola tarea y no invoca a otro. Qué servicios usa un
+// Cada servicio cumple una sola tarea y no invoca a otro. Recibe ubicación y términos
+// y resuelve por sí mismo si busca por ciudad, división o país. Qué servicios usa un
 // trigger, en qué orden y en qué países, lo dice su configuración (20.4).
 const ENGINE_STAGES = [
   { key: 'vacancies', label: 'Vacancies', short: 'Vacancies' },
@@ -3769,41 +3706,28 @@ const ENGINE_STAGES = [
   { key: 'contact', label: 'Contact details', short: 'Contact' },
   { key: 'outreach', label: 'Cold outreach', short: 'Outreach' }
 ];
-const SERVICE_MODES = {
-  terms_city: 'Terms + city', terms_country: 'Terms + country', terms_location: 'Terms + location',
-  company: 'Company', domain: 'Company domain', listing: 'Listing from any service',
-  company_data: 'Company data from any source', people: 'People from any provider',
-  person: 'Decision maker', lead_list: 'Filtered lead list'
-};
-const SERVICE_STATUS = {
-  active: { label: 'Active', tone: 'success' },
-  evaluation: { label: 'In evaluation', tone: 'warning' },
-  paused: { label: 'Paused', tone: 'neutral' }
-};
 const HIRING_COUNTRIES = ['CO', 'MX', 'AR', 'PE', 'GT', 'KE', 'PH'];
-const ALL_COUNTRIES = ENGINE_COUNTRIES.map(function (c) { return c.code; });
 const ENGINE_SERVICES_SEED = [
-  // Indeed busca en el sitio de cada país; Guatemala y Kenia no tienen sitio de Indeed.
-  { id: 'svc-indeed', stage: 'vacancies', name: 'Indeed', provider: 'Oxylabs', modes: ['terms_city', 'company'], countries: ['US', 'ES', 'CO', 'MX', 'AR', 'PE', 'PH'], status: 'active', unit: 'requests', unitCostUsd: 0.0022 },
-  { id: 'svc-linkedin', stage: 'vacancies', name: 'LinkedIn', provider: 'Apify', modes: ['terms_location', 'company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'results', unitCostUsd: 0.001 },
-  { id: 'svc-computrabajo', stage: 'vacancies', name: 'Computrabajo', provider: 'Firecrawl', modes: ['terms_city'], countries: ['CO', 'MX', 'AR', 'PE', 'GT'], status: 'active', unit: 'credits', unitCostUsd: 0.00083 },
-  { id: 'svc-theirstack', stage: 'vacancies', name: 'TheirStack', provider: 'TheirStack', modes: ['terms_country', 'company'], countries: ['US', 'ES'], status: 'evaluation', unit: 'credits', unitCostUsd: 0.0059 },
-  { id: 'svc-vacancy-analysis', stage: 'vacancy_analysis', name: 'Vacancy analysis', provider: 'OpenAI', modes: ['listing'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
-  { id: 'svc-apollo-company', stage: 'enrichment', name: 'Apollo', provider: 'Apollo', modes: ['company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'credits', unitCostUsd: 0.0 },
-  { id: 'svc-brightdata', stage: 'enrichment', name: 'Bright Data', provider: 'Bright Data', modes: ['company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'records', unitCostUsd: 0.0015 },
-  { id: 'svc-company-analysis', stage: 'company_analysis', name: 'Company analysis', provider: 'OpenAI', modes: ['company_data'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
-  { id: 'svc-apollo-people', stage: 'decision_makers', name: 'Apollo', provider: 'Apollo', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
-  { id: 'svc-hunter', stage: 'decision_makers', name: 'Hunter', provider: 'Hunter', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'requests', unitCostUsd: 0.0 },
-  { id: 'svc-dm-analysis', stage: 'dm_analysis', name: 'Decision-maker analysis', provider: 'OpenAI', modes: ['people'], countries: ['US', 'ES'], status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
-  { id: 'svc-contact', stage: 'contact', name: 'Contact details', provider: 'Apollo · Hunter', modes: ['person'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
-  { id: 'svc-outreach-us', stage: 'outreach', name: 'Cold email · United States', provider: 'Brevo', modes: ['lead_list'], countries: ['US'], status: 'active', unit: 'emails', unitCostUsd: 0.0 }
+  { id: 'svc-indeed', stage: 'vacancies', name: 'Indeed', provider: 'Oxylabs', unit: 'requests', unitCostUsd: 0.0022 },
+  { id: 'svc-linkedin', stage: 'vacancies', name: 'LinkedIn', provider: 'Apify', unit: 'results', unitCostUsd: 0.001 },
+  { id: 'svc-computrabajo', stage: 'vacancies', name: 'Computrabajo', provider: 'Firecrawl', unit: 'credits', unitCostUsd: 0.00083 },
+  { id: 'svc-theirstack', stage: 'vacancies', name: 'TheirStack', provider: 'TheirStack', unit: 'credits', unitCostUsd: 0.0059 },
+  { id: 'svc-vacancy-analysis', stage: 'vacancy_analysis', name: 'Vacancy analysis', provider: 'OpenAI', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-apollo-company', stage: 'enrichment', name: 'Apollo', provider: 'Apollo', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-brightdata', stage: 'enrichment', name: 'Bright Data', provider: 'Bright Data', unit: 'records', unitCostUsd: 0.0015 },
+  { id: 'svc-company-analysis', stage: 'company_analysis', name: 'Company analysis', provider: 'OpenAI', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-apollo-people', stage: 'decision_makers', name: 'Apollo', provider: 'Apollo', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-hunter', stage: 'decision_makers', name: 'Hunter', provider: 'Hunter', unit: 'requests', unitCostUsd: 0.0 },
+  { id: 'svc-dm-analysis', stage: 'dm_analysis', name: 'Decision-maker analysis', provider: 'OpenAI', unit: 'tokens', unitCostUsd: 0.0000006 },
+  { id: 'svc-contact', stage: 'contact', name: 'Contact details', provider: 'Apollo · Hunter', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-outreach-us', stage: 'outreach', name: 'Cold email · United States', provider: 'Brevo', unit: 'emails', unitCostUsd: 0.0 }
 ];
 
 /* ---- Estado editable de la configuración ---------------------------------- */
 // Settings escribe aquí; borrar las claves r4* devuelve el prototipo al seed.
 // Versión del seed: al cambiarla, la configuración guardada en el navegador se
 // descarta y se vuelve al seed, para que nadie quede viendo una configuración vieja.
-const R4_SEED_VERSION = '4';
+const R4_SEED_VERSION = '5';
 (function resetStaleConfig() {
   try {
     if (localStorage.getItem('r4SeedVersion') !== R4_SEED_VERSION) {
@@ -3823,7 +3747,7 @@ function engineLoad(key, seed) {
 function engineSave(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* sin almacenamiento */ }
 }
-const ENGINE_SERVICES = engineLoad('r4Services', ENGINE_SERVICES_SEED);
+const ENGINE_SERVICES = ENGINE_SERVICES_SEED;
 
 /* ---- 20.3 Términos por país ----------------------------------------------- */
 // El catálogo de posiciones es global (POSITIONS_CATALOG, el actual). Cada término
@@ -3877,8 +3801,9 @@ const ENGINE_TERMS = engineLoad('r4Terms', ENGINE_TERMS_SEED);
 
 /* ---- 20.4 Triggers -------------------------------------------------------- */
 // Un trigger es configuración: cómo se activa, la ventana de publicación, sus países
-// y ubicaciones, los términos activos de cada país, los servicios de cada etapa con
-// su orden y la condición para pasar al siguiente, y hasta qué etapa llega.
+// y ubicaciones, los términos activos de cada país y los servicios de cada etapa con
+// su orden y la condición para pasar al siguiente. Llega hasta la última etapa que
+// tiene servicios: cada servicio deja la entidad en el estado que toma el siguiente.
 const WEEKDAYS = [
   { key: 'mon', short: 'Mon' }, { key: 'tue', short: 'Tue' }, { key: 'wed', short: 'Wed' },
   { key: 'thu', short: 'Thu' }, { key: 'fri', short: 'Fri' }, { key: 'sat', short: 'Sat' }, { key: 'sun', short: 'Sun' }
@@ -3887,47 +3812,40 @@ const PASS_CONDITIONS = {
   not_found: 'Not found',
   missing_essential: 'Not found or missing essential data'
 };
-const TRIGGER_ENDS = {
-  leads_ready: { label: 'Leads ready for cold outreach', stage: 'contact' },
-  seller_alert: { label: 'Alert to the account Sales Rep', stage: 'vacancy_analysis' },
-  platform: { label: 'Results in the platform', stage: 'vacancy_analysis' },
-  analyzed_companies: { label: 'Vacancies and analyzed companies in the platform', stage: 'company_analysis' },
-  company_record: { label: 'Company record', stage: 'contact' }
-};
 const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
   const usTerms = ENGINE_TERMS_SEED.filter(function (t) { return t.country === 'US'; }).map(function (t) { return t.id; });
   const esTerms = ENGINE_TERMS_SEED.filter(function (t) { return t.country === 'ES'; }).map(function (t) { return t.id; });
   const hiringTerms = ENGINE_TERMS_SEED.filter(function (t) { return HIRING_COUNTRIES.indexOf(t.country) >= 0; }).map(function (t) { return t.id; });
   const wk = ['mon', 'tue', 'wed', 'thu', 'fri'];
-  function cities(country) { return GEO_CITIES.filter(function (c) { return c.country === country; }); }
-  // Sin calendario por ciudad: los días son del trigger y todas sus ciudades se buscan
-  // cada día que se activa, con ventana de un día, para no perder avisos.
+  function cities(country) { return GEO_CITIES.filter(function (c) { return c.country === country && c.isActive; }); }
+  // Los días son del trigger: todas sus ciudades se buscan cada día que se activa,
+  // con ventana de un día, para no perder avisos.
   const usCal = cities('US').map(function (c) { return { cityId: c.id }; });
   const esCal = cities('ES').map(function (c) { return { cityId: c.id }; });
   return [
     {
       id: 'trg-new-clients', name: 'New clients', description: 'Companies that are not clients yet, detected by the positions Solvo fills.',
-      activation: { mode: 'cron', days: wk.slice(), time: '07:00', perCity: false }, windowDays: 1, searchBy: 'terms',
+      activation: { mode: 'cron', days: wk.slice(), time: '07:00' }, windowDays: 1, searchBy: 'terms',
       countries: ['US', 'ES'], locations: usCal.concat(esCal), activeTerms: usTerms.concat(esTerms.slice(0, 18)),
       vacancyServices: { US: ['svc-indeed'], ES: ['svc-indeed'] },
       enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
       decisionMakers: [{ serviceId: 'svc-apollo-people', pass: 'not_found' }, { serviceId: 'svc-hunter', pass: null }],
-      endsAt: 'leads_ready', isActive: true, requestable: false
+      isActive: true, requestable: false
     },
     {
       id: 'trg-current-clients', name: 'Current clients', description: 'Every new opening of the client companies. The Sales Rep of the account only gets the viable ones.',
-      activation: { mode: 'cron', days: wk.slice(), time: '08:00', perCity: false }, windowDays: 1, searchBy: 'company',
+      activation: { mode: 'cron', days: wk.slice(), time: '08:00' }, windowDays: 1, searchBy: 'company',
       countries: ['US'], locations: [], activeTerms: [], companyScope: 'clients',
       vacancyServices: { US: ['svc-indeed', 'svc-linkedin'] },
-      enrichment: [], decisionMakers: [], endsAt: 'seller_alert', isActive: true, requestable: false
+      enrichment: [], decisionMakers: [], isActive: true, requestable: false
     },
     {
       id: 'trg-on-demand', name: 'On demand', description: 'A search a user requests from the platform, by company or by position and location.',
-      activation: { mode: 'request' }, windowDays: 1, maxWindowDays: 30, searchBy: 'both',
+      activation: { mode: 'request' }, windowDays: 1, searchBy: 'both',
       countries: ['US', 'ES'], locations: cities('US').concat(cities('ES')).map(function (c) { return { cityId: c.id }; }),
       activeTerms: usTerms.concat(esTerms),
       vacancyServices: { US: ['svc-indeed', 'svc-linkedin'], ES: ['svc-indeed'] },
-      enrichment: [], decisionMakers: [], endsAt: 'platform', isActive: true, requestable: true
+      enrichment: [], decisionMakers: [], isActive: true, requestable: true
     },
     {
       id: 'trg-research', name: 'On-demand research', description: 'Research of one company requested from its record: enrichment, qualification and decision makers.',
@@ -3935,18 +3853,18 @@ const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
       countries: ['US', 'ES'], locations: [], activeTerms: [], vacancyServices: {},
       enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
       decisionMakers: [{ serviceId: 'svc-apollo-people', pass: 'not_found' }, { serviceId: 'svc-hunter', pass: null }],
-      endsAt: 'company_record', isActive: true, requestable: true
+      isActive: true, requestable: true
     },
     {
       id: 'trg-hiring-countries', name: 'Hiring countries', description: 'Openings in the countries where Solvo sources and hires talent.',
-      activation: { mode: 'cron', days: wk.slice(), time: '06:00', perCity: false }, windowDays: 1, searchBy: 'terms',
+      activation: { mode: 'cron', days: wk.slice(), time: '06:00' }, windowDays: 1, searchBy: 'terms',
       countries: HIRING_COUNTRIES.slice(),
-      locations: GEO_CITIES.filter(function (c) { return HIRING_COUNTRIES.indexOf(c.country) >= 0; }).map(function (c) { return { cityId: c.id }; }),
+      locations: GEO_CITIES.filter(function (c) { return c.isActive && HIRING_COUNTRIES.indexOf(c.country) >= 0; }).map(function (c) { return { cityId: c.id }; }),
       activeTerms: hiringTerms,
       vacancyServices: { CO: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], MX: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], AR: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], PE: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], GT: ['svc-computrabajo', 'svc-linkedin'], KE: ['svc-linkedin'], PH: ['svc-indeed', 'svc-linkedin'] },
       // Sus empresas se guardan siempre, se enriquecen y se analizan, para el análisis de datos posterior.
       enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
-      decisionMakers: [], endsAt: 'analyzed_companies', isActive: true, requestable: false
+      decisionMakers: [], isActive: true, requestable: false
     }
   ];
 })();
@@ -3975,8 +3893,9 @@ const DECISION_ROLES = engineLoad('r4Roles', DECISION_ROLES_SEED);
 function decisionRole(code) { return DECISION_ROLES.find(function (r) { return r.code === code; }) || null; }
 
 /* ---- 20.6 Prompts por país y reglas --------------------------------------- */
-// Cada país tiene un prompt por análisis. El de empresas lleva el ICP del país con su
-// puntaje mínimo. Un país sin sus tres prompts activos no se puede activar en un trigger.
+// Cada país tiene un prompt por análisis. El ICP del país va en el texto del prompt de
+// empresas; su puntaje mínimo para calificar es un campo aparte. Un país se usa en un
+// trigger cuando tiene activo el prompt de cada análisis que ese trigger ejecuta.
 const PROMPT_ANALYSES = [
   { key: 'vacancies', label: 'Vacancy analysis' },
   { key: 'companies', label: 'Company analysis' },
@@ -4012,18 +3931,6 @@ function countryPromptsComplete(country) {
   });
 }
 
-const ENGINE_RULES = {
-  exclusions: [
-    { code: 'staffing_agency', label: 'Staffing agencies', note: 'They compete with Solvo.' },
-    { code: 'government', label: 'Government entities', note: 'Public procurement does not hire through Solvo.' }
-  ],
-  essentials: [
-    { code: 'domain', label: 'Domain', note: 'Key of the company and input of the decision-maker services.' },
-    { code: 'size', label: 'Size', note: 'Number of employees, used by the ICP.' },
-    { code: 'industry', label: 'Industry', note: 'Code from the industry catalog.' }
-  ],
-  validityDays: 30
-};
 
 /* ---- 20.7 Envíos programados de cold outreach ----------------------------- */
 // Cada servicio de cold outreach recibe un listado de leads ya filtrado.
@@ -4072,7 +3979,7 @@ const OUTREACH_SCHEDULES = engineLoad('r4Outreach', OUTREACH_SCHEDULES_SEED);
   vacancy({ id: 'vac-102', title: 'Administrativo contable', companyId: 'comp-101', positionId: 'pos-01', searchText: 'administrativo contable', sourcePortal: 'indeed', countryCode: 'ES', divisionCode: 'ES-M', cityId: 'es-madrid', location: 'Madrid', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=9b2d01fe34a7c615', remoteViable: true, aiConfidence: 0.81, aiReasons: ['Ledger and invoicing work in SAP Business One; the office presence is a preference, not a requirement.'], salaryPublished: { min: 1800, max: 2100, currency: 'EUR', period: 'month' }, salaryMinUsd: 23328, salaryMaxUsd: 27216, languages: ['Spanish'], seniorityLevel: 'entry', department: 'Finance', skills: 'SAP Business One, Invoicing, Reconciliation', description: 'Registro contable, conciliaciones bancarias y facturación de clientes.', triggerIds: ['trg-new-clients'], comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited', hoursAgo: 28 });
   vacancy({ id: 'vac-103', title: 'Técnico de tráfico', companyId: 'comp-102', positionId: 'pos-15', searchText: 'técnico de tráfico', sourcePortal: 'indeed', countryCode: 'ES', divisionCode: 'ES-B', cityId: 'es-barcelona', location: 'Barcelona', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=51aa9c3e0f8b2d47', remoteViable: true, aiConfidence: 0.74, aiReasons: ['Route planning and carrier coordination run on a TMS; the role does not handle goods.'], salaryPublished: null, salaryMinUsd: null, salaryMaxUsd: null, languages: ['Spanish', 'Catalan'], seniorityLevel: 'mid', department: 'Operations', skills: 'TMS, Route planning', description: 'Planificación de rutas y coordinación con transportistas nacionales.', triggerIds: ['trg-new-clients'], hoursAgo: 6 });
   vacancy({ id: 'vac-201', title: 'Asesor de servicio al cliente bilingüe', companyId: 'comp-201', positionId: 'pos-04', searchText: 'asesor de servicio al cliente', sourcePortal: 'computrabajo', countryCode: 'CO', divisionCode: 'CO-DC', cityId: 'co-bogota', location: 'Bogotá', workModality: 'onsite', jobUrl: 'https://co.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-asesor-bilingue-3F1A9C', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Inbound English support for a US client over voice and chat.'], salaryPublished: { min: 3200000, max: 3800000, currency: 'COP', period: 'month' }, salaryMinUsd: 9600, salaryMaxUsd: 11400, languages: ['Spanish', 'English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'English C1, CRM, Chat support', description: 'Atención de clientes de EE. UU. por voz y chat en inglés.', triggerIds: ['trg-hiring-countries'], extraSources: ['svc-indeed'], hoursAgo: 9 });
-  vacancy({ id: 'vac-202', title: 'Customer Service Representative', companyId: 'comp-202', positionId: 'pos-04', searchText: 'customer service representative', sourcePortal: 'indeed', countryCode: 'PH', divisionCode: 'PH-00', cityId: null, cityRaw: 'Makati', needsReview: true, location: 'Makati', workModality: 'onsite', jobUrl: 'https://ph.indeed.com/viewjob?jk=0e7b5c11d9a4f862', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Voice support for a US healthcare account; fully systems-based.'], salaryPublished: { min: 25000, max: 30000, currency: 'PHP', period: 'month' }, salaryMinUsd: 5200, salaryMaxUsd: 6240, languages: ['English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Voice support, Healthcare accounts', description: 'Handle inbound calls for a US healthcare provider.', triggerIds: ['trg-hiring-countries'], hoursAgo: 40 });
+  vacancy({ id: 'vac-202', title: 'Customer Service Representative', companyId: 'comp-202', positionId: 'pos-04', searchText: 'customer service representative', sourcePortal: 'indeed', countryCode: 'PH', divisionCode: 'PH-00', cityId: 'ph-makati', location: 'Makati', workModality: 'onsite', jobUrl: 'https://ph.indeed.com/viewjob?jk=0e7b5c11d9a4f862', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Voice support for a US healthcare account; fully systems-based.'], salaryPublished: { min: 25000, max: 30000, currency: 'PHP', period: 'month' }, salaryMinUsd: 5200, salaryMaxUsd: 6240, languages: ['English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Voice support, Healthcare accounts', description: 'Handle inbound calls for a US healthcare provider.', triggerIds: ['trg-hiring-countries'], hoursAgo: 40 });
   vacancy({ id: 'vac-203', title: 'Analista contable', companyId: 'comp-203', positionId: 'pos-01', searchText: 'analista contable', sourcePortal: 'computrabajo', countryCode: 'MX', divisionCode: 'MX-CMX', cityId: 'mx-cdmx', location: 'Ciudad de México', workModality: 'hybrid', jobUrl: 'https://mx.computrabajo.com/ofertas-de-trabajo/oferta-de-trabajo-de-analista-contable-8B21D0', remoteViable: true, aiConfidence: 0.85, aiReasons: ['Month-end close and reconciliations on CONTPAQi; hybrid by choice.'], salaryPublished: { min: 18000, max: 22000, currency: 'MXN', period: 'month' }, salaryMinUsd: 11900, salaryMaxUsd: 14540, languages: ['Spanish'], seniorityLevel: 'mid', department: 'Finance', skills: 'CONTPAQi, Month-end close', description: 'Cierre contable mensual, conciliaciones y declaraciones.', triggerIds: ['trg-hiring-countries'], hoursAgo: 55 });
   vacancy({ id: 'vac-204', title: 'Software Developer', companyId: 'comp-204', positionId: 'pos-21', searchText: 'software developer', sourcePortal: 'linkedin', countryCode: 'KE', divisionCode: 'KE-30', cityId: 'ke-nairobi', location: 'Nairobi', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3911824405', remoteViable: true, aiConfidence: 0.95, aiReasons: ['Fully remote product team.'], salaryPublished: { min: 150000, max: 220000, currency: 'KES', period: 'month' }, salaryMinUsd: 13950, salaryMaxUsd: 20460, languages: ['English'], seniorityLevel: 'mid', department: 'Engineering', skills: 'Python, Django, PostgreSQL', description: 'Build payment features for a pan-African fintech.', triggerIds: ['trg-hiring-countries'], hoursAgo: 70 });
   vacancy({ id: 'vac-205', title: 'Desarrollador full stack', companyId: 'comp-205', positionId: 'pos-21', searchText: 'desarrollador full stack', sourcePortal: 'linkedin', countryCode: 'AR', divisionCode: 'AR-X', cityId: 'ar-cordoba', location: 'Córdoba', workModality: 'remote', jobUrl: 'https://www.linkedin.com/jobs/view/3912003571', remoteViable: true, aiConfidence: 0.91, aiReasons: ['Remote-first studio working for US clients.'], salaryPublished: { min: 1800, max: 2400, currency: 'USD', period: 'month' }, salaryMinUsd: 21600, salaryMaxUsd: 28800, languages: ['Spanish', 'English'], seniorityLevel: 'senior', department: 'Engineering', skills: 'React, Node.js, AWS', description: 'Desarrollo de producto para clientes de EE. UU., en dólares.', triggerIds: ['trg-hiring-countries'], hoursAgo: 96 });
@@ -4089,10 +3996,10 @@ const VACANCY_STATES = {
   closed: { label: 'Closed', tone: 'neutral' }
 };
 const COMPANY_STATES = {
-  detected: { label: 'Detected', tone: 'neutral', note: 'Known from a posting; not enriched yet.' },
-  enriched: { label: 'Enriched', tone: 'info', note: 'A provider returned the company with its essential data.' },
-  missing_data: { label: 'Missing data', tone: 'warning', note: 'No provider returned all the essential data: domain, size and industry.' },
-  qualified: { label: 'Qualified', tone: 'success', note: 'Scored against the ICP of its country.' },
+  detected: { label: 'Detected', tone: 'neutral', note: 'Not enriched yet.' },
+  enriched: { label: 'Enriched', tone: 'info', note: 'With domain, size and industry.' },
+  missing_data: { label: 'Missing data', tone: 'warning', note: 'Missing domain, size or industry.' },
+  qualified: { label: 'Qualified', tone: 'success', note: 'Fits the ICP of its country.' },
   excluded: { label: 'Excluded', tone: 'danger', note: 'A staffing agency or a government entity.' }
 };
 const DM_STATES = {
@@ -4164,8 +4071,6 @@ const PORTAL_SERVICE = { indeed: 'svc-indeed', linkedin: 'svc-linkedin', computr
     else if (v.aiConfidence === null || v.aiConfidence === undefined) v.entityState = 'analyzed';
     else v.entityState = 'viable';
     v.promptVersion = v.aiConfidence !== null && v.aiConfidence !== undefined ? 'v' + (v.countryCode === 'US' || v.countryCode === 'ES' ? 4 : 1) : null;
-    // Ciudad fuera del catálogo: la vacante queda con su país y su división, marcada para revisión.
-    if (v.needsReview === undefined) v.needsReview = !v.cityId && !!v.cityRaw;
   });
   // El trigger de la empresa es la unión de los de sus vacantes.
   MOCK_COMPANIES.forEach(function (c) {
@@ -4377,8 +4282,8 @@ function engineService(id) { return ENGINE_SERVICES.find(function (s) { return s
 function serviceName(id) { const s = engineService(id); return s ? s.name : (id || ''); }
 function serviceLabel(id) { const s = engineService(id); return s ? (s.provider && s.provider !== s.name ? s.name + ' · ' + s.provider : s.name) : (id || ''); }
 function stageLabel(key) { const s = ENGINE_STAGES.find(function (x) { return x.key === key; }); return s ? s.label : key; }
-function servicesForStage(stage, country) {
-  return ENGINE_SERVICES.filter(function (s) { return s.stage === stage && (!country || s.countries.indexOf(country) >= 0); });
+function servicesForStage(stage) {
+  return ENGINE_SERVICES.filter(function (s) { return s.stage === stage; });
 }
 function termsFor(country, positionId) {
   return ENGINE_TERMS.filter(function (t) { return t.country === country && (!positionId || t.positionId === positionId); });

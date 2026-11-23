@@ -15,7 +15,6 @@
     .ex-provpanel { margin-bottom: var(--space-4); }
     .ex-invtable { min-width: 760px; }
     .ex-params { font-size: var(--text-xs); color: var(--text-secondary); }
-    .ex-foot { margin-top: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); line-height: 1.5; }
     .ex-links { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-2); font-size: var(--text-sm); }
     .ex-count { margin-bottom: var(--space-2); font-size: var(--text-xs); color: var(--text-muted); }
   </style>
@@ -51,7 +50,7 @@
           <div class="page-header-left">
             <h2 class="page-header-title">Engine activity</h2>
             <p class="page-header-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">
-              Each execution of a trigger and each invocation of a service, with its result and consumption
+              Trigger executions and service invocations, with results, consumption and cost
             </p>
           </div>
         </div>
@@ -73,7 +72,7 @@
 
         <p class="ex-count" id="count"></p>
         <div class="r4-tablewrap" id="list"></div>
-        <p class="kp-note">Requests are the on-demand searches and research asked from Open Positions, Companies and the company record; their cost is the sum of their logged invocations. Times are shown in the time zone of this browser.</p>
+        <p class="kp-note">Times in your local time zone.</p>
       </div>
     </main>
   </div>
@@ -166,10 +165,10 @@
       return 'By position: ' + pos.join(', ') + ' · ' + countryName(r.country) + (cities.length ? ' (' + cities.join(', ') + ')' : '') + ' · last ' + plural(r.windowDays || 1, 'day');
     }
     function requestNote(r) {
-      if (r.status === 'queued') return 'Waiting for the services.';
+      if (r.status === 'queued') return 'Queued.';
       if (r.status === 'running' && r.progress) return r.progress.searched + ' of ' + r.progress.toSearch + ' searches done.';
-      if (r.status === 'no_results') return 'No openings published in the window.';
-      if (r.outcome === 'company_not_found') return 'No company service found the company.';
+      if (r.status === 'no_results') return 'No openings found.';
+      if (r.outcome === 'company_not_found') return 'Company not found.';
       if (r.steps) return 'Enrichment: ' + String(r.steps.enrichment || '—').replace('_', ' ') + ' · qualification: ' + (r.steps.qualification || '—') + ' · ' + plural(r.steps.decisionMakers || 0, 'decision maker') + '.';
       return '';
     }
@@ -261,13 +260,13 @@
         tile('Executions', fmtInt(rows.length), (running ? '<strong>' + running + '</strong> in progress · ' : '') + (issues ? '<strong>' + issues + '</strong> with retries or failed' : 'no failures')) +
         tile('Vacancies found', fmtInt(sum('vacancies')), '<strong>' + fmtInt(sum('viable')) + '</strong> viable') +
         tile('Companies', fmtInt(sum('companies')), '<strong>' + fmtInt(sum('qualified')) + '</strong> qualified · <strong>' + fmtInt(sum('decisionMakers')) + '</strong> decision makers') +
-        tile('Cost', usd(cost), 'USD, the executions of the period');
+        tile('Cost', usd(cost), 'USD in the period');
       const prov = {};
       rows.forEach(r => { const sp = providerSplit(r); Object.keys(sp).forEach(p => { prov[p] = (prov[p] || 0) + sp[p]; }); });
       const provList = Object.keys(prov).map(p => [p, prov[p]]).sort((a, b) => b[1] - a[1]);
       const max = provList.length ? provList[0][1] : 0;
       document.getElementById('providers').innerHTML = '<div class="kp-panel-head"><span class="kp-panel-title">Cost by provider</span><span class="r4-small r4-muted">' + usd(cost) + ' in the period</span></div>' +
-        '<div class="kp-panel-sub">Each execution\'s cost split by the share of each provider in its logged invocations; approximate. Providers billed by plan (Apollo, Hunter, Brevo) show no variable cost.</div>' +
+        '<div class="kp-panel-sub">Approximate. Providers billed by plan show no variable cost.</div>' +
         (provList.length ? provList.map(p => '<div class="r4-provrow"><span style="min-width: 110px;">' + esc(p[0]) + '</span><span class="r4-provbar"><span style="width: ' + (max ? Math.max(2, p[1] / max * 100) : 0) + '%"></span></span><b>' + usd(p[1]) + '</b></div>').join('') : '<p class="r4-small r4-muted">No cost in the period.</p>');
       document.getElementById('count').textContent = plural(rows.length, 'execution') + ' · most recent first';
       document.getElementById('list').innerHTML = rows.length
@@ -283,7 +282,7 @@
               '<td class="num">' + usd(r.costUsd) + '</td>' +
               '<td><div class="ex-note">' + esc(r.request ? requestSummary(r.request) + (r.note ? '. ' + r.note : '') : (r.note || '')) + '</div></td></tr>';
           }).join('') + '</tbody></table>'
-        : '<div class="op-empty"><h3>No executions</h3><p>No execution matches the filters.</p><button class="op-actionbtn" onclick="clearFilters()">Clear filters</button></div>';
+        : '<div class="op-empty"><h3>No executions match the filters.</h3><button class="op-actionbtn" onclick="clearFilters()">Clear filters</button></div>';
     }
 
     // ---- Detalle ----
@@ -321,11 +320,9 @@
               '<td class="nowrap">' + stateBadge(RESULT, i.result) + '</td>' +
               '<td class="num">' + fmtInt(i.amount) + ' ' + esc(unitLabel(i.amount, i.unit)) + '</td>' +
               '<td class="num">' + usd(i.costUsd) + '</td></tr>').join('') + '</tbody></table></div>'
-          : '<p class="r4-small r4-muted">No invocation yet: the request is waiting for the services.</p>') +
+          : '<p class="r4-small r4-muted">No invocations yet.</p>') +
         (Object.keys(bySvc).length ? '<div class="r4-stagehead" style="margin-top: var(--space-4);">By service</div><div class="r4-chips">' +
           Object.keys(bySvc).map(k => '<span class="r4-chip is-plain">' + esc(serviceName(k)) + ': ' + bySvc[k].n + ' · ' + fmtInt(bySvc[k].amount) + ' ' + esc(unitLabel(bySvc[k].amount, bySvc[k].unit)) + ' · ' + usd(bySvc[k].cost) + '</span>').join('') + '</div>' : '') +
-        '<p class="ex-foot">' + (r.request ? 'The cost of a request is the sum of its invocations.'
-          : 'The list shows the invocations logged for each stage; the execution made ' + plural(r.counts.searches || 0, 'search', 'searches') + ' and its total cost (' + usd(r.costUsd) + ') includes all of them. A retried invocation is not charged twice.') + '</p>' +
         '<div class="ex-links">' + (t ? '<a href="settings.html#triggers/' + t.id + '">Trigger configuration</a>' : '') + (r.request ? '<a href="requests.html">Requests</a>' : '') + '</div>';
       document.getElementById('exModal').classList.add('active');
       document.getElementById('exBody').scrollTop = 0;

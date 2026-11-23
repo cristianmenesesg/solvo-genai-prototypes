@@ -108,11 +108,6 @@
               Triggers
               <span class="st-navcount" id="navCountTriggers"></span>
             </button>
-            <button class="st-navitem" data-section="services" onclick="showSection('services', this)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="3" rx="1"></rect><rect width="7" height="7" x="14" y="14" rx="1"></rect><rect width="7" height="7" x="3" y="14" rx="1"></rect></svg>
-              Services
-              <span class="st-navcount" id="navCountServices"></span>
-            </button>
             <button class="st-navitem" data-section="terms" onclick="showSection('terms', this)">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
               Positions &amp; terms
@@ -132,10 +127,6 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               Prompts by country
               <span class="st-navcount" id="navCountPrompts"></span>
-            </button>
-            <button class="st-navitem" data-section="rules" onclick="showSection('rules', this)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-              Company rules
             </button>
 
             <div class="st-navgroup">Cold outreach</div>
@@ -159,68 +150,36 @@
             <!-- Section: Triggers (lista o editor de un trigger) -->
             <div class="settings-section active" id="section-triggers"><div id="trgMount"></div></div>
 
-            <!-- Section: Services -->
-            <div class="settings-section" id="section-services">
-              <div class="st-sectionhead">
-                <div>
-                  <h3 class="st-sectiontitle">Services</h3>
-                  <p class="st-sectionsub">Each service does one task and does not call another. A trigger can only use a service in the countries where it is enabled and while its status is Active.</p>
-                </div>
-                <button class="op-btn-apply" onclick="openServiceModal()">New service</button>
-              </div>
-              <div class="st-toolbar">
-                <input type="search" class="op-states-search st-search" id="svcSearch" placeholder="Search service or provider" oninput="renderServices()">
-                <select class="form-select" id="svcStatus" onchange="renderServices()">
-                  <option value="all">All statuses</option><option value="active">Active</option><option value="evaluation">In evaluation</option><option value="paused">Paused</option>
-                </select>
-              </div>
-              <div id="svcMount"></div>
-            </div>
-
             <!-- Section: Positions & terms -->
             <div class="settings-section" id="section-terms">
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Positions &amp; terms</h3>
-                  <p class="st-sectionsub">The position catalog is global. Each country has its own search terms for those positions: a position is searched in a country when it has terms there. Each term belongs to one position and one country, and enters inactive in every trigger.</p>
+                  <p class="st-sectionsub">The position catalog and its search terms by country.</p>
                 </div>
                 <button class="op-btn-apply" onclick="openPositionModal()">New position</button>
               </div>
               <div class="st-toolbar">
-                <select class="form-select" id="termCountry" onchange="renderTerms()" aria-label="Country"></select>
-                <input type="search" class="op-states-search st-search" id="termSearch" placeholder="Search position or term" oninput="renderTerms()">
-                <button class="op-actionbtn st-reset" onclick="openCopyTermsModal()">Copy terms from another country</button>
+                <select class="form-select" id="termCountry" onchange="posPage = 1; renderTerms()" aria-label="Country"></select>
+                <input type="search" class="op-states-search st-search" id="termSearch" placeholder="Search by title or term" oninput="posPage = 1; renderTerms()">
               </div>
               <p class="st-count" id="termSummary"></p>
-              <div class="st-list" id="termList"></div>
+              <div class="r4-tablewrap" id="termList"></div>
+              <div class="op-pagination" id="termPagination"></div>
             </div>
 
-            <!-- Section: Geography -->
-            <div class="settings-section" id="section-geography">
-              <div class="st-sectionhead">
-                <div>
-                  <h3 class="st-sectiontitle">Geography</h3>
-                  <p class="st-sectionsub">Country, division and city. Each country uses one division level, identified by its ISO 3166-2 code. Each service names a city in its own way (alias). A city a service returns that is not in the catalog is kept in the vacancy and waits here for review.</p>
-                </div>
-                <button class="op-btn-apply" onclick="openCountryModal()">New country</button>
-              </div>
-              <div id="geoReview"></div>
-              <div class="r4-stagehead">Countries</div>
-              <div class="r4-tablewrap" id="geoCountries"></div>
-              <div class="r4-stagehead">Cities <span>Select a city to edit its aliases</span></div>
-              <div id="geoCities"></div>
-            </div>
+            <!-- Section: Geography (lista de países o detalle de uno) -->
+            <div class="settings-section" id="section-geography"><div id="geoMount"></div></div>
 
             <!-- Section: Decision-maker roles -->
             <div class="settings-section" id="section-roles">
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Decision-maker roles</h3>
-                  <p class="st-sectionsub">The roles the decision-maker analysis assigns, the titles they are searched with, and what the engine does with each one.</p>
+                  <p class="st-sectionsub">Decision-maker roles with their level, areas, search titles and contact channels.</p>
                 </div>
                 <button class="op-btn-apply" onclick="openRoleModal()">New role</button>
               </div>
-              <div class="r4-note"><strong>The level comes from the role, not from the company size.</strong> General-management roles apply to every area; the others only to companies whose openings are in their areas.</div>
               <div class="r4-tablewrap" id="roleTable"></div>
             </div>
 
@@ -229,23 +188,10 @@
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Prompts by country</h3>
-                  <p class="st-sectionsub">Each country has one prompt for each analysis, with its model, text and version. The company prompt carries the ICP of the country and its minimum score.</p>
+                  <p class="st-sectionsub">The prompt of each analysis by country, with its versions.</p>
                 </div>
               </div>
-              <div class="r4-note"><strong>A country needs its three active prompts to be used in a trigger.</strong> A new version is a draft until it is activated; activating it keeps the previous one to go back to.</div>
               <div class="r4-tablewrap" id="promptTable"></div>
-            </div>
-
-            <!-- Section: Company rules -->
-            <div class="settings-section" id="section-rules">
-              <div class="st-sectionhead">
-                <div>
-                  <h3 class="st-sectiontitle">Company rules</h3>
-                  <p class="st-sectionsub">The rules the company services and analysis apply: which companies are excluded, which data a company needs to be qualified, and how long a result stays valid.</p>
-                </div>
-                <button class="op-btn-apply" onclick="saveRules()">Save changes</button>
-              </div>
-              <div id="rulesMount"></div>
             </div>
 
             <!-- Section: Scheduled sends -->
@@ -253,11 +199,10 @@
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Scheduled sends</h3>
-                  <p class="st-sectionsub">Cold outreach is not a trigger. Each scheduled send builds a lead list with its filter on its days and hands it to one cold outreach service.</p>
+                  <p class="st-sectionsub">Lead lists sent on schedule to a cold outreach service.</p>
                 </div>
                 <button class="op-btn-apply" onclick="openOutreachModal()">New send</button>
               </div>
-              <div class="r4-note"><strong>A service only receives leads already filtered.</strong> It does not choose them: the filter of the send decides which decision makers enter the list.</div>
               <div class="st-list" id="outreachList"></div>
             </div>
 
@@ -266,7 +211,7 @@
               <div class="st-sectionhead">
                 <div>
                   <h3 class="st-sectiontitle">Showcase</h3>
-                  <p class="st-sectionsub">The talent the booking landing shows below the calendar. Each role carries its own résumé; only roles in the showcase appear, up to the limit.</p>
+                  <p class="st-sectionsub">The talent shown on the booking landing, up to the limit.</p>
                 </div>
                 <button class="op-btn-apply" onclick="openShowcaseModal()">New role</button>
               </div>
@@ -422,34 +367,34 @@
        la configuración de cada trigger combina. Esta página administra esa
        configuración; el motor la lee, no hay lógica de recorrido acá.
 
-       Secciones por hash: #triggers (y #triggers/<id> abre el editor) · #services ·
-       #terms · #geography · #roles · #prompts · #rules · #outreach · #showcase.
+       Secciones por hash: #triggers (y #triggers/<id> abre el editor) · #terms ·
+       #geography (y #geography/<país> abre el detalle) · #roles · #prompts ·
+       #outreach · #showcase.
 
        Datos (rbac.js §20) y dónde persisten:
        · ENGINE_TRIGGERS ......... engineSave('r4Triggers')
-       · ENGINE_SERVICES ......... engineSave('r4Services')
        · ENGINE_TERMS ............ engineSave('r4Terms')
        · DECISION_ROLES .......... engineSave('r4Roles')
        · ENGINE_PROMPTS .......... engineSave('r4Prompts') — estados active | draft |
                                     archived ("Previous"); rbac.js solo siembra active.
        · OUTREACH_SCHEDULES ...... engineSave('r4Outreach')
-       · POSITIONS_CATALOG + POSITION_AREAS, geografía (ENGINE_COUNTRIES, GEO_DIVISIONS,
-         GEO_CITIES, GEO_REVIEW) y ENGINE_RULES no tienen clave en rbac.js: esta página
-         los guarda en `r4Positions`, `r4Geo` y `r4Rules` y los vuelve a aplicar al
-         cargar. Las demás páginas leen el seed (mecanismo exclusivo del prototipo).
+       · POSITIONS_CATALOG + POSITION_AREAS y la geografía (ENGINE_COUNTRIES,
+         GEO_DIVISIONS, GEO_CITIES) no tienen clave en rbac.js: esta página los guarda
+         en `r4Positions` y `r4Geo` y los vuelve a aplicar al cargar. Las demás páginas
+         leen el seed (mecanismo exclusivo del prototipo).
        · "Run now" deja la ejecución en `r4ManualRuns`, que lee Engine activity.
 
+       Los servicios no se configuran: reciben ubicación y términos y cada uno resuelve
+       si busca por ciudad, división o país. El trigger llega hasta la última etapa con
+       servicios; no hay un "hasta dónde llega" aparte.
+
        Reglas que la interfaz hace cumplir (HUPEM-1.1):
-       · Un servicio solo se agrega a un trigger en los países donde está habilitado,
-         en estado Active y si busca del modo que el trigger necesita; los demás se
-         muestran deshabilitados con el motivo.
-       · Un país no se agrega a un trigger sin sus tres prompts activos
-         (countryPromptsComplete).
+       · Un país se usa en un trigger cuando tiene activo el prompt de cada análisis
+         que ese trigger ejecuta (missingPrompts).
        · Un término nuevo entra inactivo en todos los triggers; cada término es de una
          posición y un país, y no se repite dentro del país.
-       · Las etapas posteriores a "Ends at" no se ejecutan: sus servicios quedan
-         configurados pero no se invocan.
-       · Un servicio solo se habilita en países que existen en Geografía.
+       · Un trigger solo ofrece ciudades activas. Desactivar una división desactiva sus
+         ciudades; activar una ciudad activa su división.
 
        Contratos: los de configuración del motor están por definir en la épica; los de
        Release 3 (/api/v1/settings/positions, /cities) quedan reemplazados por estos
@@ -525,7 +470,7 @@
     }
     function windowLabel(t) {
       if (t.searchBy === 'none' || t.windowDays == null) return 'Not applicable';
-      return plural(t.windowDays, 'day') + (t.activation.mode === 'request' && t.maxWindowDays ? ' · the user can widen it to ' + t.maxWindowDays : '');
+      return 'Last ' + plural(t.windowDays, 'day');
     }
     function ago(iso) {
       const m = Math.max(0, Math.round((Date.now() - parseStamp(iso).getTime()) / 60000));
@@ -537,14 +482,12 @@
     }
     const daysAgoLabel = n => n == null ? '—' : (n === 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago');
     function memberName(id) { const m = TEAM_MEMBERS.find(x => x.id === id); return m ? m.name : (id || ''); }
-    const stageIdx = key => ENGINE_STAGES.findIndex(s => s.key === key);
-    function endIdx(t) { const e = TRIGGER_ENDS[t.endsAt]; return e ? stageIdx(e.stage) : ENGINE_STAGES.length - 1; }
     function divShort(code) { return code && code.indexOf('US-') === 0 ? code.split('-')[1] : divisionName(code); }
     const divPlural = label => String(label || 'division').toLowerCase().replace(/y$/, 'ie') + 's';
     const slug = s => fold(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
     // === Estado propio de esta página (catálogos sin clave en rbac.js) ===
-    const POS_KEY = 'r4Positions', GEO_KEY = 'r4Geo', RULES_KEY = 'r4Rules', RUNS_KEY = 'r4ManualRuns';
+    const POS_KEY = 'r4Positions', GEO_KEY = 'r4Geo', RUNS_KEY = 'r4ManualRuns';
     function replaceAll(arr, items) { arr.length = 0; items.forEach(x => arr.push(x)); }
     (function applyLocalConfig() {
       const pos = engineLoad(POS_KEY, null);
@@ -557,15 +500,12 @@
         if (Array.isArray(geo.countries)) replaceAll(ENGINE_COUNTRIES, geo.countries);
         if (Array.isArray(geo.divisions)) replaceAll(GEO_DIVISIONS, geo.divisions);
         if (Array.isArray(geo.cities)) replaceAll(GEO_CITIES, geo.cities);
-        if (Array.isArray(geo.review)) replaceAll(GEO_REVIEW, geo.review);
       }
-      const rules = engineLoad(RULES_KEY, null);
-      if (rules) Object.assign(ENGINE_RULES, rules);
     })();
     function savePositionsCatalog() {
       engineSave(POS_KEY, POSITIONS_CATALOG.map(p => ({ id: p.id, name: p.name, terms: p.terms, isActive: p.isActive, areas: POSITION_AREAS[p.id] || [] })));
     }
-    function saveGeo() { engineSave(GEO_KEY, { countries: ENGINE_COUNTRIES, divisions: GEO_DIVISIONS, cities: GEO_CITIES, review: GEO_REVIEW }); }
+    function saveGeo() { engineSave(GEO_KEY, { countries: ENGINE_COUNTRIES, divisions: GEO_DIVISIONS, cities: GEO_CITIES }); }
     const saveTriggers = () => engineSave('r4Triggers', ENGINE_TRIGGERS);
     const saveTerms = () => engineSave('r4Terms', ENGINE_TERMS);
 
@@ -614,18 +554,28 @@
     /* ========================================================================
        TRIGGERS — lista y editor
        El editor trabaja sobre una copia (trgDraft); "Save changes" la vuelca en
-       ENGINE_TRIGGERS. Cinco pestañas: General (activación, ventana, hasta dónde
-       llega), Countries, Locations, Positions & terms, Services.
+       ENGINE_TRIGGERS. Cinco pestañas: General (activación, ventana y etapas),
+       Countries, Locations, Positions & terms, Services. El trigger llega hasta la
+       última etapa con servicios: cada servicio deja la entidad en el estado que
+       toma el siguiente, sin un "hasta dónde llega" aparte.
        ======================================================================== */
-    const SEARCH_BY = { terms: 'Terms and location', company: 'Company', both: 'Company, or terms and location', none: 'Does not search vacancies' };
-    // Qué modos de un servicio de vacantes sirven a cada forma de búsqueda del trigger.
-    const MODE_NEED = {
-      terms: ['terms_city', 'terms_country', 'terms_location'],
-      company: ['company', 'domain'],
-      both: ['terms_city', 'terms_country', 'terms_location', 'company', 'domain'],
-      none: []
-    };
+    const SEARCH_BY = { terms: 'Terms and location', company: 'Company', both: 'Company, or terms and location', none: 'Does not search openings' };
     let trgDraft = null, trgTab = 'general', trgDirty = false, trgCountryTab = null;
+
+    // Una etapa se usa cuando el trigger tiene servicios para ella; cada análisis sigue a su etapa.
+    function stageRuns(t, key) {
+      if (key === 'vacancies' || key === 'vacancy_analysis') return t.searchBy !== 'none' && Object.keys(t.vacancyServices || {}).some(c => (t.vacancyServices[c] || []).length > 0);
+      if (key === 'enrichment' || key === 'company_analysis') return t.enrichment.length > 0;
+      if (key === 'decision_makers' || key === 'dm_analysis' || key === 'contact') return t.decisionMakers.length > 0;
+      return false;
+    }
+    const TRIGGER_STAGES = ENGINE_STAGES.filter(s => s.key !== 'outreach');
+    // Prompts que necesita un país en este trigger: los de los análisis que el trigger ejecuta.
+    const STAGE_ANALYSIS = { vacancy_analysis: 'vacancies', company_analysis: 'companies', dm_analysis: 'decision_makers' };
+    function missingPrompts(code, t) {
+      const used = Object.keys(STAGE_ANALYSIS).filter(k => stageRuns(t, k)).map(k => STAGE_ANALYSIS[k]);
+      return PROMPT_ANALYSES.filter(a => used.indexOf(a.key) >= 0 && !ENGINE_PROMPTS.some(p => p.country === code && p.analysis === a.key && p.status === 'active')).map(a => a.label);
+    }
 
     function renderTriggersSection() {
       const m = document.getElementById('trgMount');
@@ -637,7 +587,7 @@
       const active = ENGINE_TRIGGERS.filter(t => t.isActive).length;
       const cron = ENGINE_TRIGGERS.filter(t => t.activation.mode === 'cron').length;
       return '<div class="st-sectionhead"><div><h3 class="st-sectiontitle">Triggers</h3>' +
-        '<p class="st-sectionsub">A trigger is configuration: how it starts, the publication window, its countries and cities, the active terms of each country, the services of each stage in their order, and the stage where it ends. Adding a trigger does not change the services.</p></div>' +
+        '<p class="st-sectionsub">Scheduled and on-request searches of the prospect engine.</p></div>' +
         '<button class="op-btn-apply" onclick="newTrigger()">New trigger</button></div>' +
         '<p class="st-count">' + plural(ENGINE_TRIGGERS.length, 'trigger') + ' · ' + active + ' active · ' + cron + ' scheduled, ' + (ENGINE_TRIGGERS.length - cron) + ' on request</p>' +
         '<div class="st-list">' + ENGINE_TRIGGERS.map(trgRow).join('') + '</div>';
@@ -658,10 +608,9 @@
         '</div>' +
         '<p class="r4-rowdesc">' + esc(t.description || '') + '</p>' +
         '<dl class="r4-facts">' +
-          fact('Activation', esc(activationLabel(t)) + (isCron && t.activation.perCity ? ' <span class="r4-muted">· calendar per city</span>' : '')) +
+          fact('Activation', esc(activationLabel(t))) +
           fact('Countries', esc(countriesLabel(t.countries))) +
           fact('Publication window', esc(windowLabel(t))) +
-          fact('Ends at', esc((TRIGGER_ENDS[t.endsAt] || {}).label || '—')) +
           fact('Last execution', last ? execBadge(last.status) + ' <a class="r4-small" href="executions.html?trigger=' + t.id + '">' + ago(last.startedAt) + '</a>' : '<span class="r4-muted">None yet</span>') +
         '</dl>' +
       '</article>';
@@ -669,7 +618,7 @@
     function toggleTrigger(id, on) {
       const t = engineTrigger(id); if (!t) return;
       t.isActive = on; saveTriggers(); renderTriggersSection();
-      showToast(t.name + (on ? ' activated' : ' deactivated: it no longer ' + (t.activation.mode === 'cron' ? 'runs on its schedule' : 'accepts requests')), 'success');
+      showToast(t.name + (on ? ' activated' : ' deactivated'), 'success');
     }
     // Ejecución manual de un trigger por cron: queda en curso en Engine activity.
     function runNow(id) {
@@ -682,7 +631,7 @@
         counts: { searches: 0, vacancies: 0, viable: 0, companies: 0, qualified: 0, decisionMakers: 0 }, costUsd: 0, note: 'Started from Settings by ' + user.name + '.' });
       try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs)); } catch (e) { /* sin almacenamiento */ }
       if (!trgDraft) renderTriggersSection();
-      showToast(esc(t.name) + ': execution started. Follow it in <a href="executions.html?id=' + exId + '">Engine activity</a>.', 'info');
+      showToast(esc(t.name) + ': execution started. See it in <a href="executions.html?id=' + exId + '">Engine activity</a>.', 'info');
     }
 
     function setTrgHash(id) { history.replaceState(null, '', id ? '#triggers/' + id : '#triggers'); }
@@ -698,9 +647,9 @@
     function newTrigger() {
       trgDraft = {
         id: 'trg-' + Date.now().toString(36), name: 'New trigger', description: '',
-        activation: { mode: 'cron', days: ['mon', 'tue', 'wed', 'thu', 'fri'], time: '07:00', perCity: false },
+        activation: { mode: 'cron', days: ['mon', 'tue', 'wed', 'thu', 'fri'], time: '07:00' },
         windowDays: 1, searchBy: 'terms', countries: [], locations: [], activeTerms: [], vacancyServices: {},
-        enrichment: [], decisionMakers: [], endsAt: 'platform', isActive: false, requestable: false, _isNew: true
+        enrichment: [], decisionMakers: [], isActive: false, requestable: false, _isNew: true
       };
       trgTab = 'general'; trgDirty = true; trgCountryTab = null; delete CITYLISTS.trgCityList;
       renderTriggersSection();
@@ -708,7 +657,7 @@
     }
     function closeTrigger(force) {
       if (trgDirty && !force) {
-        openConfirmPopup({ title: 'Discard changes', message: 'The changes to this trigger have not been saved.', highlight: trgDraft.name, confirmLabel: 'Discard', danger: true, onConfirm: () => closeTrigger(true) });
+        openConfirmPopup({ title: 'Discard changes', message: 'The changes to this trigger are not saved.', highlight: trgDraft.name, confirmLabel: 'Discard', danger: true, onConfirm: () => closeTrigger(true) });
         return;
       }
       trgDraft = null; trgDirty = false;
@@ -721,36 +670,20 @@
         onConfirm: () => { if (trgDraft._isNew) closeTrigger(true); else { const tab = trgTab; openTrigger(trgDraft.id); trgTab = tab; renderTriggersSection(); } } });
     }
     function trgChanged() { trgDirty = true; renderTriggersSection(); }
-    function setTrg(field, value) {
-      trgDraft[field] = value; trgDirty = true;
-      // El nombre y la descripción cambian el encabezado; lo demás, la pestaña.
-      renderTriggersSection();
-    }
+    function setTrg(field, value) { trgDraft[field] = value; trgDirty = true; renderTriggersSection(); }
     function setTab(tab) { trgTab = tab; renderTriggersSection(); }
-
-    function stageUsed(t, i) {
-      const k = ENGINE_STAGES[i].key;
-      if (k === 'outreach') return false;
-      if (i > endIdx(t)) return false;
-      if (t.searchBy === 'none' && (k === 'vacancies' || k === 'vacancy_analysis')) return false;
-      return true;
-    }
-    function stageOffReason(t, i) {
-      const k = ENGINE_STAGES[i].key;
-      if (k === 'outreach') return 'Not a trigger stage: scheduled sends hand the filtered leads to the outreach services';
-      if (i > endIdx(t)) return 'After the end of this trigger';
-      return 'This trigger does not search vacancies';
-    }
     const activeTermsOf = (t, code) => ENGINE_TERMS.filter(x => x.country === code && t.activeTerms.indexOf(x.id) >= 0);
+    const activeCityIds = code => GEO_CITIES.filter(c => c.country === code && c.isActive).map(c => c.id);
 
     function triggerEditorHtml() {
       const t = trgDraft;
       const isCron = t.activation.mode === 'cron';
       const byTerms = t.searchBy === 'terms' || t.searchBy === 'both';
+      const nLoc = t.locations.filter(l => { const c = GEO_CITIES.find(x => x.id === l.cityId); return c && c.isActive && t.countries.indexOf(c.country) >= 0; }).length;
       const tabs = [
         ['general', 'General', ''],
         ['countries', 'Countries', t.countries.length],
-        ['locations', 'Locations', t.searchBy === 'terms' || t.searchBy === 'both' ? t.locations.length : ''],
+        ['locations', 'Locations', byTerms ? nLoc : ''],
         ['terms', 'Positions & terms', byTerms ? t.activeTerms.filter(id => ENGINE_TERMS.some(x => x.id === id && t.countries.indexOf(x.country) >= 0)).length : ''],
         ['services', 'Services', '']
       ];
@@ -765,7 +698,7 @@
         '</div>' +
         '<div class="r4-edactions">' +
           '<span class="r4-dirty">' + (trgDirty ? 'Unsaved changes' : '') + '</span>' +
-          (isCron && !t._isNew ? '<button class="op-actionbtn" onclick="runNow(\'' + t.id + '\')" title="Runs the saved configuration">Run now</button>' : '') +
+          (isCron && !t._isNew ? '<button class="op-actionbtn" onclick="runNow(\'' + t.id + '\')">Run now</button>' : '') +
           '<button class="op-actionbtn" onclick="discardTrigger()"' + (trgDirty && !t._isNew ? '' : ' disabled') + '>Discard</button>' +
           '<button class="op-btn-apply" onclick="saveTrigger()">Save changes</button>' +
         '</div></div>' +
@@ -775,58 +708,47 @@
         '<div id="trgPanel">' + panel + '</div>';
     }
 
-    // ---- Pestaña General: activación, ventana de publicación y final ----
+    // ---- Pestaña General: activación, ventana de publicación y etapas ----
     function tabGeneral(t) {
       const a = t.activation, cron = a.mode === 'cron';
-      const ei = endIdx(t);
-      let windowHtml;
-      if (t.searchBy === 'none') {
-        windowHtml = '<p class="r4-small r4-muted">Not applicable: this trigger does not search vacancies.</p>';
-      } else {
-        windowHtml = '<div class="r4-fieldrow">' +
-          '<div class="form-group"><label class="form-label" for="tWindow">Days back</label><input type="number" min="1" class="form-input r4-num" id="tWindow" value="' + (t.windowDays || 1) + '" onchange="setWindow(\'windowDays\', this.value)"></div>' +
-          (!cron ? '<div class="form-group"><label class="form-label" for="tMaxWindow">The user can widen it up to</label><input type="number" min="1" class="form-input r4-num" id="tMaxWindow" value="' + (t.maxWindowDays || t.windowDays || 1) + '" onchange="setWindow(\'maxWindowDays\', this.value)"></div>' : '') +
-        '</div><p class="st-hint">Vacancies published within these days are searched. ' + (cron ? 'Today the engine searches the last day.' : 'The request starts with the default and the user can widen it up to the maximum.') + '</p>';
-      }
+      const windowHtml = t.searchBy === 'none'
+        ? '<p class="r4-small r4-muted">This trigger does not search openings.</p>'
+        : '<div class="r4-fieldrow"><div class="form-group"><label class="form-label" for="tWindow">Days back</label><input type="number" min="1" class="form-input r4-num" id="tWindow" value="' + (t.windowDays || 1) + '" onchange="setWindow(this.value)"></div></div>' +
+          '<p class="st-hint">Openings published in the last ' + plural(t.windowDays || 1, 'day') + '.</p>';
       return '<div class="r4-block st-panel">' +
           '<div class="r4-blocktitle">Trigger</div>' +
           '<div class="r4-grid2">' +
             '<div class="form-group"><label class="form-label" for="tName">Name</label><input class="form-input" id="tName" maxlength="60" value="' + esc(t.name) + '" onchange="setTrg(\'name\', this.value.trim())"></div>' +
-            '<div class="form-group"><label class="form-label" for="tSearchBy">Searches vacancies by</label><select class="form-select" id="tSearchBy" onchange="setSearchBy(this.value)">' +
+            '<div class="form-group"><label class="form-label" for="tSearchBy">Searches openings by</label><select class="form-select" id="tSearchBy" onchange="setSearchBy(this.value)">' +
               Object.keys(SEARCH_BY).map(k => '<option value="' + k + '"' + (t.searchBy === k ? ' selected' : '') + '>' + SEARCH_BY[k] + '</option>').join('') + '</select></div>' +
           '</div>' +
           '<div class="form-group" style="margin-top: 12px;"><label class="form-label" for="tDesc">Description</label><textarea class="form-textarea" id="tDesc" rows="2" style="min-height: 56px;" onchange="setTrg(\'description\', this.value.trim())">' + esc(t.description || '') + '</textarea></div>' +
-          '<div class="r4-inline" style="margin-top: 12px;"><label class="toggle-switch"><input type="checkbox" aria-label="Active" ' + (t.isActive ? 'checked' : '') + ' onchange="setTrg(\'isActive\', this.checked)"><span class="toggle-slider"></span></label><span>Active: ' + (cron ? 'runs on its schedule' : 'accepts requests from the platform') + '</span></div>' +
+          '<div class="r4-inline" style="margin-top: 12px;"><label class="toggle-switch"><input type="checkbox" aria-label="Active" ' + (t.isActive ? 'checked' : '') + ' onchange="setTrg(\'isActive\', this.checked)"><span class="toggle-slider"></span></label><span>Active</span></div>' +
         '</div>' +
         '<div class="r4-block st-panel">' +
           '<div class="r4-blocktitle">Activation</div>' +
-          '<div class="r4-blocksub">A schedule runs on the chosen weekdays at the chosen time, in the time zone of each country. A request trigger runs when a user asks for it.</div>' +
           '<div class="kp-window" role="group" aria-label="Activation"><button type="button" class="' + (cron ? 'is-on' : '') + '" onclick="setMode(\'cron\')">Schedule</button><button type="button" class="' + (cron ? '' : 'is-on') + '" onclick="setMode(\'request\')">On request</button></div>' +
           (cron
             ? '<div class="r4-fieldrow" style="margin-top: 12px;">' +
                 '<div class="form-group"><span class="form-label">Days</span><div class="r4-days">' + WEEKDAYS.map(w =>
-                  '<button type="button" class="r4-day' + (a.days.indexOf(w.key) >= 0 ? ' is-on' : '') + '" aria-pressed="' + (a.days.indexOf(w.key) >= 0) + '" onclick="toggleDay(\'' + w.key + '\')"' + '>' + w.short + '</button>').join('') + '</div></div>' +
+                  '<button type="button" class="r4-day' + (a.days.indexOf(w.key) >= 0 ? ' is-on' : '') + '" aria-pressed="' + (a.days.indexOf(w.key) >= 0) + '" onclick="toggleDay(\'' + w.key + '\')">' + w.short + '</button>').join('') + '</div></div>' +
                 '<div class="form-group"><label class="form-label" for="tTime">Time</label><input type="time" class="form-input" style="width: 120px;" id="tTime" value="' + esc(a.time || '07:00') + '" onchange="setActivation(\'time\', this.value)"></div>' +
               '</div>' +
-              '<p class="st-hint" style="margin-top: 12px;">Every city of the trigger is searched on each of these days, with the publication window below.</p>'
-            : '<p class="st-hint" style="margin-top: 12px;">Started from the platform: on-demand searches from Open Positions and Companies, research from a company record. A user request goes before the scheduled work of the services.</p>') +
+              '<p class="st-hint" style="margin-top: 12px;">Local time of each country.</p>'
+            : '<p class="st-hint" style="margin-top: 12px;">Runs when a user requests it from the platform.</p>') +
         '</div>' +
         '<div class="r4-block st-panel"><div class="r4-blocktitle">Publication window</div>' + windowHtml + '</div>' +
-        '<div class="r4-block st-panel">' +
-          '<div class="r4-blocktitle">Ends at</div>' +
-          '<div class="r4-blocksub">The last stage the trigger runs and where it leaves the result. Stages after it are not run: their services stay configured but are not invoked.</div>' +
-          '<select class="form-select" id="tEnds" style="max-width: 320px;" onchange="setTrg(\'endsAt\', this.value)">' +
-            Object.keys(TRIGGER_ENDS).map(k => '<option value="' + k + '"' + (t.endsAt === k ? ' selected' : '') + '>' + TRIGGER_ENDS[k].label + '</option>').join('') + '</select>' +
-          '<div class="r4-stages">' + ENGINE_STAGES.map((s, i) =>
-            '<span class="r4-stagepill' + (stageUsed(t, i) ? '' : ' is-off') + (i === ei ? ' is-end' : '') + '" title="' + esc(stageUsed(t, i) ? 'Runs' : stageOffReason(t, i)) + '">' + (i + 1) + ' · ' + esc(s.label) + '</span>').join('') + '</div>' +
+        '<div class="r4-block st-panel"><div class="r4-blocktitle">Stages</div>' +
+          '<div class="r4-stages">' + TRIGGER_STAGES.map((s, i) =>
+            '<span class="r4-stagepill' + (stageRuns(t, s.key) ? '' : ' is-off') + '">' + (i + 1) + ' · ' + esc(s.label) + '</span>').join('') + '</div>' +
+          '<p class="st-hint">Stages with services in the Services tab.</p>' +
         '</div>';
     }
     function setMode(mode) {
       const t = trgDraft;
       if (t.activation.mode === mode) return;
-      t.activation = mode === 'cron' ? { mode: 'cron', days: ['mon', 'tue', 'wed', 'thu', 'fri'], time: '07:00', perCity: false } : { mode: 'request' };
+      t.activation = mode === 'cron' ? { mode: 'cron', days: ['mon', 'tue', 'wed', 'thu', 'fri'], time: '07:00' } : { mode: 'request' };
       t.requestable = mode === 'request';
-      if (mode === 'request' && t.searchBy !== 'none' && !t.maxWindowDays) t.maxWindowDays = 30;
       trgChanged();
     }
     function toggleDay(k) {
@@ -836,18 +758,11 @@
       trgDraft.activation.days = WD.filter(x => d.indexOf(x) >= 0);
       trgChanged();
     }
-    function setActivation(field, value) {
-      trgDraft.activation[field] = value;
-      // Al pasar a calendario por ciudad, cada ciudad sin día recibe uno, repartidas de lunes a viernes.
-      if (field === 'perCity' && value) trgDraft.locations.forEach((l, i) => { if (!l.days || !l.days.length) l.days = [WD[i % 5]]; });
-      trgChanged();
-    }
-    function setWindow(field, raw) {
+    function setActivation(field, value) { trgDraft.activation[field] = value; trgChanged(); }
+    function setWindow(raw) {
       const n = parseInt(raw, 10);
       if (isNaN(n) || n < 1) { showToast('The window is at least 1 day', 'error'); renderTriggersSection(); return; }
-      trgDraft[field] = n;
-      if (field === 'windowDays' && trgDraft.maxWindowDays && trgDraft.maxWindowDays < n) trgDraft.maxWindowDays = n;
-      if (field === 'maxWindowDays' && n < (trgDraft.windowDays || 1)) { trgDraft.maxWindowDays = trgDraft.windowDays; showToast('The maximum cannot be lower than the default window', 'error'); }
+      trgDraft.windowDays = n;
       trgChanged();
     }
     function setSearchBy(v) {
@@ -859,33 +774,28 @@
     }
 
     // ---- Pestaña Countries ----
-    function missingPrompts(code) {
-      return PROMPT_ANALYSES.filter(a => !ENGINE_PROMPTS.some(p => p.country === code && p.analysis === a.key && p.status === 'active')).map(a => a.label);
-    }
     function tabCountries(t) {
-      return '<div class="r4-blocksub">Only a country with its three active prompts can be added (Prompts by country). Adding a country selects all its cities; its terms enter inactive and are activated in Positions &amp; terms.</div>' +
-        '<div class="r4-countrylist">' + ENGINE_COUNTRIES.map(c => {
+      return '<div class="r4-countrylist">' + ENGINE_COUNTRIES.map(c => {
           const on = t.countries.indexOf(c.code) >= 0;
-          const miss = missingPrompts(c.code);
+          const miss = missingPrompts(c.code, t);
           const blocked = miss.length && !on;
-          const nCities = GEO_CITIES.filter(x => x.country === c.code).length;
+          const nCities = activeCityIds(c.code).length;
           return '<label class="r4-country' + (on ? ' is-on' : '') + (blocked ? ' is-blocked' : '') + '">' +
             '<input type="checkbox"' + (on ? ' checked' : '') + (blocked ? ' disabled' : '') + ' onchange="toggleTrgCountry(\'' + c.code + '\', this.checked)">' +
             '<span><span class="r4-country-name">' + esc(c.name) + '</span>' +
-            '<span class="r4-country-meta">' + esc(c.language) + ' · ' + plural(nCities, 'city', 'cities') + ' · ' + (c.group === 'hiring' ? 'Hiring country' : 'Sales country') + '</span>' +
-            (miss.length ? '<span class="r4-why">Missing active prompt: ' + esc(miss.join(', ')) + '. ' + (on ? 'The trigger skips this country until they are active.' : 'It cannot be added.') + '</span>' : '') +
+            '<span class="r4-country-meta">' + esc(c.language) + ' · ' + plural(nCities, 'active city', 'active cities') + ' · ' + (c.group === 'hiring' ? 'Hiring country' : 'Sales country') + '</span>' +
+            (miss.length ? '<span class="r4-why">Missing prompt: ' + esc(miss.join(', ')) + '</span>' : '') +
             '</span></label>';
         }).join('') + '</div>';
     }
     function toggleTrgCountry(code, on) {
       const t = trgDraft;
       if (on) {
-        if (!countryPromptsComplete(code)) { showToast(countryName(code) + ' cannot be added: it needs its three active prompts', 'error'); renderTriggersSection(); return; }
+        const miss = missingPrompts(code, t);
+        if (miss.length) { showToast(countryName(code) + ': missing prompt for ' + miss.join(', '), 'error'); renderTriggersSection(); return; }
         if (t.countries.indexOf(code) < 0) t.countries.push(code);
         if (t.searchBy === 'terms' || t.searchBy === 'both') {
-          GEO_CITIES.filter(c => c.country === code).forEach((c, i) => {
-            if (!t.locations.some(l => l.cityId === c.id)) t.locations.push(t.activation.perCity ? { cityId: c.id, days: [WD[i % 5]] } : { cityId: c.id });
-          });
+          activeCityIds(code).forEach(id => { if (!t.locations.some(l => l.cityId === id)) t.locations.push({ cityId: id }); });
         }
       } else {
         t.countries = t.countries.filter(c => c !== code);
@@ -896,17 +806,15 @@
       trgChanged();
     }
 
-    // ---- Lista compacta de ciudades (selección del trigger o catálogo de Geografía) ----
-    // Mismo patrón que Open Positions: un acordeón por país, grilla en columnas paginada de a
-    // 24, búsqueda sin acentos sobre todos los países. El estado (abiertos, página, búsqueda)
-    // vive en CITYLISTS por id, así sobrevive a los re-render del editor.
+    // ---- Lista compacta de ciudades activas para elegir las del trigger ----
+    // Un acordeón por país, grilla en columnas paginada de a 24 y búsqueda sin acentos.
+    // El estado (abiertos, página, búsqueda) vive en CITYLISTS por id y sobrevive a los re-render.
     const CITY_PAGE = 24;
     const CITYLISTS = {};
     const CHEVRON = '<svg class="r4-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
     function cityListHtml(o) {
       const prev = CITYLISTS[o.id];
       const st = prev ? prev.st : { open: {}, page: {}, q: '', qPage: {} };
-      // Arranca colapsado, salvo cuando hay un solo país en juego.
       o.countries.forEach(c => { if (!(c in st.open)) st.open[c] = o.countries.length === 1; });
       CITYLISTS[o.id] = { o: o, st: st };
       return '<div class="r4-citylist" id="' + o.id + '">' +
@@ -918,7 +826,7 @@
       const q = fold(st.q.trim());
       const html = o.countries.map(code => {
         const c = engineCountry(code);
-        const cities = GEO_CITIES.filter(x => x.country === code).sort((a, b) => a.name.localeCompare(b.name));
+        const cities = GEO_CITIES.filter(x => x.country === code && x.isActive).sort((a, b) => a.name.localeCompare(b.name));
         const matches = q ? cities.filter(x => fold(x.name).indexOf(q) >= 0) : cities;
         if (q && !matches.length) return '';
         const open = q ? true : !!st.open[code];
@@ -926,44 +834,30 @@
         const pages = Math.max(1, Math.ceil(matches.length / CITY_PAGE));
         const page = Math.min(pageMap[code] || 1, pages);
         pageMap[code] = page;
-        const sel = o.mode === 'select' ? cities.filter(x => o.isSelected(x.id)).length : 0;
+        const sel = cities.filter(x => o.isSelected(x.id)).length;
         const head = '<div class="r4-citylist-head" role="button" tabindex="0" aria-expanded="' + open + '" onclick="cityGroupToggle(\'' + id + '\', \'' + code + '\')" onkeydown="if ((event.key === \'Enter\' || event.key === \' \') && event.target === this) { event.preventDefault(); cityGroupToggle(\'' + id + '\', \'' + code + '\'); }">' +
           CHEVRON + '<strong>' + esc(c ? c.name : code) + '</strong>' +
-          '<span class="r4-citylist-count">' + (o.mode === 'select' ? sel + ' of ' + cities.length + ' selected' : plural(cities.length, 'city', 'cities')) +
-            (q ? ' · ' + matches.length + ' match' + (matches.length === 1 ? '' : 'es') : '') + '</span>' +
-          '<span class="r4-citylist-actions" onclick="event.stopPropagation()">' + (o.mode === 'select'
-            ? '<button type="button" class="r4-linkbtn" onclick="trgCityAll(\'' + code + '\', true)">All</button><button type="button" class="r4-linkbtn" onclick="trgCityAll(\'' + code + '\', false)">None</button>'
-            : '<button type="button" class="r4-linkbtn" onclick="openCityModal(null, \'' + code + '\')">Add city</button>') + '</span></div>';
+          '<span class="r4-citylist-count">' + sel + ' of ' + cities.length + ' selected' + (q ? ' · ' + matches.length + ' match' + (matches.length === 1 ? '' : 'es') : '') + '</span>' +
+          '<span class="r4-citylist-actions" onclick="event.stopPropagation()"><button type="button" class="r4-linkbtn" onclick="trgCityAll(\'' + code + '\', true)">All</button><button type="button" class="r4-linkbtn" onclick="trgCityAll(\'' + code + '\', false)">None</button></span></div>';
         if (!open) return '<div class="r4-citylist-group" data-country="' + code + '">' + head + '</div>';
-        const slice = matches.slice((page - 1) * CITY_PAGE, page * CITY_PAGE);
-        const items = slice.map(x => {
-          const dv = divShort(x.division);
-          if (o.mode === 'select') {
-            const on = o.isSelected(x.id);
-            const day = on && o.perCity ? o.dayOf(x.id) : null;
-            return '<label class="r4-citylist-item' + (on ? '' : ' is-off') + '" title="' + esc(x.name + ', ' + divisionName(x.division)) + '">' +
-              '<input type="checkbox"' + (on ? ' checked' : '') + ' onchange="trgCityToggle(\'' + x.id + '\', this.checked)">' +
-              '<span class="r4-cityname">' + esc(x.name) + '</span><span class="r4-citydiv">' + esc(dv) + '</span>' +
-              (day ? '<select class="r4-daysel" aria-label="Weekday for ' + esc(x.name) + '" onclick="event.stopPropagation()" onchange="trgCityDay(\'' + x.id + '\', this.value)">' +
-                WEEKDAYS.filter(w => !o.days || o.days.indexOf(w.key) >= 0 || w.key === day).map(w => '<option value="' + w.key + '"' + (w.key === day ? ' selected' : '') + '>' + w.short + '</option>').join('') + '</select>' : '') +
-              '</label>';
-          }
-          const nAlias = Object.keys(x.aliases || {}).length;
-          return '<button type="button" class="r4-citylist-item" onclick="openCityModal(\'' + x.id + '\')" title="' + esc(x.name + ', ' + divisionName(x.division) + ' · ' + plural(nAlias, 'service alias', 'service aliases')) + '">' +
-            '<span class="r4-cityname">' + esc(x.name) + '</span><span class="r4-citydiv">' + esc(dv) + '</span></button>';
+        const items = matches.slice((page - 1) * CITY_PAGE, page * CITY_PAGE).map(x => {
+          const on = o.isSelected(x.id);
+          return '<label class="r4-citylist-item' + (on ? '' : ' is-off') + '" title="' + esc(x.name + ', ' + divisionName(x.division)) + '">' +
+            '<input type="checkbox"' + (on ? ' checked' : '') + ' onchange="trgCityToggle(\'' + x.id + '\', this.checked)">' +
+            '<span class="r4-cityname">' + esc(x.name) + '</span><span class="r4-citydiv">' + esc(divShort(x.division)) + '</span></label>';
         }).join('');
-        const pager = matches.length > CITY_PAGE
-          ? '<div class="r4-citylist-pager"><span>' + ((page - 1) * CITY_PAGE + 1) + '–' + Math.min(page * CITY_PAGE, matches.length) + ' of ' + matches.length + '</span>' +
-            '<button type="button" class="op-actionbtn" aria-label="Previous cities"' + (page === 1 ? ' disabled' : '') + ' onclick="cityListPage(\'' + id + '\', \'' + code + '\', -1)">‹</button>' +
-            '<button type="button" class="op-actionbtn" aria-label="Next cities"' + (page === pages ? ' disabled' : '') + ' onclick="cityListPage(\'' + id + '\', \'' + code + '\', 1)">›</button></div>'
-          : '';
         return '<div class="r4-citylist-group" data-country="' + code + '">' + head +
-          (cities.length ? '<div class="r4-citylist-grid">' + items + '</div>' + pager : '<div class="r4-citylist-empty">No cities loaded yet.</div>') + '</div>';
+          (cities.length ? '<div class="r4-citylist-grid">' + items + '</div>' + cityPagerHtml(id, code, page, pages, matches.length) : '<div class="r4-citylist-empty">No active cities.</div>') + '</div>';
       }).join('');
       return html || '<div class="r4-citylist-empty">No city matches the search.</div>';
     }
+    function cityPagerHtml(id, code, page, pages, total) {
+      if (total <= CITY_PAGE) return '';
+      return '<div class="r4-citylist-pager"><span>' + ((page - 1) * CITY_PAGE + 1) + '–' + Math.min(page * CITY_PAGE, total) + ' of ' + total + '</span>' +
+        '<button type="button" class="op-actionbtn" aria-label="Previous cities"' + (page === 1 ? ' disabled' : '') + ' onclick="cityListPage(\'' + id + '\', \'' + code + '\', -1)">‹</button>' +
+        '<button type="button" class="op-actionbtn" aria-label="Next cities"' + (page === pages ? ' disabled' : '') + ' onclick="cityListPage(\'' + id + '\', \'' + code + '\', 1)">›</button></div>';
+    }
     function refreshCityList(id) { const el = document.getElementById(id + '-groups'); if (el) el.innerHTML = cityGroupsHtml(id); }
-    // Buscar abre los grupos con coincidencias y vuelve a la página 1; al limpiar vuelve el estado anterior.
     function cityListSearch(id, v) { const st = CITYLISTS[id].st; st.q = v; st.qPage = {}; refreshCityList(id); }
     function cityGroupToggle(id, code) {
       const st = CITYLISTS[id].st;
@@ -980,51 +874,38 @@
 
     // ---- Pestaña Locations ----
     function tabLocations(t) {
-      if (t.searchBy === 'company') return '<div class="r4-note">This trigger searches by company: one search per company, in its country, with each vacancy service of that country. It does not use cities.</div>';
-      if (t.searchBy === 'none') return '<div class="r4-note">This trigger does not search vacancies: it works on the company it receives, in the company\'s own location.</div>';
-      if (!t.countries.length) return '<div class="r4-note">Add a country first, in Countries.</div>';
-      const perCity = t.activation.mode === 'cron' && t.activation.perCity;
-      return '<div class="r4-blocksub">The cities where the trigger searches. ' +
-        (perCity ? 'With the calendar per city, each selected city runs on its own weekday. ' : '') +
-        'Each service receives the city in its own format (Geography › aliases); a service that searches by country receives the country.</div>' +
-        cityListHtml({
-          id: 'trgCityList', mode: 'select', countries: t.countries, perCity: perCity, days: t.activation.days,
-          isSelected: id => t.locations.some(l => l.cityId === id),
-          dayOf: id => { const l = t.locations.find(x => x.cityId === id); return (l && l.days && l.days[0]) || 'mon'; }
-        });
+      if (t.searchBy === 'company') return '<div class="r4-note">This trigger searches by company.</div>';
+      if (t.searchBy === 'none') return '<div class="r4-note">This trigger does not search openings.</div>';
+      if (!t.countries.length) return '<div class="r4-note">Add a country first.</div>';
+      return cityListHtml({ id: 'trgCityList', countries: t.countries, isSelected: id => t.locations.some(l => l.cityId === id) });
     }
     function trgCityToggle(id, on) {
       const t = trgDraft;
       t.locations = t.locations.filter(l => l.cityId !== id);
-      if (on) t.locations.push(t.activation.perCity ? { cityId: id, days: ['mon'] } : { cityId: id });
+      if (on) t.locations.push({ cityId: id });
       trgChanged();
     }
     function trgCityAll(code, on) {
       const t = trgDraft;
-      const ids = GEO_CITIES.filter(c => c.country === code).map(c => c.id);
-      if (on) ids.forEach((id, i) => { if (!t.locations.some(l => l.cityId === id)) t.locations.push(t.activation.perCity ? { cityId: id, days: [WD[i % 5]] } : { cityId: id }); });
+      const ids = activeCityIds(code);
+      if (on) ids.forEach(id => { if (!t.locations.some(l => l.cityId === id)) t.locations.push({ cityId: id }); });
       else t.locations = t.locations.filter(l => ids.indexOf(l.cityId) < 0);
       trgChanged();
-    }
-    function trgCityDay(id, day) {
-      const l = trgDraft.locations.find(x => x.cityId === id);
-      if (l) { l.days = [day]; trgDirty = true; renderTriggersSection(); }
     }
 
     // ---- Pestaña Positions & terms ----
     function tabTerms(t) {
       if (!(t.searchBy === 'terms' || t.searchBy === 'both')) return '<div class="r4-note">This trigger does not search by terms.</div>';
-      if (!t.countries.length) return '<div class="r4-note">Add a country first, in Countries.</div>';
+      if (!t.countries.length) return '<div class="r4-note">Add a country first.</div>';
       if (!trgCountryTab || t.countries.indexOf(trgCountryTab) < 0) trgCountryTab = t.countries[0];
       const code = trgCountryTab;
       const terms = ENGINE_TERMS.filter(x => x.country === code);
       const nActive = activeTermsOf(t, code).length;
       const withTerms = POSITIONS_CATALOG.filter(p => terms.some(x => x.positionId === p.id));
       const without = POSITIONS_CATALOG.filter(p => !terms.some(x => x.positionId === p.id));
-      return '<div class="r4-blocksub">The activation belongs to this trigger: turning a term off here does not turn it off in other triggers. Each vacancy service receives the active terms of the country it searches. A new term enters inactive.</div>' +
-        '<div class="r4-pills" role="group" aria-label="Country">' + t.countries.map(c =>
+      return '<div class="r4-pills" role="group" aria-label="Country">' + t.countries.map(c =>
           '<button type="button" class="r4-pill' + (c === code ? ' is-on' : '') + '" onclick="trgCountryTab=\'' + c + '\'; renderTriggersSection()">' + esc(countryName(c)) + ' · ' + activeTermsOf(t, c).length + '/' + ENGINE_TERMS.filter(x => x.country === c).length + '</button>').join('') + '</div>' +
-        '<p class="st-count">' + nActive + ' of ' + plural(terms.length, 'term') + ' of ' + esc(countryName(code)) + ' active in this trigger · ' +
+        '<p class="st-count">' + nActive + ' of ' + plural(terms.length, 'term') + ' active · ' +
           '<button type="button" class="r4-linkbtn" onclick="trgTermsAll(\'' + code + '\', true)">Activate all</button>' +
           '<button type="button" class="r4-linkbtn" onclick="trgTermsAll(\'' + code + '\', false)">Deactivate all</button></p>' +
         '<div class="st-list">' + (withTerms.length ? withTerms.map(p => {
@@ -1037,8 +918,8 @@
               const on = t.activeTerms.indexOf(x.id) >= 0;
               return '<button type="button" class="r4-termtog' + (on ? ' is-on' : '') + '" aria-pressed="' + on + '" onclick="trgTermToggle(\'' + x.id + '\')">' + esc(x.text) + '</button>';
             }).join('') + '</div></article>';
-        }).join('') : '<div class="op-empty"><h3>No terms in ' + esc(countryName(code)) + '</h3><p>Add them in Positions &amp; terms, or copy them from another country.</p></div>') + '</div>' +
-        (without.length && withTerms.length ? '<p class="st-hint">Without terms in ' + esc(countryName(code)) + ': ' + esc(without.map(p => p.name).join(', ')) + '. They are added in <a href="#terms" onclick="showSection(\'terms\'); return false;">Positions &amp; terms</a>.</p>' : '');
+        }).join('') : '<div class="op-empty"><h3>No terms in ' + esc(countryName(code)) + '</h3><p><a href="#terms" onclick="showSection(\'terms\'); return false;">Add terms</a></p></div>') + '</div>' +
+        (without.length && withTerms.length ? '<p class="st-hint">No terms in ' + esc(countryName(code)) + ': ' + esc(without.map(p => p.name).join(', ')) + '.</p>' : '');
     }
     function trgTermToggle(id) {
       const a = trgDraft.activeTerms, i = a.indexOf(id);
@@ -1057,97 +938,62 @@
     }
 
     // ---- Pestaña Services ----
-    function vacancyEligibility(s, code, t) {
-      if (s.countries.indexOf(code) < 0) return 'not enabled in ' + countryName(code);
-      if (s.status !== 'active') return SERVICE_STATUS[s.status].label.toLowerCase();
-      if (!s.modes.some(m => MODE_NEED[t.searchBy].indexOf(m) >= 0)) return 'does not search by ' + (t.searchBy === 'company' ? 'company' : 'terms');
-      return '';
-    }
-    function orderEligibility(s, t) {
-      if (s.status !== 'active') return SERVICE_STATUS[s.status].label.toLowerCase();
-      const miss = t.countries.filter(c => s.countries.indexOf(c) < 0);
-      if (miss.length) return 'not enabled in ' + miss.map(countryName).join(', ');
-      return '';
-    }
+    // Openings: servicios por país. Empresas y decisores: servicios en orden, con la
+    // condición para pasar al siguiente. Los análisis acompañan a su etapa.
     function tabServices(t) {
-      return '<div class="r4-blocksub">The services of each stage, by country for vacancies and in order for companies and decision makers. Only services enabled in the country, in Active status and that search the way the trigger needs can be added; the others are listed disabled with the reason. Each analysis uses the prompt of the country.</div>' +
-        ENGINE_STAGES.map((s, i) => {
-          const used = stageUsed(t, i);
-          let body = '';
-          if (s.key === 'vacancies') body = used ? vacancyStageBody(t) : '';
-          else if (s.key === 'enrichment' || s.key === 'decision_makers') body = orderedStageBody(t, s.key, used);
-          else if (used) {
-            const svcs = servicesForStage(s.key).filter(x => x.status === 'active');
-            const analysis = { vacancy_analysis: 'Vacancy analysis', company_analysis: 'Company analysis', dm_analysis: 'Decision-maker analysis' }[s.key];
-            if (s.key === 'contact' && !t.decisionMakers.length) body = '<p class="r4-small r4-muted">No decision-maker service configured: nothing reaches this stage.</p>';
-            else body = '<p class="r4-small">' + esc(svcs.map(x => serviceLabel(x.id)).join(', ') || 'No active service') + (analysis ? ' <span class="r4-muted">· with the ' + analysis.toLowerCase() + ' prompt of each country</span>' : '') + '</p>';
-          }
-          return '<section class="r4-stage' + (used ? '' : ' is-off') + '"><div class="r4-stagetop"><span class="r4-stageno">' + (i + 1) + '</span><span class="r4-stagetitle">' + esc(s.label) + '</span>' +
-            (used ? '' : '<span class="r4-stagenote">' + esc(stageOffReason(t, i)) + '</span>') + '</div>' +
-            (body ? '<div class="r4-stagebody">' + body + '</div>' : '') + '</section>';
-        }).join('');
+      return TRIGGER_STAGES.map((s, i) => {
+        const runs = stageRuns(t, s.key);
+        let body = '';
+        if (s.key === 'vacancies') body = t.searchBy === 'none' ? '' : vacancyStageBody(t);
+        else if (s.key === 'enrichment' || s.key === 'decision_makers') body = orderedStageBody(t, s.key);
+        else if (runs) body = '<p class="r4-small">' + esc(servicesForStage(s.key).map(x => serviceLabel(x.id)).join(', ')) + '</p>';
+        const note = runs ? '' : (s.key === 'vacancies' && t.searchBy === 'none' ? 'Does not search openings' : 'Not used');
+        return '<section class="r4-stage' + (runs ? '' : ' is-off') + '"><div class="r4-stagetop"><span class="r4-stageno">' + (i + 1) + '</span><span class="r4-stagetitle">' + esc(s.label) + '</span>' +
+          (note ? '<span class="r4-stagenote">' + note + '</span>' : '') + '</div>' +
+          (body ? '<div class="r4-stagebody">' + body + '</div>' : '') + '</section>';
+      }).join('');
     }
     function vacancyStageBody(t) {
-      if (!t.countries.length) return '<p class="r4-small r4-muted">Add a country first, in Countries.</p>';
+      if (!t.countries.length) return '<p class="r4-small r4-muted">Add a country first.</p>';
       return t.countries.map(code => {
         const list = t.vacancyServices[code] || [];
-        const chips = list.map(id => {
-          const s = engineService(id);
-          const why = s ? vacancyEligibility(s, code, t) : 'removed from the catalog';
-          return '<span class="r4-chip' + (why ? ' is-warn' : '') + '" title="' + esc(why ? 'Skipped: ' + why : (s.modes.map(m => SERVICE_MODES[m]).join('; '))) + '">' + esc(serviceLabel(id)) + (why ? ' · skipped' : '') +
-            '<button type="button" aria-label="Remove ' + esc(serviceName(id)) + '" onclick="trgVacSvc(\'' + code + '\', \'' + id + '\', false)">×</button></span>';
-        }).join('');
-        const opts = servicesForStage('vacancies').filter(s => list.indexOf(s.id) < 0).map(s => {
-          const why = vacancyEligibility(s, code, t);
-          return '<option value="' + s.id + '"' + (why ? ' disabled' : '') + '>' + esc(serviceLabel(s.id)) + (why ? ' — ' + esc(why) : '') + '</option>';
-        });
+        const chips = list.map(id =>
+          '<span class="r4-chip">' + esc(serviceLabel(id)) +
+          '<button type="button" aria-label="Remove ' + esc(serviceName(id)) + '" onclick="trgVacSvc(\'' + code + '\', \'' + id + '\', false)">×</button></span>').join('');
+        const opts = servicesForStage('vacancies').filter(s => list.indexOf(s.id) < 0).map(s => '<option value="' + s.id + '">' + esc(serviceLabel(s.id)) + '</option>');
         return '<div class="r4-svcrow"><span class="r4-svccountry">' + esc(countryName(code)) + '</span>' +
-          '<span class="r4-chips">' + (chips || '<span class="r4-chip is-warn">No service: not searched</span>') + '</span>' +
-          (opts.length ? '<select class="form-select" aria-label="Add a vacancy service for ' + esc(countryName(code)) + '" onchange="if (this.value) trgVacSvc(\'' + code + '\', this.value, true)"><option value="">Add service…</option>' + opts.join('') + '</select>' : '') +
+          '<span class="r4-chips">' + (chips || '<span class="r4-chip is-warn">No service</span>') + '</span>' +
+          (opts.length ? '<select class="form-select" aria-label="Add a service for ' + esc(countryName(code)) + '" onchange="if (this.value) trgVacSvc(\'' + code + '\', this.value, true)"><option value="">Add service…</option>' + opts.join('') + '</select>' : '') +
           '</div>';
       }).join('');
     }
     function trgVacSvc(code, id, on) {
       const t = trgDraft;
       const list = t.vacancyServices[code] || (t.vacancyServices[code] = []);
-      if (on) {
-        const s = engineService(id), why = s ? vacancyEligibility(s, code, t) : 'unknown';
-        if (why) { showToast(serviceName(id) + ' cannot be added: ' + why, 'error'); return; }
-        if (list.indexOf(id) < 0) list.push(id);
-      } else t.vacancyServices[code] = list.filter(x => x !== id);
+      if (on) { if (list.indexOf(id) < 0) list.push(id); }
+      else t.vacancyServices[code] = list.filter(x => x !== id);
       trgChanged();
     }
-    function orderedStageBody(t, key, used) {
+    function orderedStageBody(t, key) {
       const field = key === 'enrichment' ? 'enrichment' : 'decisionMakers';
       const list = t[field];
-      if (!used) return list.length ? '<p class="r4-small r4-muted">Configured, not invoked: ' + esc(list.map(x => serviceName(x.serviceId)).join(' → ')) + '</p>' : '';
-      const items = list.map((it, i) => {
-        const s = engineService(it.serviceId);
-        const why = s ? orderEligibility(s, t) : 'removed from the catalog';
-        return '<li><div class="r4-orderitem"><span class="r4-orderno">' + (i + 1) + '</span>' +
-          '<span class="r4-ordername">' + esc(serviceLabel(it.serviceId)) + (why ? '<span class="r4-why">Skipped: ' + esc(why) + '</span>' : '') + '</span>' +
+      const items = list.map((it, i) =>
+        '<li><div class="r4-orderitem"><span class="r4-orderno">' + (i + 1) + '</span>' +
+          '<span class="r4-ordername">' + esc(serviceLabel(it.serviceId)) + '</span>' +
           '<button type="button" class="cd-iconbtn" title="Move up" aria-label="Move up"' + (i === 0 ? ' disabled' : '') + ' onclick="trgOrderMove(\'' + field + '\', ' + i + ', -1)">↑</button>' +
           '<button type="button" class="cd-iconbtn" title="Move down" aria-label="Move down"' + (i === list.length - 1 ? ' disabled' : '') + ' onclick="trgOrderMove(\'' + field + '\', ' + i + ', 1)">↓</button>' +
           '<button type="button" class="cd-iconbtn" title="Remove" aria-label="Remove" onclick="trgOrderRemove(\'' + field + '\', ' + i + ')">×</button></div>' +
           (i < list.length - 1
-            ? '<div class="r4-orderpass">Go to the next service when this one returns <select class="form-select" aria-label="Pass condition" onchange="trgOrderPass(\'' + field + '\', ' + i + ', this.value)">' +
-                Object.keys(PASS_CONDITIONS).map(k => '<option value="' + k + '"' + (it.pass === k ? ' selected' : '') + '>' + PASS_CONDITIONS[k] + '</option>').join('') + '</select></div>'
-            : '<div class="r4-orderpass">Last in the order</div>') + '</li>';
-      }).join('');
-      const opts = servicesForStage(key).filter(s => !list.some(x => x.serviceId === s.id)).map(s => {
-        const why = orderEligibility(s, t);
-        return '<option value="' + s.id + '"' + (why ? ' disabled' : '') + '>' + esc(serviceLabel(s.id)) + (why ? ' — ' + esc(why) : '') + '</option>';
-      });
-      return '<ol class="r4-order">' + (items || '<li class="r4-small r4-muted">No service: the stage is skipped.</li>') + '</ol>' +
-        (opts.length ? '<select class="form-select r4-addsel" style="max-width: 320px; font-size: var(--text-xs);" aria-label="Add a service" onchange="if (this.value) trgOrderAdd(\'' + field + '\', \'' + key + '\', this.value)"><option value="">Add service…</option>' + opts.join('') + '</select>' : '');
+            ? '<div class="r4-orderpass">Next service if <select class="form-select" aria-label="Condition for the next service" onchange="trgOrderPass(\'' + field + '\', ' + i + ', this.value)">' +
+                Object.keys(PASS_CONDITIONS).map(k => '<option value="' + k + '"' + (it.pass === k ? ' selected' : '') + '>' + PASS_CONDITIONS[k].toLowerCase() + '</option>').join('') + '</select></div>'
+            : '') + '</li>').join('');
+      const opts = servicesForStage(key).filter(s => !list.some(x => x.serviceId === s.id)).map(s => '<option value="' + s.id + '">' + esc(serviceLabel(s.id)) + '</option>');
+      return '<ol class="r4-order">' + (items || '<li class="r4-small r4-muted">No service.</li>') + '</ol>' +
+        (opts.length ? '<select class="form-select r4-addsel" style="max-width: 320px; font-size: var(--text-xs);" aria-label="Add a service" onchange="if (this.value) trgOrderAdd(\'' + field + '\', this.value)"><option value="">Add service…</option>' + opts.join('') + '</select>' : '');
     }
     // La condición de paso es del servicio que cede el turno: el último no la tiene.
     function normalizeOrder(list) { list.forEach((x, i) => { x.pass = i === list.length - 1 ? null : (x.pass || 'not_found'); }); }
-    function trgOrderAdd(field, key, id) {
-      const s = engineService(id), why = s ? orderEligibility(s, trgDraft) : 'unknown';
-      if (why) { showToast(serviceName(id) + ' cannot be added: ' + why, 'error'); return; }
-      trgDraft[field].push({ serviceId: id, pass: null }); normalizeOrder(trgDraft[field]); trgChanged();
-    }
+    function trgOrderAdd(field, id) { trgDraft[field].push({ serviceId: id, pass: null }); normalizeOrder(trgDraft[field]); trgChanged(); }
     function trgOrderMove(field, i, dir) {
       const l = trgDraft[field], j = i + dir;
       if (j < 0 || j >= l.length) return;
@@ -1160,10 +1006,10 @@
     function saveTrigger() {
       const t = trgDraft;
       if (!t.name || !t.name.trim()) { trgTab = 'general'; renderTriggersSection(); showToast('The trigger needs a name', 'error'); return; }
-      if (t.activation.mode === 'cron' && !t.activation.perCity && !t.activation.days.length) { trgTab = 'general'; renderTriggersSection(); showToast('Choose at least one weekday', 'error'); return; }
+      if (t.activation.mode === 'cron' && !t.activation.days.length) { trgTab = 'general'; renderTriggersSection(); showToast('Choose at least one weekday', 'error'); return; }
       if (t.activation.mode === 'cron' && !t.activation.time) { showToast('Choose the time of the schedule', 'error'); return; }
-      const blocked = t.countries.filter(c => !countryPromptsComplete(c));
-      if (blocked.length) { trgTab = 'countries'; renderTriggersSection(); showToast(blocked.map(countryName).join(', ') + ' cannot be used: missing active prompts', 'error'); return; }
+      const blocked = t.countries.filter(c => missingPrompts(c, t).length);
+      if (blocked.length) { trgTab = 'countries'; renderTriggersSection(); showToast(blocked.map(countryName).join(', ') + ': missing prompts', 'error'); return; }
       if (ENGINE_TRIGGERS.some(x => x.id !== t.id && fold(x.name) === fold(t.name))) { showToast('Another trigger already has that name', 'error'); return; }
       // Limpieza: lo que quedó fuera de los países del trigger no se guarda.
       t.locations = t.locations.filter(l => { const c = GEO_CITIES.find(x => x.id === l.cityId); return c && t.countries.indexOf(c.country) >= 0; });
@@ -1178,433 +1024,379 @@
       t._isNew = false; trgDirty = false;
       setTrgHash(t.id);
       renderTriggersSection();
-      renderServices(); renderTerms();
+      renderTerms();
       showToast(t.name + (wasNew ? ' created' : ' saved'), 'success');
     }
 
     /* ========================================================================
-       SERVICES — catálogo por etapa
-       Consumo de los últimos 14 días: suma de las invocaciones registradas de las
-       ejecuciones del periodo (getInvocations). Es aproximado y así se rotula.
+       POSITIONS & TERMS — catálogo global de posiciones
+       La lista muestra áreas y, por país, cuántos términos tiene cada posición. La
+       edición trabaja sobre una copia (posDraft): nombre, áreas y términos por país en
+       acordeón; un país nuevo de Geografía aparece ahí listo para recibir términos.
+       Un término nuevo entra inactivo en todos los triggers.
        ======================================================================== */
-    let svcUsageCache = null;
-    function serviceUsage() {
-      if (svcUsageCache) return svcUsageCache;
-      const since = Date.now() - 14 * 86400000;
-      const out = {};
-      ENGINE_EXECUTIONS.map(e => ({ id: e.id, at: e.startedAt })).concat(MOCK_REQUESTS.map(r => ({ id: r.executionId, at: r.at })))
-        .filter(e => parseStamp(e.at).getTime() >= since)
-        .forEach(e => getInvocations(e.id).forEach(inv => {
-          const o = out[inv.serviceId] || (out[inv.serviceId] = { amount: 0, cost: 0, calls: 0, unit: inv.unit });
-          o.amount += inv.amount; o.cost += inv.costUsd; o.calls += 1;
-        }));
-      return (svcUsageCache = out);
-    }
-    // País → triggers que usan el servicio allí. Bloquea quitar ese país del servicio.
-    function countriesUsedIn(s) {
-      const map = {};
-      ENGINE_TRIGGERS.forEach(t => {
-        let codes = [];
-        if (s.stage === 'vacancies') codes = Object.keys(t.vacancyServices || {}).filter(c => (t.vacancyServices[c] || []).indexOf(s.id) >= 0);
-        else if (s.stage === 'enrichment' && t.enrichment.some(x => x.serviceId === s.id)) codes = t.countries;
-        else if (s.stage === 'decision_makers' && t.decisionMakers.some(x => x.serviceId === s.id)) codes = t.countries;
-        codes.forEach(c => { (map[c] = map[c] || []).push(t.name); });
-      });
-      if (s.stage === 'outreach') OUTREACH_SCHEDULES.filter(o => o.serviceId === s.id).forEach(o => o.filter.companyCountries.forEach(c => { (map[c] = map[c] || []).push(o.name); }));
-      return map;
-    }
-    function usedByNames(s) {
-      if (s.stage === 'outreach') return OUTREACH_SCHEDULES.filter(o => o.serviceId === s.id).map(o => o.name);
-      const i = stageIdx(s.stage);
-      return ENGINE_TRIGGERS.filter(t => {
-        if (s.stage === 'vacancies') return Object.keys(t.vacancyServices || {}).some(c => (t.vacancyServices[c] || []).indexOf(s.id) >= 0);
-        if (s.stage === 'enrichment') return t.enrichment.some(x => x.serviceId === s.id) && stageUsed(t, i);
-        if (s.stage === 'decision_makers') return t.decisionMakers.some(x => x.serviceId === s.id) && stageUsed(t, i);
-        if (s.stage === 'contact' && !t.decisionMakers.length) return false;
-        return stageUsed(t, i) && s.countries.some(c => t.countries.indexOf(c) >= 0);
-      }).map(t => t.name);
-    }
-    function countryChips(codes) {
-      if (codes.length === ENGINE_COUNTRIES.length) return '<span class="r4-chip">All ' + codes.length + ' countries</span>';
-      return '<span class="r4-chips">' + codes.map(c => '<span class="r4-chip" title="' + esc(countryName(c)) + '">' + esc(c) + '</span>').join('') + '</span>';
-    }
-    function renderServices() {
-      const q = fold(val('svcSearch').trim()), st = val('svcStatus') || 'all';
-      const usage = serviceUsage();
-      const html = ENGINE_STAGES.map(stage => {
-        const rows = ENGINE_SERVICES.filter(s => s.stage === stage.key && (st === 'all' || s.status === st) && (!q || fold(s.name + ' ' + s.provider).indexOf(q) >= 0));
-        if (!rows.length) return '';
-        return '<tr class="r4-grouprow"><td colspan="7">' + esc(stage.label) + ' <span>' + plural(rows.length, 'service') + '</span></td></tr>' +
-          rows.map(s => {
-            const u = usage[s.id];
-            const used = usedByNames(s);
-            return '<tr' + (s.status === 'active' ? '' : ' class="is-off"') + '>' +
-              '<td><span class="r4-cellname">' + esc(s.name) + '</span><span class="r4-cellsub">' + esc(s.provider) + '</span></td>' +
-              '<td class="r4-small">' + esc(s.modes.map(m => SERVICE_MODES[m] || m).join('; ')) + '</td>' +
-              '<td>' + countryChips(s.countries) + '</td>' +
-              '<td class="nowrap">' + stateBadge(SERVICE_STATUS, s.status) + '</td>' +
-              '<td class="r4-small">' + (used.length ? esc(used.join(', ')) : '<span class="r4-muted">Not used</span>') + '</td>' +
-              '<td class="num">' + (u ? fmtInt(u.amount) + ' ' + esc(u.unit) + '<span class="r4-cellsub">$' + u.cost.toFixed(2) + ' · ' + plural(u.calls, 'invocation') + '</span>' : '<span class="r4-muted">—</span>') + '</td>' +
-              '<td class="nowrap"><button class="op-actionbtn" onclick="openServiceModal(\'' + s.id + '\')">Edit</button></td></tr>';
-          }).join('');
-      }).join('');
-      document.getElementById('svcMount').innerHTML = (html
-          ? '<div class="r4-tablewrap"><table class="r4-table r4-svctable"><colgroup><col style="width: 16%"><col style="width: 15%"><col style="width: 16%"><col style="width: 13%"><col style="width: 18%"><col style="width: 14%"><col style="width: 76px"></colgroup>' +
-            '<thead><tr><th>Service</th><th>Searches by</th><th>Enabled countries</th><th>Status</th><th>Used by</th><th class="num">Last 14 days ≈</th><th></th></tr></thead><tbody>' + html + '</tbody></table></div>'
-          : '<div class="op-empty"><h3>No service matches</h3><p>Try another name, provider or status.</p></div>') +
-        '<p class="kp-note">Last 14 days ≈ adds up the invocations logged by the executions and requests of the period, with the unit each provider bills. It is an approximation of the provider invoice.</p>';
-      renderNavCounts();
-    }
-    function openServiceModal(id) {
-      const s = id ? engineService(id) : null;
-      const used = s ? countriesUsedIn(s) : {};
-      const usedNames = s ? usedByNames(s) : [];
-      const d = s || { stage: 'vacancies', name: '', provider: '', modes: [], countries: [], status: 'evaluation', unit: 'requests', unitCostUsd: 0 };
-      const body =
-        '<div class="r4-grid2">' +
-          '<div class="form-group"><label class="form-label" for="svName">Name</label><input class="form-input" id="svName" maxlength="60" value="' + esc(d.name) + '" placeholder="e.g. Glassdoor"></div>' +
-          '<div class="form-group"><label class="form-label" for="svProvider">Provider</label><input class="form-input" id="svProvider" maxlength="60" value="' + esc(d.provider) + '" placeholder="e.g. Apify"></div>' +
-        '</div>' +
-        '<div class="r4-grid3" style="margin-top: 12px;">' +
-          '<div class="form-group"><label class="form-label" for="svStage">Stage</label><select class="form-select" id="svStage"' + (s ? ' disabled' : '') + '>' + ENGINE_STAGES.map(x => '<option value="' + x.key + '"' + (x.key === d.stage ? ' selected' : '') + '>' + esc(x.label) + '</option>').join('') + '</select></div>' +
-          '<div class="form-group"><label class="form-label" for="svUnit">Billing unit</label><input class="form-input" id="svUnit" maxlength="20" value="' + esc(d.unit) + '"></div>' +
-          '<div class="form-group"><label class="form-label" for="svCost">USD per unit</label><input type="number" step="0.0000001" min="0" class="form-input" id="svCost" value="' + d.unitCostUsd + '"></div>' +
-        '</div>' +
-        '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Searches by</span>' +
-          checks('svMode', Object.keys(SERVICE_MODES).map(k => ({ value: k, label: SERVICE_MODES[k] })), v => d.modes.indexOf(v) >= 0) + '</div>' +
-        '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Enabled countries</span>' +
-          checks('svCountry', ENGINE_COUNTRIES.map(c => ({ value: c.code, label: c.name })), v => d.countries.indexOf(v) >= 0,
-            v => used[v] && d.countries.indexOf(v) >= 0 ? 'Used by ' + used[v].join(', ') : '') +
-          '<p class="st-hint">Only countries loaded in Geography can be enabled. A country a trigger uses this service in is removed from the trigger first.</p></div>' +
-        '<div class="form-group" style="margin-top: 14px;"><label class="form-label" for="svStatus">Status</label><select class="form-select" id="svStatus" style="max-width: 220px;">' +
-          Object.keys(SERVICE_STATUS).map(k => '<option value="' + k + '"' + (k === d.status ? ' selected' : '') + '>' + SERVICE_STATUS[k].label + '</option>').join('') + '</select>' +
-          (usedNames.length ? '<p class="st-hint">Used by ' + esc(usedNames.join(', ')) + '. While it is not Active, those ' + (d.stage === 'outreach' ? 'sends' : 'triggers') + ' skip it.</p>' : '<p class="st-hint">A service In evaluation or Paused cannot be added to a trigger.</p>') + '</div>' +
-        '<div class="r4-err" id="cfgErr" style="display:none"></div>';
-      openCfgModal(s ? 'Edit service' : 'New service', body, [
-        { label: 'Cancel' },
-        { label: 'Save', kind: 'primary', action: () => saveService(id) }
-      ], 680);
-    }
-    function saveService(id) {
-      const name = val('svName').trim(), provider = val('svProvider').trim();
-      const modes = checkedValues('svMode');
-      const countries = Array.from(document.querySelectorAll('input[name="svCountry"]')).filter(i => i.checked).map(i => i.value);
-      if (!name || !provider) return modalErr('Name and provider are required.');
-      if (!modes.length) return modalErr('Choose at least one way of searching.');
-      if (!countries.length) return modalErr('Enable at least one country.');
-      const cost = parseFloat(val('svCost'));
-      const data = { name: name, provider: provider, modes: modes, countries: countries, status: val('svStatus'), unit: val('svUnit').trim() || 'requests', unitCostUsd: isNaN(cost) ? 0 : cost };
-      if (id) Object.assign(engineService(id), data);
-      else ENGINE_SERVICES.push(Object.assign({ id: 'svc-' + slug(name) + '-' + Date.now().toString(36).slice(-4), stage: val('svStage') }, data));
-      engineSave('r4Services', ENGINE_SERVICES);
-      svcUsageCache = null;
-      closeCfgModal(); renderServices();
-      showToast(name + (id ? ' saved' : ' added to the catalog'), 'success');
-    }
-
-    /* ========================================================================
-       POSITIONS & TERMS — catálogo global y términos por país
-       ======================================================================== */
+    const POS_PAGE = 15;
+    let posPage = 1, posDraft = null, posOpen = {};
     function fillTermCountry() {
       const sel = document.getElementById('termCountry');
-      const cur = sel.value || 'US';
-      sel.innerHTML = ENGINE_COUNTRIES.map(c => '<option value="' + c.code + '">' + esc(c.name) + ' · ' + ENGINE_TERMS.filter(t => t.country === c.code).length + ' terms</option>').join('');
-      sel.value = ENGINE_COUNTRIES.some(c => c.code === cur) ? cur : 'US';
+      const cur = sel.value || 'all';
+      sel.innerHTML = '<option value="all">All countries</option>' + ENGINE_COUNTRIES.map(c => '<option value="' + c.code + '">' + esc(c.name) + '</option>').join('');
+      sel.value = cur === 'all' || ENGINE_COUNTRIES.some(c => c.code === cur) ? cur : 'all';
     }
-    const termUses = id => ENGINE_TRIGGERS.filter(t => t.activeTerms.indexOf(id) >= 0);
+    const termsOfPos = (pid, code) => ENGINE_TERMS.filter(t => t.positionId === pid && (!code || t.country === code));
     function renderTerms() {
       fillTermCountry();
-      const code = val('termCountry') || 'US';
-      const cname = countryName(code);
+      const code = val('termCountry'), cc = code === 'all' ? null : code;
       const q = fold(val('termSearch').trim());
-      const terms = ENGINE_TERMS.filter(t => t.country === code);
-      const rows = POSITIONS_CATALOG.filter(p => !q || fold(p.name).indexOf(q) >= 0 || terms.some(t => t.positionId === p.id && fold(t.text).indexOf(q) >= 0));
-      const withTerms = POSITIONS_CATALOG.filter(p => terms.some(t => t.positionId === p.id)).length;
-      const inUse = terms.filter(t => termUses(t.id).length).length;
-      document.getElementById('termSummary').textContent = POSITIONS_CATALOG.length + ' positions · ' + withTerms + ' with terms in ' + cname + ' · ' +
-        plural(terms.length, 'term') + ' in ' + cname + ', ' + inUse + ' active in at least one trigger';
-      document.getElementById('termList').innerHTML = rows.length ? rows.map(p => {
-        const pt = terms.filter(t => t.positionId === p.id);
-        const areas = POSITION_AREAS[p.id] || [];
-        return '<article class="st-row' + (pt.length ? '' : ' is-off') + '"><div class="st-rowhead">' +
-          '<span class="st-rowname">' + esc(p.name) + '</span>' +
-          '<span class="r4-chips">' + areas.map(a => '<span class="r4-chip is-plain">' + esc(AREA_LABELS[a] || a) + '</span>').join('') + '</span>' +
-          '<div class="st-rowactions"><span class="st-rowmeta">' + plural(pt.length, 'term') + '</span><button class="op-actionbtn" onclick="openPositionModal(\'' + p.id + '\')">Edit</button></div></div>' +
-          '<div class="r4-termblock">' + pt.map(t => {
-            const uses = termUses(t.id);
-            return '<button type="button" class="r4-term' + (uses.length ? '' : ' is-unused') + '" onclick="openTermModal(\'' + t.id + '\')" title="' + esc(uses.length ? 'Active in: ' + uses.map(x => x.name).join(', ') : 'Inactive in every trigger') + '">' +
-              esc(t.text) + '<span class="r4-term-use">' + (uses.length ? plural(uses.length, 'trigger') : 'inactive') + '</span></button>';
-          }).join('') +
-          (pt.length ? '' : '<span class="r4-small r4-muted">No terms in ' + esc(cname) + ': not searched there.</span>') +
-          '<button type="button" class="r4-addterm" onclick="openTermModal(null, \'' + p.id + '\')">+ Add term</button></div></article>';
-      }).join('') : '<div class="op-empty"><h3>No position matches</h3><p>Try another position or term.</p></div>';
+      const rows = POSITIONS_CATALOG.filter(p => {
+        const pt = termsOfPos(p.id, cc);
+        if (cc && !pt.length) return false;
+        return !q || fold(p.name).indexOf(q) >= 0 || pt.some(t => fold(t.text).indexOf(q) >= 0);
+      }).sort((a, b) => a.name.localeCompare(b.name));
+      const nTerms = rows.reduce((n, p) => n + termsOfPos(p.id, cc).length, 0);
+      document.getElementById('termSummary').textContent = plural(rows.length, 'position') + ' · ' + plural(nTerms, 'term') + (cc ? ' in ' + countryName(cc) : '');
+      const pages = Math.max(1, Math.ceil(rows.length / POS_PAGE));
+      posPage = Math.min(posPage, pages);
+      const slice = rows.slice((posPage - 1) * POS_PAGE, posPage * POS_PAGE);
+      document.getElementById('termList').innerHTML = rows.length
+        ? '<table class="r4-table"><thead><tr><th>Position</th><th>Areas</th><th>Countries</th><th class="num">Terms</th><th></th></tr></thead><tbody>' +
+          slice.map(p => {
+            const all = termsOfPos(p.id);
+            const byCountry = ENGINE_COUNTRIES.map(c => ({ c: c, n: all.filter(t => t.country === c.code).length })).filter(x => x.n);
+            const hit = q && fold(p.name).indexOf(q) < 0 ? termsOfPos(p.id, cc).find(t => fold(t.text).indexOf(q) >= 0) : null;
+            return '<tr class="is-click" onclick="openPositionModal(\'' + p.id + '\')">' +
+              '<td><span class="r4-cellname">' + esc(p.name) + '</span>' + (hit ? '<span class="r4-cellsub">Term: ' + esc(hit.text) + ' · ' + esc(hit.country) + '</span>' : '') + '</td>' +
+              '<td><span class="r4-chips">' + (POSITION_AREAS[p.id] || []).map(a => '<span class="r4-chip is-plain">' + esc(AREA_LABELS[a] || a) + '</span>').join('') + '</span></td>' +
+              '<td><span class="r4-chips">' + (byCountry.length ? byCountry.map(x => '<span class="r4-chip' + (cc === x.c.code ? '' : ' is-plain') + '" title="' + esc(x.c.name + ' · ' + plural(x.n, 'term')) + '">' + esc(x.c.code) + ' · ' + x.n + '</span>').join('') : '<span class="r4-muted r4-small">No terms</span>') + '</span></td>' +
+              '<td class="num">' + termsOfPos(p.id, cc).length + '</td>' +
+              '<td class="nowrap"><button class="op-actionbtn" onclick="event.stopPropagation(); openPositionModal(\'' + p.id + '\')">Edit</button></td></tr>';
+          }).join('') + '</tbody></table>'
+        : '<div class="op-empty"><h3>No position matches</h3><p>Try another position, term or country.</p></div>';
+      renderPager('termPagination', rows.length, posPage, n => { posPage = n; renderTerms(); }, POS_PAGE);
       renderNavCounts();
     }
     function nextTermId() {
       const max = ENGINE_TERMS.reduce((m, t) => Math.max(m, Number(String(t.id).replace(/\D/g, '')) || 0), 0);
       return 'term-' + String(max + 1).padStart(3, '0');
     }
-    function openTermModal(id, positionId) {
-      const t = id ? ENGINE_TERMS.find(x => x.id === id) : null;
-      const code = t ? t.country : (val('termCountry') || 'US');
-      const pos = t ? t.positionId : positionId;
-      const uses = t ? termUses(t.id) : [];
-      const body =
-        '<div class="form-group"><label class="form-label" for="tmText">Term</label><input class="form-input" id="tmText" maxlength="80" value="' + esc(t ? t.text : '') + '" placeholder="e.g. payroll specialist"><div class="r4-err" id="cfgErr" style="display:none"></div></div>' +
-        '<div class="r4-grid2" style="margin-top: 12px;">' +
-          '<div class="form-group"><label class="form-label" for="tmPos">Position</label><select class="form-select" id="tmPos">' + POSITIONS_CATALOG.map(p => '<option value="' + p.id + '"' + (p.id === pos ? ' selected' : '') + '>' + esc(p.name) + '</option>').join('') + '</select></div>' +
-          '<div class="form-group"><span class="form-label">Country</span><div class="form-input" style="display:flex; align-items:center; background: var(--bg-muted);">' + esc(countryName(code)) + '</div></div>' +
-        '</div>' +
-        '<p class="st-hint">' + (t
-          ? (uses.length ? 'Active in: ' + esc(uses.map(x => x.name).join(', ')) + '.' : 'Inactive in every trigger.') + ' Each trigger activates it in its Positions &amp; terms tab.'
-          : 'A new term enters inactive in every trigger; each trigger activates it in its Positions &amp; terms tab.') + '</p>';
-      const buttons = [];
-      if (t) buttons.push({ label: 'Delete', kind: 'danger', left: true, action: () => deleteTerm(t.id) });
-      buttons.push({ label: 'Cancel' }, { label: t ? 'Save' : 'Add term', kind: 'primary', action: () => saveTerm(id, code) });
-      openCfgModal(t ? 'Edit term' : 'New term · ' + countryName(code), body, buttons, 520);
-      setTimeout(() => document.getElementById('tmText').focus(), 50);
-    }
-    function saveTerm(id, code) {
-      const text = val('tmText').trim().replace(/\s+/g, ' ').toLowerCase();
-      const pos = val('tmPos');
-      if (!text) return modalErr('Write the term.');
-      const dup = ENGINE_TERMS.find(x => x.country === code && x.id !== id && fold(x.text) === fold(text));
-      if (dup) return modalErr('"' + text + '" is already a term of ' + ((POSITIONS_CATALOG.find(p => p.id === dup.positionId) || {}).name || 'another position') + ' in ' + countryName(code) + '. Each term belongs to one position.');
-      if (id) Object.assign(ENGINE_TERMS.find(x => x.id === id), { text: text, positionId: pos });
-      else ENGINE_TERMS.push({ id: nextTermId(), positionId: pos, country: code, text: text });
-      saveTerms(); closeCfgModal(); renderTerms();
-      showToast(id ? 'Term saved' : '"' + text + '" added, inactive in every trigger', 'success');
-    }
-    function deleteTerm(id) {
-      const t = ENGINE_TERMS.find(x => x.id === id); if (!t) return;
-      closeCfgModal();
-      openConfirmPopup({ title: 'Delete term', message: 'The term stops being searched in every trigger. Vacancies already found with it keep it in their source.', highlight: t.text + ' · ' + countryName(t.country), confirmLabel: 'Delete', danger: true,
-        onConfirm: () => {
-          const i = ENGINE_TERMS.indexOf(t); ENGINE_TERMS.splice(i, 1);
-          ENGINE_TRIGGERS.forEach(tr => { tr.activeTerms = tr.activeTerms.filter(x => x !== id); });
-          saveTerms(); saveTriggers(); renderTerms();
-          showToast('"' + t.text + '" deleted', 'success');
-        } });
-    }
-    function openCopyTermsModal() {
-      const to = val('termCountry') || 'US';
-      const froms = ENGINE_COUNTRIES.filter(c => c.code !== to && ENGINE_TERMS.some(t => t.country === c.code));
-      const body = '<p class="r4-blocksub">A starting point for ' + esc(countryName(to)) + ': the terms of another country are copied to the same positions, inactive in every trigger, to be adjusted afterwards. Terms ' + esc(countryName(to)) + ' already has are skipped.</p>' +
-        '<div class="form-group"><label class="form-label" for="ctFrom">Copy from</label><select class="form-select" id="ctFrom" onchange="updateCopyPreview(\'' + to + '\')">' +
-          froms.map(c => '<option value="' + c.code + '">' + esc(c.name) + ' · ' + ENGINE_TERMS.filter(t => t.country === c.code).length + ' terms</option>').join('') + '</select></div>' +
-        '<p class="st-hint" id="ctPreview"></p>';
-      openCfgModal('Copy terms to ' + countryName(to), body, [{ label: 'Cancel' }, { label: 'Copy terms', kind: 'primary', action: () => copyTerms(to) }], 520);
-      updateCopyPreview(to);
-    }
-    function copyCandidates(from, to) {
-      const have = ENGINE_TERMS.filter(t => t.country === to).map(t => fold(t.text));
-      return ENGINE_TERMS.filter(t => t.country === from && have.indexOf(fold(t.text)) < 0);
-    }
-    function updateCopyPreview(to) {
-      const c = copyCandidates(val('ctFrom'), to);
-      const npos = new Set(c.map(t => t.positionId)).size;
-      document.getElementById('ctPreview').textContent = c.length ? plural(c.length, 'term') + ' in ' + plural(npos, 'position') + ' will be copied.' : 'Nothing to copy: ' + countryName(to) + ' already has those terms.';
-    }
-    function copyTerms(to) {
-      const c = copyCandidates(val('ctFrom'), to);
-      if (!c.length) { closeCfgModal(); return; }
-      c.forEach(t => ENGINE_TERMS.push({ id: nextTermId(), positionId: t.positionId, country: to, text: t.text }));
-      saveTerms(); closeCfgModal(); renderTerms();
-      showToast(plural(c.length, 'term') + ' copied to ' + countryName(to) + ', inactive in every trigger', 'success');
-    }
     function openPositionModal(id) {
       const p = id ? POSITIONS_CATALOG.find(x => x.id === id) : null;
+      posDraft = { id: id || null, terms: p ? termsOfPos(p.id).map(t => ({ id: t.id, country: t.country, text: t.text })) : [] };
+      posOpen = {};
+      const cc = val('termCountry');
+      if (cc && cc !== 'all') posOpen[cc] = true;
       const areas = p ? (POSITION_AREAS[p.id] || []) : [];
-      const nTerms = p ? ENGINE_TERMS.filter(t => t.positionId === p.id).length : 0;
-      const nCountries = p ? new Set(ENGINE_TERMS.filter(t => t.positionId === p.id).map(t => t.country)).size : 0;
-      const body = '<div class="form-group"><label class="form-label" for="psName">Position name</label><input class="form-input" id="psName" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Payroll Specialist"></div>' +
+      const body =
+        '<div class="form-group"><label class="form-label" for="psName">Title</label><input class="form-input" id="psName" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Payroll Specialist"></div>' +
         '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Areas</span>' +
-          checks('psArea', Object.keys(AREA_LABELS).map(k => ({ value: k, label: AREA_LABELS[k] })), v => areas.indexOf(v) >= 0) +
-          '<p class="st-hint">The decision-maker analysis keeps the people of the areas of the openings, besides general management.</p></div>' +
-        '<p class="st-hint">' + (p ? plural(nTerms, 'term') + ' in ' + plural(nCountries, 'country', 'countries') + '.' : 'The new position becomes available to get terms in every country.') + '</p>' +
+          checks('psArea', Object.keys(AREA_LABELS).map(k => ({ value: k, label: AREA_LABELS[k] })), v => areas.indexOf(v) >= 0) + '</div>' +
+        '<div class="form-group" style="margin-top: 16px;"><span class="form-label">Terms by country</span>' +
+          '<div class="r4-citylist-groups" id="psTerms">' + posTermsHtml() + '</div>' +
+          '<p class="st-hint">New terms start inactive in every trigger.</p></div>' +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       const buttons = [];
-      if (p) buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: nTerms > 0, title: 'Delete its ' + nTerms + ' terms first', action: () => deletePosition(p.id) });
-      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => savePosition(id) });
-      openCfgModal(p ? 'Edit position' : 'New position', body, buttons, 560);
+      if (p) buttons.push({ label: 'Delete', kind: 'danger', left: true, action: () => deletePosition(p.id) });
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: savePosition });
+      openCfgModal(p ? 'Edit position' : 'New position', body, buttons, 720);
     }
-    function savePosition(id) {
+    function posTermsHtml() {
+      return ENGINE_COUNTRIES.map(c => {
+        const list = posDraft.terms.map((t, i) => ({ text: t.text, country: t.country, i: i })).filter(t => t.country === c.code);
+        const open = !!posOpen[c.code];
+        const head = '<div class="r4-citylist-head" role="button" tabindex="0" aria-expanded="' + open + '" onclick="posToggle(\'' + c.code + '\')" onkeydown="if ((event.key === \'Enter\' || event.key === \' \') && event.target === this) { event.preventDefault(); posToggle(\'' + c.code + '\'); }">' +
+          CHEVRON + '<strong>' + esc(c.name) + '</strong><span class="r4-citylist-count">' + (list.length ? plural(list.length, 'term') : 'No terms') + '</span></div>';
+        if (!open) return '<div class="r4-citylist-group">' + head + '</div>';
+        return '<div class="r4-citylist-group">' + head +
+          '<div class="r4-psterms">' + (list.length ? list.map(t =>
+            '<span class="r4-chip is-plain">' + esc(t.text) + '<button type="button" aria-label="Remove ' + esc(t.text) + '" onclick="removePosTerm(' + t.i + ')">×</button></span>').join('') : '<span class="r4-small r4-muted">No terms in ' + esc(c.name) + '.</span>') + '</div>' +
+          '<div class="r4-psadd"><input class="form-input" id="psNew_' + c.code + '" maxlength="80" placeholder="New term in ' + esc(c.name) + '" aria-label="New term in ' + esc(c.name) + '" onkeydown="if (event.key === \'Enter\') { event.preventDefault(); addPosTerm(\'' + c.code + '\'); }">' +
+            '<button type="button" class="op-actionbtn" onclick="addPosTerm(\'' + c.code + '\')">Add</button></div></div>';
+      }).join('');
+    }
+    function refreshPosTerms(focusCode) {
+      document.getElementById('psTerms').innerHTML = posTermsHtml();
+      if (focusCode) { const i = document.getElementById('psNew_' + focusCode); if (i) i.focus(); }
+    }
+    function posToggle(code) { posOpen[code] = !posOpen[code]; refreshPosTerms(); }
+    function addPosTerm(code) {
+      const input = document.getElementById('psNew_' + code);
+      const text = (input ? input.value : '').trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!text) return;
+      if (posDraft.terms.some(t => t.country === code && fold(t.text) === fold(text))) return modalErr('"' + text + '" is already in ' + countryName(code) + '.');
+      const other = ENGINE_TERMS.find(t => t.country === code && t.positionId !== posDraft.id && fold(t.text) === fold(text));
+      if (other) return modalErr('"' + text + '" is a term of ' + ((POSITIONS_CATALOG.find(p => p.id === other.positionId) || {}).name || 'another position') + ' in ' + countryName(code) + '.');
+      document.getElementById('cfgErr').style.display = 'none';
+      posDraft.terms.push({ id: null, country: code, text: text });
+      refreshPosTerms(code);
+    }
+    function removePosTerm(i) {
+      posDraft.terms.splice(i, 1);
+      refreshPosTerms();
+    }
+    function savePosition() {
       const name = val('psName').trim();
       const areas = checkedValues('psArea');
-      if (!name) return modalErr('The name is required.');
-      if (POSITIONS_CATALOG.some(p => p.id !== id && fold(p.name) === fold(name))) return modalErr('A position with that name already exists.');
+      const id = posDraft.id;
+      if (!name) return modalErr('The title is required.');
+      if (POSITIONS_CATALOG.some(p => p.id !== id && fold(p.name) === fold(name))) return modalErr('A position with that title already exists.');
       if (!areas.length) return modalErr('Choose at least one area.');
-      if (id) { POSITIONS_CATALOG.find(p => p.id === id).name = name; POSITION_AREAS[id] = areas; }
+      let pid = id;
+      if (id) POSITIONS_CATALOG.find(p => p.id === id).name = name;
       else {
         const max = POSITIONS_CATALOG.reduce((m, p) => Math.max(m, Number(p.id.replace(/\D/g, '')) || 0), 0);
-        const nid = 'pos-' + String(max + 1).padStart(2, '0');
-        POSITIONS_CATALOG.push({ id: nid, name: name, terms: [], isActive: true });
-        POSITION_AREAS[nid] = areas;
+        pid = 'pos-' + String(max + 1).padStart(2, '0');
+        POSITIONS_CATALOG.push({ id: pid, name: name, terms: [], isActive: true });
       }
-      savePositionsCatalog(); closeCfgModal(); renderTerms();
-      showToast(id ? name + ' saved' : name + ' created: it can get terms in every country', 'success');
+      POSITION_AREAS[pid] = areas;
+      // Términos: se quitan los que ya no están (también de los triggers) y se suman los nuevos.
+      const keep = posDraft.terms.filter(t => t.id).map(t => t.id);
+      const removed = ENGINE_TERMS.filter(t => t.positionId === pid && keep.indexOf(t.id) < 0).map(t => t.id);
+      for (let i = ENGINE_TERMS.length - 1; i >= 0; i--) if (removed.indexOf(ENGINE_TERMS[i].id) >= 0) ENGINE_TERMS.splice(i, 1);
+      if (removed.length) ENGINE_TRIGGERS.forEach(tr => { tr.activeTerms = tr.activeTerms.filter(x => removed.indexOf(x) < 0); });
+      posDraft.terms.filter(t => !t.id).forEach(t => ENGINE_TERMS.push({ id: nextTermId(), positionId: pid, country: t.country, text: t.text }));
+      savePositionsCatalog(); saveTerms(); if (removed.length) saveTriggers();
+      closeCfgModal(); renderTerms();
+      showToast(name + (id ? ' saved' : ' created'), 'success');
     }
     function deletePosition(id) {
-      const i = POSITIONS_CATALOG.findIndex(p => p.id === id);
-      if (i < 0 || ENGINE_TERMS.some(t => t.positionId === id)) return;
-      const name = POSITIONS_CATALOG[i].name;
-      POSITIONS_CATALOG.splice(i, 1); delete POSITION_AREAS[id];
-      savePositionsCatalog(); closeCfgModal(); renderTerms();
-      showToast(name + ' deleted', 'success');
+      const p = POSITIONS_CATALOG.find(x => x.id === id); if (!p) return;
+      const n = termsOfPos(id).length;
+      closeCfgModal();
+      openConfirmPopup({ title: 'Delete position', message: n ? 'Its ' + plural(n, 'term') + ' are deleted too.' : 'The position leaves the catalog.', highlight: p.name, confirmLabel: 'Delete', danger: true,
+        onConfirm: () => {
+          const ids = termsOfPos(id).map(t => t.id);
+          for (let i = ENGINE_TERMS.length - 1; i >= 0; i--) if (ids.indexOf(ENGINE_TERMS[i].id) >= 0) ENGINE_TERMS.splice(i, 1);
+          ENGINE_TRIGGERS.forEach(tr => { tr.activeTerms = tr.activeTerms.filter(x => ids.indexOf(x) < 0); });
+          POSITIONS_CATALOG.splice(POSITIONS_CATALOG.indexOf(p), 1); delete POSITION_AREAS[id];
+          savePositionsCatalog(); saveTerms(); saveTriggers(); renderTerms();
+          showToast(p.name + ' deleted', 'success');
+        } });
     }
 
     /* ========================================================================
-       GEOGRAPHY — países, divisiones, ciudades, alias y cola de revisión
+       GEOGRAPHY — países; en el detalle de cada uno, sus divisiones y ciudades
+       Tres niveles: país, división y ciudad. Cada división y cada ciudad está activa
+       o inactiva; un trigger solo ofrece ciudades activas. Desactivar una división
+       desactiva sus ciudades; activar una ciudad activa su división.
        ======================================================================== */
+    const DIV_PAGE = 20;
+    let geoCountry = null, geoFilter = 'active', geoQ = '', geoDivPage = 1, geoOpen = {}, geoCityPage = {};
+    const divsOf = code => GEO_DIVISIONS.filter(d => d.country === code).sort((a, b) => a.name.localeCompare(b.name));
+    const citiesOfDiv = dcode => GEO_CITIES.filter(c => c.division === dcode).sort((a, b) => a.name.localeCompare(b.name));
+    function setGeoHash() { const h = geoCountry ? '#geography/' + geoCountry : '#geography'; if (location.hash !== h) history.replaceState(null, '', h); }
     function renderGeo() {
-      renderGeoReview();
-      document.getElementById('geoCountries').innerHTML = '<table class="r4-table"><thead><tr><th>Country</th><th>Division</th><th>Language</th><th>Currency · time zone</th><th>Loaded</th><th>Prompts</th><th></th></tr></thead><tbody>' +
-        ENGINE_COUNTRIES.map(c => {
-          const divs = GEO_DIVISIONS.filter(d => d.country === c.code).length;
-          const cities = GEO_CITIES.filter(x => x.country === c.code).length;
-          const used = ENGINE_TRIGGERS.filter(t => t.countries.indexOf(c.code) >= 0).map(t => t.name);
-          return '<tr><td class="nowrap"><span class="r4-cellname">' + esc(c.name) + '</span><span class="r4-cellsub" title="' + esc(used.length ? 'Used by ' + used.join(', ') : 'Not used by any trigger') + '">' + esc(c.code) + ' · ' + (c.group === 'hiring' ? 'Hiring country' : 'Sales country') + ' · ' + plural(used.length, 'trigger') + '</span></td>' +
-            '<td>' + esc(c.divisionLabel) + '</td><td>' + esc(c.language) + '</td><td class="r4-small">' + esc(c.currency) + '<span class="r4-cellsub">' + esc(c.timezone) + '</span></td>' +
-            '<td class="r4-small">' + divs + ' of ' + c.divisionsTotal + ' ' + esc(divPlural(c.divisionLabel)) + '<span class="r4-cellsub">' + plural(cities, 'city', 'cities') + '</span></td>' +
-            '<td class="nowrap">' + (countryPromptsComplete(c.code) ? '<span class="badge badge-success">Complete</span>' : '<span class="badge badge-danger">Missing</span>') + '</td>' +
-            '<td class="nowrap"><button class="r4-linkbtn" onclick="openCountryModal(\'' + c.code + '\')">Edit</button></td></tr>';
-        }).join('') + '</tbody></table>';
-      document.getElementById('geoCities').innerHTML = cityListHtml({ id: 'geoCityList', mode: 'catalog', countries: ENGINE_COUNTRIES.map(c => c.code) });
+      const m = document.getElementById('geoMount');
+      if (geoCountry && !engineCountry(geoCountry)) geoCountry = null;
+      m.innerHTML = geoCountry ? geoDetailHtml() : geoListHtml();
+      if (geoCountry) renderGeoGroups();
       renderNavCounts();
     }
-    function renderGeoReview() {
-      const el = document.getElementById('geoReview');
-      if (!GEO_REVIEW.length) { el.innerHTML = '<div class="r4-note">No location to review: every city the services returned is in the catalog.</div>'; return; }
-      el.innerHTML = '<div class="st-panel r4-block"><div class="r4-blocktitle">Locations to review <span class="badge badge-warning">' + GEO_REVIEW.length + '</span></div>' +
-        '<div class="r4-blocksub">Cities a service returned that are not in the catalog. Their vacancies keep the published city, with their country and division, and show "Location to review" until the city is added or assigned. A city is added only if it will be used to search.</div>' +
-        '<div class="r4-review">' + GEO_REVIEW.map(r => {
-          const sug = GEO_CITIES.find(c => c.id === r.suggestion);
-          return '<div class="r4-reviewrow"><div><div class="r4-reviewname">' + esc(r.name) + '</div>' +
-            '<div class="r4-reviewmeta">' + esc(divisionName(r.division)) + ' · ' + esc(countryName(r.country)) + ' · from ' + esc(serviceName(r.serviceId)) + ' · ' + plural(r.vacancies, 'vacancy', 'vacancies') + ' · first seen ' + daysAgoLabel(r.firstSeenDays) + '</div></div>' +
-            '<div class="r4-reviewactions">' + (sug ? '<button class="op-actionbtn" onclick="reviewAssign(\'' + r.id + '\')">Assign to ' + esc(sug.name) + '</button>' : '') +
-            '<button class="op-actionbtn" onclick="reviewAdd(\'' + r.id + '\')">Add as new city</button>' +
-            '<button class="op-clearall" onclick="reviewDismiss(\'' + r.id + '\')">Dismiss</button></div></div>';
-        }).join('') + '</div></div>';
+    function geoListHtml() {
+      return '<div class="st-sectionhead"><div><h3 class="st-sectiontitle">Geography</h3>' +
+          '<p class="st-sectionsub">Countries with their divisions and cities.</p></div>' +
+          '<button class="op-btn-apply" onclick="openCountryModal()">New country</button></div>' +
+        '<div class="r4-tablewrap"><table class="r4-table"><thead><tr><th>Country</th><th>Divisions</th><th>Cities</th><th>Language</th><th>Time zone</th><th></th></tr></thead><tbody>' +
+        ENGINE_COUNTRIES.map(c => {
+          const divs = divsOf(c.code), cities = GEO_CITIES.filter(x => x.country === c.code);
+          return '<tr class="is-click" onclick="openGeoCountry(\'' + c.code + '\')">' +
+            '<td class="nowrap"><span class="r4-cellname">' + esc(c.name) + '</span><span class="r4-cellsub">' + esc(c.code) + ' · ' + (c.group === 'hiring' ? 'Hiring country' : 'Sales country') + '</span></td>' +
+            '<td class="r4-small">' + divs.filter(d => d.isActive).length + ' of ' + divs.length + ' active<span class="r4-cellsub">' + esc(divPlural(c.divisionLabel)) + '</span></td>' +
+            '<td class="r4-small">' + cities.filter(x => x.isActive).length + ' of ' + cities.length + ' active</td>' +
+            '<td class="r4-small">' + esc(c.language) + '<span class="r4-cellsub">' + esc(c.currency) + '</span></td>' +
+            '<td class="r4-small">' + esc(c.timezone) + '</td>' +
+            '<td class="nowrap"><button class="op-actionbtn" onclick="event.stopPropagation(); openCountryModal(\'' + c.code + '\')">Edit</button></td></tr>';
+        }).join('') + '</tbody></table></div>';
     }
-    function removeReview(id) { const i = GEO_REVIEW.findIndex(r => r.id === id); if (i >= 0) GEO_REVIEW.splice(i, 1); }
-    function reviewAssign(id) {
-      const r = GEO_REVIEW.find(x => x.id === id); if (!r) return;
-      const city = GEO_CITIES.find(c => c.id === r.suggestion); if (!city) return;
-      // La ciudad del catálogo suma la variante: lo que el servicio devuelva con ese nombre se lee como ella.
-      city.variants = (city.variants || []).concat([r.name]);
-      removeReview(id); saveGeo(); renderGeo();
-      showToast(r.name + ' is now read as ' + city.name + '; its ' + plural(r.vacancies, 'vacancy', 'vacancies') + ' take that city', 'success');
+    function openGeoCountry(code) { geoCountry = code; geoFilter = 'active'; geoQ = ''; geoDivPage = 1; geoOpen = {}; geoCityPage = {}; setGeoHash(); renderGeo(); window.scrollTo(0, 0); }
+    function closeGeoCountry() { geoCountry = null; setGeoHash(); renderGeo(); }
+    function geoDetailHtml() {
+      const c = engineCountry(geoCountry);
+      const divs = divsOf(c.code);
+      const n = { active: divs.filter(d => d.isActive).length, inactive: divs.filter(d => !d.isActive).length, all: divs.length };
+      const label = c.divisionLabel || 'Division';
+      return '<button class="r4-back" onclick="closeGeoCountry()">← All countries</button>' +
+        '<div class="r4-edhead"><div>' +
+          '<div class="r4-edtitle"><h3 class="st-sectiontitle">' + esc(c.name) + '</h3><span class="badge badge-neutral">' + (c.group === 'hiring' ? 'Hiring country' : 'Sales country') + '</span></div>' +
+          '<p class="st-sectionsub">' + esc([c.code, c.language, c.currency, c.timezone].join(' · ')) + '</p>' +
+        '</div><div class="r4-edactions">' +
+          '<button class="op-actionbtn" onclick="openCountryModal(\'' + c.code + '\')">Edit country</button>' +
+          '<button class="op-actionbtn" onclick="openDivisionModal(\'' + c.code + '\')">Add ' + esc(label.toLowerCase()) + '</button>' +
+          '<button class="op-btn-apply" onclick="openCityModal(null, \'' + c.code + '\')">Add city</button>' +
+        '</div></div>' +
+        '<div class="st-toolbar">' +
+          '<div class="kp-window" role="group" aria-label="Status">' + [['active', 'Active'], ['inactive', 'Inactive'], ['all', 'All']].map(x =>
+            '<button type="button" class="' + (geoFilter === x[0] ? 'is-on' : '') + '" onclick="geoFilter = \'' + x[0] + '\'; geoDivPage = 1; renderGeo()">' + x[1] + ' · ' + n[x[0]] + '</button>').join('') + '</div>' +
+          '<input type="search" class="op-states-search st-search" id="geoSearch" placeholder="Search ' + esc(label.toLowerCase()) + ' or city" value="' + esc(geoQ) + '" oninput="geoQ = this.value; geoDivPage = 1; renderGeoGroups()">' +
+        '</div>' +
+        '<div class="r4-citylist-groups" id="geoGroups"></div>' +
+        '<div class="op-pagination" id="geoDivPager"></div>';
     }
-    function reviewAdd(id) {
-      const r = GEO_REVIEW.find(x => x.id === id); if (!r) return;
-      const aliases = {}; aliases[r.serviceId] = r.name;
-      openCityModal(null, r.country, { name: r.name, division: r.division, aliases: aliases, reviewId: r.id });
+    function renderGeoGroups() {
+      const c = engineCountry(geoCountry);
+      const q = fold(geoQ.trim());
+      let list = divsOf(c.code).filter(d => geoFilter === 'all' || (geoFilter === 'active' ? d.isActive : !d.isActive));
+      if (q) list = list.filter(d => fold(d.name).indexOf(q) >= 0 || citiesOfDiv(d.code).some(x => fold(x.name).indexOf(q) >= 0));
+      const pages = Math.max(1, Math.ceil(list.length / DIV_PAGE));
+      geoDivPage = Math.min(geoDivPage, pages);
+      const el = document.getElementById('geoGroups');
+      el.innerHTML = list.length ? list.slice((geoDivPage - 1) * DIV_PAGE, geoDivPage * DIV_PAGE).map(d => {
+        const all = citiesOfDiv(d.code);
+        const divHit = q && fold(d.name).indexOf(q) >= 0;
+        const cities = q && !divHit ? all.filter(x => fold(x.name).indexOf(q) >= 0) : all;
+        const open = q ? true : !!geoOpen[d.code];
+        const head = '<div class="r4-citylist-head" role="button" tabindex="0" aria-expanded="' + open + '" onclick="geoDivToggle(\'' + d.code + '\')" onkeydown="if ((event.key === \'Enter\' || event.key === \' \') && event.target === this) { event.preventDefault(); geoDivToggle(\'' + d.code + '\'); }">' +
+          CHEVRON +
+          '<label class="toggle-switch" onclick="event.stopPropagation()" title="' + (d.isActive ? 'Active' : 'Inactive') + '"><input type="checkbox" aria-label="' + esc(d.name) + ' active"' + (d.isActive ? ' checked' : '') + ' onchange="setDivActive(\'' + d.code + '\', this.checked)"><span class="toggle-slider"></span></label>' +
+          '<strong>' + esc(d.name) + '</strong><span class="r4-citylist-count">' + esc(d.code) + ' · ' + all.filter(x => x.isActive).length + ' of ' + plural(all.length, 'city', 'cities') + ' active</span>' +
+          '<span class="r4-citylist-actions" onclick="event.stopPropagation()"><button type="button" class="r4-linkbtn" onclick="openCityModal(null, \'' + c.code + '\', \'' + d.code + '\')">Add city</button>' +
+            '<button type="button" class="r4-linkbtn" onclick="openDivisionModal(\'' + c.code + '\', \'' + d.code + '\')">Edit</button></span></div>';
+        if (!open) return '<div class="r4-citylist-group' + (d.isActive ? '' : ' is-off') + '">' + head + '</div>';
+        const pages2 = Math.max(1, Math.ceil(cities.length / CITY_PAGE));
+        const page = Math.min(geoCityPage[d.code] || 1, pages2);
+        geoCityPage[d.code] = page;
+        const items = cities.slice((page - 1) * CITY_PAGE, page * CITY_PAGE).map(x =>
+          '<div class="r4-citylist-item' + (x.isActive ? '' : ' is-off') + '">' +
+            '<input type="checkbox" aria-label="' + esc(x.name) + ' active"' + (x.isActive ? ' checked' : '') + ' onchange="setCityActive(\'' + x.id + '\', this.checked)">' +
+            '<button type="button" class="r4-citybtn r4-cityname" onclick="openCityModal(\'' + x.id + '\')" title="Edit ' + esc(x.name) + '">' + esc(x.name) + '</button></div>').join('');
+        const pager = cities.length > CITY_PAGE
+          ? '<div class="r4-citylist-pager"><span>' + ((page - 1) * CITY_PAGE + 1) + '–' + Math.min(page * CITY_PAGE, cities.length) + ' of ' + cities.length + '</span>' +
+            '<button type="button" class="op-actionbtn" aria-label="Previous cities"' + (page === 1 ? ' disabled' : '') + ' onclick="geoCityPage[\'' + d.code + '\'] = ' + (page - 1) + '; renderGeoGroups()">‹</button>' +
+            '<button type="button" class="op-actionbtn" aria-label="Next cities"' + (page === pages2 ? ' disabled' : '') + ' onclick="geoCityPage[\'' + d.code + '\'] = ' + (page + 1) + '; renderGeoGroups()">›</button></div>'
+          : '';
+        return '<div class="r4-citylist-group' + (d.isActive ? '' : ' is-off') + '">' + head +
+          (cities.length ? '<div class="r4-citylist-grid">' + items + '</div>' + pager : '<div class="r4-citylist-empty">No cities.</div>') + '</div>';
+      }).join('') : '<div class="r4-citylist-empty">' + (q ? 'Nothing matches the search.' : 'No ' + esc(divPlural(c.divisionLabel)) + ' here.') + '</div>';
+      renderPager('geoDivPager', list.length, geoDivPage, p => { geoDivPage = p; renderGeoGroups(); window.scrollTo(0, 0); }, DIV_PAGE);
     }
-    function reviewDismiss(id) {
-      const r = GEO_REVIEW.find(x => x.id === id); if (!r) return;
-      removeReview(id); saveGeo(); renderGeo();
-      showToast(r.name + ' dismissed: its vacancies keep the published city', 'success');
+    function geoDivToggle(code) { if (fold(geoQ.trim())) return; geoOpen[code] = !geoOpen[code]; renderGeoGroups(); }
+    function setDivActive(code, on) {
+      const d = GEO_DIVISIONS.find(x => x.code === code); if (!d) return;
+      d.isActive = on;
+      if (!on) GEO_CITIES.forEach(c => { if (c.division === code) c.isActive = false; });
+      saveGeo(); renderGeo();
+      showToast(d.name + (on ? ' active' : ' inactive, with its cities'), 'success');
     }
-    function openCityModal(id, countryCode, prefill) {
+    function setCityActive(id, on) {
+      const c = GEO_CITIES.find(x => x.id === id); if (!c) return;
+      c.isActive = on;
+      const d = GEO_DIVISIONS.find(x => x.code === c.division);
+      if (on && d && !d.isActive) { d.isActive = true; saveGeo(); renderGeo(); return; }
+      saveGeo(); renderGeoGroups();
+      const tabs = document.querySelectorAll('#geoMount .kp-window button');
+      if (tabs.length) { const divs = divsOf(c.country); const n = [divs.filter(x => x.isActive).length, divs.filter(x => !x.isActive).length, divs.length]; tabs.forEach((b, i) => { b.textContent = b.textContent.replace(/ · \d+$/, ' · ' + n[i]); }); }
+    }
+    function openDivisionModal(countryCode, code) {
+      const country = engineCountry(countryCode);
+      const d = code ? GEO_DIVISIONS.find(x => x.code === code) : null;
+      const label = (country && country.divisionLabel) || 'Division';
+      const body = '<div class="r4-grid2">' +
+          '<div class="form-group"><label class="form-label" for="dvName">Name</label><input class="form-input" id="dvName" maxlength="60" value="' + esc(d ? d.name : '') + '"></div>' +
+          '<div class="form-group"><label class="form-label" for="dvCode">Code</label><input class="form-input" id="dvCode" maxlength="8" value="' + esc(d ? d.code : countryCode + '-') + '"' + (d ? ' disabled' : '') + '></div>' +
+        '</div>' +
+        '<div class="form-group" style="margin-top: 12px;"><label class="r4-check"><input type="checkbox" id="dvActive"' + (!d || d.isActive ? ' checked' : '') + '><span>Active</span></label></div>' +
+        '<div class="r4-err" id="cfgErr" style="display:none"></div>';
+      const buttons = [];
+      if (d) { const n = citiesOfDiv(d.code).length; buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: n > 0, title: 'Delete its ' + plural(n, 'city', 'cities') + ' first', action: () => deleteDivision(d.code) }); }
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveDivision(countryCode, code) });
+      openCfgModal(d ? d.name : 'New ' + label.toLowerCase() + ' · ' + countryName(countryCode), body, buttons, 520);
+    }
+    function saveDivision(countryCode, code) {
+      const name = val('dvName').trim(), dcode = code || val('dvCode').trim().toUpperCase(), on = checked('dvActive');
+      if (!name) return modalErr('The name is required.');
+      if (!code) {
+        if (dcode.indexOf(countryCode + '-') !== 0 || dcode.length < countryCode.length + 2) return modalErr('The code starts with ' + countryCode + '-.');
+        if (GEO_DIVISIONS.some(x => x.code === dcode)) return modalErr(dcode + ' already exists.');
+        GEO_DIVISIONS.push({ code: dcode, country: countryCode, name: name, isActive: on });
+      } else {
+        const d = GEO_DIVISIONS.find(x => x.code === code);
+        d.name = name; d.isActive = on;
+        if (!on) GEO_CITIES.forEach(c => { if (c.division === code) c.isActive = false; });
+      }
+      saveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + (code ? ' saved' : ' added'), 'success');
+    }
+    function deleteDivision(code) {
+      const i = GEO_DIVISIONS.findIndex(x => x.code === code); if (i < 0 || citiesOfDiv(code).length) return;
+      const name = GEO_DIVISIONS[i].name;
+      GEO_DIVISIONS.splice(i, 1); saveGeo(); closeCfgModal(); renderGeo();
+      showToast(name + ' deleted', 'success');
+    }
+    function openCityModal(id, countryCode, divCode) {
       const c = id ? GEO_CITIES.find(x => x.id === id) : null;
       const code = c ? c.country : countryCode;
-      const p = prefill || {};
       const country = engineCountry(code);
-      const divs = GEO_DIVISIONS.filter(d => d.country === code).sort((a, b) => a.name.localeCompare(b.name));
-      const curDiv = c ? c.division : (p.division || '');
-      const aliases = c ? (c.aliases || {}) : (p.aliases || {});
-      const svcs = servicesForStage('vacancies', code);
+      const divs = divsOf(code);
+      const curDiv = c ? c.division : (divCode || '');
       const used = c ? ENGINE_TRIGGERS.filter(t => t.locations.some(l => l.cityId === c.id)).map(t => t.name) : [];
       const body =
         '<div class="r4-grid2">' +
-          '<div class="form-group"><label class="form-label" for="ctName">City</label><input class="form-input" id="ctName" maxlength="60" value="' + esc(c ? c.name : (p.name || '')) + '"></div>' +
-          '<div class="form-group"><label class="form-label" for="ctDiv">' + esc(country ? country.divisionLabel : 'Division') + '</label><select class="form-select" id="ctDiv" onchange="document.getElementById(\'ctNewDiv\').style.display = this.value === \'__new\' ? \'\' : \'none\'">' +
-            '<option value="">Select…</option>' + divs.map(d => '<option value="' + d.code + '"' + (d.code === curDiv ? ' selected' : '') + '>' + esc(d.name) + ' · ' + esc(d.code) + '</option>').join('') +
-            '<option value="__new">New ' + esc((country ? country.divisionLabel : 'division').toLowerCase()) + '…</option></select></div>' +
+          '<div class="form-group"><label class="form-label" for="ctName">City</label><input class="form-input" id="ctName" maxlength="60" value="' + esc(c ? c.name : '') + '"></div>' +
+          '<div class="form-group"><label class="form-label" for="ctDiv">' + esc(country ? country.divisionLabel : 'Division') + '</label><select class="form-select" id="ctDiv">' +
+            '<option value="">Select…</option>' + divs.map(d => '<option value="' + d.code + '"' + (d.code === curDiv ? ' selected' : '') + '>' + esc(d.name) + '</option>').join('') + '</select></div>' +
         '</div>' +
-        '<div class="r4-grid2" id="ctNewDiv" style="display:none; margin-top: 12px;">' +
-          '<div class="form-group"><label class="form-label" for="ctDivCode">ISO 3166-2 code</label><input class="form-input" id="ctDivCode" maxlength="8" value="' + esc(code) + '-"></div>' +
-          '<div class="form-group"><label class="form-label" for="ctDivName">Name</label><input class="form-input" id="ctDivName" maxlength="60"></div>' +
-        '</div>' +
-        '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Alias per service</span>' +
-          '<p class="st-hint" style="margin-top: 0; margin-bottom: 8px;">How each vacancy service enabled in ' + esc(countryName(code)) + ' names the city. Empty means the service receives the city name.</p>' +
-          (svcs.length ? svcs.map(s => '<div class="r4-fieldrow" style="margin-bottom: 8px; align-items: center;"><label class="r4-small" style="flex: 0 0 140px;" for="al_' + s.id + '">' + esc(serviceLabel(s.id)) + '</label>' +
-            '<input class="form-input" style="flex: 1 1 200px;" id="al_' + s.id + '" data-svc="' + s.id + '" value="' + esc(aliases[s.id] || '') + '" placeholder="' + esc(c ? c.name : (p.name || '')) + '"></div>').join('') : '<p class="r4-small r4-muted">No vacancy service is enabled in this country.</p>') +
-        '</div>' +
-        (c && c.variants && c.variants.length ? '<p class="st-hint">Also read as: ' + esc(c.variants.join(', ')) + '.</p>' : '') +
-        (used.length ? '<p class="st-hint">Searched by: ' + esc(used.join(', ')) + '.</p>' : '') +
+        '<div class="form-group" style="margin-top: 12px;"><label class="r4-check"><input type="checkbox" id="ctActive"' + (!c || c.isActive ? ' checked' : '') + '><span>Active</span></label></div>' +
+        (used.length ? '<p class="st-hint">Used by ' + esc(used.join(', ')) + '.</p>' : '') +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       const buttons = [];
       if (c) buttons.push({ label: 'Delete', kind: 'danger', left: true, disabled: used.length > 0, title: 'Remove it from ' + used.join(', ') + ' first', action: () => deleteCity(c.id) });
-      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveCity(id, code, p.reviewId) });
-      openCfgModal(c ? c.name + ' · ' + countryName(code) : 'New city · ' + countryName(code), body, buttons, 600);
-      if (!divs.length) { document.getElementById('ctDiv').value = '__new'; document.getElementById('ctNewDiv').style.display = ''; }
+      buttons.push({ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveCity(id, code) });
+      openCfgModal(c ? c.name + ' · ' + countryName(code) : 'New city · ' + countryName(code), body, buttons, 560);
     }
-    function saveCity(id, code, reviewId) {
-      const name = val('ctName').trim();
-      let div = val('ctDiv');
+    function saveCity(id, code) {
+      const name = val('ctName').trim(), div = val('ctDiv'), on = checked('ctActive');
       if (!name) return modalErr('The city name is required.');
-      if (div === '__new') {
-        const dcode = val('ctDivCode').trim().toUpperCase(), dname = val('ctDivName').trim();
-        if (dcode.indexOf(code + '-') !== 0 || dcode.length < code.length + 2) return modalErr('The division code starts with ' + code + '- (ISO 3166-2).');
-        if (!dname) return modalErr('The division needs a name.');
-        if (GEO_DIVISIONS.some(d => d.code === dcode)) return modalErr(dcode + ' already exists.');
-        GEO_DIVISIONS.push({ code: dcode, country: code, name: dname });
-        div = dcode;
-      }
-      if (!div) return modalErr('Choose the division.');
-      if (GEO_CITIES.some(c => c.id !== id && c.country === code && fold(c.name) === fold(name) && c.division === div)) return modalErr(name + ' already exists in that division.');
-      const aliases = {};
-      document.querySelectorAll('#cfgModalBody [data-svc]').forEach(i => { if (i.value.trim()) aliases[i.dataset.svc] = i.value.trim(); });
-      if (id) Object.assign(GEO_CITIES.find(c => c.id === id), { name: name, division: div, aliases: aliases });
+      if (!div) return modalErr('Choose the ' + ((engineCountry(code) || {}).divisionLabel || 'division').toLowerCase() + '.');
+      if (GEO_CITIES.some(c => c.id !== id && c.country === code && fold(c.name) === fold(name) && c.division === div)) return modalErr(name + ' already exists there.');
+      if (id) Object.assign(GEO_CITIES.find(c => c.id === id), { name: name, division: div, isActive: on });
       else {
         let nid = code.toLowerCase() + '-' + slug(name), k = 2;
         while (GEO_CITIES.some(c => c.id === nid)) nid = code.toLowerCase() + '-' + slug(name) + '-' + (k++);
-        GEO_CITIES.push({ id: nid, name: name, division: div, country: code, aliases: aliases });
+        GEO_CITIES.push({ id: nid, name: name, division: div, country: code, isActive: on });
       }
-      if (reviewId) removeReview(reviewId);
+      const d = GEO_DIVISIONS.find(x => x.code === div);
+      if (on && d) d.isActive = true;
+      geoOpen[div] = true;
       saveGeo(); closeCfgModal(); renderGeo();
-      showToast(name + (id ? ' saved' : ' added to ' + countryName(code)), 'success');
+      showToast(name + (id ? ' saved' : ' added'), 'success');
     }
     function deleteCity(id) {
       const i = GEO_CITIES.findIndex(c => c.id === id); if (i < 0) return;
       const name = GEO_CITIES[i].name;
       GEO_CITIES.splice(i, 1); saveGeo(); closeCfgModal(); renderGeo();
-      showToast(name + ' deleted; its vacancies keep the published city', 'success');
+      showToast(name + ' deleted', 'success');
     }
     function openCountryModal(code) {
       const c = code ? engineCountry(code) : null;
-      const d = c || { code: '', name: '', divisionLabel: 'State', divisionsTotal: '', language: '', currency: '', timezone: '', group: 'hiring' };
+      const d = c || { code: '', name: '', divisionLabel: 'State', language: '', currency: '', timezone: 'America/New_York', group: 'hiring' };
+      const zones = TIMEZONES.indexOf(d.timezone) >= 0 || !d.timezone ? TIMEZONES : [d.timezone].concat(TIMEZONES);
       const body =
         '<div class="r4-grid3">' +
           '<div class="form-group"><label class="form-label" for="coCode">ISO code</label><input class="form-input" id="coCode" maxlength="2" value="' + esc(d.code) + '"' + (c ? ' disabled' : '') + ' placeholder="BR"></div>' +
           '<div class="form-group" style="grid-column: span 2;"><label class="form-label" for="coName">Name</label><input class="form-input" id="coName" maxlength="60" value="' + esc(d.name) + '"></div>' +
         '</div>' +
         '<div class="r4-grid3" style="margin-top: 12px;">' +
-          '<div class="form-group"><label class="form-label" for="coDiv">Division level</label><input class="form-input" id="coDiv" maxlength="30" value="' + esc(d.divisionLabel) + '" placeholder="State"></div>' +
-          '<div class="form-group"><label class="form-label" for="coDivTotal">Divisions (ISO 3166-2)</label><input type="number" min="1" class="form-input" id="coDivTotal" value="' + esc(d.divisionsTotal) + '"></div>' +
+          '<div class="form-group"><label class="form-label" for="coDiv">Division name</label><input class="form-input" id="coDiv" maxlength="30" value="' + esc(d.divisionLabel) + '" placeholder="State"></div>' +
           '<div class="form-group"><label class="form-label" for="coGroup">Use</label><select class="form-select" id="coGroup"><option value="sales"' + (d.group === 'sales' ? ' selected' : '') + '>Sales country</option><option value="hiring"' + (d.group === 'hiring' ? ' selected' : '') + '>Hiring country</option></select></div>' +
+          '<div class="form-group"><label class="form-label" for="coLang">Language</label><input class="form-input" id="coLang" maxlength="30" value="' + esc(d.language) + '"></div>' +
         '</div>' +
         '<div class="r4-grid3" style="margin-top: 12px;">' +
-          '<div class="form-group"><label class="form-label" for="coLang">Language</label><input class="form-input" id="coLang" maxlength="30" value="' + esc(d.language) + '"></div>' +
           '<div class="form-group"><label class="form-label" for="coCur">Currency</label><input class="form-input" id="coCur" maxlength="3" value="' + esc(d.currency) + '" placeholder="BRL"></div>' +
-          '<div class="form-group"><label class="form-label" for="coTz">Time zone</label><input class="form-input" id="coTz" maxlength="40" value="' + esc(d.timezone) + '" placeholder="America/Sao_Paulo"></div>' +
+          '<div class="form-group" style="grid-column: span 2;"><label class="form-label" for="coTz">Time zone</label><select class="form-select" id="coTz">' +
+            zones.map(z => '<option' + (z === d.timezone ? ' selected' : '') + '>' + esc(z) + '</option>').join('') + '</select></div>' +
         '</div>' +
-        (c ? '' : '<p class="st-hint">Each country uses one division level, the one the job portals use. A new country needs its three prompts (Prompts by country) before a trigger can use it.</p>') +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       openCfgModal(c ? 'Edit ' + c.name : 'New country', body, [{ label: 'Cancel' }, { label: 'Save', kind: 'primary', action: () => saveCountry(code) }], 620);
     }
     function saveCountry(code) {
       const iso = (code || val('coCode').trim()).toUpperCase();
-      const data = { name: val('coName').trim(), divisionLabel: val('coDiv').trim(), divisionsTotal: parseInt(val('coDivTotal'), 10), language: val('coLang').trim(), currency: val('coCur').trim().toUpperCase(), timezone: val('coTz').trim(), group: val('coGroup') };
+      const data = { name: val('coName').trim(), divisionLabel: val('coDiv').trim(), language: val('coLang').trim(), currency: val('coCur').trim().toUpperCase(), timezone: val('coTz'), group: val('coGroup') };
       if (!/^[A-Z]{2}$/.test(iso)) return modalErr('The ISO code has two letters.');
       if (!code && engineCountry(iso)) return modalErr(iso + ' is already in the catalog.');
       if (!data.name || !data.divisionLabel || !data.language || !data.currency || !data.timezone) return modalErr('Every field is required.');
-      if (isNaN(data.divisionsTotal) || data.divisionsTotal < 1) return modalErr('Write how many divisions the country has.');
       if (code) Object.assign(engineCountry(code), data);
       else ENGINE_COUNTRIES.push(Object.assign({ code: iso }, data));
       saveGeo(); closeCfgModal(); renderGeo(); renderPrompts(); renderTerms();
-      showToast(code ? data.name + ' saved' : data.name + ' added. It needs its three prompts before a trigger can use it', 'success');
+      showToast(data.name + (code ? ' saved' : ' added'), 'success');
     }
 
     /* ========================================================================
@@ -1639,9 +1431,8 @@
         '</div>' +
         '<div class="form-group" style="margin-top: 14px;"><label class="r4-check"><input type="checkbox" id="roGeneral"' + (d.general ? ' checked' : '') + ' onchange="document.querySelectorAll(\'input[name=roArea]\').forEach(i => i.disabled = this.checked)"><span>General management: applies to every area</span></label></div>' +
         '<div class="form-group" style="margin-top: 10px;"><span class="form-label">Areas</span>' + checks('roArea', Object.keys(AREA_LABELS).map(k => ({ value: k, label: AREA_LABELS[k] })), v => d.areas.indexOf(v) >= 0) + '</div>' +
-        '<div class="form-group" style="margin-top: 14px;"><label class="form-label" for="roTitles">Search titles</label><textarea class="form-textarea" id="roTitles" rows="3" style="min-height: 72px;">' + esc(d.titles.join('\n')) + '</textarea><p class="st-hint">One per line. The decision-maker services search people with these titles.</p></div>' +
+        '<div class="form-group" style="margin-top: 14px;"><label class="form-label" for="roTitles">Search titles</label><textarea class="form-textarea" id="roTitles" rows="3" style="min-height: 72px;">' + esc(d.titles.join('\n')) + '</textarea><p class="st-hint">One per line.</p></div>' +
         '<div class="r4-fieldrow" style="margin-top: 10px;"><label class="r4-check"><input type="checkbox" id="roEmail"' + (d.sendsEmail ? ' checked' : '') + '><span>Sends email</span></label><label class="r4-check"><input type="checkbox" id="roPhone"' + (d.findsPhone ? ' checked' : '') + '><span>Phone search</span></label></div>' +
-        '<p class="st-hint">The level comes from the role, not from the company size.</p>' +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       const inUse = r ? MOCK_CONTACTS.filter(c => c.roleCode === r.code).length : 0;
       const buttons = [];
@@ -1685,24 +1476,21 @@
     const promptsFor = (code, key) => ENGINE_PROMPTS.filter(p => p.country === code && p.analysis === key).sort((a, b) => b.version - a.version);
     const savePrompts = () => engineSave('r4Prompts', ENGINE_PROMPTS);
     function renderPrompts() {
-      document.getElementById('promptTable').innerHTML = '<table class="r4-table"><thead><tr><th>Country</th>' + PROMPT_ANALYSES.map(a => '<th>' + esc(a.label) + '</th>').join('') + '<th>Use in triggers</th></tr></thead><tbody>' +
+      document.getElementById('promptTable').innerHTML = '<table class="r4-table"><thead><tr><th>Country</th>' + PROMPT_ANALYSES.map(a => '<th>' + esc(a.label) + '</th>').join('') + '</tr></thead><tbody>' +
         ENGINE_COUNTRIES.map(c => {
-          const ok = countryPromptsComplete(c.code);
-          const used = ENGINE_TRIGGERS.filter(t => t.countries.indexOf(c.code) >= 0).map(t => t.name);
-          return '<tr><td><span class="r4-cellname">' + esc(c.name) + '</span><span class="r4-cellsub">' + esc(c.language) + (used.length ? ' · ' + esc(used.join(', ')) : '') + '</span></td>' +
+          const none = !ENGINE_PROMPTS.some(p => p.country === c.code);
+          return '<tr><td><span class="r4-cellname">' + esc(c.name) + '</span><span class="r4-cellsub">' + esc(c.language) + '</span>' +
+            (none ? '<button class="op-actionbtn" style="margin-top: 6px;" onclick="openCopyPromptsModal(\'' + c.code + '\')">Copy from another country</button>' : '') + '</td>' +
             PROMPT_ANALYSES.map(a => {
               const list = promptsFor(c.code, a.key);
               const act = list.find(p => p.status === 'active');
               const draft = list.find(p => p.status === 'draft');
               return '<td><button type="button" class="r4-promptcell" onclick="openPromptModal(\'' + c.code + '\', \'' + a.key + '\')">' +
                 (act
-                  ? '<span class="r4-promptver">v' + act.version + '</span><span class="r4-cellsub">' + esc(act.model) + ' · updated ' + daysAgoLabel(act.updatedDays) + (act.icpMinScore != null ? ' · ICP ≥ ' + act.icpMinScore : '') + '</span>'
+                  ? '<span class="r4-promptver">v' + act.version + '</span><span class="r4-cellsub">' + esc(act.model) + ' · updated ' + daysAgoLabel(act.updatedDays) + (act.icpMinScore != null ? ' · min. score ' + act.icpMinScore : '') + '</span>'
                   : '<span class="badge badge-danger">Missing</span><span class="r4-cellsub">' + (draft ? 'Draft to activate' : 'No prompt') + '</span>') +
                 (draft && act ? '<span class="r4-chip is-warn">Draft v' + draft.version + '</span>' : '') + '</button></td>';
-            }).join('') +
-            '<td>' + (ok ? '<span class="badge badge-success">Ready</span>'
-              : '<span class="badge badge-danger">Not usable</span><span class="r4-cellsub">Needs its 3 active prompts</span>' +
-                (!ENGINE_PROMPTS.some(p => p.country === c.code) ? '<button class="op-actionbtn" style="margin-top: 6px;" onclick="openCopyPromptsModal(\'' + c.code + '\')">Copy from another country</button>' : '')) + '</td></tr>';
+            }).join('') + '</tr>';
         }).join('') + '</tbody></table>';
       renderNavCounts();
     }
@@ -1718,12 +1506,12 @@
             '<b>v' + p.version + '</b>' + stateBadge(PROMPT_STATUS, p.status) + '<span class="r4-small r4-muted">' + esc(p.model) + ' · ' + daysAgoLabel(p.updatedDays) + ' by ' + esc(memberName(p.updatedBy)) + '</span></button>').join('') + '</div>' : '<p class="r4-blocksub">No prompt yet for this analysis in ' + esc(countryName(code)) + '.</p>') +
         '<div class="r4-grid2">' +
           '<div class="form-group"><label class="form-label" for="prModel">Model</label><select class="form-select" id="prModel">' + PROMPT_MODELS.map(m => '<option' + (m === d.model ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></div>' +
-          (key === 'companies' ? '<div class="form-group"><label class="form-label" for="prIcp">ICP minimum score</label><input type="number" min="0" max="100" class="form-input r4-num" id="prIcp" value="' + (d.icpMinScore != null ? d.icpMinScore : 50) + '"></div>' : '<div></div>') +
+          (key === 'companies' ? '<div class="form-group"><label class="form-label" for="prIcp">Minimum score to qualify</label><input type="number" min="0" max="100" class="form-input r4-num" id="prIcp" value="' + (d.icpMinScore != null ? d.icpMinScore : 50) + '"></div>' : '<div></div>') +
         '</div>' +
         '<div class="form-group" style="margin-top: 12px;"><label class="form-label" for="prText">Prompt</label><textarea class="form-textarea is-code" id="prText" rows="9">' + esc(d.text) + '</textarea></div>' +
-        '<p class="st-hint">' + (sel && sel.status === 'draft' ? 'A draft is tested against a sample of recent results before it is activated. Activating it keeps the current version as Previous.'
-          : sel && sel.status === 'active' ? 'Editing the active version creates draft v' + nextV + '; the active one keeps working until the draft is activated.'
-          : sel ? 'A previous version can be restored as the active one.' : 'The new prompt is saved as a draft.') + '</p>' +
+        '<p class="st-hint">' + (sel && sel.status === 'draft' ? 'Draft. Activating it keeps the current version as Previous.'
+          : sel && sel.status === 'active' ? 'Saving creates draft v' + nextV + '.'
+          : sel ? 'Previous version.' : 'Saved as a draft.') + '</p>' +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       const buttons = [];
       if (sel && sel.status === 'draft') {
@@ -1762,11 +1550,10 @@
     function activatePrompt(code, key, id) {
       const p = ENGINE_PROMPTS.find(x => x.id === id); if (!p) return;
       if (p.status === 'draft') { const f = promptForm(key); if (!f.text) return modalErr('The prompt text is required.'); Object.assign(p, f); }
-      const wasComplete = countryPromptsComplete(code);
       promptsFor(code, key).forEach(x => { if (x.status === 'active') x.status = 'archived'; });
       p.status = 'active'; p.updatedDays = 0; p.updatedBy = user.id;
       savePrompts(); closeCfgModal(); renderPrompts(); renderGeo();
-      showToast('v' + p.version + ' is active for ' + countryName(code) + (!wasComplete && countryPromptsComplete(code) ? '. ' + countryName(code) + ' can now be used in a trigger' : ''), 'success');
+      showToast('v' + p.version + ' active for ' + countryName(code), 'success');
     }
     function deletePromptDraft(id) {
       const i = ENGINE_PROMPTS.findIndex(x => x.id === id); if (i < 0) return;
@@ -1775,7 +1562,7 @@
     }
     function openCopyPromptsModal(to) {
       const froms = ENGINE_COUNTRIES.filter(c => c.code !== to && countryPromptsComplete(c.code));
-      const body = '<p class="r4-blocksub">The three active prompts of another country are copied to ' + esc(countryName(to)) + ' as drafts, with the country name, language and currency replaced. Review them and activate each one.</p>' +
+      const body = '<p class="r4-blocksub">Creates the three prompts of ' + esc(countryName(to)) + ' as drafts.</p>' +
         '<div class="form-group"><label class="form-label" for="cpFrom">Copy from</label><select class="form-select" id="cpFrom">' + froms.map(c => '<option value="' + c.code + '">' + esc(c.name) + '</option>').join('') + '</select></div>';
       openCfgModal('Prompts for ' + countryName(to), body, [{ label: 'Cancel' }, { label: 'Create 3 drafts', kind: 'primary', action: () => copyPrompts(to) }], 520);
     }
@@ -1791,67 +1578,7 @@
         ENGINE_PROMPTS.push(p);
       });
       savePrompts(); closeCfgModal(); renderPrompts();
-      showToast('3 drafts created for ' + dest.name + ' from ' + from.name + '. Review and activate them', 'success');
-    }
-
-    /* ========================================================================
-       COMPANY RULES — exclusiones, datos esenciales y vigencia
-       ======================================================================== */
-    // Datos que se pueden marcar como esenciales; el seed marca dominio, tamaño e industria.
-    const ESSENTIAL_CANDIDATES = [
-      { code: 'domain', label: 'Domain', note: 'Key of the company and input of the decision-maker services.' },
-      { code: 'size', label: 'Size', note: 'Number of employees, used by the ICP.' },
-      { code: 'industry', label: 'Industry', note: 'Code from the industry catalog.' },
-      { code: 'revenue', label: 'Revenue', note: 'Annual revenue in USD.' },
-      { code: 'hq_country', label: 'Headquarters country', note: 'Country of the company headquarters.' },
-      { code: 'linkedin', label: 'LinkedIn profile', note: 'Company page on LinkedIn.' }
-    ];
-    let rulesDraft = null;
-    function renderRules() {
-      if (!rulesDraft) rulesDraft = JSON.parse(JSON.stringify(ENGINE_RULES));
-      const r = rulesDraft;
-      document.getElementById('rulesMount').innerHTML =
-        '<div class="st-panel r4-block"><div class="r4-blocktitle">Exclusions</div>' +
-          '<div class="r4-blocksub">The company analysis marks these companies as Excluded, with the reason. They do not go on to the decision-maker services, and an excluded company is not qualified again when it reappears.</div>' +
-          '<div class="r4-review">' + r.exclusions.map((x, i) =>
-            '<div class="r4-reviewrow"><div><div class="r4-reviewname">' + esc(x.label) + '</div><div class="r4-reviewmeta">' + esc(x.note || '') + '</div></div>' +
-            '<div class="r4-reviewactions"><button class="op-clearall" onclick="removeExclusion(' + i + ')">Remove</button></div></div>').join('') + '</div>' +
-          '<div class="r4-fieldrow" style="margin-top: 12px;">' +
-            '<div class="form-group" style="flex: 1 1 200px;"><label class="form-label" for="exLabel">New exclusion</label><input class="form-input" id="exLabel" maxlength="60" placeholder="e.g. Nonprofit organizations"></div>' +
-            '<div class="form-group" style="flex: 2 1 260px;"><label class="form-label" for="exNote">Reason</label><input class="form-input" id="exNote" maxlength="120"></div>' +
-            '<button class="op-actionbtn" style="height: var(--control-h);" onclick="addExclusion()">Add</button></div>' +
-        '</div>' +
-        '<div class="st-panel r4-block"><div class="r4-blocktitle">Essential data</div>' +
-          '<div class="r4-blocksub">A company without all its essential data is left as Missing data. In a trigger, the next company service is tried when the pass condition is "Not found or missing essential data".</div>' +
-          '<div class="r4-checks">' + ESSENTIAL_CANDIDATES.map(e => {
-            const on = r.essentials.some(x => x.code === e.code);
-            return '<label class="r4-check"><input type="checkbox"' + (on ? ' checked' : '') + ' onchange="toggleEssential(\'' + e.code + '\', this.checked)"><span>' + esc(e.label) + '<span class="r4-cellsub">' + esc(e.note) + '</span></span></label>';
-          }).join('') + '</div>' +
-        '</div>' +
-        '<div class="st-panel r4-block"><div class="r4-blocktitle">Validity</div>' +
-          '<div class="r4-fieldrow"><div class="form-group"><label class="form-label" for="ruValidity">Days</label><input type="number" min="1" class="form-input r4-num" id="ruValidity" value="' + r.validityDays + '" onchange="rulesDraft.validityDays = parseInt(this.value, 10)"></div></div>' +
-          '<p class="st-hint">A vacancy not seen again within these days is closed. A qualified company that reappears after them is enriched and qualified again; an excluded one is not.</p>' +
-        '</div>';
-    }
-    function removeExclusion(i) { rulesDraft.exclusions.splice(i, 1); renderRules(); }
-    function addExclusion() {
-      const label = val('exLabel').trim();
-      if (!label) { showToast('Write the exclusion', 'error'); return; }
-      rulesDraft.exclusions.push({ code: slug(label).replace(/-/g, '_'), label: label, note: val('exNote').trim() });
-      renderRules();
-    }
-    function toggleEssential(code, on) {
-      rulesDraft.essentials = rulesDraft.essentials.filter(x => x.code !== code);
-      if (on) { const e = ESSENTIAL_CANDIDATES.find(x => x.code === code); rulesDraft.essentials.push({ code: e.code, label: e.label, note: e.note }); }
-    }
-    function saveRules() {
-      const days = parseInt(val('ruValidity'), 10);
-      if (isNaN(days) || days < 1) { showToast('The validity is at least 1 day', 'error'); return; }
-      if (!rulesDraft.essentials.length) { showToast('Keep at least one essential datum', 'error'); return; }
-      rulesDraft.validityDays = days;
-      Object.assign(ENGINE_RULES, JSON.parse(JSON.stringify(rulesDraft)));
-      engineSave(RULES_KEY, ENGINE_RULES);
-      showToast('Company rules saved', 'success');
+      showToast('3 drafts created for ' + dest.name, 'success');
     }
 
     /* ========================================================================
@@ -1865,11 +1592,6 @@
         f.notContacted ? 'not contacted yet' : null
       ].filter(Boolean).join(' · ');
     }
-    function outreachEligibility(s, countries) {
-      if (s.status !== 'active') return SERVICE_STATUS[s.status].label.toLowerCase();
-      const miss = countries.filter(c => s.countries.indexOf(c) < 0);
-      return miss.length ? 'not enabled in ' + miss.map(countryName).join(', ') : '';
-    }
     function renderOutreach() {
       document.getElementById('outreachList').innerHTML = OUTREACH_SCHEDULES.length ? OUTREACH_SCHEDULES.map(o =>
         '<article class="st-row' + (o.isActive ? '' : ' is-off') + '"><div class="st-rowhead">' +
@@ -1881,7 +1603,7 @@
             fact('Lead filter', esc(filterSummary(o.filter))) +
             fact('Service', esc(serviceLabel(o.serviceId))) +
             fact('Last run', o.lastRunDays == null ? '<span class="r4-muted">Not run yet</span>' : daysAgoLabel(o.lastRunDays) + ' · ' + plural(o.lastCount || 0, 'lead')) +
-          '</dl></article>').join('') : '<div class="op-empty"><h3>No scheduled sends</h3><p>No lead list is handed to a cold outreach service.</p></div>';
+          '</dl></article>').join('') : '<div class="op-empty"><h3>No scheduled sends</h3></div>';
       renderNavCounts();
     }
     function toggleOutreach(id, on) {
@@ -1901,8 +1623,7 @@
         '<div class="r4-fieldrow" style="margin-top: 14px;"><label class="r4-check"><input type="checkbox" id="ouEmail"' + (d.filter.onlyRolesWithEmail ? ' checked' : '') + '><span>Only roles that receive email</span></label>' +
           '<label class="r4-check"><input type="checkbox" id="ouNotContacted"' + (d.filter.notContacted ? ' checked' : '') + '><span>Not contacted yet</span></label></div>' +
         '<div class="form-group" style="margin-top: 14px;"><label class="form-label" for="ouService">Service that receives the list</label><select class="form-select" id="ouService" style="max-width: 360px;"><option value="">Select…</option>' +
-          svcs.map(s => '<option value="' + s.id + '"' + (s.id === d.serviceId ? ' selected' : '') + '>' + esc(serviceLabel(s.id)) + ' · ' + esc(s.countries.map(countryName).join(', ')) + (s.status !== 'active' ? ' — ' + SERVICE_STATUS[s.status].label.toLowerCase() : '') + '</option>').join('') + '</select>' +
-          '<p class="st-hint">The service has to be Active and enabled in every company country of the filter. It only receives leads already filtered.</p></div>' +
+          svcs.map(s => '<option value="' + s.id + '"' + (s.id === d.serviceId ? ' selected' : '') + '>' + esc(serviceLabel(s.id)) + '</option>').join('') + '</select></div>' +
         '<div class="form-group" style="margin-top: 10px;"><label class="r4-check"><input type="checkbox" id="ouActive"' + (d.isActive ? ' checked' : '') + '><span>Active</span></label></div>' +
         '<div class="r4-err" id="cfgErr" style="display:none"></div>';
       const buttons = [];
@@ -1916,23 +1637,21 @@
       if (!days.length) return modalErr('Choose at least one day.');
       if (!countries.length || !states.length) return modalErr('The filter needs at least one company country and one company state.');
       if (!sid) return modalErr('Choose the service that receives the list.');
-      const why = outreachEligibility(engineService(sid), countries);
-      if (why) return modalErr(serviceName(sid) + ' cannot receive this list: ' + why + '.');
       const data = { name: name, serviceId: sid, days: WD.filter(k => days.indexOf(k) >= 0), filter: { companyCountries: countries, companyStates: states, onlyRolesWithEmail: checked('ouEmail'), notContacted: checked('ouNotContacted') }, isActive: checked('ouActive') };
       if (id) Object.assign(OUTREACH_SCHEDULES.find(x => x.id === id), data);
       else OUTREACH_SCHEDULES.push(Object.assign({ id: 'out-' + Date.now().toString(36), lastRunDays: null, lastCount: null }, data));
-      engineSave('r4Outreach', OUTREACH_SCHEDULES); closeCfgModal(); renderOutreach(); renderServices();
+      engineSave('r4Outreach', OUTREACH_SCHEDULES); closeCfgModal(); renderOutreach();
       showToast(name + (id ? ' saved' : ' created'), 'success');
     }
     function deleteOutreach(id) {
       const i = OUTREACH_SCHEDULES.findIndex(x => x.id === id); if (i < 0) return;
       const name = OUTREACH_SCHEDULES[i].name;
-      OUTREACH_SCHEDULES.splice(i, 1); engineSave('r4Outreach', OUTREACH_SCHEDULES); closeCfgModal(); renderOutreach(); renderServices();
+      OUTREACH_SCHEDULES.splice(i, 1); engineSave('r4Outreach', OUTREACH_SCHEDULES); closeCfgModal(); renderOutreach();
       showToast(name + ' deleted', 'success');
     }
 
     // === Navegación de secciones ===
-    const SECTIONS = ['triggers', 'services', 'terms', 'geography', 'roles', 'prompts', 'rules', 'outreach', 'showcase'];
+    const SECTIONS = ['triggers', 'terms', 'geography', 'roles', 'prompts', 'outreach', 'showcase'];
     function showSection(sectionId, btn, keepHash) {
       if (SECTIONS.indexOf(sectionId) < 0) return;
       document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
@@ -1941,17 +1660,17 @@
       if (section) section.classList.add('active');
       (btn || document.querySelector('[data-section="' + sectionId + '"]')).classList.add('is-on');
       if (!keepHash) {
-        const h = sectionId === 'triggers' && trgDraft && !trgDraft._isNew ? '#triggers/' + trgDraft.id : '#' + sectionId;
+        const h = sectionId === 'triggers' && trgDraft && !trgDraft._isNew ? '#triggers/' + trgDraft.id
+          : sectionId === 'geography' && geoCountry ? '#geography/' + geoCountry : '#' + sectionId;
         if (location.hash !== h) history.replaceState(null, '', h);
       }
     }
-    // El conteo del rail: activo sobre total, o lo que espera revisión.
+    // El conteo del rail: activo sobre total, o el tamaño del catálogo.
     function renderNavCounts() {
       const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
       set('navCountTriggers', ENGINE_TRIGGERS.filter(t => t.isActive).length + ' / ' + ENGINE_TRIGGERS.length);
-      set('navCountServices', ENGINE_SERVICES.filter(s => s.status === 'active').length + ' / ' + ENGINE_SERVICES.length);
-      set('navCountTerms', String(ENGINE_TERMS.length));
-      set('navCountGeo', GEO_REVIEW.length ? GEO_REVIEW.length + ' to review' : String(ENGINE_COUNTRIES.length));
+      set('navCountTerms', String(POSITIONS_CATALOG.length));
+      set('navCountGeo', String(ENGINE_COUNTRIES.length));
       set('navCountRoles', String(DECISION_ROLES.length));
       set('navCountPrompts', ENGINE_COUNTRIES.filter(c => countryPromptsComplete(c.code)).length + ' / ' + ENGINE_COUNTRIES.length);
       set('navCountOutreach', OUTREACH_SCHEDULES.filter(o => o.isActive).length + ' / ' + OUTREACH_SCHEDULES.length);
@@ -2232,22 +1951,22 @@
     // === Initial render ===
     scReady = true;
     renderTriggersSection();
-    renderServices();
     renderTerms();
     renderGeo();
     renderRoles();
     renderPrompts();
-    renderRules();
     renderOutreach();
     renderShowcase();
     renderNavCounts();
-    // La sección se abre desde el hash; #triggers/<id> abre el editor de ese trigger.
+    // La sección se abre desde el hash; #triggers/<id> abre el editor de ese trigger y
+    // #geography/<país>, el detalle del país.
     // Sin hash arranca en Triggers.
     function openFromHash() {
       const h = decodeURIComponent((location.hash || '').replace('#', ''));
       const parts = h.split('/');
       if (SECTIONS.indexOf(parts[0]) < 0) return;
       if (parts[0] === 'triggers' && parts[1] && engineTrigger(parts[1])) { if (!trgDraft || trgDraft.id !== parts[1]) openTrigger(parts[1]); return; }
+      if (parts[0] === 'geography' && parts[1] && engineCountry(parts[1])) { showSection('geography', null, true); if (geoCountry !== parts[1]) openGeoCountry(parts[1]); return; }
       showSection(parts[0], null, true);
     }
     openFromHash();

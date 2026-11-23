@@ -414,3 +414,16 @@ button.r4-citylist-item:focus-visible { outline: none; box-shadow: var(--focus-r
 .r4-tablewrap { max-width: 100%; }
 .r4-inline .toggle-switch, .st-rowhead .toggle-switch { flex: 0 0 auto; }
 .st-toolbar #termCountry { max-width: 260px; }
+
+/* Positions: términos por país dentro del modal de la posición */
+.r4-psterms { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; padding: var(--space-3) var(--space-3) var(--space-2); }
+.r4-psadd { display: flex; gap: var(--space-2); align-items: center; padding: 0 var(--space-3) var(--space-3); }
+.r4-psadd .form-input { max-width: 300px; height: 30px; font-size: var(--text-xs); }
+.r4-psadd .op-actionbtn { height: 30px; }
+
+/* Geography: divisiones en acordeón con interruptor y ciudades activas o inactivas */
+.r4-citylist-head .toggle-switch { flex: 0 0 auto; }
+.r4-citylist-group.is-off .r4-citylist-head strong { color: var(--text-muted); }
+.r4-citybtn { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.r4-citybtn:hover { text-decoration: underline; }
+.r4-citybtn:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }

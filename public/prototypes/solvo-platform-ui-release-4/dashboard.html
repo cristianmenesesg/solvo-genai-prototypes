@@ -180,15 +180,15 @@
       // empresas empieza de cero.
       const steps = [
         { label: 'Positions detected', value: sumMetric(rows, 'positions'), chain: false,
-          note: 'Everything the sweep brought in' },
+          note: 'Positions detected in the period' },
         { label: 'Remote viable', value: sumMetric(rows, 'viablePositions'), chain: true,
-          note: 'The classifier judged the role coverable from outside the US' },
+          note: 'Coverable with remote talent' },
         { label: 'Companies', value: sumMetric(rows, 'companies'), chain: false,
-          note: 'New companies the engine brought in during the period' },
+          note: 'New companies in the period' },
         { label: 'Viable companies', value: sumMetric(rows, 'viableCompanies'), chain: true,
           note: 'With at least one remote viable position' },
         { label: 'With decision makers', value: sumMetric(rows, 'companiesWithDm'), chain: true,
-          note: 'Somebody to write to' }
+          note: 'With at least one decision maker' }
       ];
 
       document.getElementById('kpFunnel').innerHTML = steps.map(function (s, i) {
@@ -286,13 +286,13 @@
 
       const rows = ENGINE_TRIGGERS.filter(function (t) { return t.searchBy !== 'none'; }).map(function (t) {
         const mine = exs.filter(function (e) { return e.triggerId === t.id; });
-        const why = t.name + ' does not reach this stage';
+        const why = 'Not applicable';
         if (t.id === 'trg-on-demand') {
           // A pedido no corre por calendario: cada solicitud es su ejecución.
           const sum = function (k) { return reqs.reduce(function (a, r) { return a + ((r.progress || {})[k] || 0); }, 0); };
-          return '<tr><td><span class="r4-rowname">' + esc(t.name) + '</span><span class="r4-rownote">Requests from the platform</span></td>' +
+          return '<tr><td><span class="r4-rowname">' + esc(t.name) + '</span><span class="r4-rownote">On request</span></td>' +
             '<td>' + num(reqs.length) + '</td><td>' + num(sum('searched')) + '</td><td>' + num(sum('found')) + '</td><td>' + num(sum('viable')) + '</td>' +
-            cell(0, false, why) + cell(0, false, why) + cell(0, false, why) + '<td class="r4-na" title="Cost is recorded per invocation in Engine activity">—</td><td></td></tr>';
+            cell(0, false, why) + cell(0, false, why) + cell(0, false, why) + '<td class="r4-na" title="See Engine activity">—</td><td></td></tr>';
         }
         const sum = function (k) { return mine.reduce(function (a, e) { return a + (e.counts[k] || 0); }, 0); };
         const cost = mine.reduce(function (a, e) { return a + (e.costUsd || 0); }, 0);
@@ -308,8 +308,7 @@
 
       return '<section class="kp-panel">' +
         '<div class="kp-panel-head"><h3 class="kp-panel-title">Volume reported by the executions</h3></div>' +
-        '<p class="kp-panel-sub">What each execution of a trigger reported in the range: searches made, vacancies brought in, how many the analysis judged viable, and what the company and decision-maker stages produced. ' +
-          'The execution record starts on ' + esc(dayLabel(new Date(first).toISOString())) + '; the daily line covers ' + dayKeys.length + ' days from ' + esc(dayLabel(dayKeys[0])) + '.</p>' +
+        '<p class="kp-panel-sub">Executions in the range, by trigger. Daily line from ' + esc(dayLabel(dayKeys[0])) + '.</p>' +
         '<div class="r4-scroll"><table class="kp-table"><thead><tr><th>Trigger</th><th>Executions</th><th>Searches</th><th>Vacancies</th><th>Viable</th>' +
           '<th>Companies</th><th>Qualified</th><th>Decision makers</th><th>Cost (USD)</th><th>Vacancies per day</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '</section>';
@@ -323,23 +322,23 @@
       strip.style.display = split === 'all' ? '' : 'none';
       mount.hidden = split === 'all';
       if (split === 'all') {
-        sub.textContent = 'Detection funnel: engine volume in the last ' + days + ' days, every trigger and country together.';
+        sub.textContent = 'Detection funnel, last ' + days + ' days.';
         mount.innerHTML = '';
         return;
       }
       const vacs = windowVacancies();
       let groups;
       if (split === 'trigger') {
-        sub.textContent = 'Detection funnel by trigger, in the last ' + days + ' days.';
+        sub.textContent = 'Detection funnel by trigger, last ' + days + ' days.';
         groups = ENGINE_TRIGGERS.filter(function (t) { return t.searchBy !== 'none'; }).map(function (t) {
           return {
             name: t.name, note: t.countries.length > 2 ? t.countries.length + ' countries' : t.countries.map(countryName).join(', '),
             vacs: vacs.filter(function (v) { return (v.triggerIds || []).indexOf(t.id) !== -1; }),
-            reachCo: reaches(t, 'companies'), reachDm: reaches(t, 'decisionMakers'), why: t.name + ' does not reach this stage'
+            reachCo: reaches(t, 'companies'), reachDm: reaches(t, 'decisionMakers'), why: 'Not applicable'
           };
         });
       } else {
-        sub.textContent = 'Detection funnel by country of the vacancy, in the last ' + days + ' days.';
+        sub.textContent = 'Detection funnel by country, last ' + days + ' days.';
         groups = ENGINE_COUNTRIES.map(function (c) {
           const trs = ENGINE_TRIGGERS.filter(function (t) { return t.countries.indexOf(c.code) !== -1; });
           return {
@@ -347,7 +346,7 @@
             vacs: vacs.filter(function (v) { return v.countryCode === c.code; }),
             reachCo: trs.some(function (t) { return reaches(t, 'companies'); }),
             reachDm: trs.some(function (t) { return reaches(t, 'decisionMakers'); }),
-            why: 'No trigger takes vacancies of ' + c.name + ' to this stage'
+            why: 'Not applicable'
           };
         }).filter(function (g) { return g.vacs.length; });
       }
@@ -355,9 +354,8 @@
         '<section class="kp-panel">' +
           '<div class="kp-panel-head"><h3 class="kp-panel-title">' + (split === 'trigger' ? 'Vacancies in the platform by trigger' : 'Vacancies in the platform by country') + '</h3></div>' +
           '<p class="kp-panel-sub">' + (split === 'trigger'
-            ? 'Vacancy records detected in the range, by the trigger that brought them, with the state each one is in today. A vacancy brought by two triggers counts in both rows and once in the total.'
-            : 'Vacancy records detected in the range, by the country of the vacancy, with the state each one is in today.') +
-            ' The company columns count the distinct companies of those vacancies, how many are qualified today and the decision makers on record. “—” means no trigger takes that row to the stage.</p>' +
+            ? 'Vacancies detected in the range, by trigger, with their current state.'
+            : 'Vacancies detected in the range, by country, with their current state.') + '</p>' +
           recordsTable(groups, vacs, split === 'trigger' ? 'Trigger' : 'Country') +
         '</section>' +
         (split === 'trigger' ? executionsPanel() : '');
@@ -506,8 +504,8 @@
         document.getElementById('positionsTable'), 'Positions detected and remote viable, by day');
 
       document.getElementById('prospectsSub').textContent =
-        num(sumMetric(rows, 'companies')) + ' new companies brought in by the engine, and ' +
-        num(sumMetric(rows, 'decisionMakers')) + ' decision makers found.';
+        num(sumMetric(rows, 'companies')) + ' new companies and ' +
+        num(sumMetric(rows, 'decisionMakers')) + ' decision makers.';
       legend(document.getElementById('prospectsLegend'), PROSPECT_SERIES);
       lineChart(document.getElementById('prospectsChart'), rows, PROSPECT_SERIES,
         document.getElementById('prospectsTable'), 'Companies and decision makers, by day');

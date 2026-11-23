@@ -67,7 +67,7 @@
         <div class="op-resultbar">
           <div class="op-count" id="resultCount"></div>
           <div class="op-sort">
-            <button type="button" class="op-actionbtn" onclick="openScrapePopup({})" title="Ask the On demand trigger for a search by company or by position and location; progress and results are read in Requests">
+            <button type="button" class="op-actionbtn" onclick="openScrapePopup({})" title="Request a search by company or by position and location">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path>
                 <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
@@ -146,8 +146,7 @@
          Barra       búsqueda por texto (espera al botón) + selectores rápidos de
                      empresa, posición y país (aplican al instante y escriben el
                      mismo criterio que el popup).
-         renderCard  una card por vacante: ubicación (placeLabel) con su marca de
-                     revisión, trigger y servicios, posición del catálogo, salario anual
+         renderCard  una card por vacante: ubicación (placeLabel), trigger y servicios, posición del catálogo, salario anual
                      USD + publicado, seniority, idioma, estado si no es viable, empresa con ICP / tamaño /
                      industria / señales, decisores agrupados por rol.
        Acciones: abrir detalle; Request search (openScrapePopup: solicitud al trigger
@@ -174,12 +173,10 @@
                     guarda las DESMARCADAS: [] = todas marcadas = neutro, sin chip; así una
                     ciudad de un país que se suma entra marcada. Al cambiar los países se
                     descartan las desmarcadas de países que ya no están.
-                    Ciudad fuera del catálogo (`cityRaw`, `needsReview`): no se puede
-                    elegir, así que la vacante se conserva mientras su país esté elegido
-                    y su lista de ciudades esté completa; si el usuario recorta las
-                    ciudades de ese país, sale, porque ya no es ninguna de las elegidas.
-                    El criterio "Location to review" las muestra todas, sin importar
-                    las ciudades.
+                    Ciudad fuera del catálogo (`cityRaw`, sin `cityId`): se muestra la
+                    ciudad publicada, sin marca. No se puede elegir, así que la vacante se
+                    conserva mientras su país esté elegido y su lista de ciudades esté
+                    completa; si el usuario recorta las ciudades de ese país, sale.
          Salario    USD anual primero (filtro, orden y export como antes); el publicado,
                     con su moneda y periodo, con menos jerarquía cuando no es USD/año.
          Export     las filas de rbac (buildVacancyExportRows) se extienden acá, una
@@ -231,7 +228,7 @@
         // Reemplaza el "Remote viable only" de Release 3: viable es un estado de la vacante,
         // no un criterio aparte, y es el default.
         key: 'vacancyState', group: 'Result filters', label: 'Vacancy state', type: 'multi', cols: 1,
-        hint: 'Where the vacancy stands in the engine. It is detected, then analyzed, and the analysis leaves it viable (coverable with remote talent) or discarded. It closes after 30 days without being seen again. The list starts on the viable ones.',
+        hint: 'State of the vacancy. The list starts on viable vacancies.',
         def: ['viable'], neutral: [],
         options: Object.keys(VACANCY_STATES).map(function (k) {
           const notes = {
@@ -247,7 +244,7 @@
       },
       {
         key: 'detected', group: 'Result filters', label: 'Detected', type: 'daterange', def: 'all',
-        hint: 'When Solvo first saw the posting, which is not the date the company published it.',
+        hint: 'Date the posting was first detected.',
         options: DATE_PRESETS,
         chip: function (v) {
           if (v && v.from) return 'Detected: ' + v.from + (v.to ? ' → ' + v.to : ' →');
@@ -267,7 +264,7 @@
       },
       {
         key: 'exportStatus', group: 'Result filters', label: 'Export status', type: 'single', cols: 1,
-        hint: 'Whether the position already went out in an export file, and who took it.',
+        hint: 'Whether the position was already exported, and by whom.',
         gated: function () { return canFilterByExportStatus(); }, def: '', neutral: '',
         options: [
           { value: '', label: 'All' },
@@ -286,7 +283,7 @@
       // "Detected by" (pipeline) y "Job portal" de Release 3.
       {
         key: 'trigger', group: 'Origin', label: 'Trigger', type: 'multi', cols: 1, def: [],
-        hint: 'The engine configuration that brought the vacancy in. A vacancy found by two triggers stays one record and matches both.',
+        hint: 'Trigger that found the vacancy.',
         options: function () {
           return ENGINE_TRIGGERS.filter(function (t) { return t.searchBy !== 'none'; }).map(function (t) {
             return { value: t.id, label: t.name, note: t.activation.mode === 'request' ? 'On request' : 'Scheduled' };
@@ -297,10 +294,10 @@
       },
       {
         key: 'sourceService', group: 'Origin', label: 'Source service', type: 'multi', cols: 1, def: [],
-        hint: 'The vacancy services that found the posting. One posting found by several services is one vacancy with several sources; any of the selected services is enough.',
+        hint: 'Service that found the posting. Any selected service is enough.',
         options: function () {
           return servicesForStage('vacancies').map(function (svc) {
-            return { value: svc.id, label: svc.name, note: svc.status === 'active' ? svc.provider : (SERVICE_STATUS[svc.status] || {}).label };
+            return { value: svc.id, label: svc.name, note: svc.provider };
           });
         },
         chip: function (v) { return 'Source: ' + (v.length <= 2 ? v.map(serviceName).join(', ') : v.length); },
@@ -310,7 +307,7 @@
       // ---- Location ----
       {
         key: 'country', group: 'Location', label: 'Country', type: 'multi', cols: 1,
-        hint: 'The country of the vacancy. The list starts on the countries where Solvo sells; the hiring countries are still vacancies and appear when they are selected here. Clear all returns to the default; leaving every country unchecked shows all of them.',
+        hint: 'Country of the vacancy. The list starts on the sales countries; with none checked, all are shown.',
         def: DEFAULT_LIST_COUNTRIES.slice(), neutral: [], clearTo: 'def',
         options: ENGINE_COUNTRIES.map(function (c) {
           return { value: c.code, label: c.name, note: c.group === 'sales' ? 'Sales country' : 'Hiring country' };
@@ -320,7 +317,7 @@
       },
       {
         key: 'cities', group: 'Location', label: 'Cities', type: 'cities', def: [], neutral: [],
-        hint: 'Catalog cities of the selected countries. Every city starts checked; uncheck the ones to leave out. A vacancy whose city is not in the catalog stays while every city of its country is checked.',
+        hint: 'Cities of the selected countries. Uncheck the ones to leave out.',
         chip: function (v, ctx) { return citiesChip(v, ctx); },
         test: function (vac, v) {
           if (vac.cityId) return v.indexOf(vac.cityId) === -1;
@@ -329,22 +326,11 @@
           return !v.some(function (id) { const c = geoCity(id); return c && c.country === vac.countryCode; });
         }
       },
-      {
-        key: 'review', group: 'Location', label: 'Location to review', type: 'single', cols: 1, def: '', neutral: '',
-        hint: 'A service brought a city that is not in the catalog. The vacancy keeps its country and division and is flagged until someone adds the city or maps it to an existing one in Settings.',
-        options: [
-          { value: '', label: 'All vacancies' },
-          { value: 'only', label: 'Only location to review' },
-          { value: 'hide', label: 'Hide location to review' }
-        ],
-        chip: function (v) { return v === 'only' ? 'Location to review' : 'Location to review hidden'; },
-        test: function (vac, v) { return v === 'only' ? !!vac.needsReview : !vac.needsReview; }
-      },
 
       // ---- Position ----
       {
         key: 'position', group: 'Position', label: 'Catalog position', type: 'multi', cols: 1, def: [],
-        hint: 'The catalog position whose term found the posting. A posting found by a company search (Current clients, or On demand by company) has none.',
+        hint: 'Catalog position of the vacancy.',
         options: POSITIONS_CATALOG.map(function (p) { return { value: p.id, label: p.name, note: p.terms.length + ' terms' }; })
           .concat([{ value: 'none', label: 'No catalog position', note: 'Found by a company search' }]),
         chip: function (v) { return 'Position: ' + (v.length === 1 ? (v[0] === 'none' ? 'none' : getPositionName(v[0])) : v.length); },
@@ -362,7 +348,7 @@
       },
       {
         key: 'modality', group: 'Position', label: 'Work modality', type: 'multi', def: [],
-        hint: 'How the company posted the role. An on-site role that is remote viable is the opportunity Solvo sells.',
+        hint: 'Work modality stated in the posting.',
         options: [
           { value: 'onsite', label: 'On-site' }, { value: 'hybrid', label: 'Hybrid' }, { value: 'remote', label: 'Remote' },
           { value: 'unknown', label: 'Not stated', note: 'The posting does not say' }
@@ -372,14 +358,14 @@
       },
       {
         key: 'seniority', group: 'Position', label: 'Seniority', type: 'multi', def: [],
-        hint: 'The level the posting asks for, as the classifier read it.',
+        hint: 'Level the posting asks for.',
         options: SENIORITY_LEVELS.slice(),
         chip: function (v) { return 'Seniority: ' + (v.length === 1 ? seniorityLabel(v[0]) : v.length); },
         test: function (vac, v) { return v.indexOf(String(vac.seniorityLevel || '').toLowerCase()) !== -1; }
       },
       {
         key: 'salary', group: 'Position', label: 'Annual salary (USD)', type: 'multi', def: [],
-        hint: 'Annual pay in US dollars, calculated from the published salary whatever its currency and period. Many postings state nothing.',
+        hint: 'Annual salary in US dollars.',
         options: [
           { value: '0-50', label: 'Under $50K' }, { value: '50-75', label: '$50K – $75K' },
           { value: '75-100', label: '$75K – $100K' }, { value: '100+', label: '$100K and up' },
@@ -395,7 +381,7 @@
       },
       {
         key: 'languages', group: 'Position', label: 'Languages', type: 'multi', def: [],
-        hint: 'Languages the posting requires or values. Choosing two asks for postings that need both.',
+        hint: 'Languages the posting asks for. Choosing two shows postings that need both.',
         options: [{ value: 'English', label: 'English' }, { value: 'Spanish', label: 'Spanish' }],
         chip: function (v) { return 'Language: ' + v.join(', '); },
         test: function (vac, v) {
@@ -405,7 +391,7 @@
       },
       {
         key: 'postingSignals', group: 'Position', label: 'Posting signals', type: 'multi', def: [],
-        hint: 'What the classifier found in the description itself: urgency, volume, whether the role talks to customers, and the conditions that rule people out. Any one of the selected signals is enough.',
+        hint: 'Signals found in the posting. Any selected signal is enough.',
         options: VACANCY_SIGNALS.map(function (x) { return { value: x.code, label: x.label }; }),
         chip: function (v) { return 'Posting: ' + (v.length === 1 ? vacancySignalLabel(v[0]) : v.length + ' signals'); },
         test: function (vac, v) {
@@ -415,7 +401,7 @@
       },
       {
         key: 'description', group: 'Position', label: 'Description contains', type: 'text', def: '',
-        hint: 'Searches inside the job description, for wording the title does not carry.',
+        hint: 'Word or phrase in the job description.',
         placeholder: 'Word or phrase in the job description',
         chip: function (v) { return 'Description: “' + v + '”'; },
         test: function (vac, v) { return String(vac.description || '').toLowerCase().indexOf(v.toLowerCase()) !== -1; }
@@ -424,7 +410,7 @@
       // ---- Company ----
       {
         key: 'company', group: 'Company', label: 'Company', type: 'search', single: true, def: [],
-        hint: 'One company at a time, by name. The same searchbox lives in the search bar, and both write the same choice.',
+        hint: 'One company at a time, by name.',
         placeholder: 'Search company',
         options: function () {
           return MOCK_COMPANIES.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
@@ -438,19 +424,19 @@
       },
       {
         key: 'icp', group: 'Company', label: 'ICP score', type: 'multi', cols: 1, def: [],
-        hint: 'How well the company fits Solvo as a client, scored 0 to 100 when it was qualified.',
+        hint: 'Company fit score, from 0 to 100.',
         options: [
           { value: 'strong', label: 'Strong fit', note: '67 – 100' },
           { value: 'moderate', label: 'Moderate fit', note: '34 – 66' },
           { value: 'weak', label: 'Weak fit', note: '0 – 33' },
-          { value: 'pending', label: 'Not qualified yet', note: 'The company has not been researched' }
+          { value: 'pending', label: 'Not qualified yet', note: 'No score yet' }
         ],
         chip: function (v) { return 'ICP: ' + v.join(', '); },
         test: function (vac, v) { return v.indexOf(icpTier(company(vac))) !== -1; }
       },
       {
         key: 'signals', group: 'Company', label: 'Lead signals', type: 'multi', def: [],
-        hint: 'What the qualification found that makes the company worth approaching now. Any one of the selected signals is enough.',
+        hint: 'Company signals. Any selected signal is enough.',
         options: LEAD_SIGNALS.filter(function (s) { return !s.disqualifying; })
           .map(function (s) { return { value: s.code, label: s.label }; }),
         chip: function (v) { return 'Signals: ' + v.length; },
@@ -461,7 +447,7 @@
       },
       {
         key: 'industry', group: 'Company', label: 'Industry', type: 'multi', def: [],
-        hint: 'The company sector, from the standard catalog of 23. Companies that were never researched are unclassified.',
+        hint: 'Industry of the company.',
         options: getActiveIndustries().map(function (i) { return { value: i.code, label: i.label }; })
           .concat([{ value: 'unclassified', label: 'Unclassified', note: 'No industry on record' }]),
         chip: function (v) { return 'Industry: ' + (v.length === 1 ? (v[0] === 'unclassified' ? 'unclassified' : getIndustryLabel(v[0])) : v.length); },
@@ -469,7 +455,7 @@
       },
       {
         key: 'size', group: 'Company', label: 'Company size', type: 'multi', def: [],
-        hint: 'Headcount on record. It only arrives with company research, so a wide slice of the universe has no size.',
+        hint: 'Headcount of the company.',
         options: COMPANY_SIZE_RANGES.map(function (r) { return { value: r.value, label: r.label + ' employees' }; })
           .concat([{ value: 'unknown', label: 'Size unknown' }]),
         chip: function (v) { return 'Size: ' + v.length; },
@@ -477,12 +463,12 @@
       },
       {
         key: 'dmRole', group: 'Company', label: 'Decision makers', type: 'dm',
-        hint: 'Whether the company has anybody to write to. The list starts on the positions whose company does, because one without a contact cannot be worked. Choosing “with” opens the list of roles, and leaving every role unchecked accepts any of them.',
+        hint: 'Companies with or without decision makers. The list starts on companies with decision makers.',
         def: { mode: 'with', roles: [] }, neutral: { mode: 'all', roles: [] },
         modes: [
           { value: 'all', label: 'All companies' },
           { value: 'with', label: 'With decision makers', note: 'Default' },
-          { value: 'without', label: 'Without decision makers', note: 'Nobody to write to yet' }
+          { value: 'without', label: 'Without decision makers' }
         ],
         // Los roles salen de la tabla de roles de decisor (DECISION_ROLES), que es la que
         // asigna rol y nivel en Release 4.
@@ -504,7 +490,7 @@
       },
       {
         key: 'dmLevel', group: 'Company', label: 'Decision level', type: 'multi', cols: 1, def: [],
-        hint: 'The level comes from the decision-maker roles table: each role has its own level, whatever the size of the company.',
+        hint: 'Decision level of the company decision makers.',
         options: function () {
           return [1, 2].map(function (n) {
             const roles = DECISION_ROLES.filter(function (r) { return r.level === n; }).map(function (r) { return r.label; });
@@ -518,7 +504,7 @@
       },
       {
         key: 'excluded', group: 'Company', label: 'Excluded companies', type: 'single', cols: 1, def: 'include', neutral: 'include',
-        hint: 'Qualification disqualifies staffing agencies, which compete with Solvo, and government entities. A disqualified company is never searched for contacts, so the decision-maker filter already leaves it out; this is here to audit whether the classifier excluded somebody it should not have.',
+        hint: 'Disqualified companies: staffing agencies and government entities.',
         options: [
           { value: 'include', label: 'Included' },
           { value: 'hide', label: 'Hidden' },
@@ -534,7 +520,7 @@
       },
       {
         key: 'companyType', group: 'Company', label: 'Relationship', type: 'multi', def: [],
-        hint: 'Whether Solvo already bills the company, is still prospecting it, or has set it aside.',
+        hint: 'Relationship of the company with Solvo.',
         options: [
           { value: 'client', label: 'Client' }, { value: 'prospect', label: 'Prospect' }, { value: 'inactive', label: 'Inactive' }
         ],
@@ -545,7 +531,7 @@
       // ---- Assignment ----
       {
         key: 'salesRep', group: 'Assignment', label: 'Sales Rep', type: 'search', def: [],
-        hint: 'The Sales Rep working the position, inherited from the company or set on the position itself.',
+        hint: 'Sales Rep assigned to the position.',
         placeholder: 'Search by name or email',
         gated: function () { return canViewAll(); },
         options: function () {
@@ -557,7 +543,7 @@
       },
       {
         key: 'sdr', group: 'Assignment', label: 'SDR', type: 'search', def: [],
-        hint: 'The SDR working the position, inherited from the company or set on the position itself.',
+        hint: 'SDR assigned to the position.',
         placeholder: 'Search by name or email',
         gated: function () { return canViewAll(); },
         options: function () {
@@ -569,7 +555,7 @@
       },
       {
         key: 'assignType', group: 'Assignment', label: 'Assignment type', type: 'single', cols: 1, def: '',
-        hint: 'A position inherits the company assignment until somebody sets one on the position, which then wins.',
+        hint: 'Whether the assignment comes from the company or was set on the position.',
         gated: function () { return canViewAll(); },
         options: [
           { value: '', label: 'All' },
@@ -885,7 +871,7 @@
         return '<span class="op-cbadge op-cbadge-excluded" title="Disqualified: ' +
           esc(leadSignalLabel(c.exclusionReason)) + '">Excluded</span>';
       }
-      if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
+      if (tier === 'pending') return '<span class="op-cbadge" title="Not researched yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
       return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
     }
@@ -931,19 +917,18 @@
         signalBadges += '<span class="op-cbadge op-cbadge-signal" title="' + esc(signals.slice(1).map(leadSignalLabel).join(', ')) + '">+' + (signals.length - 1) + ' more</span>';
       }
 
-      // Sin decisores hay tres situaciones distintas y conviene no confundirlas: la empresa
-      // quedó descalificada, la búsqueda corrió y nadie calificó, o todavía no corrió. Por qué
-      // no corrió —puntaje bajo o item en cola— no se dice: no cambia lo que el usuario hace.
+      // Sin decisores hay tres situaciones: la empresa quedó excluida, no se encontraron
+      // decisores, o todavía no se buscaron. Se dice cuál, sin explicar el porqué.
       const otherContacts = getUnanalyzedContacts(c.id).length;
       let dmRow;
       if (!dms.length) {
         const why = c.isExcluded
-          ? 'Excluded company — contacts are never searched'
+          ? 'Excluded company'
           : c.contactsSearchedAt
             ? 'No qualifying decision makers found'
             : 'Decision makers not searched yet';
         dmRow = '<span class="op-dm-none">' + why + '</span>' +
-          (otherContacts ? '<span class="op-dm-badge" title="Contacts saved before the profile analysis; they have no role or decision level.">' +
+          (otherContacts ? '<span class="op-dm-badge" title="Contacts without a role or decision level">' +
             otherContacts + ' other contact' + (otherContacts === 1 ? '' : 's') + '</span>' : '');
       } else {
         dmRow = '<span class="op-dm-label">Decision makers <strong>' + dms.reduce(function (n, d) { return n + d.people.length; }, 0) +
@@ -956,7 +941,7 @@
             return '<span class="op-dm-badge' + (d.level === 1 ? ' is-level1' : '') + '" title="Level ' + d.level + ' · ' + esc(who) + '">' + esc(d.label) + '</span>';
           }).join('') +
           (dms.length > 3 ? '<span class="op-dm-badge" title="' + esc(dms.slice(3).map(function (d) { return d.label; }).join(', ')) + '">+' + (dms.length - 3) + '</span>' : '') +
-          (otherContacts ? '<span class="op-dm-badge" title="Contacts saved before the profile analysis; they have no role or decision level.">' +
+          (otherContacts ? '<span class="op-dm-badge" title="Contacts without a role or decision level">' +
             otherContacts + ' other</span>' : '') +
           '</span>';
       }
@@ -979,10 +964,6 @@
         }).join('') + '</span>' : '') +
       '</div>';
 
-      const review = vac.needsReview
-        ? '<span class="r4-review" title="“' + esc(vac.cityRaw || '') + '” is not in the city catalog. The vacancy keeps its country and division until someone adds the city or maps it in Settings.">Location to review</span>'
-        : '';
-
       return '<article class="op-card' + (c.isExcluded ? ' is-excluded' : '') + '">' +
         '<div class="op-card-head">' +
           '<a class="op-card-title" href="vacancy-detail.html?id=' + esc(vac.id) + '">' + esc(vac.title) + '</a>' +
@@ -990,7 +971,6 @@
         '</div>' +
         '<div class="op-card-loc">' + ICON_PIN +
           '<span>' + esc(place(vac)) + ' · ' + esc(modalityLabel(vac.workModality)) + '</span>' +
-          review +
         '</div>' +
         origin +
         '<div class="op-tagrow">' + tags + viability + '</div>' +
@@ -1028,8 +1008,8 @@
       const grid = document.getElementById('resultGrid');
       grid.innerHTML = slice.length
         ? slice.map(renderCard).join('')
-        : '<div class="op-empty"><h3>No positions match this search</h3>' +
-          '<p>' + emptyStateHint() + '</p>' +
+        : '<div class="op-empty"><h3>No positions match the filters.</h3>' +
+          emptyStateHint() +
           '<button class="btn btn-secondary" onclick="clearEverything()">Clear search and filters</button></div>';
 
       const exportBtn = document.getElementById('exportBtn');
@@ -1041,24 +1021,13 @@
     }
 
 
-    // Varios criterios arrancan recortando —viables, no exportados, con decisores—, así que un
-    // listado vacío suele ser un default y no una búsqueda sin resultados. El vacío los nombra.
+    // Varios criterios arrancan recortando —viables, con decisores—: el vacío nombra los
+    // que siguen activos desde el default, en una línea.
     function emptyStateHint() {
       const active = visibleFilters()
         .filter(function (f) { return !isNeutral(f, state.filters[f.key]) && !isNeutral(f, defaultFor(f)); })
         .map(function (f) { return f.chip(state.filters[f.key]); });
-      // Los países donde ningún trigger busca decisores no pueden cumplir "con decisores",
-      // que es default: se dice, porque es la causa más probable del vacío.
-      const dm = state.filters.dmRole;
-      const noDm = (state.filters.country || []).filter(function (code) {
-        return !ENGINE_TRIGGERS.some(function (t) { return t.decisionMakers.length && t.countries.indexOf(code) !== -1; });
-      });
-      const dmNote = dm && dm.mode === 'with' && noDm.length
-        ? ' Decision makers are not searched in ' + noDm.map(countryName).join(', ') + ', so set Decision makers to All companies to see those vacancies.'
-        : '';
-      return (active.length
-        ? 'These filters are on by default: ' + active.join(' · ') + '. Clear them, widen the date range, or search another title.'
-        : 'Widen the date range, clear a filter, or search another title.') + dmNote;
+      return active.length ? '<p>On by default: ' + esc(active.join(' · ')) + '.</p>' : '';
     }
 
     function renderPagination(total, pages) {

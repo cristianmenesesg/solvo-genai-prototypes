@@ -222,7 +222,7 @@
            trigger, fecha). Una vacante con varias fuentes es un solo registro.
          · Ubicación de tres niveles: país, división (con la etiqueta de su país:
            State, Province, Department…) y ciudad; la ciudad fuera del catálogo se
-           muestra como la publicó el aviso, con la marca "Location to review".
+           muestra como la publicó el aviso (`cityRaw`), sin marca.
          · Salario: USD anual primero; el publicado, con moneda y periodo, debajo.
          · Estado de la vacante (`entityState`, VACANCY_STATES) en la cabecera y en Job
            info. Follow-up junta dos historiales, distinguidos por una etiqueta y un
@@ -286,12 +286,6 @@
     // placeLabel repite el nombre cuando ciudad y división se llaman igual ("Madrid, Madrid").
     function place(rec) { return placeLabel(rec).replace(/^([^,·]+), \1(?= ·|$)/, '$1'); }
 
-    function reviewMark() {
-      return vacancy.needsReview
-        ? '<span class="r4-review" title="“' + esc(vacancy.cityRaw || '') + '” is not in the city catalog. The vacancy keeps its country and division until someone adds the city or maps it in Settings.">Location to review</span>'
-        : '';
-    }
-
     // Servicios distintos que encontraron la vacante, en el orden en que llegaron.
     function sourceServices() {
       const ids = [];
@@ -349,7 +343,7 @@
         '<div class="vd-company">' +
           '<a href="company-detail.html?id=' + esc(company.id) + '">' + esc(company.name) + '</a>' +
         '</div>' +
-        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(place(vacancy)) + ' · ' + esc(modalityLabel(vacancy.workModality)) + '</span>' + reviewMark() + '</div>' +
+        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(place(vacancy)) + ' · ' + esc(modalityLabel(vacancy.workModality)) + '</span></div>' +
         '<div class="vd-tags">' + tags + '</div>' +
         '<div class="vd-actions">' +
           '<a class="op-btn-apply" href="' + esc(vacancy.jobUrl) + '" target="_blank" rel="noopener">Open original posting' + ICON.external + '</a>' +
@@ -371,19 +365,18 @@
     // El veredicto del análisis, como filas de la sección que lo explica.
     function verdictRows() {
       if (vacancy.aiConfidence === null || vacancy.aiConfidence === undefined) {
-        return specRow('Remote viability', '<span class="vd-flag vd-flag-none">Not classified</span>') +
-          specRow('Why', 'This posting was detected before the classifier existed, so there is no verdict for it.', null, true);
+        return specRow('Remote viability', '<span class="vd-flag vd-flag-none">Not classified</span>');
       }
       const ok = vacancy.remoteViable === true;
       return specRow('Remote viability',
           '<span class="vd-flag ' + (ok ? 'vd-flag-ok' : 'vd-flag-no') + '">' +
           (ok ? ICON.check : ICON.cross) + (ok ? 'Remote viable' : 'Not remote viable') + '</span>',
-          'Whether Solvo can cover the role from outside the US') +
+          'Can be covered with remote talent') +
         specRow('Confidence', Math.round(vacancy.aiConfidence * 100) + '%',
-          'How sure the classifier is of the verdict') +
+          'Confidence of the verdict') +
         specRow('Prompt', vacancy.promptVersion
           ? 'Vacancy analysis · ' + esc(countryName(vacancy.countryCode)) + ' · ' + esc(vacancy.promptVersion)
-          : '', 'The country prompt and version that produced the verdict') +
+          : '', 'Prompt and version of the analysis') +
         specRow('Why', esc((vacancy.aiReasons || [])[0] || ''), null, true);
     }
 
@@ -403,17 +396,17 @@
         : '<em>Not stated</em>';
       const city = vacancy.cityId
         ? esc(cityName(vacancy.cityId))
-        : vacancy.cityRaw ? esc(vacancy.cityRaw) + ' ' + reviewMark() : '<em>Not stated</em>';
+        : vacancy.cityRaw ? esc(vacancy.cityRaw) : '<em>Not stated</em>';
 
       // Lo que el aviso dice de sí mismo, dónde queda, qué trigger lo trajo y en qué estado está.
       const jobInfo =
         specRow('State', stateBadge(VACANCY_STATES, vacancy.entityState) +
           (since ? '<span class="r4-muted" style="font-size:var(--text-xs);">since ' + esc(formatDate(since)) + '</span>' : ''),
-          'Where the vacancy stands in the engine') +
+          'Vacancy state') +
         specRow('Seniority', esc(seniorityLabel(vacancy.seniorityLevel))) +
-        specRow('Work modality', esc(modalityLabel(vacancy.workModality)), 'How the company posted the role, not how Solvo would cover it') +
+        specRow('Work modality', esc(modalityLabel(vacancy.workModality)), 'As stated in the posting') +
         specRow('Department', esc(vacancy.department)) +
-        specRow('Salary', salaryCell, 'Annual salary in USD, calculated from the published salary') +
+        specRow('Salary', salaryCell, 'Annual salary in USD') +
         specRow('Languages', (vacancy.languages || []).length
           ? (vacancy.languages || []).map(function (l) { return '<span class="op-tag">' + esc(l) + '</span>'; }).join(' ')
           : '<em>None stated</em>') +
@@ -422,11 +415,11 @@
           : '<em>None extracted</em>') +
         specRow('Country', esc(country.name)) +
         specRow(country.divisionLabel, vacancy.divisionCode ? esc(divisionName(vacancy.divisionCode)) + ' <span class="r4-muted">' + esc(vacancy.divisionCode) + '</span>' : '<em>Not stated</em>',
-          'ISO 3166-2 division') +
+          'Division code') +
         specRow('City', city) +
         specRow((vacancy.triggerIds || []).length > 1 ? 'Triggers' : 'Trigger', esc((vacancy.triggerIds || []).map(triggerName).join(', ')),
-          'The engine configuration that brought the vacancy in') +
-        specRow('Published', esc(formatDate(vacancy.publishedDate)) || '<em>Not stated</em>', 'The date the company published the posting');
+          'Trigger that found the vacancy') +
+        specRow('Published', esc(formatDate(vacancy.publishedDate)) || '<em>Not stated</em>', 'Publication date of the posting');
 
       // Señales que el análisis etiquetó sobre la descripción (vacancies.ai_signals).
       const signals = (vacancy.aiSignals || []).map(function (x) {
@@ -437,11 +430,11 @@
       const analysis =
         verdictRows() +
         specRow('Posting signals', signals || '<em>None</em>',
-          'What the classifier found in the description: urgency, volume, customer contact and the conditions that rule people out') +
+          'Signals found in the posting') +
         specRow('Catalog position', vacancy.positionId
           ? esc(getPositionName(vacancy.positionId))
-          : '<em>None — found by a company search</em>', 'The catalog position whose term found this posting') +
-        specRow('Detected', esc(formatDate(vacancy.detectedAt)), 'The date Solvo first saw it');
+          : '<em>None</em>', 'Catalog position of the vacancy') +
+        specRow('Detected', esc(formatDate(vacancy.detectedAt)), 'Date first detected');
 
       document.getElementById('vdSpec').innerHTML =
         '<section class="vd-speccol"><h3 class="vd-blocktitle">Job info</h3><dl>' + jobInfo + '</dl></section>' +
@@ -471,9 +464,9 @@
               '</tr>';
             }).join('') + '</tbody></table>' +
             (services.length > 1
-              ? '<p class="r4-blocknote">Found by ' + services.length + ' services. It is the same opening, so it stays one vacancy with one source per service.</p>'
+              ? '<p class="r4-blocknote">Found by ' + services.length + ' services.</p>'
               : '')
-          : '<p class="vd-empty">No service is recorded for this vacancy.</p>');
+          : '<p class="vd-empty">No sources recorded.</p>');
     }
 
     /* ---- Tab Follow-up -------------------------------------------------------- */
@@ -500,8 +493,8 @@
       const el = document.getElementById('vdTimeline');
       if (!rows.length) {
         el.innerHTML = '<p class="vd-empty">' + (timelineMode === 'pipeline'
-          ? 'Nobody has changed the pipeline status of this position yet.'
-          : 'Nothing has happened to this position yet.') + '</p>';
+          ? 'No pipeline status changes yet.'
+          : 'No activity yet.') + '</p>';
         return;
       }
       el.innerHTML = rows.map(function (r) { return r.kind === 'engine' ? renderEngineEntry(r) : renderActivityEntry(r); }).join('');
@@ -571,7 +564,7 @@
     function icpBadge(c) {
       const tier = icpTier(c);
       if (tier === 'excluded') return '<span class="op-cbadge op-cbadge-excluded" title="Disqualified: ' + esc(leadSignalLabel(c.exclusionReason)) + '">Excluded</span>';
-      if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
+      if (tier === 'pending') return '<span class="op-cbadge" title="Not researched yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
       return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
     }
@@ -631,14 +624,14 @@
         const others = getUnanalyzedContacts(company.id);
         el.innerHTML = head + '<p class="vd-empty">' +
           (company.isExcluded
-            ? 'The company is excluded, so contacts are never searched for it.'
+            ? 'Excluded company.'
             : company.contactsSearchedAt
-              ? 'The contact search ran and nobody qualified as a decision maker.'
-              : 'The contact search has not run for this company yet.') +
+              ? 'No decision makers found.'
+              : 'Decision makers not searched yet.') +
           '</p>' +
           (others.length
             ? '<p class="vd-dm-others" title="' + esc(others.map(function (o) { return o.fullName + ' — ' + o.position; }).join(' · ')) + '">' +
-              others.length + ' contact' + (others.length === 1 ? '' : 's') + ' on record without a role code.</p>'
+              others.length + ' contact' + (others.length === 1 ? '' : 's') + ' without a role.</p>'
             : '');
         return;
       }
@@ -646,7 +639,7 @@
       const others = getUnanalyzedContacts(company.id);
       const othersNote = others.length
         ? '<p class="vd-dm-others" title="' + esc(others.map(function (o) { return o.fullName + ' — ' + o.position; }).join(' · ')) + '">' +
-          others.length + ' more contact' + (others.length === 1 ? '' : 's') + ' on record without a role code, so they do not count as decision makers.</p>'
+          others.length + ' more contact' + (others.length === 1 ? '' : 's') + ' without a role.</p>'
         : '';
 
       el.innerHTML = head + people.map(function (p) {
@@ -654,8 +647,7 @@
         return '<article class="vd-dm">' +
           '<div class="vd-dm-head">' +
             '<span class="vd-dm-role">' + esc(roleLabel(p.roleCode)) + '</span>' +
-            '<span class="vd-dm-level" title="Level ' + p.decisionLevel +
-              ' — from the decision-maker roles table">L' + p.decisionLevel + '</span>' +
+            '<span class="vd-dm-level" title="Decision level ' + p.decisionLevel + '">L' + p.decisionLevel + '</span>' +
           '</div>' +
           '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
           // El cargo crudo solo cuando no es la expansión literal del rol normalizado.
@@ -834,7 +826,7 @@
     function confirmDeleteVacancy() {
       openConfirmPopup({
         title: 'Delete position',
-        message: 'Deleting <strong>' + vacancy.title + '</strong> hides it from the listings and keeps its history. An administrator can restore it.',
+        message: '<strong>' + vacancy.title + '</strong> is hidden from the listings. An administrator can restore it.',
         confirmLabel: 'Delete',
         onConfirm: function () {
           const idx = MOCK_VACANCIES.findIndex(function (v) { return v.id === vacancy.id; });

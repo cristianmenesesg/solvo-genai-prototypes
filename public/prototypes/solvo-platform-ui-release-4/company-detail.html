@@ -150,7 +150,7 @@
               <label class="form-label">Website</label>
               <div class="input-with-action">
                 <input type="url" class="form-input" id="editWebsite" value="https://techcorp.com" placeholder="https://...">
-                <button type="button" class="btn btn-ghost btn-sm input-action-btn" id="editInvestigateBtn" onclick="investigateFromEdit()" title="Request the On-demand research of this company">
+                <button type="button" class="btn btn-ghost btn-sm input-action-btn" id="editInvestigateBtn" onclick="investigateFromEdit()" title="Research this company">
                   Run research
                 </button>
               </div>
@@ -196,7 +196,7 @@
 
           <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
             <p class="text-muted text-sm" style="margin: 0;">
-              <strong>Note:</strong> Pipeline state is not editable from here. Use the "Change State" button to modify it with a follow-up note.
+              <strong>Note:</strong> Stage changes use the "Change stage" button.
             </p>
           </div>
         </form>
@@ -406,10 +406,6 @@
           <div class="form-group">
             <label class="form-label">Email verification</label>
             <select class="form-select" id="newContactVerification"></select>
-            <p class="text-muted text-xs" style="margin-top:6px;">
-              The send cycle only writes to verified and catch-all addresses, and only to roles that receive
-              email. The level comes from the decision-maker roles table.
-            </p>
           </div>
         </form>
       </div>
@@ -572,7 +568,7 @@
           '<span class="op-cbadge">' + esc(RELATIONSHIP_LABELS[company.type] || company.type) + '</span>' +
           '<span class="pr-stage pr-stage-' + (STAGE_TONE[company.pipelineStage] || 'neutral') + '" id="stageBadge">' +
             esc(pipelineLabel(company.pipelineStage)) + '</span>' +
-          // Estado en el motor (con su explicación) y tipo de empresa.
+          // Estado de la empresa y tipo de empresa.
           '<span title="' + esc((COMPANY_STATES[company.entityState] || {}).note || '') + '">' + stateBadge(COMPANY_STATES, company.entityState) + '</span>' +
           '<span class="op-cbadge' + (company.companyType && company.companyType !== 'direct_employer' ? ' op-cbadge-excluded' : '') + '">' +
             esc(COMPANY_TYPES[company.companyType] || 'Type not classified') + '</span>' +
@@ -608,23 +604,23 @@
         specRow('Industry', company.industryCode
           ? esc(getIndustryLabel(company.industryCode)) +
             (company.industry && company.industry.toLowerCase() !== getIndustryLabel(company.industryCode).toLowerCase()
-              ? ' <span class="vd-raw" title="The label the source used before it was mapped to the catalog">' + esc(company.industry) + '</span>'
+              ? ' <span class="vd-raw" title="Label from the source">' + esc(company.industry) + '</span>'
               : '')
-          : '<em>Unclassified</em>', 'Mapped to the standard catalog by the enrichment') +
-        specRow('Type', company.companyType ? esc(COMPANY_TYPES[company.companyType]) : '<em>Not classified yet</em>', 'Assigned by the company analysis') +
+          : '<em>Unclassified</em>') +
+        specRow('Type', company.companyType ? esc(COMPANY_TYPES[company.companyType]) : '<em>Not classified yet</em>') +
         specRow('Employees', company.sizeEmployees
           ? Number(company.sizeEmployees).toLocaleString('en-US')
-          : '<em>Unknown</em>', 'A range from the source is stored as its midpoint') +
+          : '<em>Unknown</em>') +
         specRow('Revenue', revenueLabel(company) ? esc(revenueLabel(company)) + ' / year' : '<em>Unknown</em>') +
         specRow('Founded', company.yearFounded ? String(company.yearFounded) : '<em>Unknown</em>') +
-        specRow('Detected', esc(formatDate(company.createdAt)), 'The day a sweep first found one of its postings') +
+        specRow('Detected', esc(formatDate(company.createdAt)), 'Date first detected') +
         specRow('Triggers', (company.triggerIds || []).length ? esc(company.triggerIds.map(triggerName).join(', ')) : '<em>Created in the platform</em>',
-          'The triggers that brought the company: the one of each of its openings, or a research requested from this record') +
+          'Triggers that found the company') +
         specRow('HQ country', esc(countryName(company.countryCode))) +
         specRow('HQ ' + ((engineCountry(company.countryCode) || {}).divisionLabel || 'division').toLowerCase(),
           company.divisionCode ? esc(divisionName(company.divisionCode)) + ' <span class="vd-raw">' + esc(company.divisionCode) + '</span>' : '<em>Unknown</em>') +
         specRow('HQ city', company.city ? esc(company.city) : '<em>Unknown</em>') +
-        specRow('Domain', company.domain ? esc(company.domain) : '<em>Unknown</em>', 'The key of the company and the input of the decision-maker services') +
+        specRow('Domain', company.domain ? esc(company.domain) : '<em>Unknown</em>') +
         specRow('Website', company.website
           ? '<a href="' + esc(company.website) + '" target="_blank" rel="noopener">' + esc(String(company.website).replace(/^https?:\/\//, '')) + '</a>'
           : '<em>Unknown</em>') +
@@ -665,8 +661,8 @@
       const last = companyRequests('trg-research')[0];
       if (!last) {
         const engine = getEntityHistory('company', company.id).filter(function (h) { return h.serviceId === 'svc-apollo-company' || h.serviceId === 'svc-brightdata'; })[0];
-        el.innerHTML = '<div class="cd4-research"><span>No research has been requested from the platform.</span>' +
-          (engine ? '<span>The engine enriched it ' + esc(shortAgo(engine.at)) + ' through the ' + esc(triggerName(engine.triggerId)) + ' trigger.</span>' : '') + '</div>';
+        el.innerHTML = '<div class="cd4-research"><span>No research requested.</span>' +
+          (engine ? '<span>Enriched ' + esc(shortAgo(engine.at)) + '.</span>' : '') + '</div>';
         return;
       }
       const st = last.steps || {};
@@ -690,11 +686,11 @@
       renderResearchRequest();
       const el = document.getElementById('cdResearch');
       if (!company.isResearched) {
-        el.innerHTML = '<p class="vd-empty">This company has not been researched. A trigger that reaches company enrichment researches it when it detects one of its postings, or you can request it with Run research.</p>';
+        el.innerHTML = '<p class="vd-empty">Not researched yet.</p>';
         return;
       }
       if (!company.valueProposition && !company.salesPitch) {
-        el.innerHTML = '<p class="vd-empty">The research ran but no source returned the company, so nothing was stored. It is not qualified either.</p>';
+        el.innerHTML = '<p class="vd-empty">No research data found for this company.</p>';
         return;
       }
       // Los seis campos de la investigación, todos editables desde el mismo popup.
@@ -716,7 +712,7 @@
     function renderAnalysis() {
       const el = document.getElementById('cdAnalysis');
       if (!company.qualifiedAt) {
-        el.innerHTML = '<p class="vd-empty">This company has not been qualified, so it has no ICP score, no signals and no lead summary. The company analysis scores it against the ' + esc(countryName(company.countryCode)) + ' ICP once it has its essential data.</p>';
+        el.innerHTML = '<p class="vd-empty">Not qualified yet.</p>';
         return;
       }
 
@@ -740,36 +736,33 @@
 
       el.innerHTML =
         '<dl class="cd-analysis">' +
-          specRow(countryName(company.countryCode) + ' ICP', score, 'Scored 0 to 100 against the ICP of the company country; 0 when disqualified') +
+          specRow(countryName(company.countryCode) + ' ICP', score, 'ICP score, from 0 to 100') +
           specRow('ICP of reference', esc(countryName(company.countryCode)) +
-            (prompt ? ' · minimum score ' + prompt.icpMinScore + ' · prompt v' + prompt.version : ''),
-            'Each country has its own company-analysis prompt with its ICP and minimum score') +
-          specRow('Signals', signalRow, 'Only signals the qualification could support with the input') +
+            (prompt ? ' · minimum score ' + prompt.icpMinScore + ' · prompt v' + prompt.version : '')) +
+          specRow('Signals', signalRow) +
           (company.isExcluded
-            ? specRow('Disqualified by', '<strong>' + esc(leadSignalLabel(company.exclusionReason)) + '</strong>. It never enters the contact or send cycles.', null, true)
+            ? specRow('Disqualified by', '<strong>' + esc(leadSignalLabel(company.exclusionReason)) + '</strong>', null, true)
             : '') +
           specRow('Lead summary', esc(company.leadSummary), null, true) +
           specRow('Repeated posting', repeatedPosting(company.id)
             ? '<span class="vd-flag vd-flag-ok">' + ICON.check + 'Yes</span>'
             : '<span class="vd-flag vd-flag-none">No</span>',
-            'Computed before scoring: two or more detected positions share the same catalog position') +
+            'Two or more positions share the same catalog position') +
           // Lo que la calificación produjo aguas abajo: a quién se le puede escribir
           // y si el envío ya lo hizo.
           specRow('Decision makers', countDecisionMakers(company.id)
             ? String(countDecisionMakers(company.id)) + ' on record' +
               (getUnanalyzedContacts(company.id).length
-                ? ' · ' + getUnanalyzedContacts(company.id).length + ' more contact(s) without a role code'
+                ? ' · ' + getUnanalyzedContacts(company.id).length + ' more contact(s) without a role'
                 : '')
             : (company.isExcluded
-              ? '<em>Never searched — the company is excluded</em>'
+              ? '<em>Excluded company</em>'
               : company.contactsSearchedAt
-                ? '<em>None qualified</em>'
-                : '<em>Not searched yet</em>'),
-            'The contact search runs on companies that clear the qualification threshold, in score order; a company above it can still be waiting in the queue') +
+                ? '<em>None found</em>'
+                : '<em>Not searched yet</em>')) +
           specRow('Last outreach', company.lastContactedAt
             ? esc(formatDate(company.lastContactedAt))
-            : '<em>Not emailed yet</em>',
-            'Written only by the cold outreach send. A company with a date never enters the send cycle again.') +
+            : '<em>Not emailed yet</em>') +
         '</dl>';
     }
 
@@ -784,7 +777,7 @@
 
       const el = document.getElementById('cdPositions');
       if (!rows.length) {
-        el.innerHTML = '<p class="vd-empty">No positions detected for this company yet.</p>';
+        el.innerHTML = '<p class="vd-empty">No positions yet.</p>';
         return;
       }
       el.innerHTML = rows.map(function (v) {
@@ -800,7 +793,7 @@
             '<div class="cd-pos-tags">' +
               (v.positionId ? '<span class="op-tag op-tag-position">' + esc(getPositionName(v.positionId)) + '</span>' : '') +
               '<span class="op-tag">' + esc(modalityLabel(v.workModality)) + '</span>' +
-              (placeLabel(v) ? '<span class="op-tag" title="' + (v.needsReview ? 'Location to review: the city is not in the catalog' : '') + '">' + esc(placeLabel(v)) + (v.needsReview ? ' · to review' : '') + '</span>' : '') +
+              (placeLabel(v) ? '<span class="op-tag">' + esc(placeLabel(v)) + '</span>' : '') +
               (salaryUsdLabel(v) ? '<span class="op-tag op-tag-salary">' + esc(salaryUsdLabel(v)) + '</span>' : '') +
               (pub ? '<span class="cd4-salpub" title="Salary as published">' + esc(pub) + '</span>' : '') +
             '</div>' +
@@ -848,7 +841,7 @@
       const rows = all.filter(function (e) { return histFilter === 'all' || e.src === histFilter; });
       const el = document.getElementById('cdTimeline');
       if (!rows.length) {
-        el.innerHTML = '<p class="vd-empty">Nothing recorded here yet.</p>';
+        el.innerHTML = '<p class="vd-empty">No history yet.</p>';
         return;
       }
       el.innerHTML = rows.map(function (e) { return e.src === 'team' ? renderActivityEntry(e.a) : renderEngineEntry(e); }).join('');
@@ -923,10 +916,10 @@
       if (!people.length) {
         el.innerHTML = head + '<p class="vd-empty">' +
           (company.isExcluded
-            ? 'The company is excluded, so contacts are never searched for it.'
+            ? 'Excluded company.'
             : company.contactsSearchedAt
-              ? 'The contact search ran and nobody qualified as a decision maker.'
-              : 'The contact search has not run for this company yet.') + '</p>' +
+              ? 'No decision makers found.'
+              : 'Decision makers not searched yet.') + '</p>' +
           renderOtherContacts();
         return;
       }
@@ -939,8 +932,8 @@
           '<div class="vd-dm-head">' +
             '<span class="vd-dm-role">' + esc(dmRoleLabel(p.roleCode)) + '</span>' +
             (p.dmState ? '<span class="cd4-dmstate">' + stateBadge(DM_STATES, p.dmState) + '</span>' : '') +
-            '<span class="vd-dm-level" title="Level ' + level + ', from the decision-maker roles table' +
-              (level === 1 ? ' — signs the purchase' : '') + '">L' + level + '</span>' +
+            '<span class="vd-dm-level" title="Decision level ' + level +
+              (level === 1 ? ' · signs the purchase' : '') + '">L' + level + '</span>' +
             '<button type="button" class="cd-iconbtn" title="Edit" onclick="editContact(\'' + esc(p.id) + '\')">' + ICON.edit + '</button>' +
             '<button type="button" class="cd-iconbtn" title="Delete" onclick="confirmDeleteContact(\'' + esc(p.id) + '\')">' + ICON.trash + '</button>' +
           '</div>' +
@@ -966,7 +959,7 @@
     // proveedores distintos.
     function dmProviders(p) {
       const pr = p.providers;
-      if (pr === 'manual' || (pr && pr.manual)) return '<div class="cd4-prov">Added manually in Solvo Platform</div>';
+      if (pr === 'manual' || (pr && pr.manual)) return '<div class="cd4-prov">Added manually</div>';
       if (!pr) return '';
       const parts = [['Person', pr.person], ['Email', pr.email], ['Phone', pr.phone]]
         .filter(function (x) { return x[1]; })
@@ -977,8 +970,8 @@
     function dmFlags(role) {
       if (!role) return '';
       return '<div class="cd4-flags">' +
-        '<span class="cd4-flag' + (role.sendsEmail ? ' is-on' : '') + '" title="Whether the cold outreach writes to this role">' + (role.sendsEmail ? 'Receives cold email' : 'No cold email') + '</span>' +
-        '<span class="cd4-flag' + (role.findsPhone ? ' is-on' : '') + '" title="Whether the contact service searches a phone for this role">' + (role.findsPhone ? 'Phone search' : 'No phone search') + '</span>' +
+        '<span class="cd4-flag' + (role.sendsEmail ? ' is-on' : '') + '">' + (role.sendsEmail ? 'Receives cold email' : 'No cold email') + '</span>' +
+        '<span class="cd4-flag' + (role.findsPhone ? ' is-on' : '') + '">' + (role.findsPhone ? 'Phone search' : 'No phone search') + '</span>' +
       '</div>';
     }
 
@@ -990,7 +983,7 @@
       if (!others.length) return '';
       return '<section class="cd-others">' +
         '<h4 class="cd-otherstitle">Other contacts <span class="vd-count">' + others.length + '</span></h4>' +
-        '<p class="cd-othershint">Saved without a decision-maker role, so they do not count as decision makers and the send cycle skips them.</p>' +
+        '<p class="cd-othershint">Contacts without a decision-maker role.</p>' +
         others.map(function (p) {
           return '<article class="vd-dm is-other">' +
             '<div class="vd-dm-head">' +
@@ -1387,7 +1380,7 @@
         }, fields));
         showToast(role
           ? 'Contact added as ' + role.label + ', level ' + role.level + '.'
-          : 'Contact added without a role, under Other contacts.', 'success');
+          : 'Contact added to Other contacts.', 'success');
       }
 
       company.contactsCount = getContactsForCompany(company.id).length;
@@ -1419,8 +1412,7 @@
     function confirmDeleteCompany() {
       openConfirmPopup({
         title: 'Delete company',
-        message: 'Deleting <strong>' + company.name + '</strong> hides it and its positions from the listings. ' +
-          'The records keep their history and an administrator can restore them.',
+        message: '<strong>' + company.name + '</strong> and its positions are hidden from the listings. An administrator can restore them.',
         confirmLabel: 'Delete',
         danger: true,
         onConfirm: function () {

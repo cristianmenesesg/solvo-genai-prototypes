@@ -177,7 +177,6 @@
             <div class="form-group">
               <label class="form-label">Website</label>
               <input type="url" class="form-input" id="createWebsite" placeholder="https://example.com">
-              <p class="text-muted text-xs" style="margin-top:6px;">Its domain identifies the company and is what the decision-maker services search with.</p>
             </div>
 
             <div class="form-group">
@@ -220,7 +219,7 @@
 
           <div class="form-group" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-top: 16px;">
             <p class="text-muted text-sm" style="margin: 0;">
-              The <strong>pipeline_stage</strong> is automatically assigned as <strong>lead</strong>.
+              New companies start at the <strong>Lead</strong> stage.
             </p>
           </div>
         </form>
@@ -289,7 +288,7 @@
       // ---- Result filters ----
       {
         key: 'viability', group: 'Result filters', label: 'Remote viability', type: 'single', cols: 1, def: 'viable', neutral: 'all',
-        hint: 'Whether the company has any detected position the classifier found viable to cover remotely. Without one there is nothing to sell yet.',
+        hint: 'Companies with or without remote viable positions.',
         options: [
           { value: 'viable', label: 'With remote viable positions', note: 'Default' },
           { value: 'not_viable', label: 'Without any' },
@@ -305,7 +304,7 @@
       },
       {
         key: 'detected', group: 'Result filters', label: 'Detected', type: 'daterange', def: 'all',
-        hint: 'When the company first entered Solvo Platform, which is the day a sweep found one of its postings.',
+        hint: 'Date the company was first detected.',
         options: DATE_PRESETS,
         chip: function (v) {
           if (v && v.from) return 'Detected: ' + v.from + (v.to ? ' → ' + v.to : ' →');
@@ -325,7 +324,7 @@
       },
       {
         key: 'exportStatus', group: 'Result filters', label: 'Export status', type: 'single', cols: 1, def: '', neutral: '',
-        hint: 'Whether the company already went out in an export file, and who took it.',
+        hint: 'Whether the company was already exported, and by whom.',
         gated: function () { return canFilterByExportStatus(); },
         options: [
           { value: '', label: 'All' },
@@ -345,7 +344,7 @@
       {
         key: 'country', group: 'Company', label: 'Country', type: 'multi', cols: 1,
         def: DEFAULT_LIST_COUNTRIES.slice(), resetTo: DEFAULT_LIST_COUNTRIES.slice(),
-        hint: 'The country of the company headquarters. The list starts on the countries where Solvo sells; companies from the hiring countries appear when you choose them. Clearing goes back to United States and Spain.',
+        hint: 'Country of the company headquarters. The list starts on the sales countries.',
         options: ENGINE_COUNTRIES.map(function (c) {
           return { value: c.code, label: c.name, note: c.group === 'sales' ? 'Sales country' : 'Hiring country' };
         }),
@@ -357,47 +356,47 @@
       // Una sede fuera del catálogo de ciudades nunca queda afuera por este criterio.
       {
         key: 'cities', group: 'Company', label: 'Cities', type: 'cities', def: [],
-        hint: 'The city of the company headquarters, grouped by the countries chosen in Country. Every city is included until you uncheck it.',
+        hint: 'City of the company headquarters. Uncheck the ones to leave out.',
         chip: function (v) { return 'Cities: ' + v.length + ' excluded'; },
         test: function (c, v) { const id = companyCityId(c); return !id || v.indexOf(id) === -1; }
       },
       {
         key: 'companyState', group: 'Company', label: 'Company state', type: 'multi', cols: 1, def: [],
-        hint: 'Where the company is in the engine: detected from a posting, enriched by a provider, missing essential data, qualified against the ICP of its country, or excluded.',
+        hint: 'State of the company.',
         options: Object.keys(COMPANY_STATES).map(function (k) { return { value: k, label: COMPANY_STATES[k].label, note: COMPANY_STATES[k].note }; }),
         chip: function (v) { return 'State: ' + (v.length === 1 ? COMPANY_STATES[v[0]].label : v.length); },
         test: function (c, v) { return v.indexOf(c.entityState) !== -1; }
       },
       {
         key: 'companyType', group: 'Company', label: 'Type', type: 'multi', cols: 1, def: [],
-        hint: 'The type the company analysis assigned. Staffing agencies and government entities are excluded from prospecting.',
+        hint: 'Type of company.',
         options: Object.keys(COMPANY_TYPES).map(function (k) { return { value: k, label: COMPANY_TYPES[k] }; })
-          .concat([{ value: 'unknown', label: 'Not classified yet', note: 'Not analyzed' }]),
+          .concat([{ value: 'unknown', label: 'Not classified yet' }]),
         chip: function (v) { return 'Type: ' + (v.length === 1 ? (COMPANY_TYPES[v[0]] || 'not classified') : v.length); },
         test: function (c, v) { return v.indexOf(c.companyType || 'unknown') !== -1; }
       },
       {
         key: 'trigger', group: 'Company', label: 'Trigger', type: 'multi', cols: 1, def: [],
-        hint: 'The trigger that brought the company: the one of each of its openings, or the research requested from its record.',
+        hint: 'Trigger that found the company.',
         options: function () { return ENGINE_TRIGGERS.map(function (t) { return { value: t.id, label: t.name }; }); },
         chip: function (v) { return 'Trigger: ' + (v.length === 1 ? triggerName(v[0]) : v.length); },
         test: function (c, v) { return (c.triggerIds || []).some(function (t) { return v.indexOf(t) !== -1; }); }
       },
       {
         key: 'icp', group: 'Company', label: 'ICP score', type: 'multi', cols: 1, def: [],
-        hint: 'How well the company fits Solvo as a client, scored 0 to 100 against the ICP of its country when it was qualified.',
+        hint: 'Company fit score, from 0 to 100.',
         options: [
           { value: 'strong', label: 'Strong fit', note: '67 – 100' },
           { value: 'moderate', label: 'Moderate fit', note: '34 – 66' },
           { value: 'weak', label: 'Weak fit', note: '0 – 33' },
-          { value: 'pending', label: 'Not qualified yet', note: 'Never researched' }
+          { value: 'pending', label: 'Not qualified yet', note: 'No score yet' }
         ],
         chip: function (v) { return 'ICP: ' + v.join(', '); },
         test: function (c, v) { return v.indexOf(icpTier(c)) !== -1; }
       },
       {
         key: 'signals', group: 'Company', label: 'Lead signals', type: 'multi', def: [],
-        hint: 'What the qualification found that makes the company worth approaching now. Any one of the selected signals is enough.',
+        hint: 'Company signals. Any selected signal is enough.',
         options: LEAD_SIGNALS.filter(function (s) { return !s.disqualifying; })
           .map(function (s) { return { value: s.code, label: s.label }; }),
         chip: function (v) { return 'Signals: ' + v.length; },
@@ -408,14 +407,14 @@
       },
       {
         key: 'stage', group: 'Company', label: 'Pipeline stage', type: 'multi', def: [],
-        hint: 'How far the conversation has gone, from a detected lead to a signed client.',
+        hint: 'Stage of the company in the sales cycle.',
         options: PIPELINE_STAGES.map(function (s) { return { value: s.code, label: s.label }; }),
         chip: function (v) { return 'Stage: ' + (v.length === 1 ? pipelineLabel(v[0]) : v.length); },
         test: function (c, v) { return v.indexOf(c.pipelineStage) !== -1; }
       },
       {
         key: 'relationship', group: 'Company', label: 'Relationship', type: 'multi', cols: 1, def: [],
-        hint: 'Whether Solvo already bills the company, is still prospecting it, or has set it aside.',
+        hint: 'Relationship of the company with Solvo.',
         options: [
           { value: 'client', label: 'Client' }, { value: 'prospect', label: 'Prospect' }, { value: 'inactive', label: 'Inactive' }
         ],
@@ -424,10 +423,10 @@
       },
       {
         key: 'lastContacted', group: 'Company', label: 'Outreach', type: 'single', cols: 1, def: '',
-        hint: 'Whether the cold outreach has already written to the company. It is the only thing that writes this date, and once written the company never enters the send cycle again — so “not emailed yet” means eligible, not neglected.',
+        hint: 'When the company received the cold email.',
         options: [
           { value: '', label: 'All' },
-          { value: 'never', label: 'Not emailed yet', note: 'Eligible for the next cycle' },
+          { value: 'never', label: 'Not emailed yet' },
           { value: 'recent', label: 'Emailed in the last 30 days' },
           { value: 'stale30', label: 'Emailed more than 30 days ago' },
           { value: 'stale90', label: 'Emailed more than 90 days ago' }
@@ -446,7 +445,7 @@
       },
       {
         key: 'industry', group: 'Company', label: 'Industry', type: 'multi', def: [],
-        hint: 'The company sector, from the standard catalog of 23. Companies that were never researched are unclassified.',
+        hint: 'Industry of the company.',
         options: getActiveIndustries().map(function (i) { return { value: i.code, label: i.label }; })
           .concat([{ value: 'unclassified', label: 'Unclassified', note: 'No industry on record' }]),
         chip: function (v) { return 'Industry: ' + (v.length === 1 ? (v[0] === 'unclassified' ? 'unclassified' : getIndustryLabel(v[0])) : v.length); },
@@ -454,7 +453,7 @@
       },
       {
         key: 'size', group: 'Company', label: 'Company size', type: 'multi', def: [],
-        hint: 'Headcount on record. It only arrives with company research, so a wide slice of the universe has no size.',
+        hint: 'Headcount of the company.',
         options: COMPANY_SIZE_RANGES.map(function (r) { return { value: r.value, label: r.label + ' employees' }; })
           .concat([{ value: 'unknown', label: 'Size unknown' }]),
         chip: function (v) { return 'Size: ' + v.length; },
@@ -464,12 +463,12 @@
       // ---- Decision makers ----
       {
         key: 'dmRole', group: 'Decision makers', label: 'Decision makers', type: 'dm',
-        hint: 'Whether the company has anybody to write to. The list starts on the companies that do, because a prospect without a contact cannot be worked. Choosing “with” opens the list of roles, and leaving every role unchecked accepts any of them.',
+        hint: 'Companies with or without decision makers. The list starts on companies with decision makers.',
         def: { mode: 'with', roles: [] }, neutral: { mode: 'all', roles: [] },
         modes: [
           { value: 'all', label: 'All companies' },
           { value: 'with', label: 'With decision makers', note: 'Default' },
-          { value: 'without', label: 'Without decision makers', note: 'Nobody to write to yet' }
+          { value: 'without', label: 'Without decision makers' }
         ],
         options: DECISION_ROLES.map(function (r) { return { value: r.code, label: r.label, note: 'Level ' + r.level }; }),
         chip: function (v) {
@@ -490,7 +489,7 @@
       // ---- Positions ----
       {
         key: 'openPositions', group: 'Positions', label: 'Open positions', type: 'multi', cols: 1, def: [],
-        hint: 'How many postings the engine has detected for the company. Volume is the size of the opportunity.',
+        hint: 'Number of positions detected for the company.',
         options: [
           { value: '0', label: 'None detected' },
           { value: '1-2', label: '1 – 2 positions' },
@@ -506,7 +505,7 @@
       },
       {
         key: 'position', group: 'Positions', label: 'Catalog position', type: 'multi', cols: 1, def: [],
-        hint: 'The ICP positions the company is hiring for. A company posting bookkeepers and a company posting dispatchers are two different conversations.',
+        hint: 'Catalog positions the company is hiring for.',
         options: POSITIONS_CATALOG.map(function (p) { return { value: p.id, label: p.name }; }),
         chip: function (v) { return 'Hiring: ' + (v.length === 1 ? getPositionName(v[0]) : v.length + ' positions'); },
         test: function (c, v) {
@@ -517,7 +516,7 @@
       // ---- Assignment ----
       {
         key: 'salesRep', group: 'Assignment', label: 'Sales Rep', type: 'search', def: [],
-        hint: 'The Sales Rep who owns the company. Its positions inherit this assignment unless somebody overrides one.',
+        hint: 'Sales Rep assigned to the company.',
         placeholder: 'Search by name or email',
         gated: function () { return canViewAll(); },
         options: function () {
@@ -529,7 +528,7 @@
       },
       {
         key: 'sdr', group: 'Assignment', label: 'SDR', type: 'search', def: [],
-        hint: 'The SDR who owns the company. Its positions inherit this assignment unless somebody overrides one.',
+        hint: 'SDR assigned to the company.',
         placeholder: 'Search by name or email',
         gated: function () { return canViewAll(); },
         options: function () {
@@ -647,7 +646,7 @@
     function icpBadge(c) {
       const tier = icpTier(c);
       if (tier === 'excluded') return '';
-      if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been qualified yet">Not scored</span>';
+      if (tier === 'pending') return '<span class="op-cbadge" title="Not qualified yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
       return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100 · ' + esc(countryName(c.countryCode)) + ' ICP">ICP ' + Math.round(c.icpScore) + '</span>';
     }
@@ -670,15 +669,14 @@
 
       const others = getUnanalyzedContacts(c.id).length;
       const othersBadge = others
-        ? '<span class="pr-dm pr-dm-other" title="Contacts saved before the profile analysis: they have no role code or decision level, so the send cycle does not use them.">' +
+        ? '<span class="pr-dm pr-dm-other" title="Contacts without a role or decision level">' +
           others + ' other contact' + (others === 1 ? '' : 's') + '</span>'
         : '';
 
       if (!people.length) {
-        // Tres situaciones distintas: descalificada, buscada sin resultado, o todavía sin
-        // buscar. Por qué no se buscó no se dice: no cambia lo que el usuario hace.
-        const why = c.isExcluded ? 'Excluded — not searched'
-          : c.contactsSearchedAt ? 'Nobody qualified' : 'Not searched yet';
+        // Tres situaciones: excluida, buscada sin resultado, o todavía sin buscar.
+        const why = c.isExcluded ? 'Excluded company'
+          : c.contactsSearchedAt ? 'None found' : 'Not searched yet';
         return '<div class="pr-dms"><span class="pr-empty">' + why + '</span>' + othersBadge + '</div>';
       }
 
@@ -734,7 +732,7 @@
           // Estado en el motor, tipo y el trigger que trajo la empresa.
           '<div class="pr4-stateline">' + stateBadges(c) +
             ((c.triggerIds || []).length
-              ? '<span class="pr4-trigger" title="Trigger that brought the company">via ' + esc(c.triggerIds.map(triggerName).join(' · ')) + '</span>'
+              ? '<span class="pr4-trigger" title="Trigger">via ' + esc(c.triggerIds.map(triggerName).join(' · ')) + '</span>'
               : '') +
           '</div>' +
           '<div class="pr-meta">' +
@@ -745,7 +743,7 @@
           '</div>' +
           (c.leadSummary
             ? '<p class="pr-summary">' + esc(c.leadSummary) + '</p>'
-            : '<p class="pr-summary"><em>Not researched yet. The qualification writes this summary.</em></p>') +
+            : '<p class="pr-summary"><em>Not researched yet.</em></p>') +
           (signalBadges ? '<div class="pr-signals">' + signalBadges + '</div>' : '') +
         '</div>' +
 
@@ -762,10 +760,10 @@
         '</div>' +
 
         '<div class="pr-col pr-col-activity">' +
-          '<div class="pr-coltitle" title="company.last_contacted_at — written only by the cold outreach send, when Brevo accepts the first email. It is not a record of calls, meetings or manual emails.">Outreach</div>' +
+          '<div class="pr-coltitle" title="Cold email">Outreach</div>' +
           '<div class="pr-stat">' + (contacted === null
-            ? '<em title="The company has never entered the send cycle, so it is still eligible for it.">Not emailed yet</em>'
-            : '<span title="The automated sequence wrote to this company once; it will not enter the cycle again.">' + esc(agoPhrase('Emailed', c.lastContactedAt)) + '</span>') + '</div>' +
+            ? '<em>Not emailed yet</em>'
+            : '<span>' + esc(agoPhrase('Emailed', c.lastContactedAt)) + '</span>') + '</div>' +
           owner +
         '</div>' +
       '</article>';
@@ -785,8 +783,8 @@
 
       document.getElementById('resultList').innerHTML = slice.length
         ? slice.map(renderRow).join('')
-        : '<div class="op-empty"><h3>No companies match this search</h3>' +
-          '<p>' + emptyStateHint() + '</p>' +
+        : '<div class="op-empty"><h3>No companies match the filters.</h3>' +
+          emptyStateHint() +
           '<button class="btn btn-secondary" onclick="clearEverything()">Clear search and filters</button></div>';
 
       const exportBtn = document.getElementById('exportBtn');
@@ -797,15 +795,13 @@
       renderFilterBar();
     }
 
-    // Varios criterios arrancan recortando —con posiciones viables, no exportados, con
-    // decisores—, así que un listado vacío suele ser un default y no una búsqueda sin resultados.
+    // Varios criterios arrancan recortando —con posiciones viables, con decisores—: el vacío
+    // nombra los que siguen activos desde el default, en una línea.
     function emptyStateHint() {
       const active = visibleFilters()
         .filter(function (f) { return !isNeutral(f, state.filters[f.key]) && !isNeutral(f, defaultFor(f)); })
         .map(function (f) { return f.chip(state.filters[f.key]); });
-      return active.length
-        ? 'These filters are on by default: ' + active.join(' · ') + '. Clear them, widen the date range, or search another name.'
-        : 'Widen the date range, clear a filter, or search another name.';
+      return active.length ? '<p>On by default: ' + esc(active.join(' · ')) + '.</p>' : '';
     }
 
     function renderPagination(total, pages) {
@@ -1208,8 +1204,7 @@
         body = '<div class="r4-citylist">' +
             '<input type="search" class="r4-citylist-search" id="cityQuery" placeholder="Search a city" aria-label="Search a city" autocomplete="off" value="' + esc(cityUi.query) + '">' +
             '<div id="cityGroups"></div>' +
-          '</div>' +
-          '<div class="op-hint">A headquarters outside the city catalog is always included.</div>';
+          '</div>';
       } else if (f.type === 'search') {
         body = '<div class="op-pickbox">' +
             '<input type="text" class="op-states-search" id="panelSearch" autocomplete="off" placeholder="' +
