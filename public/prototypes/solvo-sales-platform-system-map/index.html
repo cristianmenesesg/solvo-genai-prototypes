@@ -1,0 +1,1045 @@
+<title>Mapa de Sales Platform</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Wix+Madefor+Text:wght@400;500;600&display=swap">
+<style>
+/* Layout: flow chart en carriles verticales por etapa (izquierda → derecha); tarjetas desplegables con etiquetas de fuente;
+   conectores en codo con rótulo sobre el tronco, que muestran dónde se juntan varias entradas y dónde se reparte una salida. */
+:root {
+  --bg: #eef0f3;
+  --lane: #f6f7f9;
+  --card: #ffffff;
+  --ink: #26292b;
+  --muted: #62676b;
+  --line: #2b3440;
+  --hair: #e4e6ea;
+  --pill: #1f2a37;
+  --dot: #d9dde3;
+  --pill-ink: #ffffff;
+  --accent: #c2560f;
+  --shadow: 0 6px 18px rgba(31, 42, 55, .08);
+  /* fuentes de datos */
+  --t-indeed: #dbe7fb;   --t-indeed-ink: #1d4c9b;
+  --t-linkedin: #d9eef4; --t-linkedin-ink: #0b5b72;
+  --t-apollo: #fbecc9;   --t-apollo-ink: #7a5208;
+  --t-bright: #d8f1e6;   --t-bright-ink: #17663f;
+  --t-hunter: #fde2d2;   --t-hunter-ink: #9a3d0c;
+  --t-ia: #ece3fb;       --t-ia-ink: #5a33a3;
+  --t-brevo: #dff3dc;    --t-brevo-ink: #2f6b25;
+  --t-teams: #e3e5fb;    --t-teams-ink: #3a409c;
+  --t-solvo: #fde8d8;    --t-solvo-ink: #a8470b;
+  --ink-1: #1f2a37; --ink-2: #e2620f; --ink-3: #0089ab; --ink-4: #d42a2a;
+  --font-display: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Wix Madefor Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171a; --lane: #1b1f23; --card: #23282d; --ink: #eef0f1; --muted: #a9b0b5; --line: #8c98a6; --hair: #343a40;
+    --pill: #dfe5ec; --pill-ink: #14171a; --dot: #262b31; --accent: #f19453; --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+    --t-indeed: #1d2c46; --t-indeed-ink: #a9c6f5; --t-linkedin: #143640; --t-linkedin-ink: #8fd3e6;
+    --t-apollo: #3a2e12; --t-apollo-ink: #f1cf83; --t-bright: #143a28; --t-bright-ink: #8fdcb5;
+    --t-hunter: #40230f; --t-hunter-ink: #f5b28a; --t-ia: #2c2244; --t-ia-ink: #c9b4f4;
+    --t-brevo: #1c3a18; --t-brevo-ink: #a5dc9b; --t-teams: #24274a; --t-teams-ink: #b9bdf4;
+    --t-solvo: #3d2412; --t-solvo-ink: #f4b083; --ink-1: #f3f5f7; --ink-2: #f19453; --ink-3: #4db2cb; --ink-4: #f87171; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171a; --lane: #1b1f23; --card: #23282d; --ink: #eef0f1; --muted: #a9b0b5; --line: #8c98a6; --hair: #343a40;
+  --pill: #dfe5ec; --pill-ink: #14171a; --dot: #262b31; --accent: #f19453; --shadow: 0 6px 18px rgba(0, 0, 0, .35);
+  --t-indeed: #1d2c46; --t-indeed-ink: #a9c6f5; --t-linkedin: #143640; --t-linkedin-ink: #8fd3e6;
+  --t-apollo: #3a2e12; --t-apollo-ink: #f1cf83; --t-bright: #143a28; --t-bright-ink: #8fdcb5;
+  --t-hunter: #40230f; --t-hunter-ink: #f5b28a; --t-ia: #2c2244; --t-ia-ink: #c9b4f4;
+  --t-brevo: #1c3a18; --t-brevo-ink: #a5dc9b; --t-teams: #24274a; --t-teams-ink: #b9bdf4;
+  --t-solvo: #3d2412; --t-solvo-ink: #f4b083; --ink-1: #f3f5f7; --ink-2: #f19453; --ink-3: #4db2cb; --ink-4: #f87171; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink); font: 400 14px/1.5 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+.bar { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--card); border-bottom: 1px solid var(--hair); position: relative; z-index: 5; }
+.bar .t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.eyebrow { font: 600 11px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font: 600 clamp(17px, 2.2vw, 21px)/1.2 var(--font-display); text-wrap: balance; }
+.tools { display: flex; gap: 8px; flex-wrap: wrap; }
+.tools button, .zoom button { font: 500 13px/1 var(--font-display); color: var(--ink); background: var(--card); border: 1px solid var(--hair); border-radius: 999px; padding: 9px 14px; cursor: pointer; }
+.tools button:hover, .zoom button:hover { border-color: var(--line); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Lienzo navegable */
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; }
+.stage { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background-color: var(--bg); background-image: radial-gradient(var(--dot) 1.2px, transparent 1.3px); background-size: 24px 24px; }
+.stage.dragging { cursor: grabbing; }
+.world { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.canvas { position: relative; display: grid; grid-template-columns: repeat(6, 206px); column-gap: 100px; row-gap: 36px; width: max-content; padding: 80px; }
+svg.ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; overflow: visible; }
+.stage.pen-mode { cursor: crosshair; }
+.stage.eraser-mode { cursor: cell; }
+.stage.space, .stage.space * { cursor: grab !important; }
+.stage.zoom-mode, .stage.zoom-mode * { cursor: zoom-in !important; }
+.stage.zoom-mode.zoom-out, .stage.zoom-mode.zoom-out * { cursor: zoom-out !important; }
+.stage.space.dragging, .stage.space.dragging * { cursor: grabbing !important; }
+.lane { background: var(--lane); border-radius: 16px; padding: 18px 14px 26px; display: flex; flex-direction: column; gap: 18px; min-height: 640px; }
+.lane-h { display: flex; flex-direction: column; gap: 8px; padding: 0 5px; min-height: 74px; }
+body[data-page="replanteo"] .lane-h { min-height: 116px; }
+.lane-h h2 { margin: 0; font: 600 15px/1.2 var(--font-display); }
+.mod { font: 600 10.5px/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.srcs { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12px; color: var(--muted); }
+.srcs span { display: inline-flex; align-items: center; gap: 5px; }
+.srcs i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.stack { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 48px; }
+
+.node { position: relative; z-index: 2; background: var(--card); border-radius: 10px; box-shadow: var(--shadow); border: 1px solid transparent; }
+.node.wait { background: transparent; box-shadow: none; border: 1.5px dashed var(--line); }
+.node.hl { border-color: var(--accent); }
+.tags { position: absolute; top: -10px; right: 10px; display: flex; gap: 4px; }
+.tag { font: 500 10.5px/1 var(--font-body); padding: 4px 7px; border-radius: 999px; white-space: nowrap; }
+.nh { width: 100%; text-align: left; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 18px 14px 12px; display: grid; grid-template-columns: minmax(0, 1fr) 16px; gap: 2px 8px; align-items: start; border-radius: 10px; }
+.nh b { font: 600 14.5px/1.3 var(--font-display); }
+.nh small { grid-column: 1; font-size: 12px; color: var(--muted); line-height: 1.4; }
+.chev { grid-column: 2; grid-row: 1; width: 16px; height: 16px; margin-top: 2px; transition: transform .2s; }
+.node[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.nb { border-top: 1px solid var(--hair); padding: 10px 14px 14px; margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
+.nb dt { color: var(--muted); font: 600 10.5px/1.2 var(--font-display); letter-spacing: .06em; text-transform: uppercase; margin-top: 7px; }
+.nb dd { margin: 0; }
+.nb .full { color: var(--ink); line-height: 1.5; }
+.st { grid-column: 1; justify-self: start; margin-top: 7px; display: inline-flex; align-items: center; gap: 5px; font: 600 10.5px/1 var(--font-display); letter-spacing: .04em; }
+.st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.st-new { color: var(--accent); }
+.st-gen { color: var(--t-linkedin-ink); }
+.st-ok { color: var(--muted); }
+.td { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--c); flex: none; vertical-align: baseline; }
+.td.on { background: var(--c); }
+.td.opt { background: linear-gradient(90deg, var(--c) 50%, transparent 50%); }
+.td.off { border-color: var(--line); opacity: .28; }
+.nh b .td, .mx b .td { margin-right: 7px; }
+.trg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.trg span { margin-right: 3px; }
+.mx { background: var(--card); border-radius: 10px; box-shadow: var(--shadow); padding: 4px 8px; }
+.mx table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.mx th { font: 600 10.5px/1.3 var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 12px; border-bottom: 1px solid var(--hair); }
+.mx td { padding: 13px 12px; border-bottom: 1px solid var(--hair); vertical-align: middle; }
+.mx tr:last-child td { border-bottom: 0; }
+.mx .c { text-align: center; }
+.mx td b { font: 600 14px/1.3 var(--font-display); white-space: nowrap; }
+.mx td small { display: block; font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.mx .no { color: var(--muted); opacity: .5; }
+.mxnote { margin: 0; padding: 10px 12px 12px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--hair); }
+/* Bandas bajo los carriles */
+.band { grid-column: 1 / -1; position: relative; z-index: 2; background: var(--lane); border-radius: 16px; padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+.band-h { display: flex; flex-direction: column; gap: 4px; }
+.band-h h2 { margin: 0; font: 600 17px/1.2 var(--font-display); }
+.band-h p { margin: 0; font-size: 13px; color: var(--muted); max-width: 90ch; }
+.band-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+.bcard { background: var(--card); border-radius: 10px; box-shadow: var(--shadow); padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.bcard > b { font: 600 14.5px/1.3 var(--font-display); }
+.bcard p { margin: 0; font-size: 13px; line-height: 1.5; }
+.bcard small { font: 600 10.5px/1.2 var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.bcard .hoy { color: var(--muted); }
+.bmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: auto; padding-top: 8px; }
+.bmeta .st { margin-top: 0; }
+.mchip { font: 600 10.5px/1 var(--font-display); color: var(--muted); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; }
+.bcard .n { width: 24px; height: 24px; border-radius: 50%; background: var(--pill); color: var(--pill-ink); display: grid; place-items: center; font: 600 12px/1 var(--font-display); }
+/* Pestañas */
+.tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--lane); border: 1px solid var(--hair); border-radius: 999px; }
+.tabs a { text-decoration: none; color: var(--muted); font: 500 13px/1 var(--font-display); padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+.tabs a[aria-current="page"] { background: var(--pill); color: var(--pill-ink); }
+body[data-page="actual"] .only-r, body[data-page="replanteo"] .only-a { display: none !important; }
+.multi { margin-top: 9px; font: 600 11px/1 var(--font-body); color: var(--accent); }
+
+svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; overflow: visible; }
+svg.wires path { fill: none; stroke: var(--line); stroke-width: 1.3; }
+svg.wires path.dash { stroke-dasharray: 5 4; }
+.lbl { position: absolute; z-index: 3; transform: translate(-50%, -50%); background: var(--pill); color: var(--pill-ink); font: 500 11px/1 var(--font-display); padding: 6px 10px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
+
+.legend { position: absolute; z-index: 4; left: calc(16px + env(safe-area-inset-left, 0px)); top: 16px; background: var(--card); border: 1px solid var(--hair); border-radius: 12px; box-shadow: var(--shadow); font-size: 12.5px; color: var(--muted); max-width: min(330px, calc(100% - 32px)); cursor: default; }
+.legend summary { cursor: pointer; padding: 10px 14px; font: 600 12.5px/1 var(--font-display); color: var(--ink); list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+.legend summary::-webkit-details-marker { display: none; }
+.legend summary::after { content: "+"; color: var(--muted); }
+.legend[open] summary::after { content: "−"; }
+.legend .items { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 12px; }
+.legend .items > span { display: flex; align-items: center; gap: 10px; }
+.legend svg { width: 40px; height: 20px; flex: none; }
+.legend svg path { fill: none; stroke: var(--line); stroke-width: 1.3; }
+.legend .dashbox { width: 26px; height: 16px; border: 1.5px dashed var(--line); border-radius: 4px; flex: none; margin: 0 7px; }
+.legend .tag { flex: none; }
+.legend p { margin: 4px 0 0; font-size: 11.5px; line-height: 1.45; }
+.dock { flex: none; position: relative; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding-block: 6px calc(6px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--card); border-top: 1px solid var(--hair); }
+.draw { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.hint { flex: 1; min-width: 0; font-size: 11.5px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zoom { display: flex; gap: 4px; margin-left: auto; }
+.zoom button { width: 28px; height: 28px; padding: 0; font-size: 15px; border-radius: 8px; }
+.zoom button.wide { width: auto; padding: 0 10px; font-size: 12px; }
+.seg { display: flex; gap: 1px; padding: 2px; background: var(--lane); border: 1px solid var(--hair); border-radius: 9px; }
+.seg button { display: inline-flex; align-items: center; gap: 5px; height: 26px; min-width: 26px; justify-content: center; padding: 0 8px; border: 0; border-radius: 7px; background: none; color: var(--ink); font: 500 12px/1 var(--font-display); cursor: pointer; }
+.seg button:hover { background: var(--card); }
+.seg button[aria-pressed="true"] { background: var(--pill); color: var(--pill-ink); }
+.seg button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.seg .sw, .seg .sz { padding: 0; width: 26px; }
+.seg .sw i { width: 13px; height: 13px; border-radius: 50%; display: block; box-shadow: inset 0 0 0 1px rgba(0,0,0,.15); }
+.seg .sw[aria-pressed="true"] { background: var(--card); box-shadow: inset 0 0 0 2px var(--pill); }
+.seg .sz i { border-radius: 50%; background: currentColor; display: block; }
+.seg .sz[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 2px var(--pill); }
+.seg button.primary { background: var(--accent); color: #fff; }
+#smooth b { font-weight: 500; }
+.seg button.primary:disabled { opacity: .6; cursor: progress; }
+.toast { position: absolute; z-index: 7; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--pill); color: var(--pill-ink); font: 500 13px/1.3 var(--font-display); padding: 10px 16px; border-radius: 10px; box-shadow: var(--shadow); max-width: calc(100% - 32px); text-align: center; }
+.preview { position: fixed; inset: 0; z-index: 20; background: rgba(10, 12, 14, .7); display: grid; place-items: center; padding: 24px; }
+.preview > div { background: var(--card); border-radius: 14px; padding: 16px; max-width: 100%; max-height: 100%; display: flex; flex-direction: column; gap: 12px; }
+.preview img { max-width: 100%; max-height: 70vh; object-fit: contain; border: 1px solid var(--hair); border-radius: 8px; }
+.preview p { margin: 0; font-size: 13px; color: var(--muted); }
+.preview button { align-self: flex-end; font: 500 13px/1 var(--font-display); padding: 9px 14px; border-radius: 999px; border: 1px solid var(--hair); background: var(--card); color: var(--ink); cursor: pointer; }
+@media (max-width: 1000px) { .hint { display: none; } }
+@media (max-width: 700px) { .tabs a { padding: 7px 11px; font-size: 12px; } .draw { display: contents; } .dock { gap: 6px; } .seg button { padding: 0 7px; } .seg button svg + * { display: none; }
+ .hint { display: none; } .tools button { padding: 7px 11px; font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+</style>
+
+<header class="bar">
+  <div class="t">
+    <div class="eyebrow">Solvo Sales Platform</div>
+    <h1 id="h1">Flujo de una oportunidad comercial</h1>
+  </div>
+  <nav class="tabs" aria-label="Vistas">
+    <a href="#actual" data-page="actual" aria-current="page">Flujo actual</a>
+    <a href="#replanteo" data-page="replanteo">Replanteo</a>
+  </nav>
+  <div class="tools">
+    <button type="button" id="openAll">Abrir todas</button>
+    <button type="button" id="closeAll">Cerrar todas</button>
+  </div>
+</header>
+
+<main class="stage" id="stage" aria-label="Flujo navegable: arrastra para moverte, usa los botones o pellizca para acercar">
+  <div class="world" id="world">
+    <div class="canvas" id="canvas">
+      <svg class="wires" id="wires" aria-hidden="true"></svg>
+      <svg class="ink" id="ink" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  <details class="legend" id="legend">
+    <summary>Cómo leerlo</summary>
+    <div class="items">
+      <span><svg viewBox="0 0 44 22"><path d="M2 4H20V18H2M20 11H42"/></svg>Varias entradas se juntan en un paso</span>
+      <span><svg viewBox="0 0 44 22"><path d="M2 11H24M42 4H24V18H42"/></svg>Un paso alimenta a varios</span>
+      <span><span class="tag" style="background:var(--t-apollo);color:var(--t-apollo-ink)">Apollo</span>Fuente que se consulta en ese paso</span>
+      <span class="only-a"><span class="dashbox"></span>En espera</span>
+      <span class="only-r"><span class="dashbox"></span>Se suma más adelante o está pendiente</span>
+      <span class="only-r"><span style="display:inline-flex;gap:4px;margin:0 3px"><i class="td on" style="--c:var(--t-linkedin-ink)"></i><i class="td opt" style="--c:var(--t-bright-ink)"></i><i class="td off" style="--c:var(--line)"></i></span>El trigger usa la etapa, es opcional o no la usa</span>
+      <p class="only-a">Toca una tarjeta para ver qué sucede. Fuentes: Executive Summaries y Changelogs de Solvo Sales Platform, noviembre de 2026; cifras aproximadas de la operación en producción.</p>
+      <p class="only-r">Propuesta de un sistema nuevo, para discutir. Los triggers parametrizables, los servicios por proveedor, el estado de cada entidad y los servicios de cold outreach siguen lo planteado por Producto. Debajo de los carriles están los parámetros, el modelo de datos, los catálogos, la configuración, las decisiones abiertas y el orden de construcción.</p>
+    </div>
+  </details>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</main>
+
+<footer class="dock">
+  <div class="draw" role="toolbar" aria-label="Dibujo">
+    <div class="seg" role="group" aria-label="Herramienta">
+      <button type="button" data-tool="hand" aria-pressed="true" title="Mover (H)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 9V4.5a1.3 1.3 0 0 1 2.6 0V9m0-1V3.5a1.3 1.3 0 0 1 2.6 0V9m0-.5V5a1.3 1.3 0 0 1 2.6 0v6.5c0 3.5-2.2 6-5.5 6-2.3 0-3.6-1.1-4.8-3L3.6 11a1.3 1.3 0 0 1 2.1-1.5L7 11"/></svg><span>Mover</span></button>
+      <button type="button" data-tool="pen" aria-pressed="false" title="Lápiz (P)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M13.5 3.5l3 3L7 16H4v-3z"/></svg><span>Lápiz</span></button>
+      <button type="button" data-tool="eraser" aria-pressed="false" title="Borrador (E)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 16h8M3.5 11.5l7-7 5 5-6.5 6.5H7.5z"/></svg><span>Borrar</span></button>
+    </div>
+    <div class="seg" role="group" aria-label="Color">
+      <button type="button" class="sw" data-color="1" aria-pressed="true" title="Tinta"><i style="background:var(--ink-1)"></i></button>
+      <button type="button" class="sw" data-color="2" aria-pressed="false" title="Naranja"><i style="background:var(--ink-2)"></i></button>
+      <button type="button" class="sw" data-color="3" aria-pressed="false" title="Teal"><i style="background:var(--ink-3)"></i></button>
+      <button type="button" class="sw" data-color="4" aria-pressed="false" title="Rojo"><i style="background:var(--ink-4)"></i></button>
+    </div>
+    <div class="seg" role="group" aria-label="Grosor">
+      <button type="button" class="sz" data-size="2.5" aria-pressed="false" title="Fino"><i style="width:4px;height:4px"></i></button>
+      <button type="button" class="sz" data-size="5" aria-pressed="true" title="Medio"><i style="width:8px;height:8px"></i></button>
+      <button type="button" class="sz" data-size="10" aria-pressed="false" title="Grueso"><i style="width:13px;height:13px"></i></button>
+    </div>
+    <div class="seg">
+      <button type="button" id="smooth" title="Estabilizador del trazo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 12c3-6 5-6 8 0s5 6 8 0"/></svg><span>Suavizado:</span><b id="smoothLv">medio</b></button>
+    </div>
+    <div class="seg">
+      <button type="button" id="undo" title="Deshacer (Ctrl + Z)"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5L3 9l4 4M3 9h9a5 5 0 0 1 0 10h-2"/></svg><span>Deshacer</span></button>
+      <button type="button" id="clearInk" title="Borrar todos los trazos"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6h12M8 6V4h4v2M6 6l1 11h6l1-11"/></svg><span>Limpiar</span></button>
+      <button type="button" id="export" class="primary" title="Exportar imagen"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10M6 9l4 4 4-4M4 16h12"/></svg><span>Exportar imagen</span></button>
+    </div>
+  </div>
+  <div class="hint">Rueda o Z + arrastrar para zoom · Espacio + arrastrar para moverte · Shift para línea recta</div>
+  <div class="zoom">
+    <button type="button" id="zOut" aria-label="Alejar">−</button>
+    <button type="button" id="zIn" aria-label="Acercar">+</button>
+    <button type="button" id="zFit" class="wide">Ajustar</button>
+  </div>
+</footer>
+
+<script>
+(() => {
+"use strict";
+const TAG = {
+  indeed: ["Indeed", "indeed"], linkedin: ["LinkedIn", "linkedin"], apollo: ["Apollo", "apollo"], bright: ["Bright Data", "bright"],
+  hunter: ["Hunter", "hunter"], ia: ["IA", "ia"], brevo: ["Brevo", "brevo"], teams: ["Teams", "teams"], solvo: ["Solvo Platform", "solvo"],
+  showcase: ["Showcase", "solvo"], oxylabs: ["Oxylabs", "indeed"], apify: ["Apify", "linkedin"], theirstack: ["TheirStack", "teams"], firecrawl: ["Firecrawl", "hunter"]
+};
+const LANES_A = [
+  {title: "Origen", srcs: ["indeed", "linkedin", "solvo"], nodes: [
+    {id: "diaria", t: "Búsqueda diaria", s: "EE. UU. y España, cada día hábil", tags: ["indeed"],
+     what: "Se buscan las vacantes publicadas en las últimas 24 horas para las 21 posiciones que Solvo cubre, en las ciudades que corresponden a ese día.",
+     rows: [["Cuándo", "Cada día hábil"], ["Volumen", "~1.300 vacantes nuevas por día"]]},
+    {id: "pedido", t: "Búsqueda a pedido", s: "Una empresa puntual", tags: ["indeed", "linkedin"],
+     what: "Desde la plataforma, el equipo pide las vacantes de una empresa. Primero ve una vista previa y luego confirma cuáles guardar.",
+     rows: [["Quién", "Equipo comercial"]]},
+    {id: "clientes", t: "Clientes actuales", s: "Vacantes nuevas de 158 clientes", tags: ["indeed", "linkedin"],
+     what: "De forma programada se revisan las vacantes que publican los clientes activos, en Indeed y en LinkedIn.",
+     rows: [["Alcance", "158 clientes activos"]]},
+  ]},
+  {title: "Vacantes", srcs: ["ia"], nodes: [
+    {id: "filtro", t: "Filtrar vacantes", s: "¿Se cubre con talento remoto?", tags: ["ia"],
+     what: "La IA revisa cada vacante y decide si el puesto se puede cubrir con talento remoto. Las que no cumplen se descartan.",
+     rows: [["Resultado", "Cerca de la mitad es viable"]]},
+    {id: "vendedor", t: "Aviso al vendedor", s: "Las vacantes de su cartera", tags: ["brevo"],
+     what: "Cada vendedor recibe un correo con las vacantes nuevas de sus clientes, para actuar sobre la cuenta.",
+     rows: [["Quién recibe", "El vendedor de la cuenta"]]},
+  ]},
+  {title: "Empresas", srcs: ["apollo", "bright", "ia"], nodes: [
+    {id: "califica", t: "Calificar la empresa", s: "Puntaje de ajuste al ICP, 0 a 100", tags: ["apollo", "bright", "ia"], open: true,
+     what: "Se completan los datos de la empresa con Apollo, o con Bright Data si Apollo no responde, y la IA le asigna un puntaje de ajuste al perfil de cliente ideal.",
+     rows: [["Regla", "Con 50 o más, avanza"], ["Excluye", "Agencias de staffing y gobierno"]]},
+    {id: "investiga", t: "Investigación a pedido", s: "Desde la ficha de la empresa", tags: ["solvo"],
+     what: "El equipo pide desde la plataforma investigar una empresa y sus decisores. El resultado vuelve a la ficha de la empresa.",
+     rows: [["Quién", "Equipo comercial"]]},
+  ]},
+  {title: "Decisores", srcs: ["apollo", "hunter", "ia"], nodes: [
+    {id: "decisor", t: "Encontrar al decisor", s: "Rol, nivel y correo verificado", tags: ["apollo", "hunter", "ia"], open: true,
+     what: "Se buscan hasta 10 personas por empresa en Apollo, con Hunter de respaldo. La IA asigna rol y nivel antes de pedir los datos de contacto; Hunter verifica los correos.",
+     rows: [["Del nivel 1", "Correo y hasta 2 teléfonos"], ["Capacidad", "Hasta 100 empresas por día"]]},
+  ]},
+  {title: "Contacto", srcs: ["ia", "brevo"], nodes: [
+    {id: "correo", t: "Correo frío", s: "9:00 NY, de lunes a viernes", tags: ["ia", "brevo"],
+     what: "Hasta 50 empresas por día reciben un correo escrito sobre su propia vacante, dirigido al decisor de nivel 1. A cada empresa se le escribe una sola vez.",
+     rows: [["Volumen", "Hasta 50 empresas por día"], ["Destinatarios", "Hasta 3 por empresa"]]},
+    {id: "espana", t: "España en espera", s: "Sin envío por ahora", tags: [], wait: true,
+     what: "Las empresas de España recorren el flujo hasta los decisores. El contacto espera la definición legal.",
+     rows: []},
+  ]},
+  {title: "Reunión y seguimiento", srcs: ["solvo", "teams", "brevo"], nodes: [
+    {id: "agenda", t: "Agendar la reunión", s: "Página de agendamiento", tags: ["showcase", "teams"],
+     what: "El prospecto ve en el Showcase de Talento un perfil afín a su vacante y elige un horario. Se crea la reunión de Teams y llegan las confirmaciones al prospecto y al equipo.",
+     rows: [["Quién actúa", "El prospecto"]]},
+    {id: "plataforma", t: "Seguir la oportunidad", s: "Solvo Platform", tags: ["solvo"],
+     what: "El equipo comercial ve su cartera asignada, registra cada avance y lleva la empresa hasta convertirla en cliente.",
+     rows: [["Quién", "SDR, Sales Rep, coordinación y supervisión"]]},
+    {id: "reportes", t: "Reportes del lunes", s: "Embudo y estado de la semana", tags: ["brevo"],
+     what: "El reporte del embudo cuenta entregas, aperturas, visitas y reuniones de personas. El reporte de estado muestra lo que produjo cada etapa y si los procesos corrieron sin fallas.",
+     rows: [["Cuándo", "Cada lunes"]]},
+  ]},
+];
+/* Conexiones: de → a, con rótulo. Varias de un lado = se juntan o se reparten. */
+const LINKS_A = [
+  {from: ["diaria", "pedido"], to: ["filtro"], label: "Vacantes nuevas"},
+  {from: ["clientes"], to: ["vendedor"], label: "De clientes"},
+  {from: ["filtro"], to: ["califica"], label: "Vacante viable"},
+  {from: ["califica", "investiga"], to: ["decisor"], label: "Empresa calificada"},
+  {from: ["decisor"], to: ["correo", "espana"], label: "Decisor nivel 1"},
+  {from: ["correo"], to: ["agenda"], label: "Clic en el correo"},
+  {from: ["correo"], to: ["reportes"], label: "Eventos", dash: true},
+  {from: ["agenda"], to: ["plataforma"], label: "Reunión agendada", down: true},
+];
+
+/* ---------- Replanteo: flujo modular, escalable y configurable ---------- */
+const LANES_R = [
+  {mod: "Configuración", title: "Triggers", srcs: ["solvo"], nodes: [
+    {id: "r_barrido", dot: 0, t: "Clientes nuevos", s: "Empresas que todavía no son clientes", tags: [],
+     what: "Busca las posiciones del catálogo en sus ciudades, según el calendario de cada una, para encontrar empresas que todavía no son clientes. Termina con los leads listos; los envíos programados de cold outreach los toman de ahí.",
+     rows: [["Activación", "Cron, con el calendario de cada ciudad"], ["Ventana", "Último día"], ["Posiciones", "Las del catálogo que active"], ["Ubicaciones", "Ciudades de EE. UU. y de España"], ["Vacantes", "Indeed; TheirStack en evaluación"], ["Empresas", "Apollo, luego Bright Data"], ["Decisores", "Apollo, luego Hunter"]]},
+    {id: "r_clientes", dot: 1, t: "Clientes actuales", s: "Vacantes de las empresas cliente", tags: [],
+     what: "Busca las vacantes que publican las empresas que ya son clientes. Termina en el aviso al vendedor de la cuenta.",
+     rows: [["Activación", "Cron, con su calendario"], ["Ventana", "Último día"], ["Busca por", "Empresa: cada cliente activo"], ["Posiciones", "No usa términos: trae todas las vacantes del cliente"], ["Ubicaciones", "EE. UU."], ["Vacantes", "Indeed y LinkedIn, en su modo por empresa"], ["Empresas y decisores", "No usa"]]},
+    {id: "r_pedido", dot: 2, t: "A pedido", s: "Detección manual desde la plataforma", tags: [],
+     what: "Se configura como los demás triggers: países, servicios de vacantes y ventana de publicación por defecto. Al pedir las vacantes de una empresa, el usuario ajusta dentro de esa configuración el país, la ciudad si quiere acotar, los servicios y la ventana, que puede ampliar. La respuesta vuelve a la plataforma.",
+     rows: [["Activación", "Solicitud del usuario, desde la plataforma"], ["Ventana", "Último día por defecto; el usuario puede ampliarla"], ["Ubicaciones", "Las configuradas; el usuario elige país y, si quiere, ciudad"], ["Vacantes", "Los configurados para el país; el usuario elige"]]},
+    {id: "r_talento", dot: 3, t: "Países de contratación", s: "Donde Solvo busca y contrata perfiles", tags: [],
+     what: "Apunta a los países donde Solvo busca y contrata los perfiles para sus clientes. Las vacantes se analizan y se guardan igual que las demás, y se consultan en la plataforma con sus filtros. Más adelante alimentarán un informe o un dashboard de esos países. No busca decisores ni contacta.",
+     rows: [["Activación", "Cron, de lunes a viernes"], ["Ventana", "Último día"], ["Posiciones", "Por definir"], ["Ubicaciones", "Colombia, México, Argentina, Perú, Guatemala, Kenia y Filipinas; ciudades por definir"], ["Vacantes", "Indeed; después, LinkedIn y Computrabajo"], ["Empresas", "Opcional, por definir"]]},
+    {id: "r_investiga", dot: 4, t: "Investigación a pedido", s: "Una empresa creada en la plataforma", tags: [],
+     what: "Alguien crea una empresa en la plataforma y pide investigarla. El trigger usa los servicios de empresas con los datos que haya y sigue hasta los decisores. El resultado vuelve a la ficha de la empresa.",
+     rows: [["Activación", "Solicitud del usuario, desde la ficha de la empresa"], ["Entrega", "Nombre y, si los tiene, dominio, país o perfil de LinkedIn"], ["Empresas", "Apollo, luego Bright Data"], ["Decisores", "Apollo, luego Hunter"]]},
+  ]},
+  {mod: "Servicios de vacantes", title: "Uno por proveedor", srcs: ["oxylabs", "theirstack", "apify", "firecrawl"], trg: ["on", "on", "on", "on", "off"], nodes: [
+    {id: "r_indeed", t: "Indeed · Oxylabs", s: "Por términos y ciudad, o por empresa", tags: ["oxylabs"],
+     what: "Recibe términos y una ciudad, busca en Indeed y entrega el listado tal como lo trae el portal.",
+     rows: [["Busca por", "Términos + ciudad, o empresa"], ["Países habilitados", "EE. UU. y España"], ["Salida", "Listado en el formato de Indeed"]]},
+    {id: "r_theirstack", t: "TheirStack", s: "En evaluación · varios portales en uno", tags: ["theirstack"], open: true,
+     what: "Trae en una sola consulta vacantes de varios portales, deduplicadas, y en cada una los datos de la empresa. Busca por país, con filtros de tamaño y de tipo de empresa que se aplican antes de cobrar; la ciudad llega como dato de cada vacante. Como la empresa ya trae dominio, tamaño e industria, el trigger que lo use puede configurar menos enriquecimiento, por ejemplo solo Bright Data cuando falte un dato esencial.",
+     rows: [["Busca por", "Términos + país, con banda de empleados y tipo de empresa; o empresa, por su dominio"], ["Países habilitados", "EE. UU. y España"], ["Salida", "Listado en el formato de TheirStack, con la empresa de cada vacante"], ["Prueba del 22-nov", "40 vacantes: 18 de LinkedIn, 11 de InfoJobs, 8 de Indeed y 3 de otros portales. Dominio en 38, empleados en 40, industria en 29. En 3, la empresa asignada no era la que publicaba"]]},
+    {id: "r_linkedin", t: "LinkedIn · Apify", s: "Por términos y ubicación, o por empresa", tags: ["apify"],
+     what: "El mismo contrato para LinkedIn. Queda disponible para cualquier trigger que lo habilite.",
+     rows: [["Busca por", "Términos + ubicación, o empresa"], ["Países habilitados", "EE. UU."], ["Salida", "Listado en el formato de LinkedIn"]]},
+    {id: "r_glassdoor", t: "Glassdoor · Apify", s: "Posible", tags: ["apify"], wait: true,
+     what: "Un servicio más con el mismo contrato. Sumarlo no cambia los demás servicios.",
+     rows: [["Busca por", "Términos + ciudad"], ["Países habilitados", "Por definir"], ["Salida", "Listado en el formato de Glassdoor"]]},
+    {id: "r_computrabajo", t: "Computrabajo · Firecrawl", s: "Previsto para Países de contratación", tags: ["firecrawl"], wait: true,
+     what: "Un servicio más con el mismo contrato, para los países donde opera el portal.",
+     rows: [["Busca por", "Términos + ciudad"], ["Países habilitados", "Los países de contratación donde opera el portal"], ["Salida", "Listado en el formato de Computrabajo"]]},
+  ]},
+  {mod: "Servicio", title: "Análisis de vacantes", srcs: ["ia"], trg: ["on", "on", "on", "on", "off"], nodes: [
+    {id: "r_analiza", t: "Analizar y normalizar", s: "Del listado de cada servicio a un formato único", tags: ["ia"], open: true,
+     what: "La IA lee el listado de cualquier servicio de vacantes, en el formato que venga, y lo lleva a un formato único de vacante: puesto, empresa, ubicación (país, división y ciudad), modalidad y la posición del catálogo a la que corresponde. En el mismo paso decide si se puede cubrir con talento remoto; con TheirStack también hace falta, porque la marca de remoto no vino en ninguna vacante de la prueba. El prompt puede ser distinto en cada país.",
+     rows: [["Entrada", "Listado de cualquier servicio de vacantes"], ["Salida", "Vacantes normalizadas, cada una viable o descartada, con su empresa"], ["Se configura", "Prompt y modelo por país, desde la plataforma"]]},
+    {id: "r_directa", t: "Salida tras el análisis", s: "Triggers que no siguen a empresas", tags: ["brevo", "solvo"],
+     what: "Clientes actuales termina en el aviso al vendedor de la cuenta. A pedido devuelve la respuesta a quien la pidió. Países de contratación termina aquí si no usa los servicios de empresas: sus vacantes quedan en la plataforma.",
+     rows: []},
+  ]},
+  {mod: "Servicios de enriquecimiento", title: "Empresas: uno por proveedor", srcs: ["apollo", "bright"], trg: ["on", "off", "off", "opt", "on"], nodes: [
+    {id: "r_e_apollo", t: "Apollo", s: "Para empresas que llegan sin datos", tags: [],
+     what: "Recibe una empresa con los datos que haya y devuelve lo que Apollo tiene de ella. No sabe quién lo invocó ni qué sigue: qué proveedores se usan, en qué orden y cuándo se pasa al siguiente lo define la configuración del trigger.",
+     rows: [["Entrada", "Variable: nombre, con o sin dominio, país, perfil de LinkedIn"], ["Salida", "Datos de Apollo, en su formato"]]},
+    {id: "r_e_bright", t: "Bright Data", s: "Completa lo que falta", tags: [],
+     what: "El mismo contrato que Apollo. Se usa cuando la configuración del trigger lo indica: después de Apollo, si no encuentra la empresa o si falta un dato esencial, o solo, en un trigger cuyas empresas ya llegan con datos.",
+     rows: [["Entrada", "La misma entrada variable"], ["Salida", "Datos de Bright Data, en su formato"]]},
+    {id: "r_e_nuevo", t: "Proveedor nuevo", s: "Un servicio más", tags: [], wait: true,
+     what: "Sumar un proveedor es sumar su servicio y habilitarlo en los triggers que lo usen. El análisis no cambia, porque la IA recibe los datos en el formato que vengan.",
+     rows: []},
+  ]},
+  {mod: "Servicio", title: "Análisis de empresas", srcs: ["ia"], trg: ["on", "off", "off", "opt", "on"], nodes: [
+    {id: "r_califica", t: "Normalizar y calificar", s: "Formato único de empresa y puntaje ICP", tags: ["ia"],
+     what: "La IA recibe los datos de cualquier servicio de enriquecimiento, o la empresa que ya trae TheirStack, y los lleva a un formato único de empresa, con su dominio. Verifica que la empresa enriquecida sea la que publicó la vacante antes de pasar a decisores. Le asigna el puntaje de ajuste al ICP, de 0 a 100. El prompt es el de empresas de cada país.",
+     rows: [["Entrada", "Datos de empresa de Apollo, Bright Data o TheirStack"], ["Salida", "Empresa calificada, con dominio y la versión del prompt que la produjo"], ["Se configura", "Prompt de empresas de cada país, con su ICP; exclusiones"]]},
+    {id: "r_fin_emp", t: "Salida tras las empresas", s: "Triggers que no buscan decisores", tags: [],
+     what: "Países de contratación termina aquí cuando usa los servicios de empresas: vacantes y empresas quedan en la plataforma, sin decisores ni contacto.",
+     rows: []},
+  ]},
+  {mod: "Servicios de decisores", title: "Uno por proveedor", srcs: ["apollo", "hunter"], trg: ["on", "off", "off", "off", "on"], nodes: [
+    {id: "r_d_apollo", t: "Apollo", s: "Primero en la cascada", tags: [],
+     what: "Recibe el dominio de la empresa calificada y devuelve sus personas con cargos de decisión, sin transformarlas.",
+     rows: [["Entrada", "Dominio + país + roles buscados"], ["Salida", "Personas en el formato de Apollo"]]},
+    {id: "r_d_hunter", t: "Hunter", s: "Si Apollo no encuentra", tags: [],
+     what: "Busca por dominio las personas con cargos de decisión. Sin dominio no puede buscar.",
+     rows: [["Entrada", "Dominio"], ["Salida", "Personas en el formato de Hunter"]]},
+    {id: "r_d_nuevo", t: "Proveedor nuevo", s: "Un servicio más", tags: [], wait: true,
+     what: "Con el mismo contrato: recibe el dominio y devuelve personas.",
+     rows: []},
+  ]},
+  {mod: "Servicio", title: "Análisis de decisores y contacto", srcs: ["ia", "apollo", "hunter"], trg: ["on", "off", "off", "off", "on"], nodes: [
+    {id: "r_rol", t: "Analizar rol y nivel", s: "Formato único de persona", tags: ["ia"],
+     what: "La IA recibe las personas de cualquier servicio de decisores, en el formato que venga, las lleva a un formato único y asigna a cada una su rol y su nivel de decisión, según un catálogo editable. El prompt puede ser distinto en cada país.",
+     rows: [["Entrada", "Personas por proveedor"], ["Se configura", "Prompt y modelo por país; catálogo de roles y niveles"]]},
+    {id: "r_contacto", t: "Obtener el contacto", s: "Solo de quienes califican", tags: ["apollo", "hunter"],
+     what: "Pide el correo y el teléfono únicamente de las personas que califican, según la regla de cada nivel, y verifica el correo.",
+     rows: [["Salida", "Lead listo: empresa calificada y decisor con contacto verificado"]]},
+    {id: "r_fin_dec", t: "Leads listos", s: "Fin del recorrido de los triggers", tags: ["solvo"],
+     what: "Clientes nuevos deja aquí sus leads listos, a la espera del cold outreach. Investigación a pedido devuelve el resultado a la ficha de la empresa.",
+     rows: []},
+  ]},
+  {mod: "Servicios de cold outreach", title: "Uno por canal y país", srcs: ["ia", "brevo"], own: "Recibe su listado ya filtrado", nodes: [
+    {id: "r_correo", t: "Correo · EE. UU.", s: "Brevo · activo", tags: ["ia", "brevo"], open: true,
+     what: "Recibe un listado de leads y les escribe. No filtra ni decide a quién: el listado le llega ya filtrado por su envío programado, que hoy toma los leads de empresas de EE. UU. calificadas por el ICP y todavía sin contactar.",
+     rows: [["Entrada", "Listado de leads ya filtrado"], ["Salida", "Correos enviados y sus eventos"], ["Se configura", "Mensaje (prompt y plantillas) y versión de la landing"]]},
+    {id: "r_correo_es", t: "España", s: "Se crea después", tags: [], wait: true,
+     what: "Un servicio propio, con su canal, su mensaje y su versión de la landing. Se crea cuando esté resuelto cómo se contacta en España.",
+     rows: []},
+  ]},
+  {mod: "Servicio", title: "Reunión y seguimiento", srcs: ["solvo", "teams", "brevo"], own: "Lo invoca el clic del prospecto", nodes: [
+    {id: "r_agenda", t: "Agendar la reunión", s: "Landing en la versión de cada servicio", tags: ["showcase", "teams"],
+     what: "El prospecto llega a la versión de la landing del servicio que le escribió, ve el Showcase de Talento y reserva la reunión.",
+     rows: [["Se configura", "Una versión de la landing por servicio de cold outreach"]]},
+    {id: "r_plataforma", t: "Seguir la oportunidad", s: "Solvo Platform", tags: ["solvo"],
+     what: "El equipo comercial trabaja las reuniones agendadas y lleva la empresa hasta cliente.",
+     rows: []},
+    {id: "r_reportes", t: "Reportes semanales", s: "Por país, servicio y trigger", tags: ["brevo"],
+     what: "Reportes con el detalle por país, servicio, proveedor y trigger que dejan las trazas.",
+     rows: []},
+  ]},
+];
+const LINKS_R = [
+  {from: ["r_barrido", "r_clientes", "r_pedido", "r_talento"], to: ["r_indeed", "r_theirstack", "r_linkedin", "r_glassdoor", "r_computrabajo"], label: "Solicitud de búsqueda"},
+  {from: ["r_investiga"], to: ["r_e_apollo"], label: "Empresa creada en la plataforma: nombre, dominio, país o LinkedIn", skip: true},
+  {from: ["r_indeed", "r_theirstack", "r_linkedin", "r_glassdoor", "r_computrabajo"], to: ["r_analiza"], label: "Listado por servicio"},
+  {from: ["r_analiza"], to: ["r_directa"], label: "Si el trigger termina aquí", down: true},
+  {from: ["r_analiza"], to: ["r_e_apollo"], label: "Empresas viables"},
+  {from: ["r_e_apollo"], to: ["r_e_bright"], label: "Siguiente, según el trigger", down: true},
+  {from: ["r_e_bright"], to: ["r_e_nuevo"], label: "Siguiente, según el trigger", down: true},
+  {from: ["r_e_apollo", "r_e_bright", "r_e_nuevo"], to: ["r_califica"], label: "Datos por proveedor"},
+  {from: ["r_califica"], to: ["r_fin_emp"], label: "Si el trigger termina aquí", down: true},
+  {from: ["r_califica"], to: ["r_d_apollo"], label: "Dominio"},
+  {from: ["r_d_apollo"], to: ["r_d_hunter"], label: "Si no encuentra", down: true},
+  {from: ["r_d_hunter"], to: ["r_d_nuevo"], label: "Si no encuentra", down: true},
+  {from: ["r_d_apollo", "r_d_hunter", "r_d_nuevo"], to: ["r_rol"], label: "Personas por proveedor"},
+  {from: ["r_rol"], to: ["r_contacto"], label: "Decisores", down: true},
+  {from: ["r_contacto"], to: ["r_fin_dec"], label: "Lead listo", down: true},
+  {from: ["r_fin_dec"], to: ["r_correo", "r_correo_es"], label: "Listado filtrado", dash: true},
+  {from: ["r_correo"], to: ["r_agenda"], label: "Clic en el correo"},
+  {from: ["r_agenda"], to: ["r_plataforma"], label: "Reunión agendada", down: true},
+];
+const BANDS_R = [
+  {title: "Triggers: sus parámetros", sub: "Cada trigger se configura desde la plataforma: cómo se activa, en qué ubicaciones busca y qué servicios usa en cada etapa, en qué orden. Los valores son ejemplos de configuración.", kind: "table", heads: ["Trigger", "Activación", "Ventana", "Posiciones", "Ubicaciones", "Vacantes", "Empresas", "Decisores", "Termina en"], note: "Cada etapa que se usa pasa por su análisis con IA, con el prompt del país. Al configurar un trigger, la plataforma solo ofrece los servicios habilitados para sus países y que buscan del modo que el trigger necesita. Las ubicaciones se eligen del catálogo de geografía y cada servicio usa el nivel que admite: Indeed recibe cada ciudad y TheirStack, el país. Un trigger que use TheirStack puede configurar Empresas = solo Bright Data, cuando falte un dato esencial, porque la empresa ya llega con datos. El cold outreach no es un trigger: cada servicio de cold outreach recibe su listado ya filtrado de un envío programado.", rows: [
+    ["Clientes nuevos", "Cron, con el calendario de cada ciudad", "Último día", "Las que active", "Ciudades de EE. UU. y de España", "Indeed; TheirStack en evaluación", "Apollo, luego Bright Data", "Apollo, luego Hunter", "Leads listos para el cold outreach"],
+    ["Clientes actuales", "Cron, con su calendario", "Último día", "No usa términos", "EE. UU.; busca por empresa", "Indeed y LinkedIn, por empresa", "No usa", "No usa", "Aviso al vendedor"],
+    ["A pedido", "Solicitud del usuario", "Último día por defecto; el usuario puede ampliarla", "Las activas en el trigger", "Las configuradas; el usuario elige país y, si quiere, ciudad", "Los configurados para el país; el usuario elige", "No usa", "No usa", "Respuesta en la plataforma"],
+    ["Países de contratación", "Cron, de lunes a viernes", "Último día", "Por definir", "Colombia, México, Argentina, Perú, Guatemala, Kenia y Filipinas; ciudades por definir", "Indeed; después, LinkedIn y Computrabajo", "Opcional, por definir", "No usa", "Plataforma, con sus filtros"],
+    ["Investigación a pedido", "Solicitud desde la ficha de la empresa", "No aplica", "No aplica", "La de la empresa", "No usa", "Apollo, luego Bright Data", "Apollo, luego Hunter", "Ficha de la empresa"],
+  ]},
+  {title: "Qué se configura en un trigger", sub: "Un trigger nuevo es un registro más con estos parámetros, sin cambios en los servicios.", kind: "plain", cards: [
+    ["Activación", "Cron, con los días de la semana que se elijan (por defecto, de lunes a viernes), o solicitud desde la plataforma."],
+    ["Ventana de publicación", "Cuántos días hacia atrás se buscan vacantes publicadas. Por ahora, el último día."],
+    ["Ubicaciones", "Países, divisiones y ciudades elegidos del catálogo de geografía. El calendario puede ser por ciudad."],
+    ["Posiciones", "Qué posiciones del catálogo van activas para el scraping en este trigger. Al seleccionar cada país se activan o desactivan sus términos, y cada servicio recibe los términos activos del país que busca."],
+    ["Servicios de vacantes", "Cuáles se usan en cada país, entre los habilitados para ese país en el catálogo de servicios. Un servicio que busca por país recibe el país; uno que busca por ciudad recibe cada ciudad. Clientes actuales y A pedido usan el modo por empresa."],
+    ["Servicios de empresas y de decisores", "Cuáles se usan, en qué orden y cuándo se pasa al siguiente: si el anterior no encuentra el registro o si falta un dato esencial (dominio, tamaño o industria). Vacío si el trigger no llega a esa etapa."],
+    ["Hasta dónde llega", "La última etapa que recorre y dónde deja el resultado: aviso al vendedor, plataforma, ficha de la empresa o leads listos."],
+  ]},
+  {title: "Estado de cada entidad", sub: "Vacantes, empresas y decisores tienen un estado que se actualiza a medida que avanzan de la detección a la calificación. El estado, junto con la configuración del trigger, dice qué servicio sigue.", kind: "table", heads: ["Entidad", "Estados", "Cambia con"], note: "Cada cambio guarda cuándo ocurrió, qué servicio lo produjo, por qué trigger y, si hubo análisis, con qué versión del prompt. Cada entidad tiene un estado único, con el historial de los triggers que la trajeron: una empresa que llega por dos triggers se enriquece una sola vez. Una entidad puede quedar en espera o con error si un servicio falla; el servicio la retoma sin perderla. Los 30 días de vigencia son un parámetro. Los nombres de los estados son una propuesta.", rows: [
+    ["Vacante", "Detectada → analizada → viable o descartada → cerrada, cuando el portal la marca así o no se vuelve a ver en 30 días", "Servicio de vacantes; análisis de vacantes"],
+    ["Empresa", "Detectada → enriquecida, completa o con datos faltantes → calificada o excluida. Si una calificada reaparece después de 30 días, se vuelve a enriquecer y calificar; una excluida no", "Análisis de vacantes; servicios de empresas; análisis de empresas"],
+    ["Decisor", "Encontrado → analizado → con contacto o descartado → contactado", "Servicios de decisores; análisis de decisores; cold outreach"],
+  ]},
+  {title: "Posiciones y términos por país", sub: "Las posiciones forman un catálogo único. Cada país tiene sus propios términos de búsqueda para esas posiciones: una posición existe en un país cuando tiene términos allí. En el trigger, al seleccionar cada país, se activan o desactivan sus términos. El análisis de vacantes lleva cada vacante a la posición del catálogo, venga del país que venga, y así las vacantes se comparan entre países.", kind: "table", heads: ["Tabla", "Qué guarda", "Ejemplo"], note: "Los términos del ejemplo son ilustrativos; los reales de cada país se definen al cargar el catálogo.", rows: [
+    ["Catálogo de posiciones", "El catálogo de posiciones actual, global y sin sus campos de términos. Puede crecer: una posición nueva queda disponible para crearle términos en cada país. Sus campos de términos actuales se quitan cuando el sistema actual deje de leerlos.", "Especialista de nómina"],
+    ["Términos", "Una fila por posición, término y país. Cada término pertenece a una sola posición.", "Especialista de nómina · «payroll specialist» · EE. UU. / «técnico de nóminas» · España / «liquidación de sueldos» · Argentina"],
+    ["Términos activos del trigger", "Qué términos de cada país seleccionado usa el trigger. La activación es del trigger: apagar un término en Clientes nuevos no lo apaga en Países de contratación. Un término nuevo entra inactivo en todos los triggers y se activa a mano.", "Clientes nuevos · España · «técnico de nóminas» activo"],
+  ]},
+  {title: "Catálogo de servicios", sub: "Cada servicio es un registro con los países donde está habilitado y los modos en que busca. Al configurar un trigger, la plataforma solo ofrece los servicios habilitados para sus países: Computrabajo no aparece para EE. UU.", kind: "table", heads: ["Servicio", "Etapa", "Países habilitados", "Busca por", "Estado"], note: "Los países son un ejemplo de configuración inicial. Al habilitar un país nuevo en un servicio, el país tiene que existir en el catálogo de geografía.", rows: [
+    ["Indeed · Oxylabs", "Vacantes", "EE. UU., España y los siete países de contratación", "Términos + ciudad; empresa", "Previsto"],
+    ["TheirStack", "Vacantes", "EE. UU. y España", "Términos + país; empresa, por dominio", "En evaluación"],
+    ["LinkedIn · Apify", "Vacantes", "EE. UU.; después, los países de contratación", "Términos + ubicación; empresa", "Previsto"],
+    ["Glassdoor · Apify", "Vacantes", "Por definir", "Términos + ciudad", "Posible"],
+    ["Computrabajo · Firecrawl", "Vacantes", "Los países de contratación donde opera el portal", "Términos + ciudad", "Previsto"],
+    ["Apollo", "Empresas", "EE. UU. y España", "Nombre, dominio, país o LinkedIn", "Previsto"],
+    ["Bright Data", "Empresas", "EE. UU. y España", "Nombre, dominio, país o LinkedIn", "Previsto"],
+    ["Apollo", "Decisores", "EE. UU. y España", "Dominio", "Previsto"],
+    ["Hunter", "Decisores", "EE. UU. y España", "Dominio", "Previsto"],
+  ]},
+  {title: "Modelo de datos", sub: "Las entidades que sostienen el diseño. Las de configuración se administran desde la plataforma; las de operación las producen los servicios.", kind: "table", heads: ["Entidad", "Qué guarda", "Se relaciona con"], note: "Es un modelo funcional para validar el diseño; el esquema lo define el equipo de desarrollo.", rows: [
+    ["País · División · Ciudad", "Código ISO, nombre, idioma y zona horaria", "Términos, servicios, triggers"],
+    ["Alias de ubicación", "Cómo nombra cada servicio una ciudad o división", "Ciudad, servicio"],
+    ["Posición", "El catálogo global de posiciones", "Términos, vacantes"],
+    ["Término", "Texto de búsqueda de una posición en un país", "Posición, país"],
+    ["Servicio", "Etapa, proveedor, modos de búsqueda y estado", "Países habilitados, invocaciones"],
+    ["Servicio · país", "Países donde el servicio está habilitado", "Servicio, país"],
+    ["Trigger", "Activación (días de la semana o solicitud), ventana de publicación y hasta dónde llega", "Sus ubicaciones, términos y servicios"],
+    ["Trigger · ubicación", "Países, divisiones y ciudades, con su calendario", "Trigger, geografía"],
+    ["Trigger · término", "Términos activos de cada país seleccionado", "Trigger, término"],
+    ["Trigger · servicio", "Servicios de cada etapa y país, su orden y cuándo se pasa al siguiente", "Trigger, servicio"],
+    ["Prompt", "Uno por país para cada uno de los tres análisis (vacantes, empresas y decisores), con su modelo, texto y versión. El ICP de cada país vive en su prompt de empresas. Un país no se activa en un trigger sin sus tres prompts", "País"],
+    ["Regla", "Exclusiones de empresas y los datos esenciales de una empresa: dominio, tamaño e industria", "Servicios de análisis"],
+    ["Rol de decisor", "Rol, nivel de decisión, áreas, cargos con que se busca, si se le envía correo y si se le busca teléfono", "Decisores, posiciones (por sus áreas)"],
+    ["Envío programado", "Días, filtro de leads (por ejemplo, país de la empresa y empresa calificada) y servicio de cold outreach", "Servicio, decisores"],
+    ["Ejecución", "Cada vez que corre un trigger: inicio, fin y consumo", "Trigger, invocaciones"],
+    ["Invocación", "Servicio, parámetros, quién la pidió, resultado, costo y respuesta cruda", "Ejecución, servicio, entidades"],
+    ["Vacante", "Formato único, ubicación, posición, salario publicado con su moneda y periodo y salario anual en USD, seniority y modalidad si el aviso los trae. Una sola vacante aunque llegue por varios servicios", "Empresa, ciudad, fuentes"],
+    ["Fuente de vacante", "Cada vez que un servicio trajo la vacante: servicio, término e invocación", "Vacante, término, invocación"],
+    ["Empresa", "Formato único, dominio como llave y puntaje", "Identificadores, vacantes, decisores"],
+    ["Identificador de empresa", "El identificador de la empresa en cada proveedor o portal. Mientras no tiene dominio, la empresa se reconoce por este; se fusiona cuando el enriquecimiento trae el dominio", "Empresa"],
+    ["Decisor", "Formato único, rol, nivel, contacto y envíos recibidos", "Empresa, envío programado"],
+    ["Historial de estado", "Estado anterior y nuevo, servicio, trigger, versión de prompt y fecha", "Vacante, empresa, decisor"],
+  ]},
+  {title: "Servicios: qué reciben y qué entregan", sub: "Ningún servicio invoca a otro ni sabe quién lo llamó: se invoca a demanda o por webhook y responde igual. Qué servicios se usan en cada etapa, y en qué orden, lo dice la configuración del trigger. Por eso cada uno escala por separado y se puede cambiar por dentro sin tocar los demás.", kind: "pair", labels: ["Entrada", "Salida"], cards: [
+    ["Vacantes · Indeed (Oxylabs)", "Términos + ciudad, con su país y división; o una empresa. En ambos casos, la ventana de publicación.", "Listado en el formato de Indeed."],
+    ["Vacantes · TheirStack", "Términos + país, con banda de empleados y tipo de empresa; o una empresa, por su dominio. En ambos casos, la ventana de publicación. El proveedor también puede avisar por webhook cada vacante nueva de una búsqueda guardada.", "Listado de varios portales, con dominio, empleados e industria de cada empresa."],
+    ["Vacantes · LinkedIn (Apify)", "Términos + ubicación; o una empresa. En ambos casos, la ventana de publicación.", "Listado en el formato de LinkedIn."],
+    ["Vacantes · Glassdoor (Apify) y Computrabajo (Firecrawl)", "Términos + ciudad + ventana de publicación.", "Listado en el formato de cada portal."],
+    ["Análisis de vacantes", "Listado de cualquier servicio y país.", "Vacantes normalizadas, viables o descartadas, con su empresa."],
+    ["Empresas · Apollo y Bright Data", "Variable: nombre, con o sin dominio, país, perfil de LinkedIn.", "Datos de empresa en el formato de cada proveedor."],
+    ["Análisis de empresas", "Datos de empresa en el formato de cualquier fuente, incluida la que trae TheirStack, y la vacante que la trajo.", "Empresa calificada o excluida: formato único, dominio y puntaje, verificada contra la vacante."],
+    ["Decisores · Apollo y Hunter", "Dominio, país y roles buscados.", "Personas en el formato de cada proveedor."],
+    ["Análisis de decisores y contacto", "Personas en el formato de cualquier proveedor.", "Lead listo: empresa y decisor con contacto verificado."],
+    ["Cold outreach", "Listado de leads ya filtrado por su envío programado.", "Correos enviados, con el mensaje y la landing del servicio."],
+    ["Reunión y seguimiento", "Prospecto, con el clic en el correo.", "Reunión agendada y avance hasta cliente."],
+  ]},
+  {title: "Geografía: país, división y ciudad", sub: "El sistema maneja tres niveles en todos los países: el país, la división equivalente al estado y la ciudad. Cada trigger elige de este catálogo sus ubicaciones. Cada servicio de vacantes traduce la ubicación al formato de su portal; TheirStack busca por país y devuelve la ciudad en cada vacante.", kind: "table", heads: ["País", "Equivalente al estado", "Divisiones", "Idioma", "Lo usa"], note: "Cada división se identifica con su código ISO 3166-2, que incluye el país. Así no chocan códigos iguales de países distintos: MA es Massachusetts en EE. UU. y Málaga en España, y quedan como US-MA y ES-MA. Cada país usa un solo nivel de división, el que usan los portales: provincia en España y región en Filipinas. Una ciudad que un servicio devuelve y no está en el catálogo se guarda en la vacante con su país y su división, y queda marcada para revisión; se agrega al catálogo solo si se va a usar para buscar. Las cantidades son las de ISO 3166-2 y se verifican al cargar el catálogo.", rows: [
+    ["EE. UU.", "Estado", "50 y el Distrito de Columbia", "Inglés", "Clientes nuevos, Clientes actuales"],
+    ["España", "Provincia", "50 y 2 ciudades autónomas", "Español", "Clientes nuevos"],
+    ["Colombia", "Departamento", "32 y Bogotá, Distrito Capital", "Español", "Países de contratación"],
+    ["México", "Estado", "31 y Ciudad de México", "Español", "Países de contratación"],
+    ["Argentina", "Provincia", "23 y la Ciudad Autónoma de Buenos Aires", "Español", "Países de contratación"],
+    ["Perú", "Departamento", "24 y el Callao", "Español", "Países de contratación"],
+    ["Guatemala", "Departamento", "22", "Español", "Países de contratación"],
+    ["Kenia", "Condado", "47", "Inglés", "Países de contratación"],
+    ["Filipinas", "Región", "17", "Inglés", "Países de contratación"],
+  ]},
+  {title: "Configuración central", sub: "Todo se administra desde Solvo Platform, con registro de quién cambió qué y cuándo.", kind: "config", cards: [
+    ["Triggers", "La lista de triggers y, para cada uno, su activación, sus ubicaciones (países, divisiones y ciudades), los servicios de cada etapa con su orden y hasta dónde llega. Un trigger nuevo se agrega aquí, sin cambios en los servicios.", "", "", ["Triggers"]],
+    ["Geografía", "País, división y ciudad de los nueve países, con el calendario de cada ciudad y el idioma de cada país.", "", "", ["Vacantes"]],
+    ["Posiciones y términos por país", "Qué puestos existen y con qué términos se buscan en cada país. Para sumar un país, sus términos se pueden copiar de otro país como punto de partida y ajustarse. Cada trigger activa los términos de sus países.", "", "", ["Vacantes", "Análisis"]],
+    ["Catálogo de servicios", "Qué servicios existen, en qué países está habilitado cada uno y en qué modos busca: por términos y ubicación (país o ciudad) o por empresa.", "", "", ["Vacantes"]],
+    ["Servicios de enriquecimiento y de decisores", "Qué servicios hay, y qué datos son esenciales para clasificar una empresa. Cuáles usa cada trigger, y en qué orden, se define en el trigger.", "", "", ["Empresas", "Decisores"]],
+    ["Prompts por país", "Cada país tiene sus prompts para los tres análisis: vacantes, empresas (con su ICP) y decisores, con su modelo y su versión. Un país nuevo los crea copiando los de otro. Un cambio se prueba contra una muestra antes de activarse y se puede volver a la versión anterior.", "", "", ["Análisis"]],
+    ["Roles de decisor y reglas", "Cada rol con su nivel, sus áreas, sus cargos, si recibe correo y si se le busca teléfono; exclusiones de empresas.", "", "", ["Análisis"]],
+    ["Envíos de cold outreach", "Cada envío programado: sus días, el filtro que arma el listado de leads y el servicio que lo recibe.", "", "", ["Cold outreach"]],
+  ]},
+  {title: "Base común a todos los servicios", sub: "Lo que necesitan para atender invocaciones desde varios lugares y a cualquier hora.", kind: "config", cards: [
+    ["Recorrido por estado", "No hay un componente que dirija el recorrido: cada servicio toma las entidades en el estado que le corresponde y cuyo trigger lo tiene en esa etapa, y al terminar las deja en el estado siguiente. Los servicios no se conocen entre sí y un trigger nuevo es solo configuración.", "", "", []],
+    ["Fallas y reintentos", "Si un proveedor no responde o se queda sin créditos, la entidad queda en espera y se reintenta, sin perderse ni pagarse dos veces.", "", "", []],
+    ["Prioridad y plazo", "Cada servicio atiende solicitudes simultáneas y reparte en paralelo lo pendiente; las de un usuario van antes que las de un cron. El recorrido de un trigger termina en menos de un día.", "", "", []],
+    ["Escala por servicio", "Cada servicio recibe su trabajo en una cola propia. Si coinciden el barrido de la mañana y varias investigaciones a pedido, se le suma capacidad solo al que se atrasa.", "", "", []],
+    ["Una solicitud repetida no se paga dos veces", "Cada servicio reconoce una solicitud que ya atendió y devuelve lo guardado. Importa con TheirStack, que cobra cada consulta aunque la vacante ya se haya pedido.", "", "", []],
+    ["Respuesta guardada tal cual", "Lo que entrega cada proveedor se conserva sin transformar. Si cambia un prompt, se vuelve a analizar sin consultar de nuevo al proveedor.", "", "", []],
+    ["Versión en cada resultado", "Cada análisis guarda qué versión de prompt lo produjo, para comparar resultados entre versiones.", "", "", []],
+    ["Trazas y costos", "Cada invocación registra qué servicio la atendió, quién la pidió y cuánto consumió, por proveedor y por país.", "", "", []],
+  ]},
+  {title: "Decisiones abiertas", sub: "Lo que todavía queda por definir.", kind: "plain", cards: [
+    ["Campos del formato único", "Fijar la lista de campos de vacante, empresa y decisor. La vacante ya incluye salario, seniority y modalidad como opcionales."],
+    ["Mapeo de costos proyectados de APIs", "Pendiente: proyectar el costo por proveedor con los servicios, países y triggers del diseño. Por ahora no hay topes de gasto."],
+    ["Cold outreach en España", "Pendiente de definir el canal con el equipo de ventas de España. Ese equipo trabaja por llamada y LinkedIn, y el correo solo a pedido, así que el primer servicio de España puede no ser de correo."],
+  ]},
+  {title: "Orden de construcción", sub: "Cada paso deja una parte del sistema funcionando y prepara la siguiente.", kind: "steps", cards: [
+    ["Catálogos y estado", "Geografía (país, división y ciudad), posiciones con sus términos por país, catálogo de servicios con sus países habilitados, estado de cada entidad, con toda la configuración inicial cargada."],
+    ["Configuración desde la plataforma", "Triggers con sus parámetros, prompts por país y reglas de calificación."],
+    ["Primer recorrido completo", "Clientes nuevos con Indeed, Apollo y Bright Data para empresas, y Apollo y Hunter para decisores, hasta los leads listos."],
+    ["Búsqueda por empresa", "Clientes actuales, A pedido e Investigación a pedido sobre los mismos servicios."],
+    ["TheirStack y Países de contratación", "Países de contratación con Indeed, que ya tiene cobertura en esos países; después, los servicios de LinkedIn y Computrabajo. TheirStack entra si su evaluación confirma la cobertura y la tasa de empresas mal resueltas."],
+    ["Cold outreach por servicio", "El servicio de correo de EE. UU. con su envío programado. El de España se crea cuando esté resuelto cómo se contacta."],
+  ]},
+];
+const PAGES = {
+  actual: {h1: "Flujo de una oportunidad comercial", lanes: LANES_A, links: LINKS_A, bands: [], file: "flujo"},
+  replanteo: {h1: "Replanteo: flujo modular, escalable y configurable", lanes: LANES_R, links: LINKS_R, bands: BANDS_R, file: "replanteo"},
+};
+let PAGE = "actual", LANES = LANES_A, LINKS = LINKS_A;
+const ST = {new: "Nuevo", gen: "Se generaliza", ok: "Sin cambios"};
+
+const $ = s => document.querySelector(s);
+const view = {k: 1, x: 0, y: 0};
+const canvas = $("#canvas"), wires = $("#wires");
+const chev = '<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const tagHtml = k => `<span class="tag" style="background:var(--t-${TAG[k][1]});color:var(--t-${TAG[k][1]}-ink)">${TAG[k][0]}</span>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const TRG = [["Clientes nuevos", "linkedin"], ["Clientes actuales", "teams"], ["A pedido", "apollo"], ["Países de contratación", "bright"], ["Investigación a pedido", "ia"]];
+const MODS = ["Vacantes", "Análisis de vacantes", "Empresas", "Análisis de empresas", "Decisores", "Análisis de decisores"];
+const dotHtml = (i, st) => `<i class="td ${st}" style="--c:var(--t-${TRG[i][1]}-ink)" title="${TRG[i][0]}"></i>`;
+const trgHtml = arr => arr ? `<div class="trg"><span>Lo usan</span>${arr.map((st, i) => dotHtml(i, st)).join("")}</div>` : "";
+function matrixHtml(B) {
+  const cell = (st, i) => `<td class="c">${st === "off" ? `<span class="no">—</span>` : dotHtml(i, st) + (st === "opt" ? `<small>opcional</small>` : "")}</td>`;
+  return `<div class="mx"><table><thead><tr><th>Trigger</th><th>Activación</th><th>Países</th><th>Servicios de vacantes</th>${MODS.map(m => `<th class="c">${esc(m)}</th>`).join("")}<th>Termina en</th></tr></thead><tbody>${
+    B.rows.map(r => `<tr><td><b>${dotHtml(r[0], "on")}${esc(TRG[r[0]][0])}</b></td><td>${esc(r[5])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td>${r[3].map(st => cell(st, r[0])).join("")}<td>${esc(r[4])}</td></tr>`).join("")
+  }</tbody></table>${B.note ? `<p class="mxnote">${esc(B.note)}</p>` : ""}</div>`;
+}
+function tableHtml(B) {
+  return `<div class="mx"><table><thead><tr>${B.heads.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${
+    B.rows.map(r => `<tr>${r.map((c, j) => j ? `<td>${esc(c)}</td>` : `<td><b>${esc(c)}</b></td>`).join("")}</tr>`).join("")
+  }</tbody></table>${B.note ? `<p class="mxnote">${esc(B.note)}</p>` : ""}</div>`;
+}
+let COL = {};
+function build() {
+  canvas.querySelectorAll(".lane, .band").forEach(n => n.remove());
+  COL = {};
+  canvas.style.gridTemplateColumns = `repeat(${LANES.length}, 206px)`;
+  LANES.forEach((lane, li) => {
+    const el = document.createElement("section");
+    el.className = "lane";
+    el.innerHTML = `<div class="lane-h">${lane.mod ? `<div class="mod">${esc(lane.mod)}</div>` : ""}<h2>${esc(lane.title)}</h2><div class="srcs">${lane.srcs.map(k => `<span><i style="background:var(--t-${TAG[k][1]}-ink)"></i>${TAG[k][0]}</span>`).join("")}</div>${lane.own ? `<div class="trg"><span>${esc(lane.own)}</span></div>` : trgHtml(lane.trg)}</div><div class="stack"></div>`;
+    const stack = el.querySelector(".stack");
+    lane.nodes.forEach(n => {
+      COL[n.id] = li;
+      const d = document.createElement("article");
+      d.className = "node" + (n.wait ? " wait" : "");
+      d.id = "n-" + n.id;
+      d.setAttribute("aria-expanded", n.open ? "true" : "false");
+      const multi = n.tags.length;
+      d.innerHTML = `${n.tags.length ? `<div class="tags">${n.tags.map(tagHtml).join("")}</div>` : ""}
+        <button type="button" class="nh" aria-controls="b-${n.id}"><b>${n.dot != null ? dotHtml(n.dot, "on") : ""}${esc(n.t)}</b>${chev}<small>${esc(n.s)}</small>${n.st ? `<span class="st st-${n.st}">${ST[n.st]}</span>` : ""}</button>
+        <dl class="nb" id="b-${n.id}" ${n.open ? "" : "hidden"}><dd class="full">${esc(n.what)}</dd>${n.rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}${multi > 1 && !n.st ? `<span class="multi">Consulta ${multi} fuentes</span>` : ""}</dl>`;
+      d.querySelector(".nh").addEventListener("click", () => toggle(d));
+      stack.appendChild(d);
+    });
+    const skips = LINKS.filter(L => L.skip).length;
+    el.style.marginBottom = skips ? (24 + skips * 34) + "px" : "";
+    canvas.appendChild(el);
+  });
+  PAGES[PAGE].bands.forEach(B => {
+    const el = document.createElement("section");
+    el.className = "band";
+    const card = (c, i) => {
+      if (B.kind === "pair") return `<article class="bcard"><b>${esc(c[0])}</b>${B.labels.map((l, j) => `<small>${esc(l)}</small><p${j === 0 && B.labels.length === 2 ? ` class="hoy"` : ""}>${esc(c[j + 1])}</p>`).join("")}</article>`;
+      if (B.kind === "config") return `<article class="bcard"><b>${esc(c[0])}</b><p>${esc(c[1])}</p><div class="bmeta">${c[2] ? `<span class="st st-${c[2]}">${esc(c[3])}</span>` : ""}${c[4].map(m => `<span class="mchip">${esc(m)}</span>`).join("")}</div></article>`;
+      if (B.kind === "steps") return `<article class="bcard"><span class="n">${i + 1}</span><b>${esc(c[0])}</b><p>${esc(c[1])}</p></article>`;
+      return `<article class="bcard"><b>${esc(c[0])}</b><p>${esc(c[1])}</p></article>`;
+    };
+    el.innerHTML = `<div class="band-h"><h2>${esc(B.title)}</h2>${B.sub ? `<p>${esc(B.sub)}</p>` : ""}</div>${B.kind === "matrix" ? matrixHtml(B) : B.kind === "table" ? tableHtml(B) : `<div class="band-grid">${B.cards.map(card).join("")}</div>`}`;
+    canvas.appendChild(el);
+  });
+}
+/* Alto de la fila de carriles (sin las bandas), para encuadrar. */
+function lanesH() {
+  let h = 0;
+  canvas.querySelectorAll(".lane").forEach(l => { h = Math.max(h, l.offsetTop + l.offsetHeight); });
+  return h + 80;
+}
+function toggle(d, force) {
+  const open = force != null ? force : d.getAttribute("aria-expanded") !== "true";
+  d.setAttribute("aria-expanded", open);
+  d.querySelector(".nb").hidden = !open;
+  draw();
+}
+$("#openAll").addEventListener("click", () => document.querySelectorAll(".node").forEach(d => toggle(d, true)));
+$("#closeAll").addEventListener("click", () => document.querySelectorAll(".node").forEach(d => toggle(d, false)));
+
+function off(el) {
+  let x = 0, y = 0;
+  while (el && el !== canvas) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; }
+  return {x, y};
+}
+function box(id) {
+  const el = document.getElementById("n-" + id), o = off(el);
+  return {l: o.x, r: o.x + el.offsetWidth, t: o.y, b: o.y + el.offsetHeight, cy: o.y + 26};
+}
+function laneEdge(i, side) {
+  const el = canvas.querySelectorAll(".lane")[i], o = off(el);
+  return side === "r" ? o.x + el.offsetWidth : o.x;
+}
+function draw() {
+  wires.querySelectorAll("path").forEach(p => p.remove());
+  canvas.querySelectorAll(".lbl").forEach(p => p.remove());
+  const lc = getComputedStyle(document.documentElement).getPropertyValue("--line").trim() || "#2b3440";
+  const add = (d, dash) => { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", d); p.setAttribute("fill", "none"); p.setAttribute("stroke", lc); p.setAttribute("stroke-width", "1.3"); if (dash) { p.setAttribute("class", "dash"); p.setAttribute("stroke-dasharray", "5 4"); } wires.appendChild(p); };
+  const label = (x, y, text) => { const s = document.createElement("span"); s.className = "lbl"; s.textContent = text; s.style.left = x + "px"; s.style.top = y + "px"; canvas.appendChild(s); };
+  const r = n => Math.round(n) + .5;
+  const gaps = {};
+  LINKS.forEach(L => { if (!L.down && !L.skip) (gaps[COL[L.from[0]]] = gaps[COL[L.from[0]]] || []).push(L); });
+  LINKS.forEach(L => {
+    if (L.skip) {
+      /* Entrada directa a un módulo lejano: baja por el pasillo, corre bajo los carriles y sube junto al destino. */
+      const a = box(L.from[0]), b = box(L.to[0]);
+      const v = L.lvl || 0, x1 = r(laneEdge(COL[L.from[0]], "r") + 76 + v * 12), x2 = r(laneEdge(COL[L.to[0]], "l") - 24 + v * 12), yb = r(lanesH() - 80 + 18 + v * 34);
+      add(`M ${a.r} ${r(a.cy)} H ${x1} V ${yb} H ${x2} V ${r(b.cy)} H ${b.l - 1}`, L.dash);
+      label((x1 + x2) / 2, yb, L.label);
+      return;
+    }
+    if (L.down) {
+      const a = box(L.from[0]), b = box(L.to[0]), x = r(a.l + 22);
+      add(`M ${x} ${a.b} V ${b.t}`, L.dash);
+      label(a.l + 60, a.b + 16, L.label);
+      return;
+    }
+    const S = L.from.map(box), T = L.to.map(box);
+    const g = gaps[COL[L.from[0]]], shift = (g.indexOf(L) - (g.length - 1) / 2) * 26;
+    const mx = r((laneEdge(COL[L.from[0]], "r") + laneEdge(COL[L.to[0]], "l")) / 2 + shift);
+    S.forEach(s => add(`M ${s.r} ${r(s.cy)} H ${mx}`, L.dash));
+    T.forEach(t => add(`M ${mx} ${r(t.cy)} H ${t.l - 1}`, L.dash));
+    const ys = [...S, ...T].map(b => r(b.cy));
+    add(`M ${mx} ${Math.min(...ys)} V ${Math.max(...ys)}`, L.dash);
+    const ly = S.length > 1 || T.length === 1 ? (T.length === 1 ? T[0].cy : (Math.min(...ys) + Math.max(...ys)) / 2) : S[0].cy;
+    label(mx, S.length === 1 && T.length > 1 ? (Math.min(...ys) + Math.max(...ys)) / 2 : ly, L.label);
+  });
+}
+/* ---------- Dibujo encima ---------- */
+const ink = $("#ink"), NS = "http://www.w3.org/2000/svg", KEY = "sales-flow-ink-v1";
+const pen = {tool: "hand", color: "1", size: 5, smooth: 1};
+const SMOOTH = [{label: "Suavizado: bajo", a: .75}, {label: "Suavizado: medio", a: .4}, {label: "Suavizado: alto", a: .2}];
+let space = false;
+let strokes = [], hist = [], cur = null, erasing = null;
+const inkKey = () => PAGE === "actual" ? KEY : KEY + ":" + PAGE;
+function loadInk() { try { strokes = JSON.parse(localStorage.getItem(inkKey()) || "[]"); } catch (_) { strokes = []; } hist = []; cur = null; erasing = null; }
+const save = () => { try { localStorage.setItem(inkKey(), JSON.stringify(strokes.map(x => ({color: x.color, size: x.size, pts: x.pts})))); } catch (_) {} };
+const inkColor = c => getComputedStyle(document.documentElement).getPropertyValue("--ink-" + c).trim() || "#1f2a37";
+function curve(pts) {
+  const f = v => Math.round(v * 10) / 10;
+  if (pts.length < 3) return pts.map((p, i) => (i ? "L " : "M ") + f(p[0]) + " " + f(p[1])).join(" ");
+  let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2, my = (pts[i][1] + pts[i + 1][1]) / 2;
+    d += ` Q ${f(pts[i][0])} ${f(pts[i][1])} ${f(mx)} ${f(my)}`;
+  }
+  const l = pts[pts.length - 1];
+  return d + ` L ${f(l[0])} ${f(l[1])}`;
+}
+function outline(st) {
+  const P = st.pts, n = P.length, w = i => st.size * (0.3 + 0.9 * P[i][2]);
+  const circ = (x, y, r) => `M ${x - r} ${y} a ${r} ${r} 0 1 0 ${2 * r} 0 a ${r} ${r} 0 1 0 ${-2 * r} 0 Z`;
+  if (n === 1) return circ(P[0][0], P[0][1], w(0) / 2);
+  const L = [], R = [];
+  for (let i = 0; i < n; i++) {
+    const a = P[Math.max(0, i - 1)], b = P[Math.min(n - 1, i + 1)];
+    let dx = b[0] - a[0], dy = b[1] - a[1]; const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+    const h = w(i) / 2;
+    L.push([P[i][0] - dy * h, P[i][1] + dx * h]); R.push([P[i][0] + dy * h, P[i][1] - dx * h]);
+  }
+  const back = curve(R.reverse()).replace(/^M/, "L");
+  return curve(L) + " " + back + " Z " + circ(P[0][0], P[0][1], w(0) / 2) + " " + circ(P[n - 1][0], P[n - 1][1], w(n - 1) / 2);
+}
+function paint(st) {
+  if (!st.el) { st.el = document.createElementNS(NS, "path"); ink.appendChild(st.el); }
+  st.el.setAttribute("d", outline(st)); st.el.setAttribute("fill", inkColor(st.color));
+}
+function repaint() { ink.innerHTML = ""; strokes.forEach(s => { s.el = null; paint(s); }); }
+const snapshot = () => { hist.push(strokes.map(s => ({color: s.color, size: s.size, pts: s.pts}))); if (hist.length > 80) hist.shift(); };
+const plain = () => strokes.map(s => ({color: s.color, size: s.size, pts: s.pts}));
+const toWorld = e => { const r = stage.getBoundingClientRect(); return [(e.clientX - r.left - view.x) / view.k, (e.clientY - r.top - view.y) / view.k]; };
+const isEraser = e => pen.tool === "eraser" || (e.pointerType === "pen" && (e.button === 5 || (e.buttons & 32)));
+const wantsInk = e => !space && ((pen.tool !== "hand" && ptrs.size === 0) || e.pointerType === "pen");
+function eraseAt(x, y) {
+  const r = 10 / view.k, before = strokes.length;
+  strokes = strokes.filter(s => { const hit = s.pts.some(p => Math.hypot(p[0] - x, p[1] - y) < r + s.size); if (hit && s.el) s.el.remove(); return !hit; });
+  return strokes.length !== before;
+}
+function inkDown(e) {
+  if (!wantsInk(e) || (e.pointerType === "mouse" && e.button !== 0)) return false;
+  e.preventDefault();
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  const [x, y] = toWorld(e);
+  if (isEraser(e)) { snapshot(); erasing = {id: e.pointerId, any: eraseAt(x, y)}; return true; }
+  snapshot();
+  const p = e.pointerType === "pen" ? (e.pressure || .5) : .5;
+  cur = {id: e.pointerId, color: pen.color, size: pen.size / view.k, pts: [[x, y, p]], sm: [x, y, p], start: [x, y, p], line: e.shiftKey, raw: null};
+  strokes.push(cur); paint(cur);
+  return true;
+}
+function snap45(x0, y0, x, y) {
+  const dx = x - x0, dy = y - y0, len = Math.hypot(dx, dy), ang = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+  return [x0 + Math.cos(ang) * len, y0 + Math.sin(ang) * len];
+}
+function inkMove(e) {
+  if (erasing && e.pointerId === erasing.id) { const [x, y] = toWorld(e); if (eraseAt(x, y)) erasing.any = true; return true; }
+  if (!cur || e.pointerId !== cur.id) return false;
+  const pr = ev => ev.pointerType === "pen" ? (ev.pressure || .5) : .5;
+  if (e.shiftKey) cur.line = true;
+  if (cur.line) {
+    const [x, y] = toWorld(e), [sx, sy] = snap45(cur.start[0], cur.start[1], x, y), q = pr(e);
+    cur.pts = [[cur.start[0], cur.start[1], q], [sx, sy, q]];
+    paint(cur); return true;
+  }
+  const a = SMOOTH[pen.smooth].a, evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  for (const ev of (evs.length ? evs : [e])) {
+    const [x, y] = toWorld(ev), q = pr(ev);
+    cur.raw = [x, y, q];
+    cur.sm = [cur.sm[0] + (x - cur.sm[0]) * a, cur.sm[1] + (y - cur.sm[1]) * a, cur.sm[2] + (q - cur.sm[2]) * Math.min(1, a * 1.5)];
+    const last = cur.pts[cur.pts.length - 1];
+    if (Math.hypot(cur.sm[0] - last[0], cur.sm[1] - last[1]) < 1.2 / view.k) continue;
+    cur.pts.push([Math.round(cur.sm[0] * 10) / 10, Math.round(cur.sm[1] * 10) / 10, Math.round(cur.sm[2] * 100) / 100]);
+  }
+  paint(cur);
+  return true;
+}
+function inkUp(e) {
+  if (erasing && e.pointerId === erasing.id) { if (!erasing.any) hist.pop(); else save(); erasing = null; moved = true; return true; }
+  if (!cur || e.pointerId !== cur.id) return false;
+  if (!cur.line && cur.raw && cur.pts.length > 1) { const l = cur.pts[cur.pts.length - 1]; cur.pts.push([cur.raw[0], cur.raw[1], l[2]]); paint(cur); }
+  delete cur.sm; delete cur.start; delete cur.raw; delete cur.line;
+  cur = null; moved = true; save();
+  return true;
+}
+function setTool(t) {
+  pen.tool = t;
+  document.querySelectorAll("[data-tool]").forEach(b => b.setAttribute("aria-pressed", b.dataset.tool === t));
+  stage.classList.toggle("pen-mode", t === "pen"); stage.classList.toggle("eraser-mode", t === "eraser");
+}
+document.querySelectorAll("[data-tool]").forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
+document.querySelectorAll("[data-color]").forEach(b => b.addEventListener("click", () => {
+  pen.color = b.dataset.color; document.querySelectorAll("[data-color]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  if (pen.tool !== "pen") setTool("pen");
+}));
+document.querySelectorAll("[data-size]").forEach(b => b.addEventListener("click", () => {
+  pen.size = +b.dataset.size; document.querySelectorAll("[data-size]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  if (pen.tool !== "pen") setTool("pen");
+}));
+$("#smooth").addEventListener("click", () => { pen.smooth = (pen.smooth + 1) % SMOOTH.length; $("#smoothLv").textContent = SMOOTH[pen.smooth].label.replace("Suavizado: ", ""); });
+function undo() { if (!hist.length) return; strokes = hist.pop(); repaint(); save(); }
+$("#undo").addEventListener("click", undo);
+$("#clearInk").addEventListener("click", () => { if (!strokes.length) return; snapshot(); strokes = []; repaint(); save(); toast("Trazos borrados. «Deshacer» los recupera."); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", repaint);
+new MutationObserver(repaint).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+repaint();
+
+let toastT = 0;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200); }
+
+/* ---------- Exportar ---------- */
+function loadH2C() {
+  if (window.html2canvas) return Promise.resolve();
+  return new Promise((ok, ko) => { const sc = document.createElement("script"); sc.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"; sc.onload = ok; sc.onerror = ko; document.head.appendChild(sc); });
+}
+async function exportPng() {
+  const btn = $("#export"); btn.disabled = true; btn.querySelector("span").textContent = "Generando…";
+  try {
+    await loadH2C();
+    const css = getComputedStyle(document.documentElement), bg = css.getPropertyValue("--bg").trim();
+    const W = canvas.offsetWidth, H = canvas.offsetHeight, scale = 2;
+    const shot = await html2canvas(canvas, {
+      backgroundColor: bg, scale, width: W, height: H, windowWidth: W + 40, windowHeight: H + 40, useCORS: true, logging: false,
+      onclone: doc => {
+        doc.documentElement.style.height = "auto"; doc.body.style.overflow = "visible"; doc.body.style.height = "auto";
+        const st = doc.getElementById("stage"); st.style.overflow = "visible";
+        doc.getElementById("world").style.transform = "none";
+        doc.querySelectorAll(".legend, .draw, .zoom, .hint, .toast, .bar").forEach(n => n.remove());
+      }
+    });
+    const head = 96 * scale, out = document.createElement("canvas");
+    out.width = shot.width; out.height = shot.height + head;
+    const g = out.getContext("2d");
+    g.fillStyle = bg; g.fillRect(0, 0, out.width, out.height);
+    g.fillStyle = css.getPropertyValue("--accent").trim(); g.font = `600 ${12 * scale}px Poppins, sans-serif`;
+    g.fillText("SOLVO SALES PLATFORM", 80 * scale, 44 * scale);
+    g.fillStyle = css.getPropertyValue("--ink").trim(); g.font = `600 ${26 * scale}px Poppins, sans-serif`;
+    g.fillText(PAGES[PAGE].h1, 80 * scale, 80 * scale);
+    g.drawImage(shot, 0, head);
+    const blob = await new Promise(r => out.toBlob(r, "image/png"));
+    const d = new Date(), name = `${PAGES[PAGE].file}-sales-platform-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}.png`;
+    const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+    if (dl) {
+      try { await dl.save({filename: name, data: blob}); toast("Imagen guardada."); }
+      catch (err) { if (err && err.code === "declined") toast("Exportación cancelada."); else showPreview(blob); }
+    } else if (!window.claude) {
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("Imagen descargada.");
+    } else showPreview(blob);
+  } catch (err) {
+    toast("No se pudo generar la imagen. Revisa la conexión e intenta de nuevo.");
+  } finally { btn.disabled = false; btn.querySelector("span").textContent = "Exportar imagen"; }
+}
+function showPreview(blob) {
+  const box = document.createElement("div"); box.className = "preview";
+  const url = URL.createObjectURL(blob);
+  box.innerHTML = `<div><img alt="Flujo exportado con los trazos"><p>Esta vista no permite descargar directamente. Haz clic derecho sobre la imagen y elige «Guardar imagen como…».</p><button type="button">Cerrar</button></div>`;
+  box.querySelector("img").src = url;
+  box.querySelector("button").addEventListener("click", () => { box.remove(); URL.revokeObjectURL(url); });
+  document.body.appendChild(box);
+}
+$("#export").addEventListener("click", exportPng);
+
+/* ---------- Paneo y zoom ---------- */
+const stage = $("#stage"), world = $("#world");
+const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const apply = () => { world.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.k})`; };
+const clampK = k => Math.min(2.2, Math.max(0.25, k));
+function zoomAt(px, py, f) {
+  const nk = clampK(view.k * f), q = nk / view.k;
+  view.x = px - (px - view.x) * q; view.y = py - (py - view.y) * q; view.k = nk; apply();
+}
+function fit() {
+  const s = stage.getBoundingClientRect(), cw = canvas.offsetWidth, ch = lanesH();
+  const narrow = s.width < 700;
+  const k = narrow ? clampK(Math.min(s.width / 560, 1)) : clampK(Math.min(s.width / cw, s.height / ch) * 0.98);
+  view.k = k;
+  view.x = narrow ? 0 : (s.width - cw * k) / 2;
+  view.y = narrow ? 60 : Math.max(0, (s.height - ch * k) / 2);
+  world.style.transition = reduced() ? "" : "transform .35s ease";
+  apply();
+  setTimeout(() => { world.style.transition = ""; }, 380);
+}
+stage.addEventListener("wheel", e => {
+  if (e.target.closest(".legend, .preview")) return;
+  e.preventDefault();
+  const r = stage.getBoundingClientRect(), dy = e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
+  zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0018)));
+}, {passive: false});
+const ptrs = new Map();
+let drag = null, moved = false, pinch = null;
+stage.addEventListener("pointerdown", e => {
+  if (e.target.closest(".legend, .zoom, .draw, .preview")) return;
+  if (zoomDown(e)) return;
+  if (inkDown(e)) return;
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptrs.size === 1) { drag = {x: e.clientX, y: e.clientY}; moved = false; }
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = {d: Math.hypot(a.x - b.x, a.y - b.y), m: {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2}}; moved = true; }
+});
+stage.addEventListener("pointermove", e => {
+  if (zoomMove(e)) return;
+  if (inkMove(e)) return;
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId);
+  ptrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
+  if (ptrs.size === 2 && pinch) {
+    const [a, b] = [...ptrs.values()], r = stage.getBoundingClientRect();
+    const d = Math.hypot(a.x - b.x, a.y - b.y), m = {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2};
+    zoomAt(m.x - r.left, m.y - r.top, d / Math.max(pinch.d, 1));
+    view.x += m.x - pinch.m.x; view.y += m.y - pinch.m.y; apply();
+    pinch = {d, m}; return;
+  }
+  if (drag) {
+    if (!moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 5) { moved = true; stage.classList.add("dragging"); try { stage.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (moved) { view.x += e.clientX - prev.x; view.y += e.clientY - prev.y; apply(); }
+  }
+});
+const end = e => {
+  if (zoomUp(e)) return;
+  if (inkUp(e)) return;
+  ptrs.delete(e.pointerId);
+  if (ptrs.size < 2) pinch = null;
+  if (ptrs.size === 0) { drag = null; stage.classList.remove("dragging"); }
+};
+stage.addEventListener("pointerup", end);
+stage.addEventListener("pointercancel", end);
+/* Un arrastre no abre la tarjeta donde termina */
+stage.addEventListener("click", e => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+/* Z mantenida: zoom por arrastre, como en Photoshop. Derecha acerca, izquierda aleja; un clic acerca (Alt aleja). */
+let zKey = false, scrub = null;
+function zoomDown(e) {
+  if (!zKey) return false;
+  e.preventDefault();
+  try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  const r = stage.getBoundingClientRect();
+  scrub = {id: e.pointerId, x0: e.clientX, k0: view.k, ax: e.clientX - r.left, ay: e.clientY - r.top, moved: false, alt: e.altKey};
+  return true;
+}
+function zoomMove(e) {
+  if (!scrub || e.pointerId !== scrub.id) return false;
+  const dx = e.clientX - scrub.x0;
+  if (!scrub.moved && Math.abs(dx) < 3) return true;
+  scrub.moved = true;
+  const nk = clampK(scrub.k0 * Math.exp(dx * 0.005));
+  zoomAt(scrub.ax, scrub.ay, nk / view.k);
+  return true;
+}
+function zoomUp(e) {
+  if (!scrub || e.pointerId !== scrub.id) return false;
+  if (!scrub.moved) zoomAt(scrub.ax, scrub.ay, scrub.alt || e.altKey ? 1 / 1.5 : 1.5);
+  scrub = null; moved = true;
+  return true;
+}
+const setZ = on => { zKey = on; stage.classList.toggle("zoom-mode", on); stage.classList.toggle("zoom-out", on && altKey); };
+let altKey = false;
+const center = () => { const r = stage.getBoundingClientRect(); return [r.width / 2, r.height / 2]; };
+$("#zIn").addEventListener("click", () => zoomAt(...center(), 1.25));
+$("#zOut").addEventListener("click", () => zoomAt(...center(), 0.8));
+$("#zFit").addEventListener("click", fit);
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("input, textarea")) return;
+  if (e.code === "Space") { e.preventDefault(); if (!space) { space = true; stage.classList.add("space"); } return; }
+  if (e.key === "Alt") { altKey = true; if (zKey) stage.classList.add("zoom-out"); }
+  if (e.code === "KeyZ" && !e.ctrlKey && !e.metaKey) { e.preventDefault(); if (!zKey) setZ(true); return; }
+  const step = 60;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { undo(); e.preventDefault(); return; }
+  if (e.key === "h" || e.key === "v") { setTool("hand"); return; }
+  if (e.key === "p" || e.key === "b") { setTool("pen"); return; }
+  if (e.key === "e") { setTool("eraser"); return; }
+  if (e.key === "+" || e.key === "=") zoomAt(...center(), 1.2);
+  else if (e.key === "-") zoomAt(...center(), 1 / 1.2);
+  else if (e.key === "0") fit();
+  else if (e.key === "ArrowLeft") { view.x += step; apply(); }
+  else if (e.key === "ArrowRight") { view.x -= step; apply(); }
+  else if (e.key === "ArrowUp") { view.y += step; apply(); }
+  else if (e.key === "ArrowDown") { view.y -= step; apply(); }
+  else return;
+  e.preventDefault();
+});
+document.addEventListener("keyup", e => {
+  if (e.code === "Space") { e.preventDefault(); space = false; stage.classList.remove("space"); }
+  if (e.code === "KeyZ") setZ(false);
+  if (e.key === "Alt") { altKey = false; stage.classList.remove("zoom-out"); }
+});
+addEventListener("blur", () => { space = false; stage.classList.remove("space"); setZ(false); altKey = false; });
+/* La tarjeta enfocada con Tab entra en la vista */
+stage.addEventListener("focusin", e => {
+  const n = e.target.closest(".node"); if (!n || drag) return;
+  const s = stage.getBoundingClientRect(), r = n.getBoundingClientRect();
+  if (r.left < s.left + 20 || r.right > s.right - 20 || r.top < s.top + 20 || r.bottom > s.bottom - 20) {
+    view.x += s.left + s.width / 2 - (r.left + r.right) / 2; view.y += s.top + s.height / 3 - r.top; apply();
+  }
+});
+
+new ResizeObserver(draw).observe(canvas);
+function setPage(pg) {
+  PAGE = PAGES[pg] ? pg : "actual";
+  LANES = PAGES[PAGE].lanes; LINKS = PAGES[PAGE].links;
+  document.body.dataset.page = PAGE;
+  $("#h1").textContent = PAGES[PAGE].h1;
+  document.querySelectorAll(".tabs a").forEach(a => { if (a.dataset.page === PAGE) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+  build(); loadInk(); repaint(); draw(); fit();
+}
+const fromHash = () => (location.hash || "").replace("#", "") || "actual";
+addEventListener("hashchange", () => { if (fromHash() !== PAGE) setPage(fromHash()); });
+document.querySelectorAll(".tabs a").forEach(a => a.addEventListener("click", e => { if (fromHash() === a.dataset.page) e.preventDefault(); setPage(a.dataset.page); }));
+setPage(fromHash());
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { draw(); fit(); });
+})();
+</script>

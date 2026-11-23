@@ -147,6 +147,14 @@ export const products = [
         versions: [{ label: 'App', file: 'index.html' }],
       },
       {
+        id: 'system-map',
+        nombre: 'Mapa del sistema',
+        categoria: 'Diagrama',
+        bundle: 'solvo-sales-platform-system-map',
+        notas: 'Plano navegable del flujo de una oportunidad comercial, en dos vistas: el flujo actual y el replanteo modular (Prospect Engine Modular), con triggers, servicios, estado de cada entidad, posiciones y términos por país, catálogo de servicios, modelo de datos, geografía y configuración central. Copia publicada del mapa del vault (products/solvo-sales-platform/mapa-del-sistema.html).',
+        versions: [{ label: 'Flujo actual', file: 'index.html#actual' }, { label: 'Replanteo', file: 'index.html#replanteo' }],
+      },
+      {
         id: 'platform-design-system',
         nombre: 'Platform Design System',
         categoria: 'Design system',
