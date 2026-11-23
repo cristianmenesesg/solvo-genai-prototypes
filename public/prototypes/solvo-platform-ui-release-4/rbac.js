@@ -3803,7 +3803,7 @@ const ENGINE_SERVICES_SEED = [
 // Settings escribe aquí; borrar las claves r4* devuelve el prototipo al seed.
 // Versión del seed: al cambiarla, la configuración guardada en el navegador se
 // descarta y se vuelve al seed, para que nadie quede viendo una configuración vieja.
-const R4_SEED_VERSION = '3';
+const R4_SEED_VERSION = '4';
 (function resetStaleConfig() {
   try {
     if (localStorage.getItem('r4SeedVersion') !== R4_SEED_VERSION) {
@@ -3900,13 +3900,14 @@ const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
   const hiringTerms = ENGINE_TERMS_SEED.filter(function (t) { return HIRING_COUNTRIES.indexOf(t.country) >= 0; }).map(function (t) { return t.id; });
   const wk = ['mon', 'tue', 'wed', 'thu', 'fri'];
   function cities(country) { return GEO_CITIES.filter(function (c) { return c.country === country; }); }
-  // Calendario por ciudad: cada ciudad de Clientes nuevos se barre un día de la semana.
-  const usCal = cities('US').map(function (c, i) { return { cityId: c.id, days: [wk[i % 5]] }; });
-  const esCal = cities('ES').map(function (c, i) { return { cityId: c.id, days: [wk[i % 5]] }; });
+  // Sin calendario por ciudad: los días son del trigger y todas sus ciudades se buscan
+  // cada día que se activa, con ventana de un día, para no perder avisos.
+  const usCal = cities('US').map(function (c) { return { cityId: c.id }; });
+  const esCal = cities('ES').map(function (c) { return { cityId: c.id }; });
   return [
     {
       id: 'trg-new-clients', name: 'New clients', description: 'Companies that are not clients yet, detected by the positions Solvo fills.',
-      activation: { mode: 'cron', days: wk.slice(), time: '07:00', perCity: true }, windowDays: 1, searchBy: 'terms',
+      activation: { mode: 'cron', days: wk.slice(), time: '07:00', perCity: false }, windowDays: 1, searchBy: 'terms',
       countries: ['US', 'ES'], locations: usCal.concat(esCal), activeTerms: usTerms.concat(esTerms.slice(0, 18)),
       vacancyServices: { US: ['svc-indeed'], ES: ['svc-indeed'] },
       enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],

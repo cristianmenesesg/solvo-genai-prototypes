@@ -808,7 +808,7 @@
                   '<button type="button" class="r4-day' + (a.days.indexOf(w.key) >= 0 ? ' is-on' : '') + '" aria-pressed="' + (a.days.indexOf(w.key) >= 0) + '" onclick="toggleDay(\'' + w.key + '\')"' + '>' + w.short + '</button>').join('') + '</div></div>' +
                 '<div class="form-group"><label class="form-label" for="tTime">Time</label><input type="time" class="form-input" style="width: 120px;" id="tTime" value="' + esc(a.time || '07:00') + '" onchange="setActivation(\'time\', this.value)"></div>' +
               '</div>' +
-              '<div class="r4-inline" style="margin-top: 12px;"><label class="toggle-switch"><input type="checkbox" aria-label="Calendar per city" ' + (a.perCity ? 'checked' : '') + ' onchange="setActivation(\'perCity\', this.checked)"><span class="toggle-slider"></span></label><span>Calendar per city: each city runs on its own weekday, set in Locations, within the days above</span></div>'
+              '<p class="st-hint" style="margin-top: 12px;">Every city of the trigger is searched on each of these days, with the publication window below.</p>'
             : '<p class="st-hint" style="margin-top: 12px;">Started from the platform: on-demand searches from Open Positions and Companies, research from a company record. A user request goes before the scheduled work of the services.</p>') +
         '</div>' +
         '<div class="r4-block st-panel"><div class="r4-blocktitle">Publication window</div>' + windowHtml + '</div>' +

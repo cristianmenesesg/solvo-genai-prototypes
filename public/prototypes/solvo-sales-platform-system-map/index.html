@@ -350,11 +350,11 @@ const LINKS_A = [
 const LANES_R = [
   {mod: "Configuración", title: "Triggers", srcs: ["solvo"], nodes: [
     {id: "r_barrido", dot: 0, t: "Clientes nuevos", s: "Empresas que todavía no son clientes", tags: [],
-     what: "Busca las posiciones del catálogo en sus ciudades, según el calendario de cada una, para encontrar empresas que todavía no son clientes. Termina con los leads listos; los envíos programados de cold outreach los toman de ahí.",
-     rows: [["Activación", "Cron, con el calendario de cada ciudad"], ["Ventana", "Último día"], ["Posiciones", "Las del catálogo que active"], ["Ubicaciones", "Ciudades de EE. UU. y de España"], ["Vacantes", "Indeed; TheirStack en evaluación"], ["Empresas", "Apollo, luego Bright Data"], ["Decisores", "Apollo, luego Hunter"]]},
+     what: "Busca las posiciones del catálogo en todas sus ciudades cada día que se activa, para encontrar empresas que todavía no son clientes. Termina con los leads listos; los envíos programados de cold outreach los toman de ahí.",
+     rows: [["Activación", "Cron, de lunes a viernes; todas sus ciudades cada día"], ["Ventana", "Último día"], ["Posiciones", "Las del catálogo que active"], ["Ubicaciones", "Ciudades de EE. UU. y de España"], ["Vacantes", "Indeed; TheirStack en evaluación"], ["Empresas", "Apollo, luego Bright Data"], ["Decisores", "Apollo, luego Hunter"]]},
     {id: "r_clientes", dot: 1, t: "Clientes actuales", s: "Vacantes de las empresas cliente", tags: [],
      what: "Busca las vacantes que publican las empresas que ya son clientes. Termina en el aviso al vendedor de la cuenta.",
-     rows: [["Activación", "Cron, con su calendario"], ["Ventana", "Último día"], ["Busca por", "Empresa: cada cliente activo"], ["Posiciones", "No usa términos: trae todas las vacantes del cliente"], ["Ubicaciones", "EE. UU."], ["Vacantes", "Indeed y LinkedIn, en su modo por empresa"], ["Empresas y decisores", "No usa"]]},
+     rows: [["Activación", "Cron, de lunes a viernes"], ["Ventana", "Último día"], ["Busca por", "Empresa: cada cliente activo"], ["Posiciones", "No usa términos: trae todas las vacantes del cliente"], ["Ubicaciones", "EE. UU."], ["Vacantes", "Indeed y LinkedIn, en su modo por empresa"], ["Empresas y decisores", "No usa"]]},
     {id: "r_pedido", dot: 2, t: "A pedido", s: "Detección manual desde la plataforma", tags: [],
      what: "Se configura como los demás triggers: países, servicios de vacantes y ventana de publicación por defecto. Al pedir las vacantes de una empresa, el usuario ajusta dentro de esa configuración el país, la ciudad si quiere acotar, los servicios y la ventana, que puede ampliar. La respuesta vuelve a la plataforma.",
      rows: [["Activación", "Solicitud del usuario, desde la plataforma"], ["Ventana", "Último día por defecto; el usuario puede ampliarla"], ["Ubicaciones", "Las configuradas; el usuario elige país y, si quiere, ciudad"], ["Vacantes", "Los configurados para el país; el usuario elige"]]},
@@ -473,16 +473,16 @@ const LINKS_R = [
 ];
 const BANDS_R = [
   {title: "Triggers: sus parámetros", sub: "Cada trigger se configura desde la plataforma: cómo se activa, en qué ubicaciones busca y qué servicios usa en cada etapa, en qué orden. Los valores son ejemplos de configuración.", kind: "table", heads: ["Trigger", "Activación", "Ventana", "Posiciones", "Ubicaciones", "Vacantes", "Empresas", "Decisores", "Termina en"], note: "Cada etapa que se usa pasa por su análisis con IA, con el prompt del país. Al configurar un trigger, la plataforma solo ofrece los servicios habilitados para sus países y que buscan del modo que el trigger necesita. Las ubicaciones se eligen del catálogo de geografía y cada servicio usa el nivel que admite: Indeed recibe cada ciudad y TheirStack, el país. Un trigger que use TheirStack puede configurar Empresas = solo Bright Data, cuando falte un dato esencial, porque la empresa ya llega con datos. El cold outreach no es un trigger: cada servicio de cold outreach recibe su listado ya filtrado de un envío programado.", rows: [
-    ["Clientes nuevos", "Cron, con el calendario de cada ciudad", "Último día", "Las que active", "Ciudades de EE. UU. y de España", "Indeed; TheirStack en evaluación", "Apollo, luego Bright Data", "Apollo, luego Hunter", "Leads listos para el cold outreach"],
-    ["Clientes actuales", "Cron, con su calendario", "Último día", "No usa términos", "EE. UU.; busca por empresa", "Indeed y LinkedIn, por empresa", "No usa", "No usa", "Aviso al vendedor"],
+    ["Clientes nuevos", "Cron, de lunes a viernes; todas sus ciudades cada día", "Último día", "Las que active", "Ciudades de EE. UU. y de España", "Indeed; TheirStack en evaluación", "Apollo, luego Bright Data", "Apollo, luego Hunter", "Leads listos para el cold outreach"],
+    ["Clientes actuales", "Cron, de lunes a viernes", "Último día", "No usa términos", "EE. UU.; busca por empresa", "Indeed y LinkedIn, por empresa", "No usa", "No usa", "Aviso al vendedor"],
     ["A pedido", "Solicitud del usuario", "Último día por defecto; el usuario puede ampliarla", "Las activas en el trigger", "Las configuradas; el usuario elige país y, si quiere, ciudad", "Los configurados para el país; el usuario elige", "No usa", "No usa", "Respuesta en la plataforma"],
     ["Países de contratación", "Cron, de lunes a viernes", "Último día", "Por definir", "Colombia, México, Argentina, Perú, Guatemala, Kenia y Filipinas; ciudades por definir", "Indeed donde tiene sitio, LinkedIn y Computrabajo", "Apollo, luego Bright Data", "No usa", "Plataforma: vacantes y empresas analizadas"],
     ["Investigación a pedido", "Solicitud desde la ficha de la empresa", "No aplica", "No aplica", "La de la empresa", "No usa", "Apollo, luego Bright Data", "Apollo, luego Hunter", "Ficha de la empresa"],
   ]},
   {title: "Qué se configura en un trigger", sub: "Un trigger nuevo es un registro más con estos parámetros, sin cambios en los servicios.", kind: "plain", cards: [
-    ["Activación", "Cron, con los días de la semana que se elijan (por defecto, de lunes a viernes), o solicitud desde la plataforma."],
+    ["Activación", "Cron, con los días de la semana y la hora que se elijan (por defecto, de lunes a viernes), o solicitud desde la plataforma."],
     ["Ventana de publicación", "Cuántos días hacia atrás se buscan vacantes publicadas. Por ahora, el último día."],
-    ["Ubicaciones", "Países, divisiones y ciudades elegidos del catálogo de geografía. El calendario puede ser por ciudad."],
+    ["Ubicaciones", "Países, divisiones y ciudades elegidos del catálogo de geografía. Todas se buscan cada día que el trigger se activa: no hay calendario por ciudad."],
     ["Posiciones", "Qué posiciones del catálogo van activas para el scraping en este trigger. Al seleccionar cada país se activan o desactivan sus términos, y cada servicio recibe los términos activos del país que busca."],
     ["Servicios de vacantes", "Cuáles se usan en cada país, entre los habilitados para ese país en el catálogo de servicios. Un servicio que busca por país recibe el país; uno que busca por ciudad recibe cada ciudad. Clientes actuales y A pedido usan el modo por empresa."],
     ["Servicios de empresas y de decisores", "Cuáles se usan, en qué orden y cuándo se pasa al siguiente: si el anterior no encuentra el registro o si falta un dato esencial (dominio, tamaño o industria). Vacío si el trigger no llega a esa etapa."],
@@ -517,7 +517,7 @@ const BANDS_R = [
     ["Servicio", "Etapa, proveedor, modos de búsqueda y estado", "Países habilitados, invocaciones"],
     ["Servicio · país", "Países donde el servicio está habilitado", "Servicio, país"],
     ["Trigger", "Activación (días de la semana o solicitud), ventana de publicación y hasta dónde llega", "Sus ubicaciones, términos y servicios"],
-    ["Trigger · ubicación", "Países, divisiones y ciudades, con su calendario", "Trigger, geografía"],
+    ["Trigger · ubicación", "Países, divisiones y ciudades", "Trigger, geografía"],
     ["Trigger · término", "Términos activos de cada país seleccionado", "Trigger, término"],
     ["Trigger · servicio", "Servicios de cada etapa y país, su orden y cuándo se pasa al siguiente", "Trigger, servicio"],
     ["Prompt", "Uno por país para cada uno de los tres análisis (vacantes, empresas y decisores), con su modelo, texto y versión. El ICP de cada país vive en su prompt de empresas. Un país no se activa en un trigger sin sus tres prompts", "País"],
@@ -559,7 +559,7 @@ const BANDS_R = [
   ]},
   {title: "Configuración central", sub: "Todo se administra desde Solvo Platform, con registro de quién cambió qué y cuándo.", kind: "config", cards: [
     ["Triggers", "La lista de triggers y, para cada uno, su activación, sus ubicaciones (países, divisiones y ciudades), los servicios de cada etapa con su orden y hasta dónde llega. Un trigger nuevo se agrega aquí, sin cambios en los servicios.", "", "", ["Triggers"]],
-    ["Geografía", "País, división y ciudad de los nueve países, con el calendario de cada ciudad y el idioma de cada país.", "", "", ["Vacantes"]],
+    ["Geografía", "País, división y ciudad de los nueve países, con el idioma y la zona horaria de cada país.", "", "", ["Vacantes"]],
     ["Posiciones y términos por país", "Qué puestos existen y con qué términos se buscan en cada país. Para sumar un país, sus términos se pueden copiar de otro país como punto de partida y ajustarse. Cada trigger activa los términos de sus países.", "", "", ["Vacantes", "Análisis"]],
     ["Catálogo de servicios", "Qué servicios existen, en qué países está habilitado cada uno y en qué modos busca: por términos y ubicación (país o ciudad) o por empresa.", "", "", ["Vacantes"]],
     ["Servicios de enriquecimiento y de decisores", "Qué servicios hay, y qué datos son esenciales para clasificar una empresa. Cuáles usa cada trigger, y en qué orden, se define en el trigger.", "", "", ["Empresas", "Decisores"]],
