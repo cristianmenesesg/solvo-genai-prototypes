@@ -382,7 +382,7 @@
          GEO_DIVISIONS, GEO_CITIES) no tienen clave en rbac.js: esta página los guarda
          en `r4Positions` y `r4Geo` y los vuelve a aplicar al cargar. Las demás páginas
          leen el seed (mecanismo exclusivo del prototipo).
-       · "Run now" deja la ejecución en `r4ManualRuns`, que lee Engine activity.
+       · "Run now" deja la ejecución en `r4ManualRuns` (última ejecución del trigger).
 
        Los servicios no se configuran: reciben ubicación y términos y cada uno resuelve
        si busca por ciudad, división o país. El trigger llega hasta la última etapa con
@@ -611,7 +611,7 @@
           fact('Activation', esc(activationLabel(t))) +
           fact('Countries', esc(countriesLabel(t.countries))) +
           fact('Publication window', esc(windowLabel(t))) +
-          fact('Last execution', last ? execBadge(last.status) + ' <a class="r4-small" href="executions.html?trigger=' + t.id + '">' + ago(last.startedAt) + '</a>' : '<span class="r4-muted">None yet</span>') +
+          fact('Last execution', last ? execBadge(last.status) + ' <span class="r4-small">' + ago(last.startedAt) + '</span>' : '<span class="r4-muted">None yet</span>') +
         '</dl>' +
       '</article>';
     }
@@ -620,7 +620,7 @@
       t.isActive = on; saveTriggers(); renderTriggersSection();
       showToast(t.name + (on ? ' activated' : ' deactivated'), 'success');
     }
-    // Ejecución manual de un trigger por cron: queda en curso en Engine activity.
+    // Ejecución manual de un trigger por cron: queda en curso como su última ejecución.
     function runNow(id) {
       const t = engineTrigger(id);
       if (!t || t.activation.mode !== 'cron') return;
@@ -631,7 +631,7 @@
         counts: { searches: 0, vacancies: 0, viable: 0, companies: 0, qualified: 0, decisionMakers: 0 }, costUsd: 0, note: 'Started from Settings by ' + user.name + '.' });
       try { localStorage.setItem(RUNS_KEY, JSON.stringify(runs)); } catch (e) { /* sin almacenamiento */ }
       if (!trgDraft) renderTriggersSection();
-      showToast(esc(t.name) + ': execution started. See it in <a href="executions.html?id=' + exId + '">Engine activity</a>.', 'info');
+      showToast(esc(t.name) + ': execution started.', 'info');
     }
 
     function setTrgHash(id) { history.replaceState(null, '', id ? '#triggers/' + id : '#triggers'); }

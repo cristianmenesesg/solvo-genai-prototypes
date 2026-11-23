@@ -10,10 +10,8 @@ Prototipo navegable de Solvo Sales Platform sobre **Prospect Engine Modular** (�
 | `vacancy-detail.html` | País, división y ciudad; estado; fuentes (servicio, término, trigger, fecha); salario USD y publicado; historial que une el estado del motor con los cambios de las personas. |
 | `prospects.html` | Mismo filtro de país y de ciudades; estado, tipo y trigger de la empresa; dominio. |
 | `company-detail.html` | Estado, tipo, dominio y sede; ICP del país; decisores con rol y nivel de la tabla de roles, estado, verificación y proveedor de cada dato; alta manual con rol de la tabla; investigación a pedido con su resultado leído del estado. |
-| `requests.html` (nueva) | Búsquedas a pedido (por empresa o por posición y ubicación) e investigaciones, con su avance. Sin vista previa: la solicitud se envía y se sigue aquí. |
 | `dashboard.html` | Embudo de detección separable por trigger y por país. |
 | `settings.html` | Triggers, Posiciones y términos, Geografía (lista de países y detalle con divisiones y ciudades activas o inactivas), Roles de decisor, Prompts por país y Envíos programados de cold outreach; Showcase se mantiene. Los servicios no se configuran: reciben ubicación y términos. El trigger llega hasta la última etapa con servicios y tiene una sola ventana de publicación. |
-| `executions.html` (nueva) | Engine activity: ejecuciones de cada trigger e invocaciones de cada servicio, con resultado, consumo y costo. |
 
 El modelo de datos nuevo está en la **sección 20 de `rbac.js`** (geografía, servicios, términos por país, triggers, roles, prompts, envíos, estados, historial, ejecuciones, solicitudes). Los CSS propios de Release 4 son `r4-lists.css`, `r4-company.css` y `r4-config.css`. Claves de `localStorage` nuevas: `r4Triggers`, `r4Terms`, `r4Roles`, `r4Prompts`, `r4Outreach`, `r4Requests`, `r4Positions`, `r4Geo`, `r4ManualRuns`. Los valores son de ejemplo; los niveles de `owner_founder`, `coo`, `vp_operations` y `director_operations` están pendientes de fijar.
 

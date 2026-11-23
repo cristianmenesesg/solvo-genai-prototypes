@@ -631,7 +631,7 @@
           const last = companyRequests('trg-on-demand')[0];
           return last
             ? 'Requested ' + esc(shortAgo(last.at)) + ' · ' + stateBadge(REQUEST_STATUS, last.status) +
-              ' <a href="requests.html?id=' + esc(last.id) + '">See request</a>'
+              ''
             : '<em>Never requested</em>';
         })());
 
@@ -651,7 +651,7 @@
     }
 
     // La última solicitud de investigación de la empresa y su resultado por paso. El resultado
-    // vive en el estado y el historial de la empresa; acá se resume y se enlaza a Requests.
+    // vive en el estado y el historial de la empresa; acá se resume.
     const STEP_TXT = {
       enrichment: { enriched: ['Enriched', 'success'], missing_data: ['Missing data', 'warning'], not_found: ['Not found', 'error'] },
       qualification: { qualified: ['Qualified', 'success'], excluded: ['Excluded', 'error'], pending: ['Not qualified', 'warning'] }
@@ -679,7 +679,7 @@
       el.innerHTML = '<div class="cd4-research">' +
         '<span><strong>Last research request</strong> · ' + esc(shortAgo(last.at)) + ' · ' + esc((getMemberById(last.requestedBy) || { shortName: 'Unknown user' }).shortName) + '</span>' +
         stateBadge(REQUEST_STATUS, last.status) + steps +
-        '<a href="requests.html?id=' + esc(last.id) + '">See request</a></div>';
+        '</div>';
     }
 
     function renderResearch() {

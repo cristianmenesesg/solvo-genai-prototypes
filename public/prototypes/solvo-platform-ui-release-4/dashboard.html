@@ -292,7 +292,7 @@
           const sum = function (k) { return reqs.reduce(function (a, r) { return a + ((r.progress || {})[k] || 0); }, 0); };
           return '<tr><td><span class="r4-rowname">' + esc(t.name) + '</span><span class="r4-rownote">On request</span></td>' +
             '<td>' + num(reqs.length) + '</td><td>' + num(sum('searched')) + '</td><td>' + num(sum('found')) + '</td><td>' + num(sum('viable')) + '</td>' +
-            cell(0, false, why) + cell(0, false, why) + cell(0, false, why) + '<td class="r4-na" title="See Engine activity">—</td><td></td></tr>';
+            cell(0, false, why) + cell(0, false, why) + cell(0, false, why) + '<td class="r4-na" title="Not applicable">—</td><td></td></tr>';
         }
         const sum = function (k) { return mine.reduce(function (a, e) { return a + (e.counts[k] || 0); }, 0); };
         const cost = mine.reduce(function (a, e) { return a + (e.costUsd || 0); }, 0);

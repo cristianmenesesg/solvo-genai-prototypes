@@ -660,14 +660,10 @@ function renderSidebar(activePage) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', href: 'dashboard.html', icon: '<rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect>' },
     { id: 'vacancies', label: 'Open Positions', href: 'open-positions.html', icon: '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect width="20" height="14" x="2" y="6" rx="2"></rect>' },
-    { id: 'companies', label: 'Companies', href: 'prospects.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' },
-    // Release 4: solicitudes a pedido (búsquedas e investigaciones) y su avance.
-    { id: 'requests', label: 'Requests', href: 'requests.html', icon: '<path d="M21 12a9 9 0 1 1-6.22-8.56"></path><path d="M21 3v6h-6"></path><path d="M12 7v5l3 2"></path>' }
+    { id: 'companies', label: 'Companies', href: 'prospects.html', icon: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path>' }
   ];
   const adminItems = [
     { id: 'admin-users', label: 'Users', href: 'admin-users.html', icon: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path>' },
-    // Release 4: ejecuciones de los triggers e invocaciones de cada servicio, con su consumo.
-    { id: 'executions', label: 'Engine activity', href: 'executions.html', icon: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>' },
     { id: 'settings', label: 'Settings', href: 'settings.html', icon: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle>' }
   ];
 
@@ -1392,7 +1388,7 @@ function openScrapePopup(options) {
 
   function render() {
     var cc = country();
-    var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">Searches the openings of one company. Follow it in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
+    var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">Searches the openings of one company.</p>';
 
     // Empresa (obligatoria)
     html += '<label style="' + labelCss + '" for="odr-company">Company</label>';
@@ -1531,7 +1527,7 @@ function openScrapePopup(options) {
       var recent = recentCompanyRequest();
       if (recent) {
         var mins = Math.max(1, Math.round((Date.now() - parseStamp(recent.at)) / 60000));
-        block = 'This company was requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). It can be requested again after one hour. <a href="requests.html?id=' + h(recent.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
+        block = 'This company was requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). It can be requested again after one hour.';
       }
     }
     if (warn) {
@@ -1567,7 +1563,7 @@ function openScrapePopup(options) {
     };
     addRequest(req);
     close();
-    showToast('Search requested. Follow its progress in <a href="requests.html?id=' + req.id + '" style="color:inherit; font-weight:600; text-decoration:underline;">Requests</a>.', 'success');
+    showToast('Search requested.', 'success');
     onSent(req);
   };
 
@@ -1613,7 +1609,7 @@ function openResearchRequestPopup(company, options) {
   var warn = !covered
     ? 'Research is not available in ' + h(countryName(country)) + '.'
     : pending
-      ? 'This company already has a research request ' + h((REQUEST_STATUS[pending.status] || {}).label.toLowerCase()) + '. <a href="requests.html?id=' + h(pending.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.'
+      ? 'This company already has a research request ' + h((REQUEST_STATUS[pending.status] || {}).label.toLowerCase()) + '.'
       : '';
 
   var overlay = document.createElement('div');
@@ -1653,7 +1649,7 @@ function openResearchRequestPopup(company, options) {
       status: 'queued', steps: {}, simulate: true
     });
     close();
-    showToast('Research requested. The result is written to the company record; follow it in <a href="requests.html?id=' + req.id + '" style="color:inherit; font-weight:600; text-decoration:underline;">Requests</a>.', 'success');
+    showToast('Research requested.', 'success');
     onSent(req);
   };
 }
