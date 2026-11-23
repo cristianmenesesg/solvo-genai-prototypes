@@ -1016,7 +1016,8 @@
        La lista muestra áreas y, por país, cuántos términos tiene cada posición. La
        edición trabaja sobre una copia (posDraft): nombre, áreas y términos por país en
        acordeón; un país nuevo de Geografía aparece ahí listo para recibir términos.
-       Un término nuevo entra inactivo en todos los triggers.
+       Un término nuevo entra inactivo en todos los triggers. Una posición pausada no se
+       busca en ningún país; un país sin términos es como si estuviera pausada en él.
        ======================================================================== */
     const POS_PAGE = 15;
     let posPage = 1, posDraft = null, posOpen = {};
@@ -1042,12 +1043,13 @@
       posPage = Math.min(posPage, pages);
       const slice = rows.slice((posPage - 1) * POS_PAGE, posPage * POS_PAGE);
       document.getElementById('termList').innerHTML = rows.length
-        ? '<table class="r4-table"><thead><tr><th>Position</th><th>Areas</th><th>Countries</th><th class="num">Terms</th><th></th></tr></thead><tbody>' +
+        ? '<table class="r4-table"><thead><tr><th style="width: 56px;">Active</th><th>Position</th><th>Areas</th><th>Countries</th><th class="num">Terms</th><th></th></tr></thead><tbody>' +
           slice.map(p => {
             const all = termsOfPos(p.id);
             const byCountry = ENGINE_COUNTRIES.map(c => ({ c: c, n: all.filter(t => t.country === c.code).length })).filter(x => x.n);
             const hit = q && fold(p.name).indexOf(q) < 0 ? termsOfPos(p.id, cc).find(t => fold(t.text).indexOf(q) >= 0) : null;
-            return '<tr class="is-click" onclick="openPositionModal(\'' + p.id + '\')">' +
+            return '<tr class="is-click' + (p.isActive === false ? ' is-off' : '') + '" onclick="openPositionModal(\'' + p.id + '\')">' +
+              '<td onclick="event.stopPropagation()"><label class="toggle-switch" title="' + (p.isActive === false ? 'Paused' : 'Active') + '"><input type="checkbox" aria-label="' + esc(p.name) + ' active"' + (p.isActive === false ? '' : ' checked') + ' onchange="setPositionActive(\'' + p.id + '\', this.checked)"><span class="toggle-slider"></span></label></td>' +
               '<td><span class="r4-cellname">' + esc(p.name) + '</span>' + (hit ? '<span class="r4-cellsub">Term: ' + esc(hit.text) + ' · ' + esc(hit.country) + '</span>' : '') + '</td>' +
               '<td><span class="r4-chips">' + (POSITION_AREAS[p.id] || []).map(a => '<span class="r4-chip is-plain">' + esc(AREA_LABELS[a] || a) + '</span>').join('') + '</span></td>' +
               '<td><span class="r4-chips">' + (byCountry.length ? byCountry.map(x => '<span class="r4-chip' + (cc === x.c.code ? '' : ' is-plain') + '" title="' + esc(x.c.name + ' · ' + plural(x.n, 'term')) + '">' + esc(x.c.code) + ' · ' + x.n + '</span>').join('') : '<span class="r4-muted r4-small">No terms</span>') + '</span></td>' +
@@ -1057,6 +1059,11 @@
         : '<div class="op-empty"><h3>No position matches</h3><p>Try another position, term or country.</p></div>';
       renderPager('termPagination', rows.length, posPage, n => { posPage = n; renderTerms(); }, POS_PAGE);
       renderNavCounts();
+    }
+    function setPositionActive(id, on) {
+      const p = POSITIONS_CATALOG.find(x => x.id === id); if (!p) return;
+      p.isActive = on; savePositionsCatalog(); renderTerms();
+      showToast(p.name + (on ? ' active' : ' paused'), 'success');
     }
     function nextTermId() {
       const max = ENGINE_TERMS.reduce((m, t) => Math.max(m, Number(String(t.id).replace(/\D/g, '')) || 0), 0);
@@ -1071,6 +1078,7 @@
       const areas = p ? (POSITION_AREAS[p.id] || []) : [];
       const body =
         '<div class="form-group"><label class="form-label" for="psName">Title</label><input class="form-input" id="psName" maxlength="80" value="' + esc(p ? p.name : '') + '" placeholder="e.g. Payroll Specialist"></div>' +
+        '<div class="form-group" style="margin-top: 12px;"><label class="r4-check"><input type="checkbox" id="psActive"' + (!p || p.isActive !== false ? ' checked' : '') + '><span>Active</span></label></div>' +
         '<div class="form-group" style="margin-top: 14px;"><span class="form-label">Areas</span>' +
           checks('psArea', Object.keys(AREA_LABELS).map(k => ({ value: k, label: AREA_LABELS[k] })), v => areas.indexOf(v) >= 0) + '</div>' +
         '<div class="form-group" style="margin-top: 16px;"><span class="form-label">Terms by country</span>' +
@@ -1124,11 +1132,11 @@
       if (POSITIONS_CATALOG.some(p => p.id !== id && fold(p.name) === fold(name))) return modalErr('A position with that title already exists.');
       if (!areas.length) return modalErr('Choose at least one area.');
       let pid = id;
-      if (id) POSITIONS_CATALOG.find(p => p.id === id).name = name;
+      if (id) Object.assign(POSITIONS_CATALOG.find(p => p.id === id), { name: name, isActive: checked('psActive') });
       else {
         const max = POSITIONS_CATALOG.reduce((m, p) => Math.max(m, Number(p.id.replace(/\D/g, '')) || 0), 0);
         pid = 'pos-' + String(max + 1).padStart(2, '0');
-        POSITIONS_CATALOG.push({ id: pid, name: name, terms: [], isActive: true });
+        POSITIONS_CATALOG.push({ id: pid, name: name, terms: [], isActive: checked('psActive') });
       }
       POSITION_AREAS[pid] = areas;
       // Términos: se quitan los que ya no están (también de los triggers) y se suman los nuevos.
