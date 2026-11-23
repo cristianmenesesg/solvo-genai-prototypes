@@ -1225,77 +1225,43 @@ function openExportPopup(options) {
 }
 
 // === SOLICITUDES A PEDIDO (Release 4 · Prospect Engine Modular) ===
-// La búsqueda on-demand deja de ser un scraping con vista previa: es una solicitud al trigger
-// A pedido (`trg-on-demand`) que entra en cola y se sigue en la página Requests. No hay fase de
-// vista previa ni de confirmación, porque lo que se busca —servicios, ventana, términos— lo fija
-// la configuración del trigger y el resultado se lee del estado de las vacantes, no de un callback.
+// La búsqueda on-demand es una solicitud al trigger A pedido (`trg-on-demand`) que entra en cola
+// y se sigue en la página Requests: sin vista previa ni confirmación, porque lo que se busca
+// —servicios, ventana, términos— lo fija la configuración del trigger y el resultado se lee del
+// estado de las vacantes, no de un callback.
+// Un solo modo: siempre se busca una EMPRESA. Posiciones y ciudades son un recorte opcional
+// que se agrega buscando y eligiendo (chips): sin posiciones se usan todos los términos activos
+// del trigger en el país de la empresa; sin ciudades, todo el país.
 // Se abre desde Open Positions y Companies (options = {}) y desde el detalle de una empresa
 // (options = { company }: la empresa queda preseleccionada y no se puede cambiar).
-// options: { company, mode: 'company' | 'terms', onSent(request) }
+// options: { company, onSent(request) }
 function openScrapePopup(options) {
   options = options || {};
   var trigger = engineTrigger('trg-on-demand');
   if (!trigger) { showToast('The On demand trigger is not configured.', 'error'); return; }
   var onSent = options.onSent || function () {};
-  ensureCityListCss();
-
-  // Estilos mínimos de la lista de ciudades (.r4-citylist) para el popup: el popup se abre en
-  // páginas que no cargan r4-company.css, así que los inyecta una sola vez. Son los mismos que
-  // define r4-company.css para el filtro de Companies.
-  function ensureCityListCss() {
-    if (document.getElementById('r4-citylist-css')) return;
-    var st = document.createElement('style');
-    st.id = 'r4-citylist-css';
-    st.textContent =
-      '.r4-citylist{border:1px solid var(--border-default);border-radius:var(--radius-md);padding:8px 10px;background:var(--bg-surface);}' +
-      '.r4-citylist-search{width:100%;height:32px;padding:0 10px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font:inherit;font-size:13px;}' +
-      '.r4-citylist-search:focus{outline:none;border-color:var(--color-secondary);box-shadow:var(--focus-ring);}' +
-      '.r4-citylist-group{border-bottom:1px solid var(--border-default);}' +
-      '.r4-citylist-group:last-of-type{border-bottom:0;}' +
-      '.r4-citylist-head{display:flex;align-items:center;gap:8px;min-height:36px;}' +
-      '.r4-citylist-toggle{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 0;border:0;background:transparent;color:var(--text-strong);font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer;}' +
-      '.r4-citylist-toggle svg{flex:0 0 auto;color:var(--text-muted);transition:transform .15s ease;}' +
-      '.r4-citylist-head[aria-expanded=\'true\'] .r4-citylist-toggle svg{transform:rotate(90deg);}' +
-      '.r4-citylist-toggle:focus-visible{outline:none;box-shadow:var(--focus-ring);border-radius:var(--radius-sm);}' +
-      '.r4-citylist-count{font-weight:400;font-size:12px;color:var(--text-muted);white-space:nowrap;}' +
-      '.r4-citylist-actions{display:flex;gap:2px;flex:0 0 auto;}' +
-      '.r4-citylist-actions button{border:0;background:transparent;color:var(--color-secondary);font:inherit;font-size:12px;font-weight:500;cursor:pointer;padding:2px 6px;border-radius:var(--radius-sm);}' +
-      '.r4-citylist-actions button:hover{text-decoration:underline;text-underline-offset:2px;}' +
-      '.r4-citylist-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px 12px;padding:2px 0 4px 20px;}' +
-      '.r4-citylist-item{display:flex;align-items:center;gap:6px;min-width:0;padding:3px 0;font-size:13px;color:var(--text-primary);cursor:pointer;}' +
-      '.r4-citylist-item input{margin:0;flex:0 0 auto;}' +
-      '.r4-citylist-item span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
-      '.r4-citylist-pager{display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:2px 0 8px;font-size:12px;color:var(--text-muted);}' +
-      '.r4-citylist-pager button{height:24px;padding:0 8px;border:1px solid var(--border-default);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);font:inherit;font-size:12px;cursor:pointer;}' +
-      '.r4-citylist-pager button:disabled{opacity:.45;cursor:default;}' +
-      '.r4-citylist-empty{padding:8px 0;font-size:12px;color:var(--text-muted);}' +
-      '@media (max-width:480px){.r4-citylist-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding-left:0;}}' +
-      '@media (prefers-reduced-motion:reduce){.r4-citylist-toggle svg{transition:none;}}';
-    document.head.appendChild(st);
-  }
 
   function h(s) {
     return String(s === null || s === undefined ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
   function norm(s) { return String(s || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, ''); }
-  // Comparación sin tildes ni mayúsculas para el buscador de ciudades.
-  function fold(s) { return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+  // Comparación sin tildes ni mayúsculas para todas las sugerencias.
+  function fold(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim(); }
   function looksLikeDomain(s) { return /^[^\s]+\.[a-z]{2,}$/i.test(norm(s)); }
   // Solo los servicios activos: uno en evaluación o pausado no se ofrece aunque siga en la configuración.
   function activeService(id) { var s = engineService(id); return !!s && s.status === 'active'; }
 
   var locked = !!options.company;
   var state = {
-    mode: locked ? 'company' : (options.mode === 'terms' ? 'terms' : 'company'),
     company: options.company || null,          // empresa del catálogo elegida
     typed: options.company ? options.company.name : '',
     companyCountry: trigger.countries[0],      // país donde se busca una empresa que no está en el catálogo
-    country: trigger.countries[0],
-    cityIds: [],
     positionIds: [],
+    cityIds: [],
     windowDays: trigger.windowDays || 1
   };
+  var focusAfter = null;                       // id del campo que recupera el foco tras repintar
 
   // La ventana arranca en la del trigger y el usuario la puede ampliar hasta su máximo.
   var WINDOW_STEPS = [1, 3, 7, 14, 30].filter(function (d) {
@@ -1311,7 +1277,7 @@ function openScrapePopup(options) {
         '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
       '</div>' +
       '<div class="assign-popup-body" id="odr-body" style="overflow:auto; flex:1 1 auto;"></div>' +
-      '<div class="assign-popup-footer" style="align-items:center;">' +
+      '<div class="assign-popup-footer" style="align-items:center; flex-wrap:wrap;">' +
         '<span id="odr-sum" style="margin-right:auto; font-size:12px; color:var(--text-muted);"></span>' +
         '<button type="button" class="btn btn-secondary btn-sm" data-close>Cancel</button>' +
         '<button type="button" class="btn btn-primary btn-sm" id="odr-send">Send request</button>' +
@@ -1323,71 +1289,169 @@ function openScrapePopup(options) {
   function close() { overlay.remove(); document.removeEventListener('keydown', onKey); }
   function onKey(e) { if (e.key === 'Escape') close(); }
   document.addEventListener('keydown', onKey);
-  overlay.addEventListener('click', function (e) { if (e.target === overlay || e.target.hasAttribute('data-close')) close(); });
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay || (e.target.hasAttribute && e.target.hasAttribute('data-close'))) { close(); return; }
+    // Un clic fuera de un buscador cierra su lista de sugerencias.
+    overlay.querySelectorAll('[data-combo-list]').forEach(function (l) {
+      if (!l.parentNode.contains(e.target)) { l.innerHTML = ''; l.hidden = true; }
+    });
+  });
 
   /* ---- Datos que dependen de la configuración del trigger ---------------- */
-  function countryOfCompany() {
-    if (state.company) return state.company.countryCode || null;
-    return state.companyCountry;
-  }
-  // Por empresa: los servicios del trigger para el país de la empresa que buscan por empresa.
-  function companyServices() {
-    var c = countryOfCompany();
-    return (trigger.vacancyServices[c] || []).filter(function (id) {
+  function country() { return state.company ? (state.company.countryCode || null) : state.companyCountry; }
+  // Los servicios del trigger para el país de la empresa que buscan por empresa.
+  function services() {
+    return (trigger.vacancyServices[country()] || []).filter(function (id) {
       var s = engineService(id);
       return activeService(id) && s.modes.indexOf('company') >= 0;
     });
   }
-  // Por posición y ubicación: los servicios del trigger para ese país.
-  function termServices() { return (trigger.vacancyServices[state.country] || []).filter(activeService); }
-  function tripCities(country) {
+  function tripCities() {
+    var cc = country();
     return trigger.locations.map(function (l) { return GEO_CITIES.find(function (c) { return c.id === l.cityId; }); })
-      .filter(function (c) { return c && c.country === country; });
+      .filter(function (c) { return c && c.country === cc; });
   }
-  // Términos que el trigger tiene activos en el país, de las posiciones elegidas.
-  function activeTerms(country, positionId) {
+  // Términos que el trigger tiene activos en el país (de una posición, o de todas).
+  function activeTerms(positionId) {
+    var cc = country();
     return ENGINE_TERMS.filter(function (t) {
-      return t.country === country && trigger.activeTerms.indexOf(t.id) >= 0 && (!positionId || t.positionId === positionId);
+      return t.country === cc && trigger.activeTerms.indexOf(t.id) >= 0 && (!positionId || t.positionId === positionId);
     });
   }
-  function offeredPositions() {
-    return POSITIONS_CATALOG.filter(function (p) { return activeTerms(state.country, p.id).length > 0; });
+  function usedTerms() {
+    return state.positionIds.length
+      ? state.positionIds.reduce(function (acc, pid) { return acc.concat(activeTerms(pid)); }, [])
+      : activeTerms();
   }
-  function selectedTerms() {
-    return state.positionIds.reduce(function (acc, pid) { return acc.concat(activeTerms(state.country, pid)); }, []);
+  // Al cambiar de país se sueltan las posiciones y ciudades que no aplican al nuevo.
+  function pruneForCountry() {
+    state.positionIds = state.positionIds.filter(function (pid) { return activeTerms(pid).length > 0; });
+    var ok = tripCities().map(function (c) { return c.id; });
+    state.cityIds = state.cityIds.filter(function (id) { return ok.indexOf(id) >= 0; });
   }
-  function searchCities() { return state.cityIds.length ? state.cityIds : tripCities(state.country).map(function (c) { return c.id; }); }
 
-  // Guarda contra repetir la misma búsqueda por empresa dentro de la última hora.
+  // Guarda contra repetir la misma empresa dentro de la última hora.
   function recentCompanyRequest() {
     var key = state.company ? null : norm(state.typed);
     return MOCK_REQUESTS.find(function (r) {
-      if (r.triggerId !== 'trg-on-demand' || r.mode !== 'company') return false;
+      if (r.triggerId !== 'trg-on-demand') return false;
       if (Date.now() - parseStamp(r.at) > 3600000) return false;
       if (state.company) return r.companyId === state.company.id;
       return !!key && (norm(r.companyName) === key || norm(r.domain) === key);
     }) || null;
   }
 
+  /* ---- Buscador con sugerencias (combobox) --------------------------------- */
+  // Flechas para moverse, Enter para elegir, Escape para cerrar la lista (sin cerrar el popup).
+  // getItems(q) → [{ value, label, note }]; onPick(item). minChars: cuándo empieza a sugerir.
+  function combo(inputId, getItems, onPick, minChars) {
+    var input = body.querySelector('#' + inputId);
+    if (!input) return;
+    var list = body.querySelector('#' + inputId + '-list');
+    var items = [], active = -1;
+    function paint() {
+      var q = input.value;
+      items = fold(q).length >= (minChars || 0) ? getItems(fold(q)).slice(0, 8) : [];
+      if (active >= items.length) active = items.length - 1;
+      if (!items.length) {
+        list.innerHTML = fold(q).length >= Math.max(1, minChars || 0) && minChars !== 2
+          ? '<div style="padding:8px 10px; font-size:12px; color:var(--text-muted);">Nothing matches that.</div>' : '';
+        list.hidden = !list.innerHTML;
+        input.setAttribute('aria-expanded', String(!list.hidden));
+        input.removeAttribute('aria-activedescendant');
+        return;
+      }
+      list.innerHTML = items.map(function (it, i) {
+        var on = i === active;
+        return '<div role="option" id="' + inputId + '-opt-' + i + '" data-i="' + i + '" aria-selected="' + on + '" style="display:flex; justify-content:space-between; gap:8px; padding:7px 10px; cursor:pointer; font-size:13px; color:var(--text-primary);' +
+          (on ? ' background:var(--bg-muted);' : '') + '">' +
+          '<span style="min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + h(it.label) + '</span>' +
+          (it.note ? '<span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">' + h(it.note) + '</span>' : '') + '</div>';
+      }).join('');
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      if (active >= 0) input.setAttribute('aria-activedescendant', inputId + '-opt-' + active); else input.removeAttribute('aria-activedescendant');
+      list.querySelectorAll('[data-i]').forEach(function (el) {
+        el.onmouseenter = function () { active = Number(el.getAttribute('data-i')); paint(); };
+        el.onmousedown = function (e) { e.preventDefault(); onPick(items[Number(el.getAttribute('data-i'))]); };
+      });
+    }
+    input.oninput = function () { active = 0; paint(); };
+    input.onfocus = paint;
+    input.onkeydown = function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) paint(); active = Math.min(items.length - 1, active + 1); paint(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); paint(); }
+      else if (e.key === 'Enter') { if (items[active] && !list.hidden) { e.preventDefault(); onPick(items[active]); } }
+      else if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); list.innerHTML = ''; list.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+    };
+  }
+  function comboField(id, placeholder, value, label) {
+    return '<div style="position:relative;">' +
+      '<input type="text" class="form-input" id="' + id + '" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' + id + '-list" aria-label="' + h(label) + '" autocomplete="off" placeholder="' + h(placeholder) + '" value="' + h(value || '') + '">' +
+      '<div id="' + id + '-list" role="listbox" data-combo-list hidden style="position:absolute; z-index:5; left:0; right:0; top:calc(100% + 4px); max-height:260px; overflow:auto; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-surface-raised, var(--bg-surface)); box-shadow:var(--shadow-lg);"></div>' +
+    '</div>';
+  }
+  function chips(values, labelOf, kind) {
+    return values.map(function (v) {
+      return '<span style="display:inline-flex; align-items:center; gap:4px; padding:2px 4px 2px 10px; border:1px solid var(--color-secondary-200); border-radius:var(--radius-full); background:var(--color-secondary-50); color:var(--color-secondary-700); font-size:12px;">' +
+        h(labelOf(v)) + '<button type="button" data-unchip="' + kind + '" data-v="' + h(v) + '" aria-label="Remove ' + h(labelOf(v)) + '" style="display:inline-flex; width:18px; height:18px; align-items:center; justify-content:center; border:0; border-radius:50%; background:transparent; color:inherit; cursor:pointer; font-size:14px; line-height:1;">&times;</button></span>';
+    }).join('');
+  }
+
   /* ---- Pintado -------------------------------------------------------------- */
   var labelCss = 'display:block; font-size:12px; font-weight:600; color:var(--text-secondary); margin:16px 0 6px;';
   var hintCss = 'font-size:12px; color:var(--text-muted); margin-top:6px; line-height:1.5;';
-
-  function segBtn(value, label) {
-    var on = state.mode === value;
-    return '<button type="button" data-mode="' + value + '" aria-pressed="' + on + '" style="flex:1 1 0; min-width:0; padding:8px 10px; border:0; border-radius:var(--radius-sm); font-size:13px; cursor:pointer; ' +
-      (on ? 'background:var(--bg-surface); color:var(--text-strong); font-weight:600; box-shadow:var(--shadow-sm);' : 'background:transparent; color:var(--text-secondary);') + '">' + label + '</button>';
-  }
+  var optCss = 'font-weight:400; color:var(--text-muted);';
 
   function render() {
+    var cc = country();
     var html = '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:0;">The request goes to the <strong>' + h(trigger.name) +
-      '</strong> trigger and is processed in the background. Its progress and the openings it finds are shown in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
+      '</strong> trigger and searches the openings of one company. Its progress and the openings it finds are shown in <a href="requests.html" style="color:var(--color-secondary);">Requests</a>.</p>';
 
-    if (!locked) {
-      html += '<div style="display:flex; gap:4px; padding:4px; margin-top:14px; border-radius:var(--radius-md); background:var(--bg-muted);">' +
-        segBtn('company', 'By company') + segBtn('terms', 'By position and location') + '</div>';
+    // Empresa (obligatoria)
+    html += '<label style="' + labelCss + '" for="odr-company">Company</label>';
+    if (locked) {
+      var c = state.company;
+      html += '<div style="padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-muted);">' +
+        '<div style="font-weight:600; color:var(--text-strong);">' + h(c.name) + '</div>' +
+        '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">' +
+          h([placeLabel(c, false), countryName(c.countryCode)].filter(Boolean).join(' · ')) +
+          (c.domain ? ' · ' + h(c.domain) : ' · no domain on record') + '</div></div>';
+    } else {
+      html += comboField('odr-company', 'Company name or domain, e.g. acme.com', state.typed, 'Company');
+      if (state.company) {
+        html += '<div style="' + hintCss + '">In Solvo Platform: ' + h([placeLabel(state.company, false), countryName(state.company.countryCode)].filter(Boolean).join(' · ')) +
+          (state.company.domain ? ' · ' + h(state.company.domain) : '') + '. The openings found are added to its record.</div>';
+      } else if (norm(state.typed)) {
+        // Una empresa que no está en el catálogo se busca en el país que se elija.
+        html += '<div style="' + hintCss + '">Not in Solvo Platform yet: it is searched by ' + (looksLikeDomain(state.typed) ? 'domain' : 'name') + ' and created with the openings found.</div>' +
+          '<label style="' + labelCss + '" for="odr-ccountry">Country to search in</label>' +
+          '<select class="form-select" id="odr-ccountry" style="max-width:260px;">' +
+            trigger.countries.map(function (x) { return '<option value="' + x + '"' + (x === state.companyCountry ? ' selected' : '') + '>' + h(countryName(x)) + '</option>'; }).join('') +
+          '</select>';
+      }
     }
-    html += state.mode === 'company' ? companyBlock() : termsBlock();
+
+    var covered = trigger.countries.indexOf(cc) >= 0;
+    if (covered) {
+      // Posiciones (opcional)
+      var terms = usedTerms().length;
+      html += '<label style="' + labelCss + '" for="odr-pos">Positions <span style="' + optCss + '">(optional)</span></label>' +
+        (state.positionIds.length ? '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">' + chips(state.positionIds, getPositionName, 'pos') + '</div>' : '') +
+        comboField('odr-pos', 'Search a position', '', 'Add a position') +
+        '<div style="' + hintCss + '">' + (state.positionIds.length
+          ? terms + ' active term' + (terms === 1 ? '' : 's') + ' of the chosen positions will be used.'
+          : 'None chosen: all ' + terms + ' active terms of the trigger in ' + h(countryName(cc)) + ' are used.') + '</div>';
+
+      // Ciudades (opcional)
+      var total = tripCities().length;
+      html += '<label style="' + labelCss + '" for="odr-city">Cities <span style="' + optCss + '">(optional)</span></label>' +
+        (state.cityIds.length ? '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">' + chips(state.cityIds, cityName, 'city') + '</div>' : '') +
+        comboField('odr-city', 'Search a city', '', 'Add a city') +
+        '<div style="' + hintCss + '">' + (state.cityIds.length
+          ? state.cityIds.length + ' of the ' + total + ' cities of the trigger in ' + h(countryName(cc)) + '.'
+          : 'None chosen: the whole country.') + '</div>';
+    }
 
     // Ventana de publicación
     html += '<label style="' + labelCss + '" for="odr-window">Publication window</label>' +
@@ -1400,293 +1464,128 @@ function openScrapePopup(options) {
       '<div style="' + hintCss + '">Openings published within this window are searched. The trigger allows up to ' + (trigger.maxWindowDays || trigger.windowDays) + ' days.</div>';
 
     // Servicios, solo lectura
-    var svc = state.mode === 'company' ? companyServices() : termServices();
+    var svc = services();
     html += '<div style="' + labelCss + '">Services that will search</div>' +
       (svc.length
         ? '<div style="display:flex; flex-wrap:wrap; gap:6px;">' + svc.map(function (id) {
             return '<span class="op-tag" title="' + h(serviceLabel(id)) + '">' + h(serviceName(id)) + '</span>';
           }).join('') + '</div>' +
-          '<div style="' + hintCss + '">Set by the ' + h(trigger.name) + ' trigger for ' + h(countryName(state.mode === 'company' ? countryOfCompany() : state.country)) + '. An administrator changes them in Settings.</div>'
-        : '<div style="' + hintCss + '">No service is configured for this country in the ' + h(trigger.name) + ' trigger.</div>');
+          '<div style="' + hintCss + '">The services of the ' + h(trigger.name) + ' trigger that search by company in ' + h(countryName(cc)) + '. An administrator changes them in Settings.</div>'
+        : '<div style="' + hintCss + '">' + (covered ? 'No service of the trigger searches by company in ' + h(countryName(cc)) + '.' : 'Not available for this country.') + '</div>');
 
     html += '<div id="odr-warn"></div>';
     body.innerHTML = html;
     wire();
     refresh();
-  }
-
-  function companyBlock() {
-    var html = '<label style="' + labelCss + '" for="odr-company">Company</label>';
-    if (locked) {
-      var c = state.company;
-      return html + '<div style="padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-muted);">' +
-        '<div style="font-weight:600; color:var(--text-strong);">' + h(c.name) + '</div>' +
-        '<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">' +
-          h([placeLabel(c, false), countryName(c.countryCode)].filter(Boolean).join(' · ')) +
-          (c.domain ? ' · ' + h(c.domain) : ' · no domain on record') + '</div></div>';
+    if (focusAfter) {
+      var f = body.querySelector('#' + focusAfter);
+      focusAfter = null;
+      if (f) f.focus();
+    } else if (!locked && !state.typed) {
+      var ci = body.querySelector('#odr-company');
+      if (ci) setTimeout(function () { ci.focus(); }, 0);
     }
-    html += '<input type="text" class="form-input" id="odr-company" autocomplete="off" placeholder="Company name or domain, e.g. acme.com" value="' + h(state.typed) + '">' +
-      '<div id="odr-suggest"></div>' +
-      '<div id="odr-picked"></div>';
-    return html;
-  }
-
-  function pickedInfo() {
-    var el = overlay.querySelector('#odr-picked');
-    if (!el) return;
-    if (state.company) {
-      el.innerHTML = '<div style="' + hintCss + '">In Solvo Platform: ' + h([placeLabel(state.company, false), countryName(state.company.countryCode)].filter(Boolean).join(' · ')) +
-        (state.company.domain ? ' · ' + h(state.company.domain) : '') + '. The openings found are added to its record.</div>';
-      return;
-    }
-    if (!state.typed) { el.innerHTML = ''; return; }
-    // Una empresa que no está en el catálogo se busca en el país que se elija.
-    el.innerHTML = '<div style="' + hintCss + '">Not in Solvo Platform yet: it is searched by ' + (looksLikeDomain(state.typed) ? 'domain' : 'name') +
-      ' and created with the openings found.</div>' +
-      '<label style="' + labelCss + '" for="odr-ccountry">Country to search in</label>' +
-      '<select class="form-select" id="odr-ccountry" style="max-width:260px;">' +
-        trigger.countries.map(function (cc) { return '<option value="' + cc + '"' + (cc === state.companyCountry ? ' selected' : '') + '>' + h(countryName(cc)) + '</option>'; }).join('') +
-      '</select>';
-    var sel = el.querySelector('#odr-ccountry');
-    if (sel) sel.onchange = function () { state.companyCountry = sel.value; render(); };
-  }
-
-  function suggestions() {
-    var box = overlay.querySelector('#odr-suggest');
-    if (!box) return;
-    var q = norm(state.typed);
-    if (state.company || q.length < 2) { box.innerHTML = ''; return; }
-    var list = MOCK_COMPANIES.filter(function (c) {
-      return c.name.toLowerCase().indexOf(q) >= 0 || (c.domain && c.domain.indexOf(q) >= 0);
-    }).slice(0, 6);
-    if (!list.length) { box.innerHTML = ''; return; }
-    box.innerHTML = '<div style="margin-top:4px; border:1px solid var(--border-default); border-radius:var(--radius-md); overflow:hidden; background:var(--bg-surface);">' +
-      list.map(function (c, i) {
-        return '<button type="button" data-sug="' + i + '" style="display:flex; width:100%; justify-content:space-between; gap:8px; padding:8px 10px; border:0; border-bottom:1px solid var(--border-default); background:transparent; color:var(--text-primary); text-align:left; cursor:pointer; font-size:13px;">' +
-          '<span style="font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + h(c.name) + '</span>' +
-          '<span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">' + h(c.domain || countryName(c.countryCode)) + '</span></button>';
-      }).join('') + '</div>';
-    box.querySelectorAll('[data-sug]').forEach(function (b) {
-      b.onmouseenter = function () { b.style.background = 'var(--bg-muted)'; };
-      b.onmouseleave = function () { b.style.background = 'transparent'; };
-      b.onclick = function () {
-        state.company = list[Number(b.getAttribute('data-sug'))];
-        state.typed = state.company.name;
-        render();
-      };
-    });
-  }
-
-  function termsBlock() {
-    var html = '<label style="' + labelCss + '" for="odr-country">Country</label>' +
-      '<select class="form-select" id="odr-country" style="max-width:260px;">' +
-        trigger.countries.map(function (cc) { return '<option value="' + cc + '"' + (cc === state.country ? ' selected' : '') + '>' + h(countryName(cc)) + '</option>'; }).join('') +
-      '</select>';
-
-    // Mismo patrón de lista de ciudades que el filtro de los listados (.r4-citylist): acordeón
-    // por país con buscador y grilla paginada. Ninguna marcada = todo el país.
-    html += '<div style="' + labelCss + '">Cities <span style="font-weight:400; color:var(--text-muted);">(optional)</span></div>' +
-      '<div class="r4-citylist">' +
-        '<input type="search" class="r4-citylist-search" id="odr-citysearch" placeholder="Search a city" aria-label="Search a city" autocomplete="off" value="' + h(cityUi.query) + '">' +
-        '<div id="odr-citygroups"></div>' +
-      '</div>' +
-      '<div style="' + hintCss + '" id="odr-cityhint"></div>';
-
-    var positions = offeredPositions();
-    html += '<div style="' + labelCss + '">Positions</div>' +
-      (positions.length
-        ? '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:4px 12px; max-height:220px; overflow:auto; padding:8px 10px; border:1px solid var(--border-default); border-radius:var(--radius-md);">' +
-          positions.map(function (p) {
-            var on = state.positionIds.indexOf(p.id) >= 0;
-            var n = activeTerms(state.country, p.id).length;
-            return '<label style="display:flex; align-items:flex-start; gap:8px; padding:4px 0; font-size:13px; color:var(--text-primary); cursor:pointer;">' +
-              '<input type="checkbox" data-pos="' + p.id + '"' + (on ? ' checked' : '') + ' style="margin-top:3px;">' +
-              '<span style="min-width:0;">' + h(p.name) + ' <span style="font-size:11px; color:var(--text-muted); white-space:nowrap;">' + n + ' term' + (n === 1 ? '' : 's') + '</span></span></label>';
-          }).join('') + '</div>' +
-          '<div style="' + hintCss + '">Only positions with active terms in ' + h(countryName(state.country)) + ' for this trigger.</div>'
-        : '<div style="' + hintCss + '">The trigger has no active terms in ' + h(countryName(state.country)) + '.</div>');
-    return html;
   }
 
   function wire() {
-    body.querySelectorAll('[data-mode]').forEach(function (b) {
-      b.onclick = function () { state.mode = b.getAttribute('data-mode'); render(); };
-    });
-    var input = body.querySelector('#odr-company');
-    if (input) {
-      input.oninput = function () {
-        state.typed = input.value;
+    // Empresa: sugerencias del catálogo por nombre o dominio.
+    combo('odr-company', function (q) {
+      return MOCK_COMPANIES.filter(function (c) { return fold(c.name).indexOf(q) >= 0 || (c.domain && c.domain.indexOf(q) >= 0); })
+        .map(function (c) { return { value: c.id, label: c.name, note: c.domain || countryName(c.countryCode), company: c }; });
+    }, function (it) {
+      state.company = it.company; state.typed = it.company.name;
+      pruneForCountry();
+      focusAfter = 'odr-pos';
+      render();
+    }, 2);
+    var ci = body.querySelector('#odr-company');
+    if (ci) {
+      var baseInput = ci.oninput;
+      ci.oninput = function () {
+        var hadCompany = !!state.company, hadText = !!norm(state.typed);
+        state.typed = ci.value;
         state.company = null;      // al editar se suelta la empresa elegida
-        suggestions();
-        pickedInfo();
+        // Repinta solo cuando cambia lo que se muestra debajo (país a elegir), y conserva el foco.
+        if (hadCompany || hadText !== !!norm(state.typed)) {
+          pruneForCountry();
+          focusAfter = 'odr-company';
+          render();
+          var again = body.querySelector('#odr-company');
+          again.setSelectionRange(again.value.length, again.value.length);
+          again.oninput.call(again);
+          return;
+        }
+        baseInput.call(ci);
         refresh();
       };
-      suggestions();
-      pickedInfo();
-      if (!state.typed) setTimeout(function () { input.focus(); }, 0);
     }
+    var cc = body.querySelector('#odr-ccountry');
+    if (cc) cc.onchange = function () { state.companyCountry = cc.value; pruneForCountry(); render(); };
+
+    // Posiciones con términos activos en el país; coincide por nombre o por término.
+    combo('odr-pos', function (q) {
+      return POSITIONS_CATALOG.filter(function (p) {
+        if (state.positionIds.indexOf(p.id) >= 0) return false;
+        var t = activeTerms(p.id);
+        if (!t.length) return false;
+        return !q || fold(p.name).indexOf(q) >= 0 || t.some(function (x) { return fold(x.text).indexOf(q) >= 0; });
+      }).map(function (p) { var n = activeTerms(p.id).length; return { value: p.id, label: p.name, note: n + ' term' + (n === 1 ? '' : 's') }; });
+    }, function (it) { state.positionIds.push(it.value); focusAfter = 'odr-pos'; render(); }, 0);
+
+    // Ciudades del trigger en el país.
+    combo('odr-city', function (q) {
+      return tripCities().filter(function (c) {
+        return state.cityIds.indexOf(c.id) < 0 && (!q || fold(c.name + ' ' + divisionName(c.division)).indexOf(q) >= 0);
+      }).map(function (c) { return { value: c.id, label: c.name, note: divisionName(c.division) }; });
+    }, function (it) { state.cityIds.push(it.value); focusAfter = 'odr-city'; render(); }, 0);
+
+    body.querySelectorAll('[data-unchip]').forEach(function (b) {
+      b.onclick = function () {
+        var v = b.getAttribute('data-v');
+        if (b.getAttribute('data-unchip') === 'pos') { state.positionIds = state.positionIds.filter(function (x) { return x !== v; }); focusAfter = 'odr-pos'; }
+        else { state.cityIds = state.cityIds.filter(function (x) { return x !== v; }); focusAfter = 'odr-city'; }
+        render();
+      };
+    });
     var win = body.querySelector('#odr-window');
     if (win) win.onchange = function () { state.windowDays = Number(win.value); refresh(); };
-    var country = body.querySelector('#odr-country');
-    if (country) country.onchange = function () {
-      state.country = country.value;
-      state.cityIds = [];
-      cityUi = { open: {}, page: {}, query: '', saved: null };
-      // Las posiciones elegidas que no tienen términos en el país nuevo se sueltan.
-      state.positionIds = state.positionIds.filter(function (pid) { return activeTerms(state.country, pid).length > 0; });
-      render();
-    };
-    var cs = body.querySelector('#odr-citysearch');
-    // La búsqueda solo repinta los grupos, para no perder el foco mientras se escribe. Al
-    // empezar a buscar se guarda el estado de los acordeones y al borrar la búsqueda se repone.
-    if (cs) cs.oninput = function () {
-      var q = cs.value.trim();
-      if (q && !cityUi.query) cityUi.saved = { open: Object.assign({}, cityUi.open), page: Object.assign({}, cityUi.page) };
-      if (!q && cityUi.saved) { cityUi.open = cityUi.saved.open; cityUi.page = cityUi.saved.page; cityUi.saved = null; }
-      else if (q) cityUi.page = {};
-      cityUi.query = q;
-      renderCityGroups();
-    };
-    renderCityGroups();
-    cityHint();
-    body.querySelectorAll('[data-pos]').forEach(function (cb) {
-      cb.onchange = function () {
-        var id = cb.getAttribute('data-pos');
-        state.positionIds = cb.checked ? state.positionIds.concat([id]) : state.positionIds.filter(function (x) { return x !== id; });
-        refresh();
-      };
-    });
   }
 
-  /* ---- Lista de ciudades: acordeón por país, búsqueda y páginas de 24 ---------- */
-  var CITY_PAGE = 24;
-  var CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>';
-  var cityUi = { open: {}, page: {}, query: '', saved: null };
-
-  function renderCityGroups() {
-    var box = overlay.querySelector('#odr-citygroups');
-    if (!box) return;
-    var q = fold(cityUi.query);
-    // Un solo país en juego (el elegido): su grupo arranca abierto.
-    var countries = [state.country];
-    var single = countries.length === 1;
-    var html = '';
-    countries.forEach(function (cc) {
-      var all = tripCities(cc);
-      if (!all.length) return;
-      var list = q ? all.filter(function (c) { return fold(c.name + ' ' + divisionName(c.division)).indexOf(q) >= 0; }) : all;
-      if (q && !list.length) return;
-      var open = q ? true : (cityUi.open[cc] !== undefined ? cityUi.open[cc] : single);
-      var sel = all.filter(function (c) { return state.cityIds.indexOf(c.id) >= 0; }).length;
-      var pages = Math.max(1, Math.ceil(list.length / CITY_PAGE));
-      var page = Math.min(cityUi.page[cc] || 1, pages);
-      var from = (page - 1) * CITY_PAGE;
-      var slice = list.slice(from, from + CITY_PAGE);
-      html += '<div class="r4-citylist-group" data-group="' + cc + '">' +
-        '<div class="r4-citylist-head" aria-expanded="' + open + '">' +
-          '<button type="button" class="r4-citylist-toggle" data-cgtoggle="' + cc + '" aria-expanded="' + open + '">' + CHEVRON +
-            '<span>' + h(countryName(cc)) + '</span><span class="r4-citylist-count">' + sel + ' of ' + all.length + ' selected</span></button>' +
-          '<span class="r4-citylist-actions"><button type="button" data-cgall="' + cc + '">All</button><button type="button" data-cgnone="' + cc + '">None</button></span>' +
-        '</div>' +
-        (open
-          ? '<div class="r4-citylist-grid">' + slice.map(function (c) {
-              var on = state.cityIds.indexOf(c.id) >= 0;
-              return '<label class="r4-citylist-item" title="' + h(c.name + ', ' + divisionName(c.division)) + '">' +
-                '<input type="checkbox" data-city="' + c.id + '"' + (on ? ' checked' : '') + '><span>' + h(c.name) + '</span></label>';
-            }).join('') + '</div>' +
-            '<div class="r4-citylist-pager"><span>' + (from + 1) + '–' + (from + slice.length) + ' of ' + list.length + '</span>' +
-              (pages > 1
-                ? '<button type="button" data-cgpage="' + cc + '" data-step="-1"' + (page === 1 ? ' disabled' : '') + ' aria-label="Previous cities">Prev</button>' +
-                  '<button type="button" data-cgpage="' + cc + '" data-step="1"' + (page === pages ? ' disabled' : '') + ' aria-label="Next cities">Next</button>'
-                : '') + '</div>'
-          : '') +
-      '</div>';
-    });
-    box.innerHTML = html || '<div class="r4-citylist-empty">No city matches.</div>';
-
-    function visibleIds(cc) {
-      var all = tripCities(cc);
-      return (q ? all.filter(function (c) { return fold(c.name + ' ' + divisionName(c.division)).indexOf(q) >= 0; }) : all).map(function (c) { return c.id; });
-    }
-    function changed() { renderCityGroups(); cityHint(); refresh(); }
-    box.querySelectorAll('[data-city]').forEach(function (cb) {
-      cb.onchange = function () {
-        var id = cb.getAttribute('data-city');
-        state.cityIds = cb.checked ? state.cityIds.concat([id]) : state.cityIds.filter(function (x) { return x !== id; });
-        changed();
-      };
-    });
-    // All / None funcionan con el grupo cerrado; con una búsqueda activa, sobre las coincidencias.
-    box.querySelectorAll('[data-cgall]').forEach(function (b) {
-      b.onclick = function () {
-        visibleIds(b.getAttribute('data-cgall')).forEach(function (id) { if (state.cityIds.indexOf(id) < 0) state.cityIds.push(id); });
-        changed();
-      };
-    });
-    box.querySelectorAll('[data-cgnone]').forEach(function (b) {
-      b.onclick = function () {
-        var ids = visibleIds(b.getAttribute('data-cgnone'));
-        state.cityIds = state.cityIds.filter(function (id) { return ids.indexOf(id) < 0; });
-        changed();
-      };
-    });
-    box.querySelectorAll('[data-cgtoggle]').forEach(function (b) {
-      b.onclick = function () {
-        var cc = b.getAttribute('data-cgtoggle');
-        cityUi.open[cc] = b.getAttribute('aria-expanded') !== 'true';
-        renderCityGroups();
-      };
-    });
-    box.querySelectorAll('[data-cgpage]').forEach(function (b) {
-      b.onclick = function () {
-        var cc = b.getAttribute('data-cgpage');
-        cityUi.page[cc] = (cityUi.page[cc] || 1) + Number(b.getAttribute('data-step'));
-        renderCityGroups();
-      };
-    });
-  }
-
-  function cityHint() {
-    var el = overlay.querySelector('#odr-cityhint');
-    if (!el) return;
-    var total = tripCities(state.country).length;
-    el.textContent = state.cityIds.length ? state.cityIds.length + ' of ' + total + ' cities selected.'
-      : 'None selected: every city of the trigger in ' + countryName(state.country) + ' is searched (' + total + ').';
+  // Cantidad de búsquedas: servicio × ciudad (o el país) × término de las posiciones elegidas
+  // (sin posiciones, una consulta por empresa en cada servicio).
+  function searchCount() {
+    var chosenTerms = state.positionIds.length ? usedTerms().length : 1;
+    return services().length * Math.max(1, state.cityIds.length) * Math.max(1, chosenTerms);
   }
 
   // Resumen, avisos y habilitación del envío.
   function refresh() {
     var warn = overlay.querySelector('#odr-warn');
     var sum = overlay.querySelector('#odr-sum');
-    var block = null, info = '';
-    if (state.mode === 'company') {
-      var cc = countryOfCompany();
-      var svc = companyServices();
-      if (!state.company && !norm(state.typed)) block = '';
-      else if (trigger.countries.indexOf(cc) < 0) {
-        block = 'The ' + trigger.name + ' trigger does not search in ' + (countryName(cc) || 'the company’s country') + '. An administrator can add the country to the trigger in Settings.';
-      } else if (!svc.length) {
-        block = 'No service of the trigger searches by company in ' + countryName(cc) + '.';
-      } else {
-        var recent = recentCompanyRequest();
-        if (recent) {
-          var mins = Math.max(1, Math.round((Date.now() - parseStamp(recent.at)) / 60000));
-          block = 'This company was already requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). The same company can be requested again after one hour. <a href="requests.html" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
-        }
-      }
-      info = svc.length ? svc.length + ' search' + (svc.length === 1 ? '' : 'es') : '';
+    var cc = country();
+    var block = null;
+    if (!state.company && !norm(state.typed)) block = '';
+    else if (trigger.countries.indexOf(cc) < 0) {
+      block = 'The ' + trigger.name + ' trigger does not search in ' + (countryName(cc) || 'the company’s country') + '. An administrator can add the country to the trigger in Settings.';
+    } else if (!services().length) {
+      block = 'No service of the trigger searches by company in ' + countryName(cc) + '.';
     } else {
-      var terms = selectedTerms().length, cities = searchCities().length, services = termServices().length;
-      if (!state.positionIds.length) block = '';
-      else if (!services) block = 'No service is configured for ' + countryName(state.country) + ' in this trigger.';
-      info = terms ? terms + ' term' + (terms === 1 ? '' : 's') + ' × ' + cities + ' cit' + (cities === 1 ? 'y' : 'ies') + ' × ' + services + ' service' + (services === 1 ? '' : 's') + ' = ' + (terms * cities * services) + ' searches' : 'Choose at least one position';
+      var recent = recentCompanyRequest();
+      if (recent) {
+        var mins = Math.max(1, Math.round((Date.now() - parseStamp(recent.at)) / 60000));
+        block = 'This company was already requested ' + mins + ' min ago (' + (REQUEST_STATUS[recent.status] || {}).label + '). The same company can be requested again after one hour. <a href="requests.html?id=' + h(recent.id) + '" style="color:inherit; text-decoration:underline;">See it in Requests</a>.';
+      }
     }
     if (warn) {
       warn.innerHTML = block
         ? '<div role="status" style="margin-top:16px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;">' + block + '</div>'
         : '';
     }
-    sum.textContent = info;
+    if (block === null) {
+      var t = usedTerms().length;
+      sum.textContent = t + ' term' + (t === 1 ? '' : 's') + ' · ' + (state.cityIds.length ? state.cityIds.length + ' cit' + (state.cityIds.length === 1 ? 'y' : 'ies') : 'whole country') +
+        ' · ' + searchCount() + ' search' + (searchCount() === 1 ? '' : 'es');
+    } else sum.textContent = block === '' ? 'Choose a company' : '';
     var disabled = block !== null;
     sendBtn.disabled = disabled;
     sendBtn.style.opacity = disabled ? '.5' : '';
@@ -1695,30 +1594,20 @@ function openScrapePopup(options) {
 
   sendBtn.onclick = function () {
     if (sendBtn.disabled) return;
-    var req;
-    if (state.mode === 'company') {
-      var svc = companyServices();
-      var typed = state.typed.trim();
-      req = {
-        triggerId: trigger.id, mode: 'company',
-        companyId: state.company ? state.company.id : null,
-        companyName: state.company ? state.company.name : (looksLikeDomain(typed) ? null : typed),
-        domain: state.company ? (state.company.domain || null) : (looksLikeDomain(typed) ? norm(typed) : null),
-        country: countryOfCompany(), windowDays: state.windowDays, serviceIds: svc,
-        progress: { searched: 0, toSearch: svc.length, found: 0, analyzed: 0, viable: 0 }
-      };
-    } else {
-      var termIds = selectedTerms().map(function (t) { return t.id; });
-      var services = termServices();
-      req = {
-        triggerId: trigger.id, mode: 'terms', country: state.country,
-        cityIds: state.cityIds.slice(), positionIds: state.positionIds.slice(), termIds: termIds,
-        windowDays: state.windowDays, serviceIds: services,
-        progress: { searched: 0, toSearch: termIds.length * searchCities().length * services.length, found: 0, analyzed: 0, viable: 0 }
-      };
-    }
-    // `simulate`: el prototipo avanza la solicitud con el tiempo transcurrido (página Requests).
-    req.vacancyIds = []; req.status = 'queued'; req.simulate = true;
+    var typed = state.typed.trim();
+    var req = {
+      triggerId: trigger.id, mode: 'company',
+      companyId: state.company ? state.company.id : null,
+      companyName: state.company ? state.company.name : (looksLikeDomain(typed) ? null : typed),
+      domain: state.company ? (state.company.domain || null) : (looksLikeDomain(typed) ? norm(typed) : null),
+      country: country(),
+      positionIds: state.positionIds.slice(), cityIds: state.cityIds.slice(),
+      termIds: state.positionIds.length ? usedTerms().map(function (t) { return t.id; }) : [],
+      windowDays: state.windowDays, serviceIds: services(),
+      progress: { searched: 0, toSearch: searchCount(), found: 0, analyzed: 0, viable: 0 },
+      // `simulate`: el prototipo avanza la solicitud con el tiempo transcurrido (página Requests).
+      vacancyIds: [], status: 'queued', simulate: true
+    };
     addRequest(req);
     close();
     showToast('Search requested. Follow its progress in <a href="requests.html?id=' + req.id + '" style="color:inherit; font-weight:600; text-decoration:underline;">Requests</a>.', 'success');
@@ -3895,12 +3784,12 @@ const HIRING_COUNTRIES = ['CO', 'MX', 'AR', 'PE', 'GT', 'KE', 'PH'];
 const ALL_COUNTRIES = ENGINE_COUNTRIES.map(function (c) { return c.code; });
 const ENGINE_SERVICES_SEED = [
   { id: 'svc-indeed', stage: 'vacancies', name: 'Indeed', provider: 'Oxylabs', modes: ['terms_city', 'company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'requests', unitCostUsd: 0.0022 },
-  { id: 'svc-linkedin', stage: 'vacancies', name: 'LinkedIn', provider: 'Apify', modes: ['terms_location', 'company'], countries: ['US', 'CO', 'MX', 'AR', 'PE', 'KE', 'PH'], status: 'active', unit: 'results', unitCostUsd: 0.001 },
+  { id: 'svc-linkedin', stage: 'vacancies', name: 'LinkedIn', provider: 'Apify', modes: ['terms_location', 'company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'results', unitCostUsd: 0.001 },
   { id: 'svc-computrabajo', stage: 'vacancies', name: 'Computrabajo', provider: 'Firecrawl', modes: ['terms_city'], countries: ['CO', 'MX', 'AR', 'PE', 'GT'], status: 'active', unit: 'credits', unitCostUsd: 0.00083 },
   { id: 'svc-theirstack', stage: 'vacancies', name: 'TheirStack', provider: 'TheirStack', modes: ['terms_country', 'company'], countries: ['US', 'ES'], status: 'evaluation', unit: 'credits', unitCostUsd: 0.0059 },
   { id: 'svc-vacancy-analysis', stage: 'vacancy_analysis', name: 'Vacancy analysis', provider: 'OpenAI', modes: ['listing'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
-  { id: 'svc-apollo-company', stage: 'enrichment', name: 'Apollo', provider: 'Apollo', modes: ['company'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
-  { id: 'svc-brightdata', stage: 'enrichment', name: 'Bright Data', provider: 'Bright Data', modes: ['company'], countries: ['US', 'ES'], status: 'active', unit: 'records', unitCostUsd: 0.0015 },
+  { id: 'svc-apollo-company', stage: 'enrichment', name: 'Apollo', provider: 'Apollo', modes: ['company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'credits', unitCostUsd: 0.0 },
+  { id: 'svc-brightdata', stage: 'enrichment', name: 'Bright Data', provider: 'Bright Data', modes: ['company'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'records', unitCostUsd: 0.0015 },
   { id: 'svc-company-analysis', stage: 'company_analysis', name: 'Company analysis', provider: 'OpenAI', modes: ['company_data'], countries: ALL_COUNTRIES.slice(), status: 'active', unit: 'tokens', unitCostUsd: 0.0000006 },
   { id: 'svc-apollo-people', stage: 'decision_makers', name: 'Apollo', provider: 'Apollo', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'credits', unitCostUsd: 0.0 },
   { id: 'svc-hunter', stage: 'decision_makers', name: 'Hunter', provider: 'Hunter', modes: ['domain'], countries: ['US', 'ES'], status: 'active', unit: 'requests', unitCostUsd: 0.0 },
@@ -3911,6 +3800,18 @@ const ENGINE_SERVICES_SEED = [
 
 /* ---- Estado editable de la configuración ---------------------------------- */
 // Settings escribe aquí; borrar las claves r4* devuelve el prototipo al seed.
+// Versión del seed: al cambiarla, la configuración guardada en el navegador se
+// descarta y se vuelve al seed, para que nadie quede viendo una configuración vieja.
+const R4_SEED_VERSION = '2';
+(function resetStaleConfig() {
+  try {
+    if (localStorage.getItem('r4SeedVersion') !== R4_SEED_VERSION) {
+      ['r4Triggers', 'r4Services', 'r4Terms', 'r4Roles', 'r4Prompts', 'r4Outreach', 'r4Requests', 'r4Positions', 'r4Geo', 'r4Rules', 'r4ManualRuns']
+        .forEach(function (k) { localStorage.removeItem(k); });
+      localStorage.setItem('r4SeedVersion', R4_SEED_VERSION);
+    }
+  } catch (e) { /* sin almacenamiento */ }
+})();
 function engineLoad(key, seed) {
   try {
     const raw = localStorage.getItem(key);
@@ -3989,6 +3890,7 @@ const TRIGGER_ENDS = {
   leads_ready: { label: 'Leads ready for cold outreach', stage: 'contact' },
   seller_alert: { label: 'Alert to the account Sales Rep', stage: 'vacancy_analysis' },
   platform: { label: 'Results in the platform', stage: 'vacancy_analysis' },
+  analyzed_companies: { label: 'Vacancies and analyzed companies in the platform', stage: 'company_analysis' },
   company_record: { label: 'Company record', stage: 'contact' }
 };
 const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
@@ -4039,8 +3941,10 @@ const ENGINE_TRIGGERS_SEED = (function buildTriggers() {
       countries: HIRING_COUNTRIES.slice(),
       locations: GEO_CITIES.filter(function (c) { return HIRING_COUNTRIES.indexOf(c.country) >= 0; }).map(function (c) { return { cityId: c.id }; }),
       activeTerms: hiringTerms,
-      vacancyServices: { CO: ['svc-indeed', 'svc-computrabajo'], MX: ['svc-indeed', 'svc-computrabajo'], AR: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], PE: ['svc-indeed', 'svc-computrabajo'], GT: ['svc-indeed', 'svc-computrabajo'], KE: ['svc-indeed', 'svc-linkedin'], PH: ['svc-indeed', 'svc-linkedin'] },
-      enrichment: [], decisionMakers: [], endsAt: 'platform', isActive: true, requestable: false
+      vacancyServices: { CO: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], MX: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], AR: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], PE: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], GT: ['svc-indeed', 'svc-computrabajo', 'svc-linkedin'], KE: ['svc-indeed', 'svc-linkedin'], PH: ['svc-indeed', 'svc-linkedin'] },
+      // Sus empresas se guardan siempre, se enriquecen y se analizan, para el análisis de datos posterior.
+      enrichment: [{ serviceId: 'svc-apollo-company', pass: 'missing_essential' }, { serviceId: 'svc-brightdata', pass: null }],
+      decisionMakers: [], endsAt: 'analyzed_companies', isActive: true, requestable: false
     }
   ];
 })();
@@ -4139,9 +4043,10 @@ const OUTREACH_SCHEDULES = engineLoad('r4Outreach', OUTREACH_SCHEDULES_SEED);
   // España: llegan por Clientes nuevos y pasan por todas las etapas.
   company({ id: 'comp-101', name: 'Grupo Lumen Servicios', industry: 'Servicios profesionales', industryCode: 'professional_services', location: 'Madrid, Madrid', countryCode: 'ES', divisionCode: 'ES-M', city: 'Madrid', website: 'https://lumenservicios.es', phone: '+34 910 555 210', sizeEmployees: 240, revenueUsd: '38000000', yearFounded: '2006', icpScore: 71, leadSignals: ['multiple_openings', 'repeated_posting'], qualifiedAt: daysAgoStr(1), researchedAt: daysAgoStr(1), lastResearchAt: daysAgoStr(1), isResearched: true, contactsSearchedAt: daysAgoStr(1), isExcluded: false, exclusionReason: null, leadSummary: 'Madrid back-office services firm for insurers and utilities. Hires payroll and accounting staff every quarter and runs its own customer care desk.', valueProposition: 'Outsourced administrative, payroll and customer-care operations for mid-size insurers and utilities in Spain.', strengthsDifferentiators: 'Long contracts with regional insurers; bilingual Spanish–English desk.', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-006', createdAt: daysAgoStr(2), contactsCount: 0 });
   company({ id: 'comp-102', name: 'Nexa Logística', industry: 'Logística', industryCode: 'logistics_transportation', location: 'Barcelona, Barcelona', countryCode: 'ES', divisionCode: 'ES-B', city: 'Barcelona', website: 'https://nexalogistica.com', phone: '+34 932 555 118', sizeEmployees: 95, revenueUsd: null, yearFounded: '2014', icpScore: null, leadSignals: [], qualifiedAt: null, researchedAt: daysAgoStr(0), lastResearchAt: daysAgoStr(0), isResearched: true, contactsSearchedAt: null, isExcluded: false, exclusionReason: null, industryMissing: false, leadSummary: null, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(0), contactsCount: 0 });
-  // Países de contratación: Hiring countries termina en la plataforma, sin pasar por
-  // los servicios de empresas; la empresa queda detectada, con el nombre del aviso.
-  company({ id: 'comp-201', name: 'Andes Contact Center', industry: '', industryCode: null, location: 'Bogotá, Bogotá, D.C.', countryCode: 'CO', divisionCode: 'CO-DC', city: 'Bogotá', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(1), contactsCount: 0 });
+  // Países de contratación: la empresa se guarda siempre (también la confidencial de
+  // Computrabajo), se enriquece y se analiza. Andes ya pasó por Bright Data; las demás
+  // llegaron en las últimas horas y siguen detectadas.
+  company({ id: 'comp-201', name: 'Andes Contact Center', industry: 'BPO', industryCode: 'professional_services', location: 'Bogotá, Bogotá, D.C.', countryCode: 'CO', divisionCode: 'CO-DC', city: 'Bogotá', website: 'https://andescontact.co', sizeEmployees: 420, icpScore: null, leadSignals: [], isResearched: true, researchedAt: daysAgoStr(0), isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(1), contactsCount: 0 });
   company({ id: 'comp-202', name: 'Pacífica BPO', industry: '', industryCode: null, location: 'Makati, National Capital Region', countryCode: 'PH', divisionCode: 'PH-00', city: null, website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(2), contactsCount: 0 });
   company({ id: 'comp-203', name: 'Grupo Ferrara', industry: '', industryCode: null, location: 'Ciudad de México, Ciudad de México', countryCode: 'MX', divisionCode: 'MX-CMX', city: 'Ciudad de México', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(3), contactsCount: 0 });
   company({ id: 'comp-204', name: 'Kilima Software', industry: '', industryCode: null, location: 'Nairobi, Nairobi City', countryCode: 'KE', divisionCode: 'KE-30', city: 'Nairobi', website: null, sizeEmployees: null, icpScore: null, leadSignals: [], isResearched: false, researchedAt: null, isExcluded: false, remoteViable: true, comercialId: null, sdrId: null, createdAt: daysAgoStr(4), contactsCount: 0 });
@@ -4345,7 +4250,7 @@ const ENGINE_EXECUTIONS = (function buildExecutions() {
   const shape = {
     'trg-new-clients': { searches: 180, vacancies: 340, viable: 190, companies: 120, qualified: 46, dms: 61, cost: 6.4, hours: 5.2 },
     'trg-current-clients': { searches: 158, vacancies: 95, viable: 58, companies: 0, qualified: 0, dms: 0, cost: 0.9, hours: 1.1 },
-    'trg-hiring-countries': { searches: 96, vacancies: 410, viable: 260, companies: 0, qualified: 0, dms: 0, cost: 1.7, hours: 2.4 }
+    'trg-hiring-countries': { searches: 96, vacancies: 410, viable: 260, companies: 150, qualified: 0, dms: 0, cost: 2.6, hours: 3.1 }
   };
   for (let d = 0; d < 14; d++) {
     const day = new Date(Date.now() - d * 86400000);
@@ -4431,12 +4336,12 @@ const REQUEST_STATUS = {
 const MOCK_REQUESTS_SEED = (function buildRequests() {
   function hoursAgo(h) { return new Date(Date.now() - h * 3600000).toISOString(); }
   return [
-    { id: 'req-0007', executionId: 'rx-0007', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-006', at: hoursAgo(0.4), mode: 'terms', country: 'ES', cityIds: ['es-valencia'], positionIds: ['pos-01', 'pos-09'], windowDays: 7, status: 'running', progress: { searched: 4, toSearch: 6, found: 9, analyzed: 5, viable: 4 }, vacancyIds: [] },
+    { id: 'req-0007', executionId: 'rx-0007', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-006', at: hoursAgo(0.4), mode: 'company', companyId: 'comp-101', country: 'ES', positionIds: ['pos-01', 'pos-09'], cityIds: ['es-madrid'], windowDays: 7, status: 'running', progress: { searched: 4, toSearch: 6, found: 2, analyzed: 1, viable: 1 }, vacancyIds: ['vac-101', 'vac-102'] },
     { id: 'req-0006', executionId: 'rx-0006', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-006', at: hoursAgo(3), mode: 'company', companyId: 'comp-004', windowDays: 1, status: 'done', progress: { searched: 2, toSearch: 2, found: 2, analyzed: 2, viable: 2 }, vacancyIds: ['vac-006'] },
     { id: 'req-0005', executionId: 'rx-0005', triggerId: 'trg-research', requestedBy: 'uuid-staff-006', at: hoursAgo(0.2), companyId: 'comp-011', status: 'running', steps: { enrichment: 'running' } },
     { id: 'req-0004', executionId: 'rx-0004', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-007', at: hoursAgo(30), mode: 'company', companyName: 'Blue Harbor Dental Group', windowDays: 14, status: 'no_results', progress: { searched: 2, toSearch: 2, found: 0, analyzed: 0, viable: 0 }, vacancyIds: [] },
     { id: 'req-0003', executionId: 'rx-0003', triggerId: 'trg-research', requestedBy: 'uuid-staff-007', at: hoursAgo(50), companyId: 'comp-102', status: 'done', outcome: 'ok', steps: { enrichment: 'enriched', qualification: 'pending', decisionMakers: 0 } },
-    { id: 'req-0002', executionId: 'rx-0002', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-001', at: hoursAgo(75), mode: 'terms', country: 'US', cityIds: ['us-austin', 'us-dallas'], positionIds: ['pos-12'], windowDays: 3, status: 'done', progress: { searched: 6, toSearch: 6, found: 14, analyzed: 14, viable: 9 }, vacancyIds: [] },
+    { id: 'req-0002', executionId: 'rx-0002', triggerId: 'trg-on-demand', requestedBy: 'uuid-staff-001', at: hoursAgo(75), mode: 'company', companyId: 'comp-004', country: 'US', positionIds: ['pos-12'], cityIds: ['us-austin', 'us-dallas'], windowDays: 3, status: 'done', progress: { searched: 16, toSearch: 16, found: 1, analyzed: 1, viable: 1 }, vacancyIds: ['vac-018'] },
     { id: 'req-0001', executionId: 'rx-0001', triggerId: 'trg-research', requestedBy: 'uuid-staff-006', at: hoursAgo(98), companyName: 'Corvid Analytics', status: 'failed', outcome: 'company_not_found', steps: { enrichment: 'not_found' } }
   ];
 })();

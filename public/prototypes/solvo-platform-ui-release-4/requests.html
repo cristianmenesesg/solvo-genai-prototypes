@@ -39,8 +39,7 @@
           <div class="op-count" id="rqCount"></div>
           <select id="rqType" aria-label="Type of request">
             <option value="">All types</option>
-            <option value="company">Search by company</option>
-            <option value="terms">Search by position</option>
+            <option value="search">Search</option>
             <option value="research">Research</option>
           </select>
           <select id="rqStatus" aria-label="Status"></select>
@@ -63,8 +62,8 @@
        Datos: getVisibleRequests() sobre MOCK_REQUESTS (rbac.js 20.12): SDR y
        Sales Rep ven las suyas; Coordinator, Supervisor y Administrator ven todas,
        con la columna "Requested by" y su filtro. Cada solicitud es de uno de dos
-       triggers: A pedido (`trg-on-demand`, por empresa o por posición y
-       ubicación) o Investigación a pedido (`trg-research`).
+       triggers: A pedido (`trg-on-demand`: siempre una empresa, con posiciones y
+       ciudades como recorte opcional) o Investigación a pedido (`trg-research`).
        Secciones: barra con conteo, filtros (tipo, estado, quién la pidió) y las
        acciones; una fila por solicitud con tipo, objetivo, ventana, quién y
        cuándo, estado (REQUEST_STATUS) y avance; la fila se despliega con los
@@ -81,8 +80,7 @@
        ------------------------------------------------------------------------ */
 
     const ICON = {
-      company: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
-      terms: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+      search: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
       research: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path><path d="M11 8v6"></path><path d="M8 11h6"></path></svg>',
       caret: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>'
     };
@@ -107,8 +105,9 @@
       if (h < 48) return h + ' h ago';
       return Math.round(h / 24) + ' days ago';
     }
-    function kindOf(r) { return r.triggerId === 'trg-research' ? 'research' : (r.mode === 'company' ? 'company' : 'terms'); }
-    const KIND_LABEL = { company: 'Search by company', terms: 'Search by position', research: 'Research' };
+    // A pedido es un solo modo: búsqueda de una empresa, con posiciones y ciudades opcionales.
+    function kindOf(r) { return r.triggerId === 'trg-research' ? 'research' : 'search'; }
+    const KIND_LABEL = { search: 'Search', research: 'Research' };
     function windowLabel(d) { return d ? (d === 1 ? 'Last day' : 'Last ' + d + ' days') : ''; }
     function companyOf(r) { return r.companyId ? MOCK_COMPANIES.find(function (c) { return c.id === r.companyId; }) : null; }
     function memberShort(id) { const m = getMemberById(id); return m ? m.shortName : 'Unknown user'; }
@@ -121,9 +120,8 @@
       const cutoff = Date.now() - (r.windowDays || 1) * 86400000 - 86400000;
       return MOCK_VACANCIES.filter(function (v) {
         if (parseStamp(v.detectedAtTs || v.detectedAt) < cutoff) return false;
-        if (r.mode === 'company') return r.companyId ? v.companyId === r.companyId : false;
-        if (v.countryCode !== r.country) return false;
-        if ((r.positionIds || []).indexOf(v.positionId) < 0) return false;
+        if (!r.companyId || v.companyId !== r.companyId) return false;
+        if ((r.positionIds || []).length && r.positionIds.indexOf(v.positionId) < 0) return false;
         return !(r.cityIds || []).length || r.cityIds.indexOf(v.cityId) >= 0;
       });
     }
@@ -165,23 +163,24 @@
     /* ---- Celdas de la fila --------------------------------------------------- */
     function target(r) {
       const c = companyOf(r);
-      if (r.triggerId === 'trg-research' || r.mode === 'company') {
-        const name = c ? c.name : (r.companyName || r.domain || 'Unnamed company');
-        const sub = c ? [placeLabel(c, false), countryName(c.countryCode), c.domain].filter(Boolean).join(' · ')
-          : [r.domain && r.companyName ? r.domain : '', r.country ? countryName(r.country) : ''].filter(Boolean).join(' · ') || 'Not in Solvo Platform';
-        return { title: name, sub: sub };
-      }
-      const names = (r.positionIds || []).map(getPositionName);
-      const title = names.length > 2 ? names.slice(0, 2).join(', ') + ' +' + (names.length - 2) : names.join(', ');
+      const name = c ? c.name : (r.companyName || r.domain || 'Unnamed company');
+      const sub = c ? [placeLabel(c, false), countryName(c.countryCode), c.domain].filter(Boolean).join(' · ')
+        : [r.domain && r.companyName ? r.domain : '', r.country ? countryName(r.country) : ''].filter(Boolean).join(' · ') || 'Not in Solvo Platform';
+      return { title: name, sub: sub };
+    }
+
+    // Recorte de una búsqueda: posiciones y ciudades como chips; vacío = todas / todo el país.
+    function scopeChips(r) {
+      const pos = (r.positionIds || []).map(getPositionName);
       const cities = (r.cityIds || []).map(cityName);
-      return {
-        title: title || 'No positions',
-        sub: countryName(r.country) + ' · ' + (cities.length ? cities.join(', ') : 'all cities of the trigger')
-      };
+      return '<div class="rq-scope">' +
+        (pos.length ? pos.map(function (x) { return '<span class="rq-chip">' + esc(x) + '</span>'; }).join('') : '<span class="rq-chip is-all">All positions</span>') +
+        (cities.length ? cities.map(function (x) { return '<span class="rq-chip is-city">' + esc(x) + '</span>'; }).join('') : '<span class="rq-chip is-all is-city">Whole country</span>') +
+      '</div>';
     }
 
     function stepChip(text, tone) { return '<span class="rq-step is-' + tone + '">' + esc(text) + '</span>'; }
-    const ENRICH = { enriched: ['Enriched', 'success'], missing_data: ['Missing data', 'warning'], not_found: ['Not found', 'error'] };
+    const ENRICH = { enriched: ['Enriched', 'success'], missing_data: ['Missing data', 'warning'], not_found: ['Not found', 'error'], running: ['In progress', 'info'] };
     const QUALIFY = { qualified: ['Qualified', 'success'], excluded: ['Excluded', 'error'], pending: ['Not qualified', 'warning'] };
 
     function researchSteps(v) {
@@ -218,7 +217,7 @@
       const byCol = canViewAll()
         ? '<div class="rq-c rq-c-by"><span class="rq-key">Requested by</span><div class="rq-val">' + esc(memberShort(v.requestedBy)) + '</div>' +
           '<div class="rq-sub" title="' + esc(when(v.at)) + '">' + esc(ago(v.at)) + '</div></div>'
-        : '<div class="rq-c"><span class="rq-key">Requested</span><div class="rq-val" title="' + esc(when(v.at)) + '">' + esc(ago(v.at)) + '</div></div>';
+        : '<div class="rq-c rq-c-by"><span class="rq-key">Requested</span><div class="rq-val" title="' + esc(when(v.at)) + '">' + esc(ago(v.at)) + '</div></div>';
 
       return '<article class="rq-row' + (isOpen ? ' is-open' : '') + '" id="' + esc(v.id) + '">' +
         '<button type="button" class="rq-sum" aria-expanded="' + isOpen + '" aria-controls="' + esc(v.id) + '-detail" data-toggle="' + esc(v.id) + '">' +
@@ -226,6 +225,7 @@
             '<span class="rq-kind">' + ICON[kind] + esc(KIND_LABEL[kind]) + ' · ' + esc(trigger(v).name) + '</span>' +
             '<div class="rq-target">' + esc(t.title) + '</div>' +
             '<div class="rq-sub">' + esc(t.sub) + '</div>' +
+            (kind === 'search' ? scopeChips(v) : '') +
           '</div>' +
           '<div class="rq-c rq-c-win"><span class="rq-key">Window</span><div class="rq-val">' +
             (kind === 'research' ? '<em>Not applicable</em>' : esc(windowLabel(v.windowDays))) + '</div></div>' +
@@ -258,8 +258,8 @@
         const chainTxt = function (list) {
           return list.map(function (x) { return esc(serviceName(x.serviceId)); }).join(' → ');
         };
-        const enrichTxt = s.enrichment ? ENRICH[s.enrichment][0] + '.' : 'Pending.';
-        const qualTxt = s.qualification
+        const enrichTxt = ENRICH[s.enrichment] ? ENRICH[s.enrichment][0] + '.' : 'Pending.';
+        const qualTxt = QUALIFY[s.qualification]
           ? QUALIFY[s.qualification][0] + (s.qualification === 'qualified' && c && c.icpScore != null ? ': ICP score ' + Math.round(c.icpScore) + ' (' + esc(countryName(c.countryCode)) + ' ICP).' : '.')
           : (s.enrichment === 'not_found' ? 'Not run: the company was not found.' : 'Pending.');
         const dmTxt = s.decisionMakers !== undefined && s.decisionMakers !== null
@@ -284,23 +284,20 @@
       }
 
       // Búsquedas: qué se buscó y qué trajo.
-      const services = v.serviceIds || (kind === 'company'
-        ? (trg.vacancyServices[v.country || (c && c.countryCode) || 'US'] || []).filter(function (id) { const s = engineService(id); return s && s.modes.indexOf('company') >= 0; })
-        : (trg.vacancyServices[v.country] || []));
-      let what;
-      if (kind === 'company') {
-        what = '<dt>Company</dt><dd>' + (c ? '<a class="rq-link" href="company-detail.html?id=' + esc(c.id) + '&tab=positions">' + esc(c.name) + '</a>' : esc(v.companyName || v.domain)) + '</dd>' +
-          (v.domain || (c && c.domain) ? '<dt>Domain</dt><dd>' + esc(v.domain || c.domain) + '</dd>' : '');
-      } else {
-        const terms = v.termIds
-          ? v.termIds.map(function (id) { const t = ENGINE_TERMS.find(function (x) { return x.id === id; }); return t ? t.text : ''; }).filter(Boolean)
-          : ENGINE_TERMS.filter(function (t) { return t.country === v.country && (v.positionIds || []).indexOf(t.positionId) >= 0 && trg.activeTerms.indexOf(t.id) >= 0; }).map(function (t) { return t.text; });
-        const allCities = trg.locations.map(function (l) { return GEO_CITIES.find(function (g) { return g.id === l.cityId; }); }).filter(function (g) { return g && g.country === v.country; });
-        what = '<dt>Positions</dt><dd>' + esc((v.positionIds || []).map(getPositionName).join(', ')) + '</dd>' +
-          '<dt>Terms</dt><dd>' + (terms.length ? '<div class="rq-tags">' + terms.map(function (t) { return '<span class="op-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '<em>None active</em>') + '</dd>' +
-          '<dt>Country</dt><dd>' + esc(countryName(v.country)) + '</dd>' +
-          '<dt>Cities</dt><dd>' + ((v.cityIds || []).length ? esc(v.cityIds.map(cityName).join(', ')) : 'All ' + allCities.length + ' cities of the trigger') + '</dd>';
-      }
+      const country = v.country || (c && c.countryCode) || 'US';
+      const services = v.serviceIds || (trg.vacancyServices[country] || []).filter(function (id) { const s = engineService(id); return s && s.modes.indexOf('company') >= 0; });
+      const terms = (v.termIds && v.termIds.length)
+        ? v.termIds.map(function (id) { const t = ENGINE_TERMS.find(function (x) { return x.id === id; }); return t ? t.text : ''; }).filter(Boolean)
+        : ENGINE_TERMS.filter(function (t) { return t.country === country && trg.activeTerms.indexOf(t.id) >= 0 && (!(v.positionIds || []).length || v.positionIds.indexOf(t.positionId) >= 0); }).map(function (t) { return t.text; });
+      const allCities = trg.locations.map(function (l) { return GEO_CITIES.find(function (g) { return g.id === l.cityId; }); }).filter(function (g) { return g && g.country === country; });
+      const what = '<dt>Company</dt><dd>' + (c ? '<a class="rq-link" href="company-detail.html?id=' + esc(c.id) + '&tab=positions">' + esc(c.name) + '</a>' : esc(v.companyName || v.domain)) + '</dd>' +
+        (v.domain || (c && c.domain) ? '<dt>Domain</dt><dd>' + esc(v.domain || c.domain) + '</dd>' : '') +
+        '<dt>Country</dt><dd>' + esc(countryName(country)) + '</dd>' +
+        '<dt>Positions</dt><dd>' + ((v.positionIds || []).length ? esc(v.positionIds.map(getPositionName).join(', ')) : 'All positions') + '</dd>' +
+        '<dt>Terms</dt><dd>' + ((v.positionIds || []).length
+          ? (terms.length ? '<div class="rq-tags">' + terms.map(function (t) { return '<span class="op-tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '<em>None active</em>')
+          : 'All ' + terms.length + ' active terms of the trigger in ' + esc(countryName(country))) + '</dd>' +
+        '<dt>Cities</dt><dd>' + ((v.cityIds || []).length ? esc(v.cityIds.map(cityName).join(', ')) : 'Whole country (' + allCities.length + ' cities of the trigger)') + '</dd>';
       const left = '<section><h4>What was requested</h4><dl class="rq-dl">' + what +
         '<dt>Window</dt><dd>' + esc(windowLabel(v.windowDays)) + '</dd>' +
         '<dt>Services</dt><dd>' + svcTags(services) + '</dd>' +
@@ -321,7 +318,7 @@
       } else if (p.found) {
         right += '<p class="rq-note">' + p.found + ' opening' + (p.found === 1 ? '' : 's') + ' found, ' + (p.viable || 0) + ' viable. They are in Open Positions with the ' + esc(trg.name) + ' trigger as their origin.</p>';
       } else if (v.status === 'no_results') {
-        right += '<p class="rq-note">The services ran every search and found no opening published in the window. A wider window or other cities may return results.</p>';
+        right += '<p class="rq-note">The services ran every search and found no opening published in the window. A wider window, fewer positions or the whole country may return results.</p>';
       } else {
         right += '<p class="rq-note">Nothing found yet. The openings appear here as the services return them.</p>';
       }
@@ -347,7 +344,7 @@
       const list = document.getElementById('rqList');
       if (!all.length) {
         list.innerHTML = '<div class="op-empty"><h3>No requests yet</h3>' +
-          '<p>A search by company or by position and location, or the research of a company, appears here with its progress and results.</p>' +
+          '<p>A search of a company\'s openings, optionally narrowed by positions and cities, or the research of a company, appears here with its progress and results.</p>' +
           '<button class="btn btn-primary" onclick="openScrapePopup({ onSent: render })">Request search</button></div>';
         return;
       }

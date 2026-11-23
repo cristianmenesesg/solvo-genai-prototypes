@@ -73,6 +73,10 @@
 .rq-kind { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-muted); }
 .rq-kind svg { flex: 0 0 auto; }
 .rq-target { margin-top: 2px; font-family: var(--font-heading); font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--text-strong); overflow-wrap: anywhere; }
+.rq-scope { display: flex; flex-wrap: wrap; gap: 4px; margin-top: var(--space-2); }
+.rq-chip { display: inline-flex; align-items: center; padding: 0 var(--space-2); border-radius: var(--radius-full); font-size: var(--text-xs); line-height: 1.7; background: var(--color-secondary-50); color: var(--color-secondary-700); box-shadow: inset 0 0 0 1px var(--color-secondary-200); }
+.rq-chip.is-city { background: var(--bg-muted); color: var(--text-secondary); box-shadow: inset 0 0 0 1px var(--border-default); }
+.rq-chip.is-all { background: transparent; color: var(--text-muted); box-shadow: inset 0 0 0 1px var(--border-default); font-style: italic; }
 .rq-sub { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); overflow-wrap: anywhere; }
 .rq-key { display: block; font-size: var(--text-xs); color: var(--text-muted); margin-bottom: 2px; }
 .rq-val { font-size: var(--text-sm); color: var(--text-primary); }
