@@ -1603,8 +1603,9 @@ function openResearchRequestPopup(company, options) {
 
   var steps =
     step(1, 'Company data', 'Domain, size, industry and headquarters.') +
-    step(2, 'Qualification', 'Company type and ICP score for ' + h(countryName(country)) + '.') +
-    (trigger.decisionMakers.length ? step(3, 'Decision makers', 'People in decision roles, with their contact details.') : '');
+    step(2, 'Qualification', 'Company type and ICP score for ' + h(countryName(country)) + '.');
+  // Decisores opcionales: con la casilla marcada, la empresa calificada pasa también por los servicios de decisores.
+  var withDm = trigger.decisionMakers.length > 0;
 
   var warn = !covered
     ? 'Research is not available in ' + h(countryName(country)) + '.'
@@ -1629,6 +1630,12 @@ function openResearchRequestPopup(company, options) {
         '</div>' +
         '<p style="font-size:13px; color:var(--text-secondary); line-height:1.5; margin:12px 0 4px;">Updates the record of the company with:</p>' +
         '<ol style="list-style:none; margin:0; padding:0;">' + steps + '</ol>' +
+        (trigger.decisionMakers.length
+          ? '<label style="display:flex; gap:10px; align-items:flex-start; margin-top:8px; padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); cursor:pointer;">' +
+              '<input type="checkbox" id="rr-dm" checked style="margin-top:2px; accent-color:var(--color-secondary);">' +
+              '<span><span style="display:block; font-size:13px; font-weight:600; color:var(--text-strong);">Also research decision makers</span>' +
+              '<span style="display:block; font-size:12px; color:var(--text-secondary); margin-top:2px;">People in decision roles, with their contact details. Only for a qualified company.</span></span></label>'
+          : '') +
         (warn ? '<div role="status" style="margin-top:12px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;">' + warn + '</div>' : '') +
       '</div>' +
       '<div class="assign-popup-footer">' +
@@ -1642,11 +1649,13 @@ function openResearchRequestPopup(company, options) {
   document.addEventListener('keydown', onKey);
   overlay.addEventListener('click', function (e) { if (e.target === overlay || e.target.hasAttribute('data-close')) close(); });
 
+  var dmBox = overlay.querySelector('#rr-dm');
+  if (dmBox) dmBox.onchange = function () { withDm = dmBox.checked; };
   overlay.querySelector('#rr-send').onclick = function () {
     if (warn) return;
     var req = addRequest({
       triggerId: trigger.id, companyId: company.id, companyName: company.name, country: country,
-      status: 'queued', steps: {}, simulate: true
+      withDecisionMakers: withDm, status: 'queued', steps: withDm ? {} : { decisionMakers: 0 }, simulate: true
     });
     close();
     showToast('Research requested.', 'success');

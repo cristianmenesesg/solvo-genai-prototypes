@@ -674,8 +674,10 @@
       const steps = '<div class="rq-steps">' +
         chip('enrichment', st.enrichment, 'Enrichment pending') + '<span class="rq-steparrow">&rarr;</span>' +
         chip('qualification', st.qualification, 'Qualification pending') + '<span class="rq-steparrow">&rarr;</span>' +
-        '<span class="rq-step is-' + (st.decisionMakers ? 'success' : (st.decisionMakers === 0 ? 'neutral' : 'pending')) + '">' +
-          (st.decisionMakers !== undefined && st.decisionMakers !== null ? st.decisionMakers + ' decision maker' + (st.decisionMakers === 1 ? '' : 's') : 'Decision makers pending') + '</span></div>';
+        (last.withDecisionMakers === false
+          ? '<span class="rq-step is-neutral">Decision makers not requested</span></div>'
+          : '<span class="rq-step is-' + (st.decisionMakers ? 'success' : (st.decisionMakers === 0 ? 'neutral' : 'pending')) + '">' +
+            (st.decisionMakers !== undefined && st.decisionMakers !== null ? st.decisionMakers + ' decision maker' + (st.decisionMakers === 1 ? '' : 's') : 'Decision makers pending') + '</span></div>');
       el.innerHTML = '<div class="cd4-research">' +
         '<span><strong>Last research request</strong> · ' + esc(shortAgo(last.at)) + ' · ' + esc((getMemberById(last.requestedBy) || { shortName: 'Unknown user' }).shortName) + '</span>' +
         stateBadge(REQUEST_STATUS, last.status) + steps +
