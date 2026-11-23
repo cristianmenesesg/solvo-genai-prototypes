@@ -73,7 +73,7 @@
               <section class="vd-block" style="margin-top:0;">
                 <div class="vd-blockhead">
                   <h3 class="vd-blocktitle" id="cdPositionsTitle">Positions</h3>
-                  <button class="op-actionbtn" onclick="scrapeThisCompany()">Request search</button>
+                  <button class="op-actionbtn" onclick="scrapeThisCompany()">Search Positions</button>
                 </div>
                 <div id="cdPositions"></div>
               </section>
@@ -454,7 +454,7 @@
          empresa en MOCK_REQUESTS con su resultado; el resultado en sí se lee del estado
          y del historial, no de un callback.
        · Positions: estado de la vacante (VACANCY_STATES), trigger y fuentes (servicio,
-         término y fecha); "Request search" → openScrapePopup({ company }).
+         término y fecha); "Search Positions" → openScrapePopup({ company }).
        · History (antes Follow-up): getEntityHistory('company') y el de sus decisores,
          junto a los cambios de etapa que hacen las personas (getCompanyActivity),
          distinguidos por procedencia y filtrables.
@@ -586,7 +586,7 @@
         '<div class="vd-actions">' +
           '<button type="button" class="op-btn-apply" onclick="openEditModal()">Edit company</button>' +
           '<button type="button" class="op-actionbtn" onclick="openStateChangeModal()">Change stage</button>' +
-          '<button type="button" class="op-actionbtn" onclick="scrapeThisCompany()">Request search</button>' +
+          '<button type="button" class="op-actionbtn" onclick="scrapeThisCompany()">Search Positions</button>' +
           // Una sola acción: pide la investigación al trigger Investigación a pedido. Sirve tanto
           // la primera vez como para rehacerla sobre lo que ya hay.
           '<button type="button" class="op-actionbtn" onclick="openResearchRequestModal()">Run research</button>' +

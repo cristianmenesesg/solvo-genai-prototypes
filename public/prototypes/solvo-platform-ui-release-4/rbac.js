@@ -1261,7 +1261,7 @@ function openScrapePopup(options) {
   overlay.innerHTML =
     '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="odr-title" style="width:600px; max-width:95vw; display:flex; flex-direction:column; max-height:92vh;">' +
       '<div class="assign-popup-header">' +
-        '<h3 id="odr-title">Request a search</h3>' +
+        '<h3 id="odr-title">Search Positions</h3>' +
         '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
       '</div>' +
       '<div class="assign-popup-body" id="odr-body" style="overflow:auto; flex:1 1 auto;"></div>' +
@@ -1563,7 +1563,7 @@ function openScrapePopup(options) {
     };
     addRequest(req);
     close();
-    showToast('Search requested.', 'success');
+    showToast('Search started.', 'success');
     onSent(req);
   };
 

@@ -67,7 +67,7 @@
                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path>
                 <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path>
               </svg>
-              Request search
+              Search Positions
             </button>
             <button type="button" class="op-actionbtn" onclick="openCreateModal()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -242,7 +242,7 @@
        parámetro de GET /api/companies (y /export, /export/count) y `state.q`
        busca por company.name. La fila muestra company_research.lead_summary, así que el
        endpoint del listado lo trae con un LEFT JOIN a company_research, que es 1:1.
-       Acciones: abrir detalle; Request search (solicitud al trigger A pedido,
+       Acciones: abrir detalle; Search Positions (solicitud al trigger A pedido,
        openScrapePopup → Requests); New company (POST /api/companies: país, división,
        ciudad, dominio, industria del catálogo y relación con los valores de la base);
        Export (prospectos + posiciones como acompañante, FSPL-2, con las columnas de
