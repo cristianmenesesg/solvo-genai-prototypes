@@ -52,6 +52,7 @@
 
           <div class="op-quickfilters">
             <div id="pickPosition"></div>
+            <div id="pickCountry"></div>
             <div id="pickState"></div>
           </div>
         </div>
@@ -155,14 +156,18 @@
               <select class="form-select" id="createIndustry"></select>
             </div>
 
-            <!-- La base guarda `location` como "City, ST" y `state_code` aparte: el formulario
-                 pide las dos piezas en vez de un texto libre con el nombre del estado. -->
+            <!-- En EE. UU. la base guarda `location` como "City, ST" y `state_code` aparte; en
+                 España no hay estado y `location` es solo la ciudad. -->
+            <div class="form-group">
+              <label class="form-label" for="createCountry">Country *</label>
+              <select class="form-select" id="createCountry" onchange="syncCreateState()"></select>
+            </div>
             <div class="form-row">
               <div class="form-group" style="flex:2;">
                 <label class="form-label">City *</label>
                 <input type="text" class="form-input" id="createCity" placeholder="E.g.: Austin" required>
               </div>
-              <div class="form-group" style="flex:1;">
+              <div class="form-group" style="flex:1;" id="createStateGroup">
                 <label class="form-label">State *</label>
                 <select class="form-select" id="createState"></select>
               </div>
@@ -385,12 +390,23 @@
           return d >= 90;
         }
       },
+      // País: los dos marcados es el valor neutro. Vacío también lo es, y se asienta en los dos.
       {
-        key: 'state', group: 'Company', label: 'Location', type: 'multi', def: [],
-        hint: 'The US state the company is based in. The same selector lives in the search bar, and both write the same choice.',
+        key: 'country', group: 'Company', label: 'Country', type: 'multi', cols: 1,
+        hint: 'The country the company is based in.',
+        def: ['US', 'ES'], neutral: ['US', 'ES'],
+        options: RECORD_COUNTRIES.map(function (c) { return { value: c.code, label: c.name }; }),
+        chip: function (v) { return 'Country: ' + v.map(countryName).join(', '); },
+        test: function (c, v) { return v.indexOf(companyCountryCode(c)) !== -1; }
+      },
+      // Solo recorta las empresas de EE. UU.: las de España no tienen estado y siguen en la lista
+      // mientras el país las incluya.
+      {
+        key: 'state', group: 'Company', label: 'US states', type: 'multi', def: [],
+        hint: 'The US state the company is based in.',
         options: US_STATES.map(function (st) { return { value: st.code, label: st.name, note: st.code }; }),
-        chip: function (v) { return 'Location: ' + (v.length <= 3 ? v.join(', ') : v.length + ' states'); },
-        test: function (c, v) { return v.indexOf(c.stateCode) !== -1; }
+        chip: function (v) { return 'US states: ' + (v.length <= 3 ? v.join(', ') : v.length); },
+        test: function (c, v) { return companyCountryCode(c) !== 'US' || v.indexOf(c.stateCode) !== -1; }
       },
       {
         key: 'industry', group: 'Company', label: 'Industry', type: 'multi', def: [],
@@ -509,7 +525,7 @@
     function filterOptions(f) { return typeof f.options === 'function' ? f.options() : (f.options || []); }
 
     function defaultFor(f) {
-      if (Array.isArray(f.def)) return [];
+      if (Array.isArray(f.def)) return f.def.slice();
       if (f.def && typeof f.def === 'object') return { mode: f.def.mode, roles: [] };
       return f.def;
     }
@@ -524,6 +540,7 @@
     // no al valor por defecto, que en varios criterios sí recorta.
     function neutralFor(f) {
       if (f.neutral !== undefined) {
+        if (Array.isArray(f.neutral)) return f.neutral.slice();
         return (f.neutral && typeof f.neutral === 'object') ? { mode: f.neutral.mode, roles: [] } : f.neutral;
       }
       if (Array.isArray(f.def)) return [];
@@ -534,7 +551,19 @@
 
     function clearFilters(target) { visibleFilters().forEach(function (f) { target[f.key] = neutralFor(f); }); }
 
+    // Un criterio con neutro propio que quedó vacío vuelve a su neutro, para que el selector
+    // lo muestre marcado. Devuelve si cambió algo.
+    function settleFilters(target) {
+      let changed = false;
+      visibleFilters().forEach(function (f) {
+        if (Array.isArray(f.neutral) && (!target[f.key] || !target[f.key].length)) { target[f.key] = f.neutral.slice(); changed = true; }
+      });
+      return changed;
+    }
+
     function isNeutral(f, v) {
+      // Un multi con neutro propio (país) no recorta vacío ni con todo marcado.
+      if (Array.isArray(f.neutral)) return !v || !v.length || f.neutral.every(function (x) { return v.indexOf(x) !== -1; });
       if (f.type === 'multi' || f.type === 'search') return !v || !v.length;
       if (f.type === 'text') return !v;
       if (f.type === 'daterange') return !v || v === 'all';
@@ -668,7 +697,7 @@
           '<div class="pr-meta">' +
             (c.industryCode ? esc(getIndustryLabel(c.industryCode)) : '<em>Unclassified</em>') + ' · ' +
             (c.sizeEmployees ? Number(c.sizeEmployees).toLocaleString('en-US') + ' employees' : '<em>size unknown</em>') + ' · ' +
-            esc(c.location) +
+            esc(locationLabel(c)) +
           '</div>' +
           (c.leadSummary
             ? '<p class="pr-summary">' + esc(c.leadSummary) + '</p>'
@@ -816,11 +845,21 @@
         state.innerHTML = '<option value="">—</option>' +
           US_STATES.map(function (st) { return '<option value="' + st.code + '">' + esc(st.name) + ' (' + st.code + ')</option>'; }).join('');
       }
+      const country = document.getElementById('createCountry');
+      if (!country.options.length) country.innerHTML = countryOptionsHtml('US');
+    }
+
+    // El estado solo existe en EE. UU.: con España se oculta y no se pide.
+    function syncCreateState() {
+      const us = document.getElementById('createCountry').value === 'US';
+      document.getElementById('createStateGroup').style.display = us ? '' : 'none';
+      document.getElementById('createCity').placeholder = us ? 'E.g.: Austin' : 'E.g.: Madrid';
     }
 
     function openCreateModal() {
       fillCreateCatalogs();
       document.getElementById('createCompanyForm').reset();
+      syncCreateState();
       document.getElementById('createModal').classList.add('active');
       setTimeout(function () { document.getElementById('createName').focus(); }, 50);
     }
@@ -830,9 +869,11 @@
     function createCompany() {
       const name = document.getElementById('createName').value.trim();
       const city = document.getElementById('createCity').value.trim();
-      const stateCode = document.getElementById('createState').value;
+      const countryCode = document.getElementById('createCountry').value;
+      const stateCode = countryCode === 'US' ? document.getElementById('createState').value : null;
       if (!name) { showToast('The company needs a name', 'error'); return; }
-      if (!city || !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
+      if (!city) { showToast('The company needs a city', 'error'); return; }
+      if (countryCode === 'US' && !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
 
       const relationship = document.getElementById('createRelationType').value;
       const company = {
@@ -840,11 +881,11 @@
         name: name,
         industry: '',
         industryCode: document.getElementById('createIndustry').value || null,
-        location: city + ', ' + stateCode,
+        location: stateCode ? city + ', ' + stateCode : city,
         stateCode: stateCode,
         website: document.getElementById('createWebsite').value.trim() || null,
         phone: document.getElementById('createPhone').value.trim() || null,
-        city: city, state: stateName(stateCode), country: 'United States',
+        city: city, state: stateCode ? stateName(stateCode) : '', country: countryName(countryCode),
         linkedinId: null, indeedId: null, linkedinUrl: null, indeedUrl: null,
         sizeEmployees: Number(document.getElementById('createEmployees').value) || null,
         revenueUsd: Number(document.getElementById('createRevenue').value) || null,
@@ -946,6 +987,7 @@
     // Los filtros de al lado se aplican al elegir.
     function applyQuick(key, value) {
       state.filters[key] = value;
+      if (settleFilters(state.filters)) syncShellPickers();
       state.page = 1;
       render();
     }
@@ -961,10 +1003,20 @@
         onChange: function (v) { applyQuick('position', v); }
       });
 
+      shellPickers.country = renderShellPicker('pickCountry', {
+        icon: SHELL_ICONS.country,
+        allLabel: 'Country',
+        search: false,
+        summary: countrySummary,
+        items: RECORD_COUNTRIES.map(function (x) { return { value: x.code, label: x.name }; }),
+        value: state.filters.country,
+        onChange: function (v) { applyQuick('country', v); }
+      });
+
       shellPickers.state = renderShellPicker('pickState', {
         icon: SHELL_ICONS.location,
-        allLabel: 'All states',
-        plural: 'states',
+        allLabel: 'All US states',
+        plural: 'US states',
         searchPlaceholder: 'Search state or code',
         items: US_STATES.map(function (x) { return { value: x.code, label: x.name, note: x.code }; }),
         value: state.filters.state,
@@ -973,7 +1025,7 @@
     }
 
     function syncShellPickers() {
-      ['position', 'state'].forEach(function (k) {
+      ['position', 'country', 'state'].forEach(function (k) {
         if (shellPickers[k]) shellPickers[k].setValue(state.filters[k]);
       });
     }
@@ -1249,6 +1301,7 @@
       document.getElementById('modalClearAll').onclick = function () { clearFilters(draft); renderModal(); };
       document.getElementById('modalApply').onclick = function () {
         Object.keys(draft).forEach(function (k) { state.filters[k] = draft[k]; });
+        settleFilters(state.filters);
         state.page = 1;
         closeFilterModal();
         syncShellPickers();

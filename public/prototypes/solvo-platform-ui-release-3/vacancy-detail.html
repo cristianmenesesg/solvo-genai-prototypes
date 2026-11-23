@@ -115,9 +115,15 @@
               </div>
             </div>
             <div class="form-row">
-              <div class="form-group">
+              <!-- El estado solo existe en EE. UU.; en España se muestra la ubicación y el país
+                   sigue a la empresa, no se edita en la vacante. -->
+              <div class="form-group" id="editStateGroup">
                 <label class="form-label" for="editState">State code</label>
                 <input type="text" class="form-input" id="editState" placeholder="FL" maxlength="2">
+              </div>
+              <div class="form-group" id="editPlaceGroup" style="display:none;">
+                <label class="form-label" for="editPlace">Location</label>
+                <input type="text" class="form-input" id="editPlace" readonly>
               </div>
               <div class="form-group">
                 <label class="form-check" style="margin-top:26px;">
@@ -289,7 +295,7 @@
         '<div class="vd-company">' +
           '<a href="company-detail.html?id=' + esc(company.id) + '">' + esc(company.name) + '</a>' +
         '</div>' +
-        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(vacancy.location) + ' · ' + esc(modalityLabel(vacancy.workModality)) + '</span></div>' +
+        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(locationLabel(vacancy)) + ' · ' + esc(modalityLabel(vacancy.workModality)) + '</span></div>' +
         '<div class="vd-tags">' + tags + '</div>' +
         '<div class="vd-actions">' +
           '<a class="op-btn-apply" href="' + esc(vacancy.jobUrl) + '" target="_blank" rel="noopener">Open original posting' + ICON.external + '</a>' +
@@ -339,7 +345,7 @@
         specRow('Skills', skills.length
           ? skills.map(function (s) { return '<span class="op-tag">' + esc(s) + '</span>'; }).join(' ')
           : '<em>None extracted</em>') +
-        specRow('Location', esc(vacancy.location) + ' · ' + esc(stateName(vacancy.stateCode))) +
+        specRow('Location', esc(locationDetail(vacancy))) +
         specRow('Job portal', '<span class="op-portal op-portal-' + esc(String(vacancy.sourcePortal || '').toLowerCase()) + '">' + esc(portalLabel(vacancy.sourcePortal)) + '</span>') +
         specRow('Published', esc(formatDate(vacancy.publishedDate)) || '<em>Not stated</em>', 'The date the company published the posting');
 
@@ -447,7 +453,7 @@
         '<dl class="vd-colist">' +
           specRow('Industry', company.industryCode ? esc(getIndustryLabel(company.industryCode)) : '<em>Unclassified</em>') +
           specRow('Employees', company.sizeEmployees ? Number(company.sizeEmployees).toLocaleString('en-US') : '<em>Unknown</em>') +
-          specRow('Location', esc(company.location)) +
+          specRow('Location', esc(locationLabel(company))) +
           specRow('Pipeline', '<span class="pr-stage pr-stage-neutral">' + esc(pipelineLabel(company.pipelineStage)) + '</span>') +
           specRow('Open positions', '<strong>' + pos.total + '</strong> detected · <strong>' + pos.viable + '</strong> remote viable') +
         '</dl>' +
@@ -592,6 +598,10 @@
       document.getElementById('editSalaryMin').value = vacancy.salaryMinUsd || '';
       document.getElementById('editSalaryMax').value = vacancy.salaryMaxUsd || '';
       document.getElementById('editState').value = vacancy.stateCode || '';
+      const us = vacancyCountryCode(vacancy) === 'US';
+      document.getElementById('editStateGroup').style.display = us ? '' : 'none';
+      document.getElementById('editPlaceGroup').style.display = us ? 'none' : '';
+      document.getElementById('editPlace').value = us ? '' : locationLabel(vacancy);
       document.getElementById('editRemoteViable').checked = !!vacancy.remoteViable;
       EDIT_FIELDS.forEach(function (id) { originals[id] = document.getElementById(id).value; });
       originals.remote = !!vacancy.remoteViable;
@@ -634,7 +644,8 @@
       vacancy.description = document.getElementById('editDescription').value;
       vacancy.salaryMinUsd = Number(document.getElementById('editSalaryMin').value) || null;
       vacancy.salaryMaxUsd = Number(document.getElementById('editSalaryMax').value) || null;
-      vacancy.stateCode = document.getElementById('editState').value.trim().toUpperCase();
+      // Una vacante de España no tiene estado: el campo está oculto y no se escribe.
+      if (vacancyCountryCode(vacancy) === 'US') vacancy.stateCode = document.getElementById('editState').value.trim().toUpperCase();
       // Lo editado a mano queda así hasta que algo lo sobreescriba, que es como se comporta
       // el resto de los campos que también escribe el motor.
       vacancy.remoteViable = document.getElementById('editRemoteViable').checked;

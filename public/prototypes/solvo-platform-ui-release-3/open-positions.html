@@ -55,6 +55,7 @@
           <div class="op-quickfilters">
             <div id="pickCompany"></div>
             <div id="pickPosition"></div>
+            <div id="pickCountry"></div>
             <div id="pickState"></div>
           </div>
         </div>
@@ -143,8 +144,8 @@
                      Sumar un criterio = agregar una entrada.
          state       lo aplicado · draft: lo que edita el popup hasta "Show results".
          Barra       búsqueda por texto (espera al botón) + selectores rápidos de
-                     empresa, posición y estado (aplican al instante y escriben el
-                     mismo criterio que el popup).
+                     empresa, posición, país y estado de EE. UU. (aplican al instante
+                     y escriben el mismo criterio que el popup).
          renderCard  una card por vacante: posición del catálogo, salario anual,
                      seniority, idioma, viabilidad, empresa con ICP / tamaño /
                      industria / señales, decisores agrupados por rol.
@@ -280,12 +281,23 @@
         chip: function (v) { return 'Portal: ' + v.map(portalLabel).join(', '); },
         test: function (vac, v) { return v.indexOf(vac.sourcePortal) !== -1; }
       },
+      // País: los dos marcados es el valor neutro. Vacío también lo es, y se asienta en los dos.
       {
-        key: 'state', group: 'Position', label: 'State', type: 'multi', def: [],
-        hint: 'The US state the posting is located in. It is the state, not the city, because the sweep is organised by state.',
+        key: 'country', group: 'Position', label: 'Country', type: 'multi', cols: 1,
+        hint: 'The country of the company that posted the opening.',
+        def: ['US', 'ES'], neutral: ['US', 'ES'],
+        options: RECORD_COUNTRIES.map(function (c) { return { value: c.code, label: c.name }; }),
+        chip: function (v) { return 'Country: ' + v.map(countryName).join(', '); },
+        test: function (vac, v) { return v.indexOf(vacancyCountryCode(vac)) !== -1; }
+      },
+      // Solo recorta las vacantes de EE. UU.: las de España no tienen estado y siguen en la lista
+      // mientras el país las incluya.
+      {
+        key: 'state', group: 'Position', label: 'US states', type: 'multi', def: [],
+        hint: 'The US state of the opening.',
         options: US_STATES.map(function (st) { return { value: st.code, label: st.name, note: st.code }; }),
-        chip: function (v) { return 'State: ' + (v.length <= 3 ? v.join(', ') : v.length); },
-        test: function (vac, v) { return v.indexOf(vac.stateCode) !== -1; }
+        chip: function (v) { return 'US states: ' + (v.length <= 3 ? v.join(', ') : v.length); },
+        test: function (vac, v) { return vacancyCountryCode(vac) !== 'US' || v.indexOf(vac.stateCode) !== -1; }
       },
       {
         key: 'modality', group: 'Position', label: 'Work modality', type: 'multi', def: [],
@@ -355,7 +367,7 @@
         placeholder: 'Search company',
         options: function () {
           return MOCK_COMPANIES.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
-            .map(function (c) { return { value: c.id, label: c.name, note: c.location }; });
+            .map(function (c) { return { value: c.id, label: c.name, note: locationLabel(c) }; });
         },
         chip: function (v) {
           if (v.length === 1) { const c = MOCK_COMPANIES.find(function (x) { return x.id === v[0]; }); return 'Company: ' + (c ? c.name : v[0]); }
@@ -513,7 +525,7 @@
     }
 
     function defaultFor(f) {
-      if (Array.isArray(f.def)) return [];
+      if (Array.isArray(f.def)) return f.def.slice();
       // Un default que es objeto se clona: compartir la referencia haría que limpiar
       // un criterio escribiera sobre el default de la declaración.
       if (f.def && typeof f.def === 'object') return { mode: f.def.mode, roles: [] };
@@ -532,6 +544,7 @@
     // no al valor por defecto, que en varios criterios sí recorta.
     function neutralFor(f) {
       if (f.neutral !== undefined) {
+        if (Array.isArray(f.neutral)) return f.neutral.slice();
         return (f.neutral && typeof f.neutral === 'object') ? { mode: f.neutral.mode, roles: [] } : f.neutral;
       }
       if (Array.isArray(f.def)) return [];
@@ -542,7 +555,19 @@
 
     function clearFilters(target) { visibleFilters().forEach(function (f) { target[f.key] = neutralFor(f); }); }
 
+    // Un criterio con neutro propio que quedó vacío vuelve a su neutro, para que el selector
+    // lo muestre marcado. Devuelve si cambió algo.
+    function settleFilters(target) {
+      let changed = false;
+      visibleFilters().forEach(function (f) {
+        if (Array.isArray(f.neutral) && (!target[f.key] || !target[f.key].length)) { target[f.key] = f.neutral.slice(); changed = true; }
+      });
+      return changed;
+    }
+
     function isNeutral(f, v) {
+      // Un multi con neutro propio (país) no recorta vacío ni con todo marcado.
+      if (Array.isArray(f.neutral)) return !v || !v.length || f.neutral.every(function (x) { return v.indexOf(x) !== -1; });
       if (f.type === 'multi' || f.type === 'search') return !v || !v.length;
       if (f.type === 'text') return !v;
       if (f.type === 'daterange') return !v || v === 'all';
@@ -674,7 +699,7 @@
           '<span class="op-age" title="Detected ' + esc(vac.detectedAt) + '">' + esc(detectedAge(vac)) + '</span>' +
         '</div>' +
         '<div class="op-card-loc">' + ICON_PIN +
-          '<span>' + esc(vac.location) + ' · ' + esc(modalityLabel(vac.workModality)) + '</span>' +
+          '<span>' + esc(locationLabel(vac)) + ' · ' + esc(modalityLabel(vac.workModality)) + '</span>' +
           '<span class="op-portal op-portal-' + esc(String(vac.sourcePortal || '').toLowerCase()) + '" title="Published on ' + esc(portalLabel(vac.sourcePortal)) + '">' + esc(portalLabel(vac.sourcePortal)) + '</span>' +
         '</div>' +
         '<div class="op-tagrow">' + tags + viability + '</div>' +
@@ -867,9 +892,10 @@
       render();
     }
 
-    // Los tres filtros de al lado se aplican al elegir.
+    // Los filtros de al lado se aplican al elegir.
     function applyQuick(key, value) {
       state.filters[key] = value;
+      if (settleFilters(state.filters)) syncShellPickers();
       state.page = 1;
       render();
     }
@@ -879,7 +905,7 @@
         icon: SHELL_ICONS.company,
         placeholder: 'Company',
         items: MOCK_COMPANIES.slice().sort(function (a, b) { return a.name.localeCompare(b.name); })
-          .map(function (c) { return { value: c.id, label: c.name, note: c.location }; }),
+          .map(function (c) { return { value: c.id, label: c.name, note: locationLabel(c) }; }),
         value: state.filters.company,
         onChange: function (v) { applyQuick('company', v); }
       });
@@ -895,10 +921,20 @@
         onChange: function (v) { applyQuick('position', v); }
       });
 
+      shellPickers.country = renderShellPicker('pickCountry', {
+        icon: SHELL_ICONS.country,
+        allLabel: 'Country',
+        search: false,
+        summary: countrySummary,
+        items: RECORD_COUNTRIES.map(function (x) { return { value: x.code, label: x.name }; }),
+        value: state.filters.country,
+        onChange: function (v) { applyQuick('country', v); }
+      });
+
       shellPickers.state = renderShellPicker('pickState', {
         icon: SHELL_ICONS.location,
-        allLabel: 'All states',
-        plural: 'states',
+        allLabel: 'All US states',
+        plural: 'US states',
         searchPlaceholder: 'Search state or code',
         items: US_STATES.map(function (x) { return { value: x.code, label: x.name, note: x.code }; }),
         value: state.filters.state,
@@ -907,7 +943,7 @@
     }
 
     function syncShellPickers() {
-      ['company', 'position', 'state'].forEach(function (k) {
+      ['company', 'position', 'country', 'state'].forEach(function (k) {
         if (shellPickers[k]) shellPickers[k].setValue(state.filters[k]);
       });
     }
@@ -1210,6 +1246,7 @@
       document.getElementById('modalClearAll').onclick = function () { clearFilters(draft); renderModal(); };
       document.getElementById('modalApply').onclick = function () {
         Object.keys(draft).forEach(function (k) { state.filters[k] = draft[k]; });
+        settleFilters(state.filters);
         state.page = 1;
         closeFilterModal();
         syncShellPickers();

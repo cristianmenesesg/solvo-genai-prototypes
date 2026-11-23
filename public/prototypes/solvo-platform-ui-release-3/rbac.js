@@ -19,7 +19,7 @@
    10. POPUPS ............................... asignación, confirmación, exportación, scraping
    11. CSV EXPORT · EMPAQUETADO · COLUMNAS ... contrato de archivos (FSPL-2)
    12. DATE RANGE / MULTI-SELECT / SEARCHBOX . filtros de Release 2, sin uso en Release 3
-   13. RELEASE 3 — Open Positions ........... US_STATES, POSITIONS_CATALOG, LEAD_SIGNALS,
+   13. RELEASE 3 — Open Positions ........... US_STATES, RECORD_COUNTRIES, POSITIONS_CATALOG, LEAD_SIGNALS,
                                               icpTier, ROLE_CODES, nivel de decisión,
                                               EMAIL_VERIFICATION, seeds de calificación,
                                               análisis de contactos y vacantes del barrido
@@ -175,8 +175,9 @@ function getIndustryLabel(code) {
      name                      company.name
      industry                  company.industry — texto crudo de la fuente; no se muestra
      industryCode              company.industry_code (HUSPL-0.1) · null = sin clasificar
-     location                  company.location ("City, ST")
-     stateCode                 company.state_code (HUPEA-0.3)
+     location                  company.location ("City, ST"; en España solo la ciudad)
+     stateCode                 company.state_code (HUPEA-0.3) · null en España
+     country                   company.country — 'United States' | 'Spain'; sin dato = Estados Unidos
      website                   company.website
      linkedinId / indeedId     company.linkedin_id / indeed_id — slug; ver rebuildPortalUrl
      linkedinUrl / indeedUrl   derivado (seedPortalUrls)
@@ -216,7 +217,8 @@ function getIndustryLabel(code) {
                                general-us-openings | current-client-us-openings | on_demand_openings
                                | prospect_engine (el barrido por posición del ICP)
      sourcePortal              source — indeed | linkedin | website | manual
-     stateCode / location      state_code / location
+     stateCode / location      state_code / location · state_code null en España
+     (país)                    derivado: el de su empresa (vacancyCountryCode)
      workModality              work_modality — remote | hybrid | onsite | unknown
      jobUrl                    job_url
      remoteViable              is_remote_viable
@@ -326,6 +328,18 @@ const MOCK_VACANCIES = [
   { id: 'vac-010', title: 'Marketing Coordinator', companyId: 'comp-008', status: 'lost', source: 'general-us-openings', sourcePortal: 'indeed', stateCode: 'CA', location: 'Los Angeles, CA', workModality: 'hybrid', jobUrl: 'https://www.indeed.com/viewjob?jk=5c08a26fb914d773', remoteViable: true, salary: '$55K - $70K', salaryBucket: '50-100', seniorityLevel: 'entry', department: 'Marketing', skills: 'HubSpot, Paid media, Copywriting', description: 'Manage digital marketing campaigns for retail brand.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: 'uuid-staff-011', sdrType: 'inherited' }
 ];
 
+// === EMPRESAS DE ESPAÑA ===
+// La base guarda empresas y vacantes de dos países. Las de España no tienen estado de EE. UU.:
+// `state_code` queda vacío y `location` es solo la ciudad. El país de una vacante es el de su
+// empresa. Se cargan acá, antes de las siembras, para que reciban las mismas fechas,
+// calificación, investigación e historial que el resto.
+MOCK_COMPANIES.push(
+  { id: 'comp-013', name: 'Castellana Asesores', industry: 'Contabilidad', industryCode: 'financial_services', location: 'Madrid', city: 'Madrid', state: '', country: 'Spain', phone: '+34 910 555 210', website: 'https://castellanaasesores.es', linkedinId: 'castellana-asesores', indeedId: 'castellana-asesores', sizeEmployees: 140, lastContactedAt: null, researchedAt: null, salesPitch: 'Advisory firm with 2,300 SME clients; the monthly close and payroll runs are the bottleneck.', pipelineStage: 'engaged', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-001', sdrId: 'uuid-staff-006', coordinatorId: 'uuid-staff-004', contactsCount: 2 },
+  { id: 'comp-014', name: 'Clínicas Dentales Mediterránea', industry: 'Salud', industryCode: 'healthcare', location: 'Barcelona', city: 'Barcelona', state: '', country: 'Spain', phone: '+34 930 555 482', website: 'https://dentalmediterranea.es', linkedinId: 'clinicas-dentales-mediterranea', indeedId: null, sizeEmployees: 260, lastContactedAt: null, researchedAt: null, salesPitch: 'Dental group opening clinics in Catalonia; patient booking and call handling scale with every site.', pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-002', sdrId: 'uuid-staff-007', coordinatorId: 'uuid-staff-008', contactsCount: 1 },
+  { id: 'comp-015', name: 'Transportes Turia', industry: 'Transporte y logística', industryCode: 'logistics_transportation', location: 'Valencia', city: 'Valencia', state: '', country: 'Spain', phone: '+34 960 555 317', website: 'https://transportesturia.es', linkedinId: 'transportes-turia', indeedId: 'transportes-turia', sizeEmployees: 480, lastContactedAt: null, researchedAt: null, salesPitch: null, pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: 'uuid-staff-003', sdrId: null, coordinatorId: 'uuid-staff-004', contactsCount: 1 },
+  { id: 'comp-016', name: 'Nubalia Software', industry: 'Software', industryCode: 'technology_software', location: 'Madrid', city: 'Madrid', state: '', country: 'Spain', phone: '+34 910 555 904', website: 'https://nubalia.io', linkedinId: 'nubalia-software', indeedId: null, sizeEmployees: 95, lastContactedAt: null, researchedAt: null, salesPitch: null, pipelineStage: 'prospecting', type: 'prospect', remoteViable: true, comercialId: null, sdrId: 'uuid-staff-006', coordinatorId: null, contactsCount: 2 }
+);
+
 // === ON-DEMAND OPENINGS (ODO) ===
 // Seed last_scraped_at per company (base for the cooldown). null = never scraped on-demand.
 (function seedOdState() {
@@ -359,7 +373,8 @@ MOCK_VACANCIES.push(
   function daysAgo(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
   var companyOffsets = {
     'comp-001': 120, 'comp-002': 96, 'comp-003': 74, 'comp-004': 41, 'comp-005': 63,
-    'comp-006': 133, 'comp-007': 17, 'comp-008': 52, 'comp-009': 9, 'comp-010': 148, 'comp-011': 3
+    'comp-006': 133, 'comp-007': 17, 'comp-008': 52, 'comp-009': 9, 'comp-010': 148, 'comp-011': 3,
+    'comp-013': 34, 'comp-014': 22, 'comp-015': 15, 'comp-016': 6
   };
   MOCK_COMPANIES.forEach(function (c) {
     c.createdAt = daysAgo(companyOffsets[c.id] !== undefined ? companyOffsets[c.id] : 90);
@@ -378,7 +393,7 @@ MOCK_VACANCIES.push(
     v.publishedDate = daysAgo(o[1]);
   });
   // Última vez contactada de las empresas que ya entraron en conversación.
-  var contactedOffsets = { 'comp-001': 7, 'comp-002': 21, 'comp-003': 14, 'comp-005': 45, 'comp-006': 5, 'comp-010': 112 };
+  var contactedOffsets = { 'comp-001': 7, 'comp-002': 21, 'comp-003': 14, 'comp-005': 45, 'comp-006': 5, 'comp-010': 112, 'comp-013': 9 };
   MOCK_COMPANIES.forEach(function (c) {
     if (contactedOffsets[c.id] !== undefined) c.lastContactedAt = daysAgo(contactedOffsets[c.id]) + ' 09:30';
   });
@@ -1587,7 +1602,7 @@ const EXPORT_COLUMNS_PROSPECTS = [
 ];
 
 const EXPORT_COLUMNS_VACANCIES = [
-  'Empresa', 'Cargo', 'Posición del catálogo', 'Correos de decisores', 'Ubicación', 'Modalidad', 'Enlace al aviso',
+  'Empresa', 'Cargo', 'Posición del catálogo', 'Correos de decisores', 'Ubicación', 'País', 'Modalidad', 'Enlace al aviso',
   'Comercial asignado', 'SDR asignado', 'Coordinador/supervisor asignado', 'Estado comercial',
   'Viable en remoto', 'Confianza', 'Última vez contactada', 'Detectada', 'Seniority', 'Departamento',
   'Skills', 'Idiomas', 'Rango salarial', 'Publicada', 'Fuente',
@@ -1662,7 +1677,7 @@ function buildProspectExportRows(companies, listName) {
       'Company Address': c.address || ctx['Ubicación'] || '',
       'Company City': c.city || '',
       'Company State': c.state || '',
-      'Company Country': c.country || '',
+      'Company Country': countryName(companyCountryCode(c)),
       'Company Phone': c.phone || '',
       'Detected Positions_genai': companyPositionTitles(c.id),
       'ICP Score_genai': ctx['Puntaje ICP'],
@@ -1739,6 +1754,7 @@ function buildVacancyExportRows(vacancies) {
       'Posición del catálogo': v.positionId ? getPositionName(v.positionId) : '',
       'Correos de decisores': decisionMakerEmails(v.companyId),
       'Ubicación': v.location,
+      'País': countryName(vacancyCountryCode(v)),
       // Modalidad, seniority, portal y pipeline se entregan con su etiqueta, como Industria:
       // la celda la lee una persona. Relación y Etapa del embudo sí van crudas, por contrato.
       'Modalidad': modalityLabel(v.workModality),
@@ -1827,6 +1843,59 @@ function formatStamp(value) {
 function stateName(code) {
   const s = US_STATES.find(function (x) { return x.code === code; });
   return s ? s.name : (code || '');
+}
+
+// === PAÍS DEL REGISTRO ===
+// La empresa guarda `country`; la vacante toma el de su empresa. Lo que no lo tiene es de
+// Estados Unidos, que es todo lo que existía antes de España. Solo las de EE. UU. tienen estado.
+const RECORD_COUNTRIES = [
+  { code: 'US', name: 'United States' },
+  { code: 'ES', name: 'Spain' }
+];
+
+function countryName(code) {
+  const c = RECORD_COUNTRIES.find(function (x) { return x.code === code; });
+  return c ? c.name : '';
+}
+
+function companyCountryCode(company) {
+  return company && company.country === 'Spain' ? 'ES' : 'US';
+}
+
+function vacancyCountryCode(vacancy) {
+  const company = vacancy && MOCK_COMPANIES.find(function (c) { return c.id === vacancy.companyId; });
+  return companyCountryCode(company);
+}
+
+// Una vacante se reconoce por su `companyId`; una empresa, por no tenerlo.
+function recordCountryCode(record) {
+  return record && record.companyId ? vacancyCountryCode(record) : companyCountryCode(record);
+}
+
+// "Miami, FL" en EE. UU.; "Madrid · Spain" en España.
+function locationLabel(record) {
+  const loc = (record && record.location) || '';
+  return recordCountryCode(record) === 'ES' ? (loc ? loc + ' · ' : '') + 'Spain' : loc;
+}
+
+// La línea de ubicación del detalle: "Miami, FL · Florida" o "Madrid · Spain".
+function locationDetail(record) {
+  if (recordCountryCode(record) === 'ES') return locationLabel(record);
+  return ((record && record.location) || '') + ' · ' + stateName(record && record.stateCode);
+}
+
+// Opciones del selector de país de los formularios de empresa.
+function countryOptionsHtml(selected) {
+  return RECORD_COUNTRIES.map(function (c) {
+    return '<option value="' + c.code + '"' + (c.code === selected ? ' selected' : '') + '>' + c.name + '</option>';
+  }).join('');
+}
+
+// Selector de país de los listados: los dos marcados se leen "US + Spain".
+function countrySummary(value) {
+  const v = value || [];
+  if (!v.length || v.length === RECORD_COUNTRIES.length) return 'US + Spain';
+  return v.map(countryName).join(', ');
 }
 
 // === CATÁLOGO DE POSICIONES (public.positions_catalog · HUPEA-0.1 / 0.4) ===
@@ -2167,7 +2236,11 @@ function salaryLabel(vacancy) {
     'comp-008': { stateCode: 'CA', icpScore: 29, leadSignals: ['multiple_openings'], leadSummary: 'National retailer with high-volume seasonal customer care hiring. At 5,400 employees it runs its own recruiting and BPO contracts, which makes displacement unlikely.' },
     'comp-009': { stateCode: 'CA', icpScore: 71, leadSignals: ['size_fit', 'growth', 'ai_adoption'], leadSummary: 'B2B SaaS extending support coverage to US business hours as its account base grows. 210 employees, no offshore presence yet, and already routing tier-1 through automation.' },
     'comp-010': { stateCode: 'PA', icpScore: 33, leadSignals: [], leadSummary: 'Pharmaceutical lab whose open roles are lab- and site-bound. The cycle closed without moving forward; revisit next budget season.' },
-    'comp-011': { stateCode: 'FL', icpScore: null, leadSignals: null, leadSummary: null }
+    'comp-011': { stateCode: 'FL', icpScore: null, leadSignals: null, leadSummary: null },
+    'comp-013': { stateCode: null, icpScore: 79, leadSignals: ['repeated_posting', 'multiple_openings', 'size_fit'], leadSummary: 'Madrid advisory firm keeping the books and payroll of 2,300 small businesses. Reposts accounting and payroll roles every quarter and runs the close in A3, with no presence required.' },
+    'comp-014': { stateCode: null, icpScore: 63, leadSignals: ['multiple_openings', 'new_location'], leadSummary: 'Dental group with 18 clinics in Catalonia, opening three more this year. Hiring patient booking and bilingual call handling in volume; front-desk roles stay on site.' },
+    'comp-015': { stateCode: null, icpScore: 52, leadSignals: ['repeated_posting'], leadSummary: 'Regional road haulier based at the Port of Valencia. Traffic and billing administration is steady back-office demand; drivers and warehouse roles are out of scope.' },
+    'comp-016': { stateCode: null, icpScore: 82, leadSignals: ['size_fit', 'recent_funding', 'urgent_hiring'], leadSummary: 'Madrid SaaS company, 95 people, closed a seed extension this year. Hiring support and sales roles at once with immediate start and no internal recruiting team.' }
   };
   MOCK_COMPANIES.forEach(function (c) {
     const row = q[c.id] || {};
@@ -2213,7 +2286,14 @@ MOCK_COMPANIES.push({
 // nunca se escribe a mano, se calcula con la banda de tamaño de la empresa.
 MOCK_CONTACTS.push(
   { id: 'ct-009', companyId: 'comp-003', fullName: 'Miguel Santos', position: 'Director of Operations', department: 'operations', seniorityLevel: 'director', email: 'm.santos@finserve.com', phone: null, directPhone: '+1 312-555-0310', linkedinUrl: 'https://linkedin.com/in/miguelsantos' },
-  { id: 'ct-022', companyId: 'comp-009', fullName: 'Daniel Okafor', position: 'Chief Operating Officer', department: 'operations', seniorityLevel: 'c_suite', email: 'd.okafor@cloudbridge.io', phone: '+1 415-555-0902', linkedinUrl: 'https://linkedin.com/in/danielokafor' }
+  { id: 'ct-022', companyId: 'comp-009', fullName: 'Daniel Okafor', position: 'Chief Operating Officer', department: 'operations', seniorityLevel: 'c_suite', email: 'd.okafor@cloudbridge.io', phone: '+1 415-555-0902', linkedinUrl: 'https://linkedin.com/in/danielokafor' },
+  // Empresas de España: el cargo llega en español y el análisis lo normaliza al mismo código de rol.
+  { id: 'ct-030', companyId: 'comp-013', fullName: 'Lucía Fernández Ruiz', position: 'Directora General', department: 'executive', seniorityLevel: 'c_suite', email: 'l.fernandez@castellanaasesores.es', phone: '+34 655 210 481', linkedinUrl: 'https://linkedin.com/in/luciafernandezruiz' },
+  { id: 'ct-031', companyId: 'comp-013', fullName: 'Javier Moreno Gil', position: 'Director Financiero', department: 'finance', seniorityLevel: 'c_suite', email: 'j.moreno@castellanaasesores.es', phone: '+34 655 210 532', linkedinUrl: 'https://linkedin.com/in/javiermorenogil' },
+  { id: 'ct-032', companyId: 'comp-014', fullName: 'Marta Puig Serra', position: 'CEO', department: 'executive', seniorityLevel: 'c_suite', email: 'marta.puig@dentalmediterranea.es', phone: '+34 622 318 940', linkedinUrl: 'https://linkedin.com/in/martapuigserra' },
+  { id: 'ct-033', companyId: 'comp-015', fullName: 'Vicente Llorens Martí', position: 'Director General', department: 'executive', seniorityLevel: 'c_suite', email: 'v.llorens@transportesturia.es', phone: '+34 677 905 213', linkedinUrl: 'https://linkedin.com/in/vicentellorens' },
+  { id: 'ct-034', companyId: 'comp-016', fullName: 'Pablo Navarro Díaz', position: 'CEO y cofundador', department: 'executive', seniorityLevel: 'founder', email: 'pablo@nubalia.io', phone: '+34 611 447 082', linkedinUrl: 'https://linkedin.com/in/pablonavarrodiaz' },
+  { id: 'ct-035', companyId: 'comp-016', fullName: 'Elena Ortiz Blanco', position: 'Directora Comercial', department: 'sales', seniorityLevel: 'director', email: 'elena@nubalia.io', phone: '+34 611 447 195', linkedinUrl: 'https://linkedin.com/in/elenaortizblanco' }
 );
 
 (function seedContactAnalysis() {
@@ -2228,7 +2308,13 @@ MOCK_CONTACTS.push(
     'ct-014': { roleCode: 'vp_sales', emailVerification: 'risky', interestSignal: null },
     'ct-021': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Talks about extending support coverage to US business hours.' },
     'ct-022': { roleCode: 'coo', emailVerification: 'valid', interestSignal: null },
-    'ct-023': { roleCode: 'chairman', emailVerification: 'unknown', interestSignal: null }
+    'ct-023': { roleCode: 'chairman', emailVerification: 'unknown', interestSignal: null },
+    'ct-030': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Writes about bringing payroll and close work in-house without adding office space.' },
+    'ct-031': { roleCode: 'cfo', emailVerification: 'valid', interestSignal: null },
+    'ct-032': { roleCode: 'ceo', emailVerification: 'accept_all', interestSignal: 'Announced three new clinics opening in Girona and Tarragona.' },
+    'ct-033': { roleCode: 'ceo', emailVerification: 'unknown', interestSignal: null },
+    'ct-034': { roleCode: 'ceo', emailVerification: 'valid', interestSignal: 'Founder hiring support and sales after the funding round.' },
+    'ct-035': { roleCode: 'vp_sales', emailVerification: 'valid', interestSignal: null }
   };
   MOCK_CONTACTS.forEach(function (ct) {
     const row = a[ct.id];
@@ -2375,7 +2461,15 @@ const VACANCY_SIGNAL_SEED = {
   'vac-036': ['back_office'],
   'vac-037': ['back_office', 'company_growing'],
   'vac-038': ['client_facing', 'multiple_openings'],
-  'vac-039': ['client_facing', 'no_visa_sponsorship']
+  'vac-039': ['client_facing', 'no_visa_sponsorship'],
+  'vac-040': ['back_office', 'multiple_openings'],
+  'vac-041': ['back_office'],
+  'vac-042': ['back_office'],
+  'vac-043': ['client_facing', 'shift_work'],
+  'vac-044': ['client_facing', 'company_growing'],
+  'vac-045': ['client_facing'],
+  'vac-046': ['back_office'],
+  'vac-047': ['client_facing', 'urgent_hire']
 };
 
 // Se llama después de cada tanda de vacantes: el bloque de Companies agrega más abajo las que
@@ -2572,9 +2666,23 @@ MOCK_VACANCIES.push(
   { id: 'vac-039', title: 'IT Support Specialist', companyId: 'comp-001', positionId: 'pos-11', searchText: 'it support specialist', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: 'FL', location: 'Miami, FL', workModality: 'onsite', jobUrl: 'https://www.indeed.com/viewjob?jk=c20f84a17be3d95', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Ticket triage and remote sessions cover the work; on-site time is for hardware handover only.'], salaryMinUsd: 49920, salaryMaxUsd: 58240, languages: ['English'], seniorityLevel: 'mid', department: 'IT', skills: 'Zendesk, Intune, Windows, Networking', description: 'Second-line support for internal users, owning escalations from the help desk.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' }
 );
 
+// Vacantes de España: las trae el mismo barrido por posición con los términos en español.
+// Sin `state_code`; el salario se persiste convertido a USD anual y el aviso lo da en euros.
+MOCK_VACANCIES.push(
+  { id: 'vac-040', title: 'Administrativo contable', companyId: 'comp-013', positionId: 'pos-01', searchText: 'administrativo contable', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: null, location: 'Madrid', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=4c1e9a7b20d35f86', remoteViable: true, aiConfidence: 0.93, aiReasons: ['Bookkeeping, VAT filings and bank reconciliation run in A3 and Excel; nothing requires presence.'], salaryMinUsd: 24840, salaryMaxUsd: 28080, languages: ['Spanish'], seniorityLevel: 'mid', department: 'Finance', skills: 'A3, IVA, Conciliación bancaria', description: 'Contabilidad de una cartera de 60 pymes: asientos, conciliaciones bancarias y modelos trimestrales de IVA. Salario de 23.000 a 26.000 € brutos al año.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-041', title: 'Técnico de nóminas', companyId: 'comp-013', positionId: 'pos-09', searchText: 'técnico de nóminas', status: 'contacted', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: null, location: 'Madrid', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3913204518', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Payroll, social security filings and contracts are processed in A3Nom and SILTRA.'], salaryMinUsd: 28080, salaryMaxUsd: 32400, languages: ['Spanish'], seniorityLevel: 'mid', department: 'HR', skills: 'A3Nom, Seguridad Social, SILTRA', description: 'Gestión de nóminas, seguros sociales y contratos para 180 empresas clientes. Salario de 26.000 a 30.000 € al año, dos días de teletrabajo.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-042', title: 'Auxiliar administrativo', companyId: 'comp-013', positionId: 'pos-06', searchText: 'auxiliar administrativo', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: null, location: 'Madrid', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=9a03d5f1c7e24b68', remoteViable: true, aiConfidence: 0.95, aiReasons: ['Document intake and data entry into the accounting system; digital filing only.'], salaryMinUsd: 19440, salaryMaxUsd: 21600, languages: ['Spanish'], seniorityLevel: 'entry', department: 'Operations', skills: 'Grabación de datos, Excel, Archivo digital', description: 'Registro de facturas y documentación de clientes, archivo digital y apoyo al cierre mensual. Salario de 18.000 a 20.000 € al año.', comercialId: 'uuid-staff-001', comercialType: 'inherited', sdrId: 'uuid-staff-006', sdrType: 'inherited' },
+  { id: 'vac-043', title: 'Teleoperador bilingüe', companyId: 'comp-014', positionId: 'pos-04', searchText: 'teleoperador bilingüe', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: null, location: 'Barcelona', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=1f6b0e93a2c84d57', remoteViable: true, aiConfidence: 0.94, aiReasons: ['Inbound patient calls and booking are handled by phone and in the clinic CRM.'], salaryMinUsd: 20520, salaryMaxUsd: 23760, languages: ['Spanish', 'English'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Atención telefónica, Inglés B2, CRM', description: 'Atención a pacientes en español e inglés: citas, presupuestos y seguimiento de tratamientos. Turnos de mañana o tarde, de 19.000 a 22.000 € al año.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-044', title: 'Coordinador de citas', companyId: 'comp-014', positionId: 'pos-10', searchText: 'coordinador de citas', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: null, location: 'Barcelona', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3913577402', remoteViable: true, aiConfidence: 0.89, aiReasons: ['Agenda planning across clinics is done in the booking system and by phone.'], salaryMinUsd: 22680, salaryMaxUsd: 25920, languages: ['Spanish'], seniorityLevel: 'mid', department: 'Operations', skills: 'Gestión de agendas, Software clínico, Atención al paciente', description: 'Coordinar las agendas de 18 clínicas y reprogramar citas ante ausencias de los especialistas. Salario de 21.000 a 24.000 € al año.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-045', title: 'Recepcionista de clínica', companyId: 'comp-014', positionId: 'pos-10', searchText: 'recepcionista', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: null, location: 'Barcelona', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=6d27c4a0e9b153f8', remoteViable: false, aiConfidence: 0.84, aiReasons: ['Front-desk role: patient check-in and payments at the clinic require presence.'], salaryMinUsd: 18360, salaryMaxUsd: 20520, languages: ['Spanish'], seniorityLevel: 'entry', department: 'Customer Service', skills: 'Recepción, Cobros, Atención al paciente', description: 'Recepción de pacientes, cobros y gestión de la sala de espera en la clínica de Gràcia. Salario de 17.000 a 19.000 € al año.', comercialId: 'uuid-staff-002', comercialType: 'inherited', sdrId: 'uuid-staff-007', sdrType: 'inherited' },
+  { id: 'vac-046', title: 'Administrativo de tráfico', companyId: 'comp-015', positionId: 'pos-15', searchText: 'administrativo de tráfico', status: 'detected', source: 'prospect_engine', sourcePortal: 'indeed', stateCode: null, location: 'Valencia', workModality: 'onsite', jobUrl: 'https://es.indeed.com/viewjob?jk=b83e1d6f40a2c975', remoteViable: true, aiConfidence: 0.86, aiReasons: ['Load planning and carrier communication are done in the TMS and by phone.'], salaryMinUsd: 23760, salaryMaxUsd: 27000, languages: ['Spanish'], seniorityLevel: 'mid', department: 'Operations', skills: 'TMS, Planificación de rutas, Facturación', description: 'Planificación de cargas y rutas de contenedores, comunicación con conductores y facturación de servicios. Salario de 22.000 a 25.000 € al año.', comercialId: 'uuid-staff-003', comercialType: 'inherited', sdrId: null, sdrType: null },
+  { id: 'vac-047', title: 'Técnico de soporte informático', companyId: 'comp-016', positionId: 'pos-11', searchText: 'técnico de soporte informático', status: 'detected', source: 'prospect_engine', sourcePortal: 'linkedin', stateCode: null, location: 'Madrid', workModality: 'hybrid', jobUrl: 'https://www.linkedin.com/jobs/view/3913890265', remoteViable: true, aiConfidence: 0.9, aiReasons: ['Customer tickets and remote sessions over the helpdesk; no on-site visits.'], salaryMinUsd: 25920, salaryMaxUsd: 30240, languages: ['Spanish', 'English'], seniorityLevel: 'entry', department: 'IT', skills: 'Helpdesk, Jira Service Management, Inglés B2', description: 'Soporte de primer nivel a clientes de la plataforma en España y Portugal. Incorporación inmediata, de 24.000 a 28.000 € al año.', comercialId: null, comercialType: null, sdrId: 'uuid-staff-006', sdrType: 'inherited' }
+);
+
 (function seedRelease3Extra() {
   function daysAgoStr(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
-  const offsets = { 'vac-033': [2, 4], 'vac-034': [4, 6], 'vac-035': [8, 10], 'vac-036': [1, 2], 'vac-037': [5, 7], 'vac-038': [10, 12], 'vac-039': [3, 5] };
+  const offsets = { 'vac-033': [2, 4], 'vac-034': [4, 6], 'vac-035': [8, 10], 'vac-036': [1, 2], 'vac-037': [5, 7], 'vac-038': [10, 12], 'vac-039': [3, 5],
+    'vac-040': [1, 2], 'vac-041': [3, 5], 'vac-042': [2, 3], 'vac-043': [1, 1], 'vac-044': [4, 6], 'vac-045': [6, 8], 'vac-046': [2, 4], 'vac-047': [1, 2] };
   MOCK_VACANCIES.forEach(function (v) {
     if (!offsets[v.id]) return;
     v.detectedAt = daysAgoStr(offsets[v.id][0]);
@@ -2586,6 +2694,8 @@ MOCK_VACANCIES.push(
   applyVacancySignals();
   // El conteo de contactos y la marca de principal se rehacen con el universo completo.
   MOCK_COMPANIES.forEach(function (c) { c.contactsCount = getContactsForCompany(c.id).length; });
+  // Todo lo anterior a España es de Estados Unidos.
+  MOCK_COMPANIES.forEach(function (c) { if (!c.country) c.country = 'United States'; });
 })();
 
 // === SELECTOR DE LA BARRA DE BÚSQUEDA (Release 3) ===
@@ -2625,6 +2735,8 @@ function renderShellPicker(containerId, options) {
   const list = document.getElementById(containerId + '-list');
 
   function label() {
+    // `summary(value)` reemplaza la lectura por defecto cuando el selector la necesita propia.
+    if (opts.summary) { valueEl.textContent = opts.summary(value.slice()); return; }
     if (!value.length) { valueEl.textContent = opts.allLabel || 'All'; return; }
     if (value.length === 1) {
       const hit = items.find(function (i) { return i.value === value[0]; });
@@ -2760,7 +2872,8 @@ function renderShellSearchbox(containerId, options) {
 const SHELL_ICONS = {
   company: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path></svg>',
   position: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="6" rx="2"></rect><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
-  location: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>'
+  location: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>',
+  country: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>'
 };
 
 // Cuántos decisores tiene guardados la empresa. Cuenta personas, no roles: dos
@@ -2945,8 +3058,8 @@ const MOCK_EXECUTION_LOGS = [];
       workflowName: portal === 'LinkedIn' ? '01_SWEEP_LINKEDIN' : '01_SWEEP_INDEED',
       nodeName: 'Enqueue vacancy',
       message: v.searchText
-        ? 'Queued from the ' + portal + ' sweep of ' + city + ', ' + v.stateCode + ', searching “' + v.searchText + '”.'
-        : 'Queued from the ' + portal + ' sweep of ' + city + ', ' + v.stateCode + '.',
+        ? 'Queued from the ' + portal + ' sweep of ' + city + ', ' + (v.stateCode || countryName(vacancyCountryCode(v))) + ', searching “' + v.searchText + '”.'
+        : 'Queued from the ' + portal + ' sweep of ' + city + ', ' + (v.stateCode || countryName(vacancyCountryCode(v))) + '.',
       createdAt: minutesBefore(at, 7)
     });
 
@@ -3055,7 +3168,19 @@ function getVacancyActivity(vacancyId) {
     'comp-011': null,
     'comp-012': { revenue: 24000000, founded: 2013, apollo: 'd47f1c90a3b6',
       value: 'Regional staffing agency placing administrative, clerical and light industrial workers on temporary and temp-to-hire contracts across the Southeast.',
-      strengths: 'Local branch network and same-week placement on clerical roles. Competes directly with Solvo on the same buyers.' }
+      strengths: 'Local branch network and same-week placement on clerical roles. Competes directly with Solvo on the same buyers.' },
+    'comp-013': { revenue: 14000000, founded: 2004, apollo: 'e81c3a5d907f',
+      value: 'Accounting, tax and payroll advisory for small and mid-sized businesses in the Madrid region, billed as a monthly retainer per client.',
+      strengths: 'Long client tenure and a partner on every account. Bookkeeping, VAT filings and payroll run in A3, which makes the work location-independent.' },
+    'comp-014': { revenue: 31000000, founded: 2012, apollo: 'a5f20c8e6b13',
+      value: 'Network of 18 dental clinics across Catalonia offering general dentistry, orthodontics and implants, with central booking and patient financing.',
+      strengths: 'Fast expansion through new openings and a central call centre that books for every clinic. Bilingual patients in coastal areas.' },
+    'comp-015': { revenue: 46000000, founded: 1988, apollo: '7d93b1e04c2a',
+      value: 'Road haulage and container drayage out of the Port of Valencia, with its own fleet and a bonded warehouse.',
+      strengths: 'Port concession and long-standing shipping line contracts. Traffic planning and billing are handled by an in-house office team.' },
+    'comp-016': { revenue: 7000000, founded: 2019, apollo: 'c06e4f9a2b81',
+      value: 'Field-service management software for installers and maintenance companies in Spain and Portugal, sold per technician.',
+      strengths: 'Seed-funded, 95 people, growing customer base in Iberia. Support and sales are covered by the founders’ network, with no recruiting function.' }
   };
 
   MOCK_COMPANIES.forEach(function (c) {

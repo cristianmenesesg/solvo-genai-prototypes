@@ -124,13 +124,18 @@
               <select class="form-select" id="editIndustry"></select>
             </div>
 
-            <!-- `location` es "City, ST" y `state_code` va aparte: dos campos, no un texto libre. -->
+            <!-- En EE. UU. `location` es "City, ST" y `state_code` va aparte; en España no hay
+                 estado y `location` es solo la ciudad. -->
+            <div class="form-group">
+              <label class="form-label" for="editCountry">Country *</label>
+              <select class="form-select" id="editCountry" onchange="syncEditState()"></select>
+            </div>
             <div class="form-row">
               <div class="form-group" style="flex:2;">
                 <label class="form-label">City *</label>
                 <input type="text" class="form-input" id="editCity" placeholder="E.g.: Miami" required>
               </div>
-              <div class="form-group" style="flex:1;">
+              <div class="form-group" style="flex:1;" id="editStateGroup">
                 <label class="form-label">State *</label>
                 <select class="form-select" id="editState"></select>
               </div>
@@ -516,7 +521,7 @@
             : '') +
         '</div>' +
         '<h2 class="vd-title" id="companyName">' + esc(company.name) + '</h2>' +
-        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(company.location) + '</span></div>' +
+        '<div class="vd-loc">' + ICON.pin + '<span>' + esc(locationLabel(company)) + '</span></div>' +
         '<div class="vd-tags">' + tags + '</div>' +
         (links.length
           ? '<div class="vd-links" style="margin-top:var(--space-3);padding-top:0;border-top:0;">' +
@@ -552,7 +557,7 @@
           : '<em>Unknown</em>', 'A range from the source is stored as its midpoint') +
         specRow('Revenue', revenueLabel(company) ? esc(revenueLabel(company)) + ' / year' : '<em>Unknown</em>') +
         specRow('Founded', company.yearFounded ? String(company.yearFounded) : '<em>Unknown</em>') +
-        specRow('Location', esc(company.location) + ' · ' + esc(stateName(company.stateCode))) +
+        specRow('Location', esc(locationDetail(company))) +
         specRow('Website', company.website
           ? '<a href="' + esc(company.website) + '" target="_blank" rel="noopener">' + esc(String(company.website).replace(/^https?:\/\//, '')) + '</a>'
           : '<em>Unknown</em>') +
@@ -890,6 +895,15 @@
         US_STATES.map(function (st) {
           return '<option value="' + st.code + '"' + (st.code === company.stateCode ? ' selected' : '') + '>' + esc(st.name) + ' (' + st.code + ')</option>';
         }).join('');
+      document.getElementById('editCountry').innerHTML = countryOptionsHtml(companyCountryCode(company));
+      syncEditState();
+    }
+
+    // El estado solo existe en EE. UU.: con España se oculta y no se pide.
+    function syncEditState() {
+      const us = document.getElementById('editCountry').value === 'US';
+      document.getElementById('editStateGroup').style.display = us ? '' : 'none';
+      document.getElementById('editCity').placeholder = us ? 'E.g.: Miami' : 'E.g.: Madrid';
     }
 
     function openEditModal() {
@@ -900,7 +914,7 @@
       document.getElementById('editEmployees').value = company.sizeEmployees || '';
       document.getElementById('editRevenue').value = company.revenueUsd || '';
       document.getElementById('editYearFounded').value = company.yearFounded || '';
-      // `location` llega como "City, ST": el campo de ciudad muestra solo la ciudad.
+      // `location` llega como "City, ST" (o solo la ciudad en España): el campo muestra la ciudad.
       document.getElementById('editCity').value = String(company.location || '').replace(/,\s*[A-Z]{2}$/, '');
       document.getElementById('editRelationType').value = company.type;
       document.getElementById('editModal').classList.add('active');
@@ -911,6 +925,11 @@
     function saveCompany() {
       const name = document.getElementById('editName').value.trim();
       if (!name) { showToast('The company needs a name', 'error'); return; }
+      const countryCode = document.getElementById('editCountry').value;
+      const city = document.getElementById('editCity').value.trim();
+      const stateCode = countryCode === 'US' ? document.getElementById('editState').value : null;
+      if (!city) { showToast('The company needs a city', 'error'); return; }
+      if (countryCode === 'US' && !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
       company.name = name;
       company.website = document.getElementById('editWebsite').value.trim() || null;
       company.phone = document.getElementById('editPhone').value.trim() || null;
@@ -918,13 +937,11 @@
       company.sizeEmployees = Number(document.getElementById('editEmployees').value) || null;
       company.revenueUsd = Number(document.getElementById('editRevenue').value) || null;
       company.yearFounded = Number(document.getElementById('editYearFounded').value) || null;
-      const city = document.getElementById('editCity').value.trim();
-      const stateCode = document.getElementById('editState').value;
-      if (!city || !stateCode) { showToast('The company needs a city and a state', 'error'); return; }
-      company.location = city + ', ' + stateCode;
+      company.location = stateCode ? city + ', ' + stateCode : city;
       // Además de `location`, la empresa guarda ciudad, estado y país por separado: es lo que
-      // exporta el archivo de importación a Apollo.
-      company.city = city; company.state = stateName(stateCode); company.country = 'United States';
+      // exporta el archivo de importación a Apollo. El país elegido se conserva tal cual.
+      company.city = city; company.state = stateCode ? stateName(stateCode) : '';
+      company.country = countryName(countryCode);
       company.stateCode = stateCode;
       company.type = document.getElementById('editRelationType').value;
 

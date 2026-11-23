@@ -69,6 +69,8 @@ Open Positions y Companies comparten el patrón; cada uno declara su propio `FIL
   test(record, value) }         // predicado client-side; en la plataforma es un parámetro del endpoint
 ```
 
+**País**: Open Positions y Companies filtran por país (`United States`, `Spain`; los dos marcados por defecto, "US + Spain") desde la barra, el popup y su chip; el país de la vacante es el de su empresa, el filtro *US states* solo recorta las de EE. UU. y el archivo de posiciones suma la columna `País`.
+
 `state` es lo aplicado; `draft` lo que edita el popup hasta "Show results". La búsqueda por texto espera al botón; los selectores rápidos y los chips aplican al instante y escriben el mismo criterio que el popup. `isNeutral(f, v)` decide si un criterio se evalúa; `defaultFor` / `neutralFor` clonan objetos para no compartir referencias.
 
 ## Exportación
