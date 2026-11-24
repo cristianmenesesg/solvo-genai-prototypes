@@ -3781,9 +3781,11 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 }
 
 /* ---- Grilla de cards ----------------------------------------------------- */
+/* Como máximo 4 columnas: cada card mide al menos 288px o un cuarto del ancho
+   (descontando los 3 espacios entre columnas), lo que sea mayor. */
 .op-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(max(288px, calc((100% - 3 * var(--space-4)) / 4)), 1fr));
   gap: var(--space-4);
   align-items: start;
 }
