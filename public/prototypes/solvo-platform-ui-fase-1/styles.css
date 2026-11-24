@@ -6018,3 +6018,49 @@ html:has(.assign-popup-overlay) {
   z-index: 30;
 }
 
+
+/* ==== Tarjetas parejas y acentos naranja (referencia de la plataforma en producción) ====
+   · Todas las tarjetas de Open Positions miden lo mismo: filas de igual alto, etiquetas en
+     dos líneas fijas y la empresa y los decisores al fondo.
+   · Acentos: naranja Solvo para lo que destaca (posición, señales que apuran, ICP, decisor de
+     nivel 1); gris para lo descriptivo; azul Solvo para los enlaces (título y empresa).
+   · Al pasar el mouse, la tarjeta se marca con borde y sombra azul. */
+.op-grid { align-items: stretch; grid-auto-rows: 1fr; }
+.op-card { height: 100%; }
+.op-card-title {
+  color: var(--color-secondary);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.op-card-title:hover { color: var(--color-secondary-600); }
+.op-tagrow { height: 56px; overflow: hidden; align-content: flex-start; }
+.op-card-desc { min-height: calc(2 * 1.5em); }
+.op-company { margin-top: auto; }
+.op-cname { color: var(--color-secondary); }
+
+.op-tag, .op-cbadge, .op-dm-badge, .op-portal { border-radius: 999px; }
+.op-tag-position {
+  background: var(--color-primary-50); border-color: var(--color-primary-200);
+  color: var(--color-primary-700); font-weight: var(--font-medium);
+}
+.op-tag-lang { background: var(--bg-surface); border-color: var(--border-default); color: var(--text-secondary); }
+.op-tag-signal.is-hot,
+.op-cbadge-signal.is-hot {
+  background: var(--color-primary); border-color: var(--color-primary); box-shadow: none;
+  color: #fff; font-weight: var(--font-semibold);
+}
+.op-cbadge-icp { background: var(--color-primary); color: #fff; box-shadow: none; font-weight: var(--font-semibold); }
+.op-cbadge-icp-mod {
+  background: var(--color-primary-50); color: var(--color-primary-700);
+  box-shadow: inset 0 0 0 1px var(--color-primary-200); font-weight: var(--font-semibold);
+}
+.op-dm-badge { background: transparent; border-color: var(--border-default); color: var(--text-secondary); }
+.op-dm-badge.is-level1 {
+  background: var(--color-primary-50); border-color: var(--color-primary-200); color: var(--color-primary-700);
+}
+
+.op-card { transition: border-color .15s ease, box-shadow .15s ease; }
+.op-card:hover {
+  border-color: var(--color-secondary-300);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-secondary) 24%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .op-card { transition: none; } }

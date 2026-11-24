@@ -926,7 +926,37 @@ function pushFocusTrail(el) {
   FOCUS_TRAIL.push(el);
   if (FOCUS_TRAIL.length > 8) FOCUS_TRAIL.shift();
 }
-document.addEventListener('focusin', function (e) { pushFocusTrail(e.target); }, true);
+document.addEventListener('focusin', function (e) {
+  pushFocusTrail(e.target);
+  const layer = e.target.closest && e.target.closest(LAYER_SELECTOR);
+  layerFocusKey = layer ? { layer: layer, key: focusKeyOf(e.target) } : null;
+}, true);
+
+// Cómo reencontrar un control después de que la capa re-pinta su contenido: por id, por
+// nombre y valor (casillas) o por sus atributos data-*.
+let layerFocusKey = null;
+function focusKeyOf(el) {
+  if (el.id) return '#' + CSS.escape(el.id);
+  if ((el.type === 'checkbox' || el.type === 'radio') && el.name) return 'input[name="' + CSS.escape(el.name) + '"][value="' + CSS.escape(el.value) + '"]';
+  const data = Array.prototype.filter.call(el.attributes || [], function (a) { return a.name.indexOf('data-') === 0; });
+  return data.length ? el.tagName.toLowerCase() + data.map(function (a) { return '[' + a.name + '="' + CSS.escape(a.value) + '"]'; }).join('') : null;
+}
+// Si un re-pintado dentro de la capa de arriba se llevó el elemento con foco, el foco vuelve
+// a su equivalente nuevo o, si no lo hay, al diálogo: nunca queda en la página de atrás.
+function recoverLayerFocus(records) {
+  if (document.activeElement && document.activeElement !== document.body) return;
+  const top = openLayers().pop();
+  if (!top || !records.some(function (r) { return r.type === 'childList' && top.contains(r.target); })) return;
+  let target = null;
+  if (layerFocusKey && layerFocusKey.layer === top && layerFocusKey.key) {
+    try { target = top.querySelector(layerFocusKey.key); } catch (err) { target = null; }
+  }
+  if (!target || !canTakeFocus(target)) {
+    target = top.querySelector(LAYER_BOX) || top;
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+  }
+  target.focus({ preventScroll: true });
+}
 document.addEventListener('pointerdown', function (e) {
   pushFocusTrail(e.target.closest && e.target.closest('button, a[href], [role="button"], [tabindex], input, select, textarea, summary'));
 }, true);
@@ -996,6 +1026,7 @@ new MutationObserver(function (records) {
     return !!c && (c.contains('modal-overlay') || c.contains('op-modal'));
   });
   if (relevant) syncLayers();
+  else recoverLayerFocus(records);
 }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 
 // === TOAST NOTIFICATIONS ===
@@ -3777,4 +3808,31 @@ const MOCK_BOOKING_FUNNEL = (function buildBookingFunnel() {
 
 function bookingFunnel(days) {
   return MOCK_BOOKING_FUNNEL.slice(Math.max(0, MOCK_BOOKING_FUNNEL.length - days));
+}
+
+// Fila de etiquetas de las tarjetas de Open Positions: tiene un alto fijo de dos líneas.
+// Lo que no cabe se quita desde el final (la posición del catálogo, la primera, siempre
+// queda) y se suma al chip «+N», que lleva en su título lo que oculta. Al cambiar el ancho
+// de la ventana se vuelve a pintar el listado para recalcular.
+function fitTagRows(root) {
+  (root || document).querySelectorAll('.op-tagrow').forEach(function (row) {
+    if (row.scrollHeight <= row.clientHeight + 1) return;
+    var more = row.querySelector('.op-tag-more');
+    var base = more ? Number((more.textContent.match(/\d+/) || [0])[0]) : 0;
+    var prevTitle = more && more.title ? more.title : '';
+    if (!more) { more = document.createElement('span'); more.className = 'op-tag op-tag-more'; row.appendChild(more); }
+    var items = Array.prototype.filter.call(row.children, function (t) { return t !== more; });
+    var hidden = [];
+    for (var i = items.length - 1; i > 0 && row.scrollHeight > row.clientHeight + 1; i--) {
+      hidden.unshift(items[i].textContent);
+      items[i].remove();
+      more.textContent = '+' + (base + hidden.length);
+    }
+    more.title = hidden.concat(prevTitle ? [prevTitle] : []).join(', ');
+  });
+  if (!fitTagRows.watching && typeof window.render === 'function') {
+    fitTagRows.watching = true;
+    var t;
+    window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(window.render, 150); });
+  }
 }

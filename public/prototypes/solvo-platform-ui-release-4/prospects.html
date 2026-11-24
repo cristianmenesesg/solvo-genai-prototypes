@@ -658,7 +658,7 @@
       if (tier === 'excluded') return '';
       if (tier === 'pending') return '<span class="op-cbadge" title="Not qualified yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
-      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100 · ' + esc(countryName(c.countryCode)) + ' ICP">ICP ' + Math.round(c.icpScore) + '</span>';
+      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100 · ' + esc(countryName(c.countryCode)) + ' ICP">ICP ' + Math.round(c.icpScore) + (tier === 'strong' ? ' Strong' : tier === 'moderate' ? ' Moderate' : '') + '</span>';
     }
 
     // Estado de la empresa y, cuando no es empleador directo, su tipo.

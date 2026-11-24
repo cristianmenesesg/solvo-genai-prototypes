@@ -632,7 +632,7 @@
       }
       if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
-      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
+      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + (tier === 'strong' ? ' Strong' : tier === 'moderate' ? ' Moderate' : '') + '</span>';
     }
 
     // Un decisor por badge: rol, nombre y la inicial del apellido. El tono lo da la

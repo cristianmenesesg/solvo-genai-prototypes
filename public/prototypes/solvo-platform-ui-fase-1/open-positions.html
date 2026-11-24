@@ -635,7 +635,7 @@
       }
       if (tier === 'pending') return '<span class="op-cbadge" title="The company has not been researched yet">Not scored</span>';
       const cls = tier === 'strong' ? ' op-cbadge-icp' : tier === 'moderate' ? ' op-cbadge-icp-mod' : '';
-      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + '</span>';
+      return '<span class="op-cbadge' + cls + '" title="ICP score ' + c.icpScore + ' of 100">ICP ' + Math.round(c.icpScore) + (tier === 'strong' ? ' Strong' : tier === 'moderate' ? ' Moderate' : '') + '</span>';
     }
 
     function renderCard(vac) {
@@ -658,7 +658,7 @@
         tags += '<span class="op-tag op-tag-signal is-' + vacancySignalTone(x) + '">' + esc(vacancySignalLabel(x)) + '</span>';
       });
       if (posted.length > shownSignals.length) {
-        tags += '<span class="op-tag" title="' + esc(posted.filter(function (x) { return shownSignals.indexOf(x) === -1; }).map(vacancySignalLabel).join(', ')) +
+        tags += '<span class="op-tag op-tag-more" title="' + esc(posted.filter(function (x) { return shownSignals.indexOf(x) === -1; }).map(vacancySignalLabel).join(', ')) +
           '">+' + (posted.length - shownSignals.length) + '</span>';
       }
 
@@ -696,7 +696,7 @@
               const ver = EMAIL_VERIFICATION[p.emailVerification] || EMAIL_VERIFICATION.unknown;
               return p.fullName + ' — ' + ver.label.toLowerCase();
             }).join(' · ');
-            return '<span class="op-dm-badge' + (d.level === 1 ? ' is-level1' : '') + '" title="Level ' + d.level + ' · ' + esc(who) + '">' + esc(d.label) + '</span>';
+            return '<span class="op-dm-badge' + (d.level === 1 ? ' is-level1' : '') + '" title="Level ' + d.level + ' · ' + esc(who) + '">' + esc(d.label) + ' Level ' + d.level + '</span>';
           }).join('') +
           (dms.length > 3 ? '<span class="op-dm-badge" title="' + esc(dms.slice(3).map(function (d) { return d.label; }).join(', ')) + '">+' + (dms.length - 3) + '</span>' : '') +
           (otherContacts ? '<span class="op-dm-badge" title="Contacts saved before the profile analysis; they have no role or decision level.">' +
@@ -755,6 +755,7 @@
         : '<div class="op-empty"><h3>No positions match this search</h3>' +
           '<p>' + emptyStateHint() + '</p>' +
           '<button class="btn btn-secondary" onclick="clearEverything()">Clear search and filters</button></div>';
+      fitTagRows(grid);
 
       const exportBtn = document.getElementById('exportBtn');
       exportBtn.style.display = canExport() ? '' : 'none';
