@@ -936,12 +936,15 @@ tr:last-child td {
   transition: transform 0.2s;
 }
 
+/* Abierto queda sin transformación: un transform haría del modal la referencia de las
+   listas fijas (floatList) y el recorte de su overflow las volvería a cortar. */
 .modal-overlay.active .modal {
-  transform: scale(1);
+  transform: none;
 }
 
 .modal-header {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   padding: var(--spacing-lg);
@@ -974,13 +977,18 @@ tr:last-child td {
   color: var(--text-primary);
 }
 
+/* El cuerpo es lo único que se desplaza: cabecera y botones quedan siempre a la vista */
 .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: var(--spacing-lg);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-footer {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: flex-end;
   gap: var(--spacing-md);
@@ -2358,17 +2366,23 @@ tr:last-child td {
   background: rgba(33,33,33,0.6); z-index: 1000;
   display: flex; align-items: center; justify-content: center;
 }
+/* Mismo armado que .modal: alto tope, cabecera y botones fijos y un solo cuerpo que se
+   desplaza. Sin tope, un popup largo crecía más que la pantalla y perdía los botones. */
 .assign-popup {
   background: var(--bg-surface-raised); border: 1px solid var(--border-color);
   border-radius: var(--radius-panel); width: 480px; max-width: 95vw;
+  max-height: 90vh; display: flex; flex-direction: column;
   box-shadow: var(--shadow-xl); overflow: hidden;
 }
+.assign-popup:focus, .modal:focus { outline: none; }
 .assign-popup-header {
+  flex: 0 0 auto;
   padding: 16px 20px; border-bottom: 1px solid var(--border-color);
   display: flex; align-items: center; justify-content: space-between;
 }
 .assign-popup-header h3 { font-family: var(--font-heading); font-size: 15px; font-weight: 600; color: var(--text-strong); }
-.assign-popup-body { padding: 20px; }
+.assign-popup-body { flex: 1 1 auto; min-height: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }
+.assign-popup > .modal-footer { flex: 0 0 auto; }
 .assign-popup-row {
   margin-bottom: 16px;
 }
@@ -2402,6 +2416,7 @@ tr:last-child td {
   background: var(--bg-tertiary); color: var(--text-muted); margin-left: auto;
 }
 .assign-popup-footer {
+  flex: 0 0 auto;
   padding: 12px 20px; border-top: 1px solid var(--border-color);
   display: flex; justify-content: flex-end; gap: 8px;
 }
@@ -3578,6 +3593,9 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 .op-states.open .op-states-panel { display: block; }
 
+/* Cerca del borde de abajo el panel se abre hacia arriba (fitBarDropdown en rbac.js) */
+.op-states.is-up .op-states-panel { top: auto; bottom: calc(100% + var(--space-2)); }
+
 .op-states-search {
   width: 100%;
   height: var(--control-h);
@@ -3593,7 +3611,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 .op-states-search:focus { outline: none; border-color: var(--border-focus); box-shadow: var(--focus-ring); }
 
-.op-states-list { max-height: 260px; overflow-y: auto; }
+.op-states-list { max-height: 260px; overflow-y: auto; overscroll-behavior: contain; }
 
 .op-states-list label {
   display: flex;
@@ -4026,12 +4044,15 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 .op-modal.open { display: flex; }
 
+/* Alto fijo (hasta el 90 % de la ventana): el listado de criterios es largo y el popup no
+   cambia de tamaño —ni mueve sus botones— al pasar de un criterio a otro. */
 .op-modal-box {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 940px;
-  max-height: min(680px, calc(100vh - var(--space-12)));
+  height: min(880px, 90vh);
+  max-height: calc(100vh - var(--space-12));
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-panel);
@@ -4041,6 +4062,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 .op-modal-head {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -4089,6 +4111,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 .op-modal-rail {
   flex: 0 0 248px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-3) var(--space-2);
   border-right: 1px solid var(--border-default);
   background: var(--bg-muted);
@@ -4140,7 +4163,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   font-weight: var(--font-semibold);
 }
 
-.op-modal-panel { flex: 1 1 auto; overflow-y: auto; padding: var(--space-5) var(--space-6); }
+.op-modal-panel { flex: 1 1 auto; min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-5) var(--space-6); }
 
 .op-panel-head {
   display: flex;
@@ -4220,6 +4243,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 .op-modal-foot {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -4227,7 +4251,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   background: var(--bg-surface);
 }
 
-.op-foot-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); flex: 1 1 auto; max-height: 64px; overflow-y: auto; }
+.op-foot-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); flex: 1 1 auto; max-height: 64px; overflow-y: auto; overscroll-behavior: contain; }
 
 .op-foot-chip {
   display: inline-flex;
@@ -4275,7 +4299,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 /* ---- Adaptación a pantallas angostas ------------------------------------- */
 @media (max-width: 900px) {
   .op-modal { padding: 0; }
-  .op-modal-box { max-width: 100%; max-height: 100vh; height: 100vh; border-radius: 0; }
+  .op-modal-box { max-width: 100%; height: 100vh; height: 100dvh; max-height: none; border-radius: 0; }
   .op-modal-body { flex-direction: column; }
   .op-modal-rail { flex: 0 0 auto; display: flex; gap: var(--space-1); overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border-default); }
   .op-rail-group { display: none; }
@@ -4389,6 +4413,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   z-index: 5;
   max-height: 260px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-card);
   background: var(--bg-surface-raised);
@@ -4718,6 +4743,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   max-width: 340px;
   max-height: 280px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   z-index: 60;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-card);
@@ -4726,6 +4752,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 }
 
 .op-sbox-suggest.open { display: block; }
+.op-sbox.is-up .op-sbox-suggest { top: auto; bottom: calc(100% + var(--space-1)); }
 
 @media (max-width: 860px) {
   .op-quickfilters { margin-left: 0; width: 100%; }
@@ -5932,12 +5959,27 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   .st-navitem { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
   .page-content .st-toolbar .form-select, .page-content .st-toolbar .st-search, .page-content .st-toolbar #termCountry { flex: 1 1 100%; width: 100%; max-width: none; }
 
-  /* Modales: caben en la pantalla, con su cuerpo desplazable */
-  .modal-overlay { padding: var(--space-3); }
-  .modal { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+  /* Modales y popups: hoja inferior a lo ancho, que llega hasta arriba cuando el contenido
+     lo pide. Cabecera y botones quedan fijos; se desplaza solo el cuerpo. */
+  .modal-overlay, .assign-popup-overlay { padding: var(--space-3) 0 0; align-items: flex-end; }
+  .modal, .assign-popup {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: calc(100vh - var(--space-3));
+    max-height: calc(100dvh - var(--space-3));
+    border-bottom: 0;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  }
   .modal-header { padding: var(--space-4); }
   .modal-body { padding: var(--space-4); }
   .modal-footer { flex-wrap: wrap; padding: var(--space-3) var(--space-4); }
+  .assign-popup-header { padding: var(--space-3) var(--space-4); }
+  .assign-popup-body { padding: var(--space-4); }
+  .assign-popup-footer { flex-wrap: wrap; padding: var(--space-3) var(--space-4); }
+  .modal-footer, .assign-popup-footer { padding-bottom: max(var(--space-3), env(safe-area-inset-bottom)); }
+
+  /* La hoja de un filtro de la barra deja quieta la página de atrás */
+  html:has(.op-states.open) { overflow: hidden; }
 
   /* Objetivos táctiles de 36 px como mínimo */
   .btn, .op-actionbtn, .op-scrapebtn, .op-filters-open, .pagination-btn, .op-pag-btn, .kp-toggle,
@@ -5952,3 +5994,27 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 @media (prefers-reduced-motion: reduce) {
   .sidebar, .sidebar-overlay { transition: none; }
 }
+
+/* ===========================================
+   Capas: modales, popups y listas desplegables
+   =========================================== */
+
+/* Con una capa abierta la página de atrás queda quieta: ni la rueda ni el dedo la
+   desplazan, tampoco al llegar al final del cuerpo del modal ni sobre el fondo oscuro.
+   Vuelve sola al cerrarse la capa (botón, Esc o clic en el fondo). El canal de la barra
+   de desplazamiento se conserva para que el contenido no cambie de ancho. */
+html:has(.modal-overlay.active),
+html:has(.op-modal.open),
+html:has(.assign-popup-overlay) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+/* Lista de sugerencias de un campo dentro de un modal: floatList() (rbac.js) la fija a la
+   ventana, debajo del campo o encima si abajo no cabe, para que el cuerpo desplazable del
+   modal no la recorte. Tiene su propio alto tope y se desplaza adentro. */
+.float-list {
+  overscroll-behavior: contain;
+  z-index: 30;
+}
+

@@ -148,7 +148,6 @@
 .f1-citylist-item.is-off .f1-cityname { color: var(--text-muted); }
 .f1-citylist-empty { padding: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); }
 /* ---- Modal genérico de configuración ------------------------------------------ */
-.f1-modal .modal-body { max-height: min(72vh, 760px); overflow-y: auto; }
 .f1-modal .form-group { margin-bottom: 0; }
 .f1-modal .form-label { margin-bottom: var(--space-1); }
 .f1-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-1) var(--space-3); }

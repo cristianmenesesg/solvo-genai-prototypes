@@ -1108,7 +1108,21 @@
       document.getElementById('psTerms').innerHTML = posTermsHtml();
       if (focusCode) { const i = document.getElementById('psNew_' + focusCode); if (i) i.focus(); }
     }
-    function posToggle(code) { posOpen[code] = !posOpen[code]; refreshPosTerms(); }
+    // El acordeón se re-pinta: el foco sigue en la cabecera del país y, al abrirlo, su grupo
+    // queda a la vista dentro del cuerpo del modal (que es lo único que se desplaza).
+    function posToggle(code) {
+      posOpen[code] = !posOpen[code];
+      refreshPosTerms();
+      const head = document.querySelector('#psTerms [onclick="posToggle(\'' + code + '\')"]');
+      if (!head) return;
+      head.focus({ preventScroll: true });
+      if (posOpen[code]) revealInModalBody(head.parentElement);
+    }
+    function revealInModalBody(el) {
+      const body = document.getElementById('cfgModalBody');
+      const b = body.getBoundingClientRect(), r = el.getBoundingClientRect();
+      if (r.bottom > b.bottom) body.scrollTop += Math.min(r.bottom - b.bottom + 12, Math.max(0, r.top - b.top - 12));
+    }
     function addPosTerm(code) {
       const input = document.getElementById('psNew_' + code);
       const text = (input ? input.value : '').trim().replace(/\s+/g, ' ').toLowerCase();

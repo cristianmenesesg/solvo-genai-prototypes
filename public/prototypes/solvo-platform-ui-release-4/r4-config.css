@@ -370,7 +370,6 @@ button.r4-citylist-item:focus-visible { outline: none; box-shadow: var(--focus-r
 .r4-reviewactions { margin-left: auto; display: flex; gap: var(--space-1); flex-wrap: wrap; }
 
 /* ---- Modal genérico de configuración ------------------------------------------ */
-.r4-modal .modal-body { max-height: min(72vh, 760px); overflow-y: auto; }
 .r4-modal .form-group, #trgPanel .form-group, #rulesMount .form-group { margin-bottom: 0; }
 .r4-modal .form-label, #trgPanel .form-label, #rulesMount .form-label { margin-bottom: var(--space-1); }
 .r4-checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-1) var(--space-3); }

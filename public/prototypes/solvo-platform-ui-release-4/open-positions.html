@@ -1293,7 +1293,22 @@
       pickFocus = null;
       document.getElementById('filterModal').classList.add('open');
       renderModal();
+      document.getElementById('modalPanel').scrollTop = 0;
+      showActiveCriterion();
       document.querySelector('.op-modal-box').focus();
+    }
+
+    // El criterio activo a la vista en el listado de criterios (columna en escritorio,
+    // tira horizontal en teléfono), por ejemplo al abrir el popup desde un chip.
+    function showActiveCriterion() {
+      const rail = document.getElementById('modalRail');
+      const on = rail.querySelector('.op-rail-item.is-active');
+      if (!on) return;
+      const rr = rail.getBoundingClientRect(), ir = on.getBoundingClientRect();
+      if (ir.top < rr.top) rail.scrollTop -= rr.top - ir.top + 8;
+      else if (ir.bottom > rr.bottom) rail.scrollTop += ir.bottom - rr.bottom + 8;
+      if (ir.left < rr.left) rail.scrollLeft -= rr.left - ir.left + 8;
+      else if (ir.right > rr.right) rail.scrollLeft += ir.right - rr.right + 8;
     }
 
     function closeFilterModal() {
@@ -1333,7 +1348,16 @@
       });
       document.getElementById('modalRail').innerHTML = rail;
       document.querySelectorAll('[data-cat]').forEach(function (b) {
-        b.onclick = function () { activeCategory = b.dataset.cat; renderModal(); };
+        // Otro criterio arranca arriba de su panel, no en el desplazamiento del anterior.
+        b.onclick = function () {
+          const changed = activeCategory !== b.dataset.cat;
+          activeCategory = b.dataset.cat;
+          renderModal();
+          if (changed) { document.getElementById('modalPanel').scrollTop = 0; showActiveCriterion(); }
+          // El listado se re-pinta: el foco sigue en el criterio elegido
+          const again = document.querySelector('[data-cat="' + activeCategory + '"]');
+          if (again) again.focus({ preventScroll: true });
+        };
       });
     }
 
@@ -1530,6 +1554,8 @@
             }).join('')
           : '<div class="op-hint" style="padding:var(--space-3);">Nobody else matches &ldquo;' + esc(pickQuery[f.key]) + '&rdquo;.</div>';
         results.classList.add('open');
+        // Flota sobre el panel (floatList, rbac.js): el desplazamiento del panel no la recorta.
+        floatList(input, results, { close: function () { results.classList.remove('open'); } });
       }
 
       pickedBox.innerHTML = picked.length

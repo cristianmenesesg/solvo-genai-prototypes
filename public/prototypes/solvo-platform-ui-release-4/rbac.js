@@ -728,6 +728,261 @@ function closeSidebar() {
 }
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSidebar(); });
 
+// === CAPAS: MODALES, POPUPS Y LISTAS DESPLEGABLES ===
+// Comportamiento común a todas las capas, sin depender del código de cada página:
+//  · Esc cierra solo la capa de arriba: primero una lista abierta (sugerencias de un campo
+//    dentro de un modal o un filtro de la barra), después el modal o popup.
+//  · Al abrirse una capa el foco entra en su primer campo —o en el diálogo, en pantallas
+//    táctiles, para no levantar el teclado—; al cerrarse vuelve al botón que la abrió.
+//  · floatList() saca la lista de sugerencias de un campo del recorte del cuerpo del modal.
+//  · fitBarDropdown() abre hacia arriba, o con menos alto, un desplegable de la barra que no
+//    cabe debajo.
+// El bloqueo del desplazamiento de la página de atrás es CSS (styles.css, html:has(...)).
+const LAYER_SELECTOR = '.modal-overlay.active, .op-modal.open, .assign-popup-overlay';
+const LAYER_BOX = '.modal, .op-modal-box, .assign-popup';
+
+// Capas abiertas de abajo hacia arriba: por z-index y, a igual z-index, por orden en el documento.
+function openLayers() {
+  return Array.prototype.slice.call(document.querySelectorAll(LAYER_SELECTOR)).sort(function (a, b) {
+    const za = parseInt(getComputedStyle(a).zIndex, 10) || 0, zb = parseInt(getComputedStyle(b).zIndex, 10) || 0;
+    if (za !== zb) return za - zb;
+    return (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
+  });
+}
+
+function isShown(el) {
+  return !!el && el.isConnected && !el.hidden && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+}
+
+// ---- Listas flotantes dentro de modales -----------------------------------------
+// La lista queda fija a la ventana con la posición del campo: no la recorta el overflow del
+// cuerpo del modal. Se abre hacia arriba si abajo no cabe, ajusta su alto al espacio que hay
+// y sigue al campo cuando se desplaza el cuerpo o cambia la ventana. Si el campo sale de la
+// vista de su contenedor, la lista se esconde hasta que vuelva.
+// options: { close() } — cómo se cierra la lista (Esc); por defecto, `hidden`.
+const FLOAT_LISTS = [];
+
+function floatList(anchor, list, options) {
+  if (!anchor || !list) return null;
+  // Fuera del orden de Tab: a las opciones se llega con las flechas desde el campo.
+  if (!list.hasAttribute('tabindex')) list.setAttribute('tabindex', '-1');
+  for (let i = FLOAT_LISTS.length - 1; i >= 0; i--) {
+    const e = FLOAT_LISTS[i];
+    if (e.list === list || !e.list.isConnected || !e.anchor.isConnected) FLOAT_LISTS.splice(i, 1);
+  }
+  if (!list.dataset.floatMax) list.dataset.floatMax = parseFloat(getComputedStyle(list).maxHeight) || 280;
+  const entry = { anchor: anchor, list: list, close: options && options.close };
+  list.classList.add('float-list');
+  FLOAT_LISTS.push(entry);
+  placeFloatList(entry);
+  return entry;
+}
+
+// Área visible del contenedor desplazable más cercano del campo (o la ventana).
+function scrollViewOf(el) {
+  let top = 0, bottom = window.innerHeight;
+  for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(a).overflowY)) {
+      const r = a.getBoundingClientRect();
+      top = Math.max(top, r.top); bottom = Math.min(bottom, r.bottom);
+      break;
+    }
+  }
+  return { top: top, bottom: bottom };
+}
+
+function placeFloatList(entry) {
+  const list = entry.list, anchor = entry.anchor;
+  if (!list.isConnected || list.hidden || getComputedStyle(list).display === 'none' || !anchor.isConnected) return;
+  const r = anchor.getBoundingClientRect();
+  const vh = window.innerHeight, vw = document.documentElement.clientWidth;
+  const gap = 4, edge = 8, max = Number(list.dataset.floatMax) || 280;
+  const view = scrollViewOf(anchor);
+  list.style.visibility = (r.bottom <= view.top + 4 || r.top >= view.bottom - 4) ? 'hidden' : '';
+  const natural = Math.min(max, list.scrollHeight + 2);
+  const below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
+  const up = below < natural && above > below;
+  const room = up ? above : below;
+  list.style.position = 'fixed';
+  list.style.zIndex = '30';
+  list.style.right = 'auto';
+  list.style.margin = '0';
+  list.style.width = Math.round(r.width) + 'px';
+  list.style.left = Math.round(Math.max(edge, Math.min(r.left, vw - edge - r.width))) + 'px';
+  list.style.maxHeight = Math.round(Math.max(Math.min(natural, 120), Math.min(max, room))) + 'px';
+  if (up) { list.style.top = 'auto'; list.style.bottom = Math.round(vh - r.top + gap) + 'px'; }
+  else { list.style.bottom = 'auto'; list.style.top = Math.round(r.bottom + gap) + 'px'; }
+  list.classList.toggle('is-up', up);
+}
+
+function placeFloatLists() { FLOAT_LISTS.forEach(placeFloatList); }
+
+// La opción activa (flechas del teclado) siempre a la vista dentro de su lista.
+function keepOptionVisible(list, option) {
+  if (!list || !option) return;
+  const top = option.offsetTop, bottom = top + option.offsetHeight;
+  if (top < list.scrollTop) list.scrollTop = top;
+  else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+}
+
+function closeFloatList(entry) {
+  if (entry.close) entry.close();
+  else entry.list.hidden = true;
+}
+
+window.addEventListener('resize', function () { placeFloatLists(); fitOpenBarDropdowns(); });
+document.addEventListener('scroll', function (e) {
+  // El desplazamiento dentro de la propia lista no la recoloca.
+  if (FLOAT_LISTS.length && !FLOAT_LISTS.some(function (x) { return x.list === e.target || (e.target.nodeType === 1 && x.list.contains(e.target)); })) placeFloatLists();
+  if (e.target === document) fitOpenBarDropdowns();
+}, true);
+
+// ---- Desplegables de la barra (filtros rápidos) -----------------------------------
+// En escritorio el panel cuelga del botón: si abajo no cabe y arriba hay más lugar se abre
+// hacia arriba, y la lista toma el alto que quede. En teléfono es una hoja inferior (CSS).
+function fitBarDropdown(wrap, panel, list) {
+  if (!wrap || !panel) return;
+  wrap.classList.remove('is-up');
+  if (list) list.style.maxHeight = '';
+  if (!isShown(panel) || getComputedStyle(panel).position === 'fixed') return;
+  const r = wrap.getBoundingClientRect(), vh = window.innerHeight, edge = 8, gap = 8;
+  const below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
+  const h = panel.offsetHeight;
+  if (h <= below) return;
+  const up = above > below;
+  if (up) wrap.classList.add('is-up');
+  if (list) {
+    const room = (up ? above : below) - (h - list.offsetHeight);
+    const cap = parseFloat(getComputedStyle(list).maxHeight) || list.offsetHeight;
+    list.style.maxHeight = Math.max(120, Math.min(cap, room)) + 'px';
+  }
+}
+const BAR_DROPDOWNS = [];
+// d: { wrap, panel, list, isOpen(), close(focusToggle) } — Esc y el ajuste al desplazar la página.
+function registerBarDropdown(d) {
+  for (let i = BAR_DROPDOWNS.length - 1; i >= 0; i--) {
+    if (BAR_DROPDOWNS[i].wrap === d.wrap || !BAR_DROPDOWNS[i].wrap.isConnected) BAR_DROPDOWNS.splice(i, 1);
+  }
+  BAR_DROPDOWNS.push(d);
+}
+function fitOpenBarDropdowns() {
+  BAR_DROPDOWNS.forEach(function (d) { if (d.isOpen()) fitBarDropdown(d.wrap, d.panel, d.list); });
+}
+
+// ---- Esc: se cierra la capa de arriba ------------------------------------------------
+function closeLayer(layer) {
+  const btn = layer.querySelector('.modal-close, .op-modal-close, [data-close], .assign-popup-header button');
+  if (btn) btn.click();
+  else if (layer.classList.contains('assign-popup-overlay')) layer.remove();
+  else layer.classList.remove('active', 'open');
+}
+
+window.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape' || e.defaultPrevented) return;
+  const layers = openLayers();
+  const top = layers[layers.length - 1] || null;
+  // 1) Una lista abierta dentro de la capa de arriba (o en la página, sin capas)
+  const lists = FLOAT_LISTS.filter(function (x) { return isShown(x.list) && (!top || top.contains(x.list)); });
+  if (lists.length) {
+    closeFloatList(lists[lists.length - 1]);
+    e.preventDefault(); e.stopImmediatePropagation();
+    return;
+  }
+  if (!top) {
+    // 2) Un filtro de la barra abierto
+    const bar = BAR_DROPDOWNS.filter(function (d) { return d.isOpen(); });
+    if (bar.length) {
+      bar[bar.length - 1].close(true);
+      e.preventDefault(); e.stopImmediatePropagation();
+    }
+    return;
+  }
+  // 3) El modal o popup de arriba
+  closeLayer(top);
+  e.preventDefault(); e.stopImmediatePropagation();
+}, true);
+
+// ---- Foco al abrir y al cerrar -------------------------------------------------------
+// Últimos elementos con foco o pulsados: el disparador de una capa es el más reciente que
+// no está dentro de ella (la propia capa suele mover el foco adentro antes de enterarnos).
+const FOCUS_TRAIL = [];
+function pushFocusTrail(el) {
+  if (!el || el === document.body || FOCUS_TRAIL[FOCUS_TRAIL.length - 1] === el) return;
+  FOCUS_TRAIL.push(el);
+  if (FOCUS_TRAIL.length > 8) FOCUS_TRAIL.shift();
+}
+document.addEventListener('focusin', function (e) { pushFocusTrail(e.target); }, true);
+document.addEventListener('pointerdown', function (e) {
+  pushFocusTrail(e.target.closest && e.target.closest('button, a[href], [role="button"], [tabindex], input, select, textarea, summary'));
+}, true);
+function triggerOf(layer) {
+  for (let i = FOCUS_TRAIL.length - 1; i >= 0; i--) if (!layer.contains(FOCUS_TRAIL[i])) return FOCUS_TRAIL[i];
+  return null;
+}
+
+function canTakeFocus(el) {
+  if (!el || !el.isConnected || el.disabled || !el.getClientRects().length) return false;
+  if (getComputedStyle(el).visibility === 'hidden') return false;
+  const layer = el.closest('.modal-overlay, .op-modal, .assign-popup-overlay');
+  return !layer || layer.matches(LAYER_SELECTOR);
+}
+
+function focusIntoLayer(layer, tries) {
+  if (!layer.isConnected || !layer.matches(LAYER_SELECTOR) || layer.contains(document.activeElement)) return;
+  const box = layer.querySelector(LAYER_BOX) || layer;
+  if (!box.getAttribute('role') && !layer.getAttribute('role')) { box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); }
+  const touch = window.matchMedia && window.matchMedia('(hover: none)').matches;
+  let target = null;
+  if (!touch) {
+    target = Array.prototype.find.call(box.querySelectorAll('input, select, textarea'), function (el) {
+      return !el.readOnly && !el.disabled && ['hidden', 'checkbox', 'radio', 'file', 'button', 'submit'].indexOf(el.type) === -1 &&
+        el.getAttribute('role') !== 'combobox' && el.getClientRects().length > 0 && !el.closest('[hidden]');
+    }) || null;
+  }
+  if (!target) {
+    if (!box.hasAttribute('tabindex')) box.setAttribute('tabindex', '-1');
+    target = box;
+  }
+  target.focus({ preventScroll: true });
+  // .modal-overlay entra con una transición de visibilidad: mientras dura, el foco no entra.
+  if (document.activeElement !== target && (tries || 0) < 12) setTimeout(function () { focusIntoLayer(layer, (tries || 0) + 1); }, 40);
+}
+
+const LAYER_STATE = new Map();   // capa abierta → { returnTo, returnId }
+function syncLayers() {
+  const now = openLayers();
+  const closedReturn = new Map();
+  LAYER_STATE.forEach(function (st, layer) {
+    if (now.indexOf(layer) !== -1) return;
+    LAYER_STATE.delete(layer);
+    closedReturn.set(layer, st);
+    // El foco vuelve al disparador si quedó en la capa cerrada o en ningún lado
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && ae.isConnected && !layer.contains(ae)) return;
+    let target = st.returnTo;
+    if (!canTakeFocus(target) && st.returnId) target = document.getElementById(st.returnId);
+    if (canTakeFocus(target)) target.focus({ preventScroll: true });
+    else if (ae && layer.contains(ae)) ae.blur();
+  });
+  now.forEach(function (layer) {
+    if (LAYER_STATE.has(layer)) return;
+    let st = { returnTo: triggerOf(layer) };
+    // Abierta desde una capa que se cerró en el mismo paso: hereda su disparador
+    closedReturn.forEach(function (prev, closed) { if (st.returnTo && closed.contains(st.returnTo)) st = { returnTo: prev.returnTo, returnId: prev.returnId }; });
+    if (st.returnTo && !st.returnId) st.returnId = st.returnTo.id || null;
+    LAYER_STATE.set(layer, st);
+    setTimeout(function () { focusIntoLayer(layer); }, 0);
+  });
+}
+new MutationObserver(function (records) {
+  const relevant = records.some(function (r) {
+    if (r.type === 'childList') return r.target === document.body;
+    const c = r.target.classList;
+    return !!c && (c.contains('modal-overlay') || c.contains('op-modal'));
+  });
+  if (relevant) syncLayers();
+}).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
 // === TOAST NOTIFICATIONS ===
 function showToast(message, type = 'success') {
   let container = document.querySelector('.toast-container');
@@ -839,8 +1094,8 @@ function openAssignmentPopup(options) {
     if (!container) return;
     const current = currentId ? items.find(i => i.id === currentId) : null;
     container.innerHTML = `
-      <input type="text" class="form-input" id="${containerId}-input" placeholder="Search…" value="${current ? current.name : ''}" autocomplete="off" style="font-size:14px;" />
-      <div id="${containerId}-results" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:200px; overflow-y:auto; background:var(--bg-surface-raised); border:1px solid var(--border-color); border-radius:var(--radius-input); margin-top:4px; box-shadow:var(--shadow-lg);"></div>`;
+      <input type="text" class="form-input" id="${containerId}-input" role="combobox" aria-autocomplete="list" aria-controls="${containerId}-results" placeholder="Search…" value="${current ? current.name : ''}" autocomplete="off" style="font-size:14px;" />
+      <div id="${containerId}-results" role="listbox" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; max-height:200px; overflow-y:auto; background:var(--bg-surface-raised); border:1px solid var(--border-color); border-radius:var(--radius-input); margin-top:4px; box-shadow:var(--shadow-lg);"></div>`;
     const input = document.getElementById(`${containerId}-input`);
     const results = document.getElementById(`${containerId}-results`);
     let isOpen = false;
@@ -871,9 +1126,12 @@ function openAssignmentPopup(options) {
       });
     }
 
-    input.onfocus = () => { isOpen = true; results.style.display = 'block'; render(input.value); };
-    input.oninput = () => { if (!isOpen) { isOpen = true; results.style.display = 'block'; } render(input.value); };
-    document.addEventListener('click', (e) => { if (!container.contains(e.target)) { results.style.display = 'none'; isOpen = false; } });
+    // La lista flota sobre el popup (floatList): la del SDR, la última fila, ya no queda cortada por su borde.
+    const hide = () => { results.style.display = 'none'; isOpen = false; };
+    const show = () => { isOpen = true; results.style.display = 'block'; render(input.value); floatList(input, results, { close: hide }); };
+    input.onfocus = show;
+    input.oninput = show;
+    document.addEventListener('click', (e) => { if (!container.contains(e.target)) hide(); });
   }
 
   const saveBtn = document.getElementById('popup-save-btn');
@@ -1261,12 +1519,12 @@ function openScrapePopup(options) {
   var overlay = document.createElement('div');
   overlay.className = 'assign-popup-overlay';
   overlay.innerHTML =
-    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="odr-title" style="width:600px; max-width:95vw; display:flex; flex-direction:column; max-height:92vh;">' +
+    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="odr-title" style="width:600px;">' +
       '<div class="assign-popup-header">' +
         '<h3 id="odr-title">Search Positions</h3>' +
         '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
       '</div>' +
-      '<div class="assign-popup-body" id="odr-body" style="overflow:auto; flex:1 1 auto;"></div>' +
+      '<div class="assign-popup-body" id="odr-body"></div>' +
       '<div class="assign-popup-footer" style="align-items:center; flex-wrap:wrap;">' +
         '<span id="odr-sum" style="margin-right:auto; font-size:12px; color:var(--text-muted);"></span>' +
         '<button type="button" class="btn btn-secondary btn-sm" data-close>Cancel</button>' +
@@ -1329,11 +1587,14 @@ function openScrapePopup(options) {
   /* ---- Buscador con sugerencias (combobox) --------------------------------- */
   // Flechas para moverse, Enter para elegir, Escape para cerrar la lista (sin cerrar el popup).
   // getItems(q) → [{ value, label, note }]; onPick(item). minChars: cuándo empieza a sugerir.
+  // La lista flota fuera del cuerpo del popup (floatList): no la corta su desplazamiento y, si
+  // abajo no cabe, se abre hacia arriba. La opción activa queda siempre a la vista.
   function combo(inputId, getItems, onPick, minChars) {
     var input = body.querySelector('#' + inputId);
     if (!input) return;
     var list = body.querySelector('#' + inputId + '-list');
     var items = [], active = -1;
+    function closeList() { list.innerHTML = ''; list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); }
     function paint() {
       var q = input.value;
       items = fold(q).length >= (minChars || 0) ? getItems(fold(q)).slice(0, 8) : [];
@@ -1344,6 +1605,7 @@ function openScrapePopup(options) {
         list.hidden = !list.innerHTML;
         input.setAttribute('aria-expanded', String(!list.hidden));
         input.removeAttribute('aria-activedescendant');
+        if (!list.hidden) floatList(input, list, { close: closeList });
         return;
       }
       list.innerHTML = items.map(function (it, i) {
@@ -1360,14 +1622,20 @@ function openScrapePopup(options) {
         el.onmouseenter = function () { active = Number(el.getAttribute('data-i')); paint(); };
         el.onmousedown = function (e) { e.preventDefault(); onPick(items[Number(el.getAttribute('data-i'))]); };
       });
+      floatList(input, list, { close: closeList });
+      if (active >= 0) keepOptionVisible(list, list.querySelector('[data-i="' + active + '"]'));
     }
     input.oninput = function () { active = 0; paint(); };
-    input.onfocus = paint;
+    // Al pasar a otro buscador (Tab) se cierra la lista del anterior: no quedan dos abiertas.
+    input.onfocus = function () {
+      body.querySelectorAll('[data-combo-list]').forEach(function (l) { if (l !== list && !l.hidden) { l.innerHTML = ''; l.hidden = true; } });
+      paint();
+    };
     input.onkeydown = function (e) {
       if (e.key === 'ArrowDown') { e.preventDefault(); if (list.hidden) paint(); active = Math.min(items.length - 1, active + 1); paint(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); paint(); }
       else if (e.key === 'Enter') { if (items[active] && !list.hidden) { e.preventDefault(); onPick(items[active]); } }
-      else if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); list.innerHTML = ''; list.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+      else if (e.key === 'Escape' && !list.hidden) { e.stopPropagation(); closeList(); }
     };
   }
   function comboField(id, placeholder, value, label) {
@@ -1618,12 +1886,12 @@ function openResearchRequestPopup(company, options) {
   var overlay = document.createElement('div');
   overlay.className = 'assign-popup-overlay';
   overlay.innerHTML =
-    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width:560px; max-width:95vw; display:flex; flex-direction:column; max-height:92vh;">' +
+    '<div class="assign-popup" role="dialog" aria-modal="true" aria-labelledby="rr-title" style="width:560px;">' +
       '<div class="assign-popup-header">' +
         '<h3 id="rr-title">Run research</h3>' +
         '<button type="button" class="modal-close" data-close aria-label="Close">&times;</button>' +
       '</div>' +
-      '<div class="assign-popup-body" style="overflow:auto; flex:1 1 auto;">' +
+      '<div class="assign-popup-body">' +
         '<div style="padding:10px 12px; border:1px solid var(--border-default); border-radius:var(--radius-md); background:var(--bg-muted);">' +
           '<div style="display:flex; flex-wrap:wrap; align-items:center; gap:8px;"><span style="font-weight:600; color:var(--text-strong);">' + h(company.name) + '</span>' +
             stateBadge(COMPANY_STATES, company.entityState) + '</div>' +
@@ -2933,23 +3201,35 @@ function renderShellPicker(containerId, options) {
     label();
   }
 
+  const panel = document.getElementById(containerId + '-panel');
+  // Cerrar deja el botón como estaba; con Esc o "Done" el foco vuelve a él.
+  function close(focusToggle) {
+    if (!wrap.classList.contains('open')) return;
+    wrap.classList.remove('open', 'is-up');
+    toggle.setAttribute('aria-expanded', 'false');
+    if (focusToggle) toggle.focus();
+  }
   toggle.onclick = function (e) {
     e.stopPropagation();
-    const open = wrap.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) { paint(); if (search) search.focus(); }
+    if (wrap.classList.contains('open')) { close(); return; }
+    wrap.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+    paint();
+    fitBarDropdown(wrap, panel, list);
+    if (search) search.focus({ preventScroll: true });
   };
-  if (search) search.oninput = paint;
+  if (search) search.oninput = function () { paint(); fitBarDropdown(wrap, panel, list); };
   document.getElementById(containerId + '-clear').onclick = function () { value = []; paint(); emit(); };
-  document.getElementById(containerId + '-done').onclick = function () { wrap.classList.remove('open'); };
-  document.addEventListener('click', function (e) { if (!container.contains(e.target)) wrap.classList.remove('open'); });
+  document.getElementById(containerId + '-done').onclick = function () { close(true); };
+  document.addEventListener('click', function (e) { if (!container.contains(e.target)) close(); });
+  registerBarDropdown({ wrap: wrap, panel: panel, list: list, isOpen: function () { return wrap.classList.contains('open'); }, close: close });
 
   label();
 
   return {
     getValue: function () { return value.slice(); },
     setValue: function (v) { value = (v || []).slice(); if (wrap.classList.contains('open')) paint(); else label(); },
-    close: function () { wrap.classList.remove('open'); }
+    close: function () { close(); }
   };
 }
 
@@ -3007,6 +3287,7 @@ function renderShellSearchbox(containerId, options) {
         }).join('')
       : '<div class="op-hint" style="padding:10px 12px;">Nothing matches that.</div>';
     suggest.classList.add('open');
+    fitBarDropdown(wrap, suggest, suggest);
     suggest.querySelectorAll('[data-pick]').forEach(function (b) {
       b.onclick = function () { value = [b.dataset.pick]; reflect(); emit(); };
     });
@@ -3017,6 +3298,11 @@ function renderShellSearchbox(containerId, options) {
   clearBtn.onclick = function () { value = []; reflect(); input.focus(); emit(); };
   document.addEventListener('click', function (e) {
     if (!container.contains(e.target)) { suggest.classList.remove('open'); reflect(); }
+  });
+  registerBarDropdown({
+    wrap: wrap, panel: suggest, list: suggest,
+    isOpen: function () { return suggest.classList.contains('open'); },
+    close: function () { suggest.classList.remove('open'); reflect(); }
   });
 
   reflect();
