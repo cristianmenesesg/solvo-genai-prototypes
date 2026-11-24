@@ -6091,3 +6091,12 @@ html:has(.assign-popup-overlay) {
   box-shadow: 0 6px 20px color-mix(in srgb, var(--color-secondary) 24%, transparent);
 }
 @media (prefers-reduced-motion: reduce) { .pr-row { transition: none; } }
+
+/* Modo oscuro: los enlaces de las tarjetas y de Companies (título de la vacante y nombre de la
+   empresa) usan un azul Solvo más claro, para que se lean sobre el fondo oscuro. */
+[data-theme='dark'] .op-card-title,
+[data-theme='dark'] .op-cname,
+[data-theme='dark'] .pr-name { color: var(--color-secondary-300); }
+[data-theme='dark'] .op-card-title:hover,
+[data-theme='dark'] .op-cname:hover,
+[data-theme='dark'] .pr-name:hover { color: var(--color-secondary-200); }
