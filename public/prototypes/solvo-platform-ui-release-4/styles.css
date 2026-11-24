@@ -6064,3 +6064,27 @@ html:has(.assign-popup-overlay) {
   box-shadow: 0 6px 20px color-mix(in srgb, var(--color-secondary) 24%, transparent);
 }
 @media (prefers-reduced-motion: reduce) { .op-card { transition: none; } }
+
+/* ==== Companies con el mismo lenguaje que las tarjetas de Open Positions ====
+   · Nombre de la empresa en azul Solvo, como enlace.
+   · Relación y etapa siempre en la línea de abajo del nombre, en píldoras.
+   · Decisores en píldoras: nivel 1 en naranja suave, nivel 2 con contorno gris. Los bordes
+     de verificación del correo (aviso, error, sin verificar) se mantienen encima.
+   · Al pasar el mouse, la fila se marca con borde y sombra azul. */
+.pr-headtext { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.pr-name { flex: 1 0 100%; color: var(--color-secondary); }
+.pr-name:hover { color: var(--color-secondary-600); }
+.pr-stage, .pr-dm { border-radius: 999px; }
+.pr-dm-l1 { border-color: var(--color-primary-200); background: var(--color-primary-50); }
+.pr-dm-l1 .pr-dm-role { color: var(--color-primary-700); }
+.pr-dm-l2 { border-color: var(--border-default); background: transparent; }
+.pr-dm-l2 .pr-dm-role { color: var(--text-strong); }
+.pr-dm-warning { border-color: var(--color-warning); }
+.pr-dm-error { border-color: var(--color-error); }
+.pr-dm-neutral { border-style: dashed; }
+.pr-row { transition: border-color .15s ease, box-shadow .15s ease; }
+.pr-row:hover {
+  border-color: var(--color-secondary-300);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-secondary) 24%, transparent);
+}
+@media (prefers-reduced-motion: reduce) { .pr-row { transition: none; } }
