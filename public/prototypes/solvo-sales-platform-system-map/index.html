@@ -580,10 +580,11 @@ const BANDS_R = [
   {title: "Orden de construcción", sub: "El motor nuevo se construye por partes y convive con el actual: cada flujo actual se apaga cuando están en producción los servicios que lo reemplazan y su página en Solvo Platform.", kind: "steps", cards: [
     ["Modelo de datos (FPEM-0)", "Tablas y columnas nuevas sin cambiar las actuales, los catálogos actuales cargados y las vacantes y empresas con su ciudad, su división y su país."],
     ["Solvo Platform, Fase 1 (FSPL-1)", "País en Open Positions y Companies, y en Settings las posiciones con sus términos por país, la geografía y los roles de decisor. El motor actual sigue funcionando: solo lee los términos por país y guarda la ubicación de lo nuevo."],
-    ["Servicios de vacantes (FPEM-1)", "Configuración de los triggers, su activación, Indeed en EE. UU. y España y el análisis de vacantes. Cada país de contratación entra con su POC."],
-    ["Empresas, decisores y correo (FPEM-2 a FPEM-4)", "Cada conjunto de servicios con su configuración inicial. La investigación a pedido llega a los decisores solo si se piden."],
+    ["Servicios de vacantes (FPEM-1)", "Configuración de los triggers, su activación e Indeed en EE. UU. y España. Cada país de contratación entra con su POC."],
+    ["Análisis de vacantes (FPEM-2)", "Un solo servicio para el listado de cualquier portal, con el prompt de cada país: formato único, ubicación, posición del catálogo y viabilidad."],
+    ["Empresas, decisores y correo (FPEM-3 a FPEM-5)", "Cada conjunto de servicios con su configuración inicial. La investigación a pedido llega a los decisores solo si se piden."],
     ["Solvo Platform, Fase 2 (FSPL-2)", "Triggers, prompts y envíos programados desde la plataforma, Search Positions, Run research y los datos del motor en vacantes, empresas y decisores."],
-    ["Proveedores nuevos (FPEM-5 a FPEM-7)", "Computrabajo, TheirStack y LinkedIn, cada uno con su POC, que decide en qué países y si hace falta un servicio por país."],
+    ["Proveedores nuevos (FPEM-6 a FPEM-8)", "Computrabajo, TheirStack y LinkedIn, cada uno con su POC, que decide en qué países y si hace falta un servicio por país."],
   ]},
 ];
 const PAGES = {
