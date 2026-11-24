@@ -2365,6 +2365,15 @@ function getDecisionMakers(companyId) {
   return out.sort(function (a, b) { return a.level - b.level; });
 }
 
+// Teléfono directo o móvil de algún decisor de la empresa (filtro "Has direct/mobile phone").
+// Cuenta el móvil (`phone`) y la línea directa (`directPhone`); el teléfono corporativo de la
+// empresa no cuenta.
+function hasDirectOrMobilePhone(companyId) {
+  return getDecisionMakers(companyId).some(function (d) {
+    return d.people.some(function (p) { return !!(p.phone || p.directPhone); });
+  });
+}
+
 /* ---- Vacantes detectadas y calificadas (FPEA-1) -------------------------- */
 // El listado convive con dos generaciones. Las que trajo el barrido por geografía
 // no tienen posición del catálogo ni término de búsqueda, y se muestran sin ellos.

@@ -440,6 +440,21 @@
         }
       },
       {
+        key: 'phone', group: 'Company', label: 'Direct or mobile phone', type: 'single', cols: 1, def: 'all', neutral: 'all',
+        hint: 'Decision makers with a direct line or a mobile phone. The corporate phone does not count.',
+        options: [
+          { value: 'all', label: 'All companies' },
+          { value: 'with', label: 'Has direct/mobile phone' },
+          { value: 'without', label: 'No direct/mobile phone' }
+        ],
+        chip: function (v) { return v === 'with' ? 'Has direct/mobile phone' : 'No direct/mobile phone'; },
+        test: function (vac, v) {
+          if (v === 'all') return true;
+          const has = hasDirectOrMobilePhone(vac.companyId);
+          return v === 'with' ? has : !has;
+        }
+      },
+      {
         key: 'dmLevel', group: 'Company', label: 'Decision level', type: 'multi', cols: 1, def: [],
         hint: 'Level 1 signs the purchase. Level 2 is kept only when the company has no level 1 at all.',
         options: [
