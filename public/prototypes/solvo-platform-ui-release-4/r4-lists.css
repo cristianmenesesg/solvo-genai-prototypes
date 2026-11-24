@@ -292,3 +292,7 @@
   .op-sort { flex-wrap: wrap; }
   .r4-sources { min-width: 0; }
 }
+
+/* El portal es un dato descriptivo: todos en neutro, como en styles.css */
+.op-portal-computrabajo,
+.op-portal-theirstack { background: transparent; box-shadow: inset 0 0 0 1px var(--border-default); color: var(--text-secondary); }
