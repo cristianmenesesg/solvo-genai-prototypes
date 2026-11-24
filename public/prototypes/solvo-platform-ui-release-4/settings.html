@@ -1649,7 +1649,11 @@
       document.querySelectorAll('.st-navitem').forEach(b => b.classList.remove('is-on'));
       const section = document.getElementById('section-' + sectionId);
       if (section) section.classList.add('active');
-      (btn || document.querySelector('[data-section="' + sectionId + '"]')).classList.add('is-on');
+      const navBtn = btn || document.querySelector('[data-section="' + sectionId + '"]');
+      navBtn.classList.add('is-on');
+      // En teléfono el menú es una tira horizontal: la sección activa queda a la vista.
+      const nav = document.getElementById('settingsNav');
+      if (nav && nav.scrollWidth > nav.clientWidth) nav.scrollLeft = navBtn.offsetLeft - nav.offsetLeft - 16;
       if (!keepHash) {
         const h = sectionId === 'triggers' && trgDraft && !trgDraft._isNew ? '#triggers/' + trgDraft.id
           : sectionId === 'geography' && geoCountry ? '#geography/' + geoCountry : '#' + sectionId;

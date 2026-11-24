@@ -363,6 +363,9 @@
     }
 
     function lineChart(mount, rows, series, tableMount, tableCaption) {
+      // Una unidad del dibujo = un píxel: el gráfico se arma al ancho de su panel y el
+      // texto de los ejes no se achica en pantallas angostas. Oculto (vista de tabla), 720.
+      CHART.w = Math.max(300, Math.round(mount.clientWidth || mount.parentElement.clientWidth || 720));
       const max = niceCeil(Math.max.apply(null, rows.map(function (r) {
         return Math.max.apply(null, series.map(function (s) { return r[s.key]; }));
       })));
@@ -549,6 +552,15 @@
         chart.hidden = showing;
         b.textContent = showing ? 'Chart view' : 'Table view';
       });
+    });
+
+    // Al cambiar el ancho de la ventana, los gráficos se rearman a su nuevo ancho.
+    let resizeTimer = null, lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(renderTrends, 150);
     });
 
     renderAll();

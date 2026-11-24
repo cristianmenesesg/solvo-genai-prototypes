@@ -539,7 +539,7 @@
         : stageBadge(a.statusTo);
       const body = (a.note ? '<p class="vd-tl-note">' + esc(a.note) + '</p>' : '') +
         (a.tags && a.tags.length
-          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
+          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge op-cbadge-signal' + (leadSignalTone(t) === 'hot' ? ' is-hot' : '') + '">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
           : '');
 
       return '<article class="vd-tl-item">' +
@@ -599,12 +599,12 @@
           specRow('State', stateBadge(COMPANY_STATES, company.entityState), (COMPANY_STATES[company.entityState] || {}).note) +
           specRow('Type', company.companyType ? esc(COMPANY_TYPES[company.companyType]) : '<em>Not classified</em>') +
           specRow('Location', esc(place(company)) || '<em>Unknown</em>') +
-          specRow('Pipeline', '<span class="pr-stage pr-stage-neutral">' + esc(pipelineLabel(company.pipelineStage)) + '</span>') +
+          specRow('Pipeline', '<span class="pr-stage pr-stage-' + pipelineTone(company.pipelineStage) + '">' + esc(pipelineLabel(company.pipelineStage)) + '</span>') +
           specRow('Open positions', '<strong>' + pos.total + '</strong> detected · <strong>' + pos.viable + '</strong> remote viable') +
         '</dl>' +
         (company.leadSummary ? '<p class="vd-co-summary">' + esc(company.leadSummary) + '</p>' : '') +
         (signals.length ? '<div class="vd-co-signals">' + signals.map(function (s) {
-          return '<span class="op-cbadge op-cbadge-signal">' + esc(leadSignalLabel(s)) + '</span>';
+          return '<span class="op-cbadge op-cbadge-signal' + (leadSignalTone(s) === 'hot' ? ' is-hot' : '') + '">' + esc(leadSignalLabel(s)) + '</span>';
         }).join('') + '</div>' : '') +
         (links.length ? '<div class="vd-links">' + links.map(function (l) {
           return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' + esc(l.label) + ICON.external + '</a>';
@@ -647,7 +647,7 @@
         return '<article class="vd-dm">' +
           '<div class="vd-dm-head">' +
             '<span class="vd-dm-role">' + esc(roleLabel(p.roleCode)) + '</span>' +
-            '<span class="vd-dm-level" title="Decision level ' + p.decisionLevel + '">L' + p.decisionLevel + '</span>' +
+            '<span class="vd-dm-level is-l' + p.decisionLevel + '" title="Decision level ' + p.decisionLevel + '">L' + p.decisionLevel + '</span>' +
           '</div>' +
           '<div class="vd-dm-name">' + esc(personName(p.fullName)) + '</div>' +
           // El cargo crudo solo cuando no es la expansión literal del rol normalizado.

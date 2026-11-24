@@ -481,10 +481,7 @@
       trash: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
     };
 
-    const STAGE_TONE = {
-      lead: 'neutral', prospecting: 'neutral', engaged: 'info', 'initial appointment held': 'info',
-      'onboarding started': 'success', client: 'success', lost: 'error'
-    };
+    const STAGE_TONE = PIPELINE_STAGE_TONE; // rbac.js
 
     function specRow(label, value, title, wide) {
       if (!value) return '';
@@ -545,6 +542,7 @@
       // Una sola sección: la firmografía que consolidó el enriquecimiento, repartida
       // en dos columnas. La relación y la etapa ya viven como badges en la cabecera,
       // así que repetirlas acá sería decir lo mismo dos veces.
+      // Dos columnas de cinco filas: firmografía a la izquierda; sede, web y contacto a la derecha.
       const rows =
         specRow('Industry', company.industryCode
           ? esc(getIndustryLabel(company.industryCode)) +
@@ -557,6 +555,7 @@
           : '<em>Unknown</em>', 'A range from the source is stored as its midpoint') +
         specRow('Revenue', revenueLabel(company) ? esc(revenueLabel(company)) + ' / year' : '<em>Unknown</em>') +
         specRow('Founded', company.yearFounded ? String(company.yearFounded) : '<em>Unknown</em>') +
+        specRow('Detected', esc(formatDate(company.createdAt)), 'The day a sweep first found one of its postings') +
         specRow('Location', esc(locationDetail(company))) +
         specRow('Website', company.website
           ? '<a href="' + esc(company.website) + '" target="_blank" rel="noopener">' + esc(String(company.website).replace(/^https?:\/\//, '')) + '</a>'
@@ -564,14 +563,13 @@
         specRow('Corporate phone', company.phone
           ? '<a href="tel:' + esc(company.phone) + '" style="white-space: nowrap;">' + esc(company.phone) + '</a>'
           : '<em>Unknown</em>') +
-        specRow('Detected', esc(formatDate(company.createdAt)), 'The day a sweep first found one of its postings') +
         specRow('On-demand scraping', company.lastScrapedAt
           ? 'Last run ' + esc(agoLabel(company.lastScrapedAt)) + ' ago'
           : '<em>Never run</em>');
 
       document.getElementById('cdSpec').innerHTML =
         '<section class="vd-speccol" style="grid-column:1/-1;"><h3 class="vd-blocktitle">Company</h3>' +
-        '<dl class="cd-twocol">' + rows + '</dl></section>';
+        '<dl class="cd-twocol" style="--cd-rows:5;">' + rows + '</dl></section>';
     }
 
     /* ---- Research ------------------------------------------------------------ */
@@ -628,7 +626,7 @@
       const signalRow = signals.length
         ? signals.map(function (s) {
             const dis = (LEAD_SIGNALS.find(function (x) { return x.code === s; }) || {}).disqualifying;
-            return '<span class="op-cbadge' + (dis ? ' op-cbadge-excluded' : ' op-cbadge-signal') + '">' +
+            return '<span class="op-cbadge' + (dis ? ' op-cbadge-excluded' : ' op-cbadge-signal' + (leadSignalTone(s) === 'hot' ? ' is-hot' : '')) + '">' +
               esc(leadSignalLabel(s)) + '</span>';
           }).join('')
         : '<em>None</em>';
@@ -648,7 +646,7 @@
             ? '<span class="vd-flag vd-flag-ok">' + ICON.check + 'Yes</span>'
             : '<span class="vd-flag vd-flag-none">No</span>',
             'Computed before scoring: two or more detected positions share the same catalog position') +
-          specRow('Size fit', '<span class="vd-flag ' + (fit === 'true' ? 'vd-flag-ok' : 'vd-flag-none') + '">' + esc(fitLabel) + '</span>',
+          specRow('Size fit', '<span class="vd-flag ' + (fit === 'true' ? 'vd-flag-ok' : fit === 'false' ? 'vd-flag-warn' : 'vd-flag-none') + '">' + esc(fitLabel) + '</span>',
             'Unknown is not the same as out of range: a company whose size could not be found is not penalised as the wrong size') +
           // Lo que la calificación produjo aguas abajo: a quién se le puede escribir
           // y si el envío ya lo hizo.
@@ -734,7 +732,7 @@
         : stageBadge(a.statusTo);
       const body = '<p class="vd-tl-note">' + esc(a.note) + '</p>' +
         (a.tags && a.tags.length
-          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
+          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge op-cbadge-signal' + (leadSignalTone(t) === 'hot' ? ' is-hot' : '') + '">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
           : '');
 
       return '<article class="vd-tl-item">' +
@@ -774,7 +772,7 @@
         return '<article class="vd-dm">' +
           '<div class="vd-dm-head">' +
             '<span class="vd-dm-role">' + esc(roleCodeLabel(p.roleCode)) + '</span>' +
-            '<span class="vd-dm-level" title="Level ' + p.decisionLevel +
+            '<span class="vd-dm-level is-l' + p.decisionLevel + '" title="Level ' + p.decisionLevel +
               (p.decisionLevel === 1 ? ' — signs the purchase' : ' — kept only when there is no level 1') + '">L' + p.decisionLevel + '</span>' +
             '<button type="button" class="cd-iconbtn" title="Edit" onclick="editContact(\'' + esc(p.id) + '\')">' + ICON.edit + '</button>' +
             '<button type="button" class="cd-iconbtn" title="Delete" onclick="confirmDeleteContact(\'' + esc(p.id) + '\')">' + ICON.trash + '</button>' +

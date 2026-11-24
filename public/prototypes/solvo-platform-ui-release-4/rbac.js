@@ -630,6 +630,8 @@ function renderHeaderControls() {
   hb.setAttribute('aria-label', 'Hide/show menu');
   hb.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>';
   hb.addEventListener('click', function () {
+    // Hasta 768 px el menú es un panel que se abre encima; en escritorio se oculta/muestra.
+    if (window.matchMedia('(max-width: 768px)').matches) { toggleSidebar(); return; }
     const collapsed = document.body.classList.toggle('sidebar-collapsed');
     try { localStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0'); } catch (e) {}
   });
@@ -2106,12 +2108,12 @@ function getPositionName(positionId) {
 // cuando aparecen, la empresa queda excluida y no se trabaja.
 const LEAD_SIGNALS = [
   { code: 'repeated_posting', label: 'Repeated posting' },
-  { code: 'multiple_openings', label: 'Multiple openings' },
-  { code: 'urgent_hiring', label: 'Urgent hiring' },
-  { code: 'growth', label: 'Growth' },
-  { code: 'recent_acquisition', label: 'Recent acquisition' },
-  { code: 'recent_funding', label: 'Recent funding' },
-  { code: 'new_location', label: 'New location' },
+  { code: 'multiple_openings', label: 'Multiple openings', tone: 'hot' },
+  { code: 'urgent_hiring', label: 'Urgent hiring', tone: 'hot' },
+  { code: 'growth', label: 'Growth', tone: 'hot' },
+  { code: 'recent_acquisition', label: 'Recent acquisition', tone: 'hot' },
+  { code: 'recent_funding', label: 'Recent funding', tone: 'hot' },
+  { code: 'new_location', label: 'New location', tone: 'hot' },
   { code: 'spanish_speaking_market', label: 'Spanish-speaking market' },
   { code: 'ai_adoption', label: 'AI adoption' },
   { code: 'founder_led', label: 'Founder-led' },
@@ -2123,6 +2125,14 @@ const LEAD_SIGNALS = [
 function leadSignalLabel(code) {
   const s = LEAD_SIGNALS.find(function (x) { return x.code === code; });
   return s ? s.label : code;
+}
+
+// Tono de la señal, con la misma regla que las del aviso (vacancySignalTone): 'hot' para
+// los hechos recientes que apuran la conversación (contrata ya, recibió fondos, crece,
+// abre sede); 'plain' para los rasgos descriptivos (tamaño, repetición, idioma, IA).
+function leadSignalTone(code) {
+  const s = LEAD_SIGNALS.find(function (x) { return x.code === code; });
+  return (s && s.tone) || 'plain';
 }
 
 // === PUNTAJE DE AJUSTE AL ICP (company.icp_score · FPEA-1) ===
@@ -2737,6 +2747,20 @@ const PIPELINE_STAGES = [
 function pipelineLabel(stage) {
   const s = PIPELINE_STAGES.find(function (x) { return x.code === stage; });
   return s ? s.label : (stage || '');
+}
+
+// Tono del badge de etapa (clase .pr-stage-<tono>), el mismo en listado, ficha y aviso:
+// lead en neutro; prospecting en azul suave y engaged / primera reunión en azul más
+// firme (la conversación avanza); onboarding y cliente en verde; perdida en rojo.
+const PIPELINE_STAGE_TONE = {
+  lead: 'neutral', prospecting: 'prospecting',
+  engaged: 'engaged', 'initial appointment held': 'engaged',
+  'onboarding started': 'success', client: 'success',
+  lost: 'error'
+};
+
+function pipelineTone(stage) {
+  return PIPELINE_STAGE_TONE[stage] || 'neutral';
 }
 
 // Etiquetas de company.relationship_type. Los códigos son los de la base: client | prospect | inactive.

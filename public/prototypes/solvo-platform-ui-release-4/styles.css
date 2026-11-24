@@ -5736,3 +5736,217 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   box-shadow: inset 0 0 0 1px var(--border-default);
   color: var(--text-secondary);
 }
+
+/* ---- Acentos de color: etapas, señales de empresa, decisores y encaje de tamaño ----
+   Extienden la misma regla. Etapa del embudo: lead neutro; prospecting azul suave;
+   engaged y primera reunión azul más firme; onboarding y cliente verde; perdida rojo.
+   Señales de empresa: las que apuran la conversación en naranja, las descriptivas neutras. */
+.pr-stage-prospecting { background: var(--color-secondary-50); color: var(--color-secondary-700); }
+.pr-stage-engaged { background: var(--color-secondary-100); color: var(--color-secondary-700); font-weight: var(--font-semibold); }
+.op-cbadge-signal.is-hot {
+  background: var(--color-primary-50);
+  color: var(--color-primary-700);
+  box-shadow: inset 0 0 0 1px var(--color-primary-200);
+  font-weight: var(--font-medium);
+}
+/* Nivel 1 firma la compra: azul sólido. Nivel 2, el reemplazo: contorno azul. */
+.vd-dm-level.is-l1 { background: var(--color-secondary); color: #fff; }
+.vd-dm-level.is-l2 { background: transparent; box-shadow: inset 0 0 0 1px var(--color-secondary); color: var(--color-secondary-700); }
+/* Encaje de tamaño fuera de rango: pide atención, no descalifica */
+.vd-flag-warn { background: var(--color-primary-50); color: var(--color-primary-700); }
+/* Rol del usuario: neutro; Administrador en naranja Solvo */
+.user-role { white-space: nowrap; }
+.user-role.is-admin { background: var(--color-primary-50); color: var(--color-primary-700); box-shadow: inset 0 0 0 1px var(--color-primary-200); font-weight: var(--font-medium); }
+
+/* ============================================================================
+   PULIDO VISUAL Y ADAPTACIÓN A TABLET Y TELÉFONO
+   ============================================================================ */
+
+/* Dashboard: "Table view / Chart view" como enlace de texto, igual que las acciones
+   secundarias de los paneles (antes quedaba como botón nativo del navegador) */
+.kp-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--color-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.kp-toggle:hover { text-decoration: underline; text-underline-offset: 2px; }
+.kp-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+/* El día de las tablas en una sola línea ("Nov 24") */
+.kp-table th:first-child, .kp-table td:first-child { white-space: nowrap; }
+.kp-tablewrap { overflow-x: auto; }
+
+/* Companies: nombre y badges en un bloque que se parte; ICP y antigüedad quedan
+   siempre en la primera línea, y el nombre largo se corta con elipsis */
+.pr-head { flex-wrap: nowrap; align-items: flex-start; }
+.pr-head > .op-cicon, .pr-head > .op-cbadge, .pr-head > .op-age { flex: 0 0 auto; }
+.pr-head > .op-cbadge, .pr-head > .op-age { margin-top: 2px; }
+.pr-headtext { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); }
+.pr-headtext .pr-name { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Ficha de empresa: dos columnas de filas etiqueta / valor, alineadas */
+.cd-twocol { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--cd-rows, 4), auto); }
+.cd-twocol .vd-specrow { grid-template-columns: 140px minmax(0, 1fr); align-items: baseline; }
+
+/* Ficha de empresa angosta: una sola columna de filas etiqueta / valor */
+@media (max-width: 720px) {
+  .cd-twocol { grid-template-columns: minmax(0, 1fr); }
+  .cd-twocol .vd-specrow { grid-template-columns: 120px minmax(0, 1fr); gap: var(--space-3); }
+}
+
+/* La × del buscador de empresa solo aparece con un valor elegido */
+.op-sbox-x[hidden] { display: none; }
+
+/* Tablas anchas: se desplazan dentro de su marco, nunca ensanchan la página.
+   El contenido principal no se estira con lo que lleva adentro. */
+.main-content, .page-content { min-width: 0; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Tablet (laptop chico): la búsqueda ocupa la fila y los filtros rápidos van debajo,
+   alineados a la izquierda, en vez de quedar sueltos a la derecha */
+@media (max-width: 1280px) {
+  .op-searchshell { flex-basis: 100%; max-width: none; }
+  .op-quickfilters { margin-left: 0; }
+}
+
+/* Settings apilado desde laptop chico: con el menú al costado las tablas quedaban en
+   ~490 px. Menú arriba y contenido debajo, ambos a lo ancho (la línea no se ensancha
+   con el menú). */
+@media (max-width: 1100px) {
+  .page-content .settings-layout { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .settings-layout > .settings-content { width: 100%; min-width: 0; }
+  .st-nav { flex: 0 0 auto; flex-direction: row; flex-wrap: wrap; }
+  .st-navgroup { display: none; }
+  .st-navitem { width: auto; }
+}
+
+@media (max-width: 860px) {
+  /* Los filtros rápidos reparten la fila: cada selector llena su parte */
+  .op-quickfilters .op-states { flex: 1 1 auto; min-width: 0; }
+  .op-quickfilters .op-states-toggle { width: 100%; max-width: none; }
+  .op-quickfilters .op-states-toggle .op-caret { margin-left: auto; }
+}
+
+/* Companies en tablet: las tres columnas (posiciones, decisores, contacto) en una
+   fila debajo de la empresa */
+@media (min-width: 721px) and (max-width: 1180px) {
+  .pr-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Tablet y teléfono: un solo header; su botón de menú abre el menú lateral encima */
+@media (max-width: 768px) {
+  .mobile-header { display: none; }
+  .main-content { padding-top: 0; }
+  .header { position: sticky; top: 0; padding: 0 var(--space-4); }
+  .header .sidebar-collapse-btn { display: inline-flex; }
+  .sidebar { box-shadow: var(--shadow-xl); }
+  .sidebar:not(.open) { box-shadow: none; }
+  .page-content { padding: var(--space-5) var(--space-4); }
+  .page-header { flex-wrap: wrap; gap: var(--space-2); }
+  .page-header-left { flex-wrap: wrap; gap: var(--space-1) var(--space-3); }
+}
+
+/* Teléfono */
+@media (max-width: 640px) {
+  .header-title { font-size: var(--text-base); }
+  .page-title { font-size: var(--text-xl); }
+
+  /* Búsqueda y filtros rápidos: a lo ancho; los selectores en dos columnas */
+  .op-searchshell { min-width: 0; }
+  .op-quickfilters { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .op-quickfilters > div { min-width: 0; }
+  .op-sbox { width: 100%; }
+  .op-sbox-input { flex: 1 1 auto; width: auto; }
+
+  /* Los desplegables de la barra se abren como hoja inferior, a lo ancho */
+  .op-states-panel,
+  .op-quickfilters .op-states-panel {
+    position: fixed;
+    top: auto;
+    left: var(--space-3);
+    right: var(--space-3);
+    bottom: var(--space-3);
+    width: auto;
+    max-height: 70vh;
+    z-index: 1100;
+    box-shadow: var(--shadow-xl), 0 0 0 100vmax rgba(0, 0, 0, 0.35);
+  }
+  .op-states.open .op-states-panel { display: flex; flex-direction: column; overflow: hidden; }
+  .op-states-list { max-height: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .op-states-list label { min-height: 40px; }
+
+  /* Filtros activos: los chips se parten; "Clear all" queda a la derecha */
+  .op-chip { max-width: 100%; height: auto; min-height: var(--control-h); }
+  .op-chip > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .op-chip-x { width: 28px; height: 28px; }
+
+  /* Acciones y orden del listado: se parten en vez de ensanchar la página */
+  .op-sort { flex-wrap: wrap; }
+  .op-sort select { max-width: 100%; }
+
+  /* Cabecera de la tarjeta de empresa: los badges bajan, el nombre se corta */
+  .pr-row { padding: var(--space-4) var(--space-3); gap: var(--space-3); }
+
+  /* Fichas: menos relleno; los encabezados de bloque con acciones se parten */
+  .detail-tab-content { padding: var(--space-4); }
+  .detail-tab-btn { padding: var(--space-3) var(--space-4); }
+  .vd-head { padding: var(--space-4); }
+  .vd-blockhead { flex-wrap: wrap; gap: var(--space-2); }
+  .vd-blockhead .cd4-blockactions { width: 100%; }
+
+  /* Gráficos del tablero: rótulos legibles */
+  .kp-axis-text, .kp-endlabel { font-size: 12px; }
+
+  /* Dashboard: el embudo en dos columnas, no seis tarjetas apiladas */
+  .kp-funnelstrip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
+  .kp-tile::before { display: none; }
+  .kp-panel-head { flex-wrap: wrap; }
+
+  /* Tablas: ancho mínimo legible; el marco se desplaza */
+  .table-scroll .data-table { min-width: 680px; }
+  .table-pagination { flex-wrap: wrap; gap: var(--space-2); }
+
+  /* Settings: el menú de secciones pasa a una tira horizontal desplazable */
+  .st-nav {
+    flex: 0 0 auto;
+    align-self: stretch;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--space-1);
+    margin: 0 calc(-1 * var(--space-4));
+    padding: 0 var(--space-4) var(--space-2);
+    border-bottom: 1px solid var(--border-default);
+    scrollbar-width: thin;
+  }
+  .st-navitem { flex: 0 0 auto; white-space: nowrap; min-height: 36px; }
+  .page-content .st-toolbar .form-select, .page-content .st-toolbar .st-search, .page-content .st-toolbar #termCountry { flex: 1 1 100%; width: 100%; max-width: none; }
+
+  /* Modales: caben en la pantalla, con su cuerpo desplazable */
+  .modal-overlay { padding: var(--space-3); }
+  .modal { max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); }
+  .modal-header { padding: var(--space-4); }
+  .modal-body { padding: var(--space-4); }
+  .modal-footer { flex-wrap: wrap; padding: var(--space-3) var(--space-4); }
+
+  /* Objetivos táctiles de 36 px como mínimo */
+  .btn, .op-actionbtn, .op-scrapebtn, .op-filters-open, .pagination-btn, .op-pag-btn, .kp-toggle,
+  .op-clearall, .op-btn-text, .header-icon-btn { min-height: 36px; }
+  .header-icon-btn, .cd-iconbtn { min-width: 36px; min-height: 36px; }
+  .modal-close { width: 36px; height: 36px; }
+
+  /* Texto nunca por debajo de 12 px */
+  .badge-role, .cd4-dmstate .badge, .col-assignment-header { font-size: var(--text-xs); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .sidebar-overlay { transition: none; }
+}

@@ -513,10 +513,7 @@
       trash: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>'
     };
 
-    const STAGE_TONE = {
-      lead: 'neutral', prospecting: 'neutral', engaged: 'info', 'initial appointment held': 'info',
-      'onboarding started': 'success', client: 'success', lost: 'error'
-    };
+    const STAGE_TONE = PIPELINE_STAGE_TONE; // rbac.js
 
     function specRow(label, value, title, wide) {
       if (!value) return '';
@@ -729,7 +726,7 @@
       const signalRow = signals.length
         ? signals.map(function (s) {
             const dis = (LEAD_SIGNALS.find(function (x) { return x.code === s; }) || {}).disqualifying;
-            return '<span class="op-cbadge' + (dis ? ' op-cbadge-excluded' : ' op-cbadge-signal') + '">' +
+            return '<span class="op-cbadge' + (dis ? ' op-cbadge-excluded' : ' op-cbadge-signal' + (leadSignalTone(s) === 'hot' ? ' is-hot' : '')) + '">' +
               esc(leadSignalLabel(s)) + '</span>';
           }).join('')
         : '<em>None</em>';
@@ -891,7 +888,7 @@
         : stageBadge(a.statusTo));
       const body = '<p class="vd-tl-note">' + esc(a.note) + '</p>' +
         (a.tags && a.tags.length
-          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
+          ? '<div class="vd-tl-tags">' + a.tags.map(function (t) { return '<span class="op-cbadge op-cbadge-signal' + (leadSignalTone(t) === 'hot' ? ' is-hot' : '') + '">' + esc(leadSignalLabel(t)) + '</span>'; }).join('') + '</div>'
           : '');
 
       return '<article class="vd-tl-item">' +
@@ -934,7 +931,7 @@
           '<div class="vd-dm-head">' +
             '<span class="vd-dm-role">' + esc(dmRoleLabel(p.roleCode)) + '</span>' +
             (p.dmState ? '<span class="cd4-dmstate">' + stateBadge(DM_STATES, p.dmState) + '</span>' : '') +
-            '<span class="vd-dm-level" title="Decision level ' + level +
+            '<span class="vd-dm-level is-l' + level + '" title="Decision level ' + level +
               (level === 1 ? ' · signs the purchase' : '') + '">L' + level + '</span>' +
             '<button type="button" class="cd-iconbtn" title="Edit" onclick="editContact(\'' + esc(p.id) + '\')">' + ICON.edit + '</button>' +
             '<button type="button" class="cd-iconbtn" title="Delete" onclick="confirmDeleteContact(\'' + esc(p.id) + '\')">' + ICON.trash + '</button>' +

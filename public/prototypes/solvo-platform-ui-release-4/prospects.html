@@ -634,12 +634,7 @@
 
     // La etapa se lee por su significado comercial, no por su nombre: abierta, en
     // conversación, ganada o perdida.
-    const STAGE_TONE = {
-      lead: 'neutral', prospecting: 'neutral',
-      engaged: 'info', 'initial appointment held': 'info',
-      'onboarding started': 'success', client: 'success',
-      lost: 'error'
-    };
+    const STAGE_TONE = PIPELINE_STAGE_TONE; // rbac.js: un solo mapa de tonos para listado, ficha y aviso
 
     // El puntaje es contra el ICP del país de la empresa. Una excluida no tiene puntaje:
     // su estado ya lo dice.
@@ -704,7 +699,7 @@
       const contacted = daysSince(c.lastContactedAt);
 
       let signalBadges = signals.slice(0, 3).map(function (s) {
-        return '<span class="op-cbadge op-cbadge-signal">' + esc(leadSignalLabel(s)) + '</span>';
+        return '<span class="op-cbadge op-cbadge-signal' + (leadSignalTone(s) === 'hot' ? ' is-hot' : '') + '">' + esc(leadSignalLabel(s)) + '</span>';
       }).join('');
       if (signals.length > 3) {
         signalBadges += '<span class="op-cbadge op-cbadge-signal" title="' +
@@ -722,10 +717,11 @@
         '<div class="pr-main">' +
           '<div class="pr-head">' +
             '<span class="op-cicon' + (c.type === 'client' ? ' is-client' : '') + '" aria-hidden="true">' + ICON_BUILDING + '</span>' +
-            '<a class="pr-name" href="company-detail.html?id=' + esc(c.id) + '">' + esc(c.name) + '</a>' +
-            '<span class="op-cbadge">' + esc(RELATIONSHIP_LABELS[c.type] || c.type) + '</span>' +
-            '<span class="pr-stage pr-stage-' + (STAGE_TONE[c.pipelineStage] || 'neutral') + '">' + esc(pipelineLabel(c.pipelineStage)) + '</span>' +
-            '<span class="pr-spacer"></span>' +
+            '<div class="pr-headtext">' +
+              '<a class="pr-name" href="company-detail.html?id=' + esc(c.id) + '">' + esc(c.name) + '</a>' +
+              '<span class="op-cbadge">' + esc(RELATIONSHIP_LABELS[c.type] || c.type) + '</span>' +
+              '<span class="pr-stage pr-stage-' + (STAGE_TONE[c.pipelineStage] || 'neutral') + '">' + esc(pipelineLabel(c.pipelineStage)) + '</span>' +
+            '</div>' +
             icpBadge(c) +
             '<span class="op-age" title="Detected ' + esc(c.createdAt) + '">' + esc(agoLabel(c.createdAt)) + '</span>' +
           '</div>' +

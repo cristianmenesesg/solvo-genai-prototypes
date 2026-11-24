@@ -268,21 +268,6 @@
   .r4-citylist-chev { transition: none; }
 }
 
-/* "Table view" del tablero: Release 3 lo dejó sin estilo (botón nativo). Enlace de texto,
-   como las acciones secundarias de los paneles. */
-.kp-toggle {
-  flex: 0 0 auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-secondary);
-  cursor: pointer;
-}
-.kp-toggle:hover { text-decoration: underline; text-underline-offset: 2px; }
-.kp-toggle:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
-
 /* ---- Ancho de teléfono ---------------------------------------------------------
    La fila de acciones del listado no se partía y fijaba el ancho mínimo de la columna
    principal (scroll horizontal a 390 px, ya en Release 3). Se deja partir, y la columna

@@ -13,6 +13,10 @@
     .col-assignment-header { font-size: 0.72rem; line-height: 1.2; text-align: center; }
     .col-assignment-header small { display: block; font-weight: 400; color: var(--text-muted); }
     .count-zero { color: var(--text-muted); }
+    /* Barra de filtros activos: solo aparece cuando hay algo que quitar */
+    #filterBar:empty { display: none; }
+    /* Nombre y correo en una línea: en pantallas angostas la tabla se desplaza */
+    #usersTableBody td:nth-child(-n+2) { white-space: nowrap; }
   </style>
   <script src="theme.js"></script>
 </head>
@@ -56,27 +60,27 @@
           </div>
         </div>
 
-        <!-- Filters -->
-        <div class="filters-bar">
-          <div class="filter-group">
-            <label class="filter-label">Role</label>
-            <select class="form-select" id="filterRole" onchange="filterUsers()">
-              <option value="">All roles</option>
-              <option value="comercial">Sales Rep</option>
-              <option value="sdr">SDR</option>
-              <option value="coordinador">Coordinator</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="administrador">Administrator</option>
-            </select>
+        <!-- Búsqueda y filtro de rol: la misma barra que Open Positions y Companies.
+             Ambos aplican al instante; no hay botón de buscar. -->
+        <div class="op-searchrow">
+          <div class="op-searchshell">
+            <div class="op-searchfield">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input type="text" id="filterSearch" placeholder="Name or email" aria-label="Search users by name or email" autocomplete="off" oninput="filterUsers()">
+            </div>
           </div>
-          <div class="filter-group">
-            <label class="filter-label">Search</label>
-            <input type="text" class="form-input" id="filterSearch" placeholder="Name or email..." oninput="filterUsers()">
+          <div class="op-quickfilters">
+            <div id="pickRole"></div>
           </div>
         </div>
 
+        <div class="op-filterbar" id="filterBar"></div>
+
         <!-- Table -->
         <div class="table-container">
+          <div class="table-scroll">
           <table class="data-table">
             <thead>
               <tr>
@@ -92,6 +96,7 @@
             </thead>
             <tbody id="usersTableBody"></tbody>
           </table>
+          </div>
 
           <div class="table-pagination">
             <div class="pagination-info" id="usersPaginationInfo">Showing 0 of 0</div>
@@ -142,6 +147,8 @@
     function renderUsersTable(data) {
       const members = data || TEAM_MEMBERS;
       const tbody = document.getElementById('usersTableBody');
+      document.getElementById('usersPaginationInfo').textContent =
+        `Showing ${members.length ? '1-' + members.length : '0'} of ${members.length}`;
 
       if (members.length === 0) {
         tbody.innerHTML = `
@@ -153,8 +160,6 @@
         return;
       }
 
-      document.getElementById('usersPaginationInfo').textContent =
-        `Showing ${members.length ? '1-' + members.length : '0'} of ${members.length}`;
       tbody.innerHTML = members.map(member => {
         const roleData = ROLES[member.roleKey];
         const roleName = roleData ? roleData.name : member.roleKey;
@@ -169,7 +174,7 @@
             <td class="font-medium">${member.name}</td>
             <td class="text-secondary">${member.email}</td>
             <td>
-              <span class="badge badge-role badge-role-${member.roleKey}">${roleName}</span>
+              <span class="op-cbadge user-role${member.roleKey === 'administrador' ? ' is-admin' : ''}">${roleName}</span>
             </td>
             <td class="text-secondary" style="white-space:nowrap;">${lastLogin}</td>
             <td class="col-assignment">${fmtCount(member.companiesAsComercial)}</td>
@@ -180,13 +185,59 @@
       }).join('');
     }
 
+    // === Filtro de rol (selector de la barra, selección múltiple) ===
+    const ROLE_KEYS = ['comercial', 'sdr', 'coordinador', 'supervisor', 'administrador'];
+    let roleFilter = [];
+    const rolePicker = renderShellPicker('pickRole', {
+      icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>',
+      allLabel: 'All roles',
+      plural: 'roles',
+      search: false,
+      items: ROLE_KEYS.map(function (k) { return { value: k, label: ROLES[k] ? ROLES[k].name : k }; }),
+      value: roleFilter,
+      onChange: function (v) { roleFilter = v; filterUsers(); }
+    });
+
+    // Chips de lo que está filtrando, con su × y "Clear all", como en los listados.
+    const ICON_CHIP_X = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>';
+    function renderFilterBar(q) {
+      const chips = [];
+      if (q) chips.push({ key: '__q', text: '“' + q + '”' });
+      roleFilter.forEach(function (k) { chips.push({ key: k, text: 'Role: ' + (ROLES[k] ? ROLES[k].name : k) }); });
+      const bar = document.getElementById('filterBar');
+      bar.innerHTML = chips.length
+        ? chips.map(function (c) {
+            return '<span class="op-chip"><span>' + escapeHtml(c.text) + '</span>' +
+              '<button type="button" class="op-chip-x" aria-label="Remove filter" data-clear="' + c.key + '">' + ICON_CHIP_X + '</button></span>';
+          }).join('') + '<button type="button" class="op-clearall" id="clearAllUsers">Clear all</button>'
+        : '';
+      bar.querySelectorAll('[data-clear]').forEach(function (b) {
+        b.onclick = function () {
+          if (b.dataset.clear === '__q') document.getElementById('filterSearch').value = '';
+          else { roleFilter = roleFilter.filter(function (k) { return k !== b.dataset.clear; }); rolePicker.setValue(roleFilter); }
+          filterUsers();
+        };
+      });
+      const all = document.getElementById('clearAllUsers');
+      if (all) all.onclick = function () {
+        document.getElementById('filterSearch').value = '';
+        roleFilter = []; rolePicker.setValue(roleFilter);
+        filterUsers();
+      };
+    }
+
+    function escapeHtml(t) {
+      return String(t).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; });
+    }
+
     // === Filter Users ===
     function filterUsers() {
-      const roleFilter = document.getElementById('filterRole').value;
-      const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
+      const rawSearch = document.getElementById('filterSearch').value.trim();
+      const searchFilter = rawSearch.toLowerCase();
+      renderFilterBar(rawSearch);
 
       const filtered = TEAM_MEMBERS.filter(member => {
-        const matchesRole = !roleFilter || member.roleKey === roleFilter;
+        const matchesRole = !roleFilter.length || roleFilter.indexOf(member.roleKey) !== -1;
         const matchesSearch = !searchFilter ||
           member.name.toLowerCase().includes(searchFilter) ||
           member.email.toLowerCase().includes(searchFilter);
