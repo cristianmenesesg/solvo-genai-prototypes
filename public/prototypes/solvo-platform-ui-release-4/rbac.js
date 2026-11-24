@@ -801,7 +801,8 @@ function placeFloatList(entry) {
   list.style.visibility = (r.bottom <= view.top + 4 || r.top >= view.bottom - 4) ? 'hidden' : '';
   const natural = Math.min(max, list.scrollHeight + 2);
   const below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
-  const up = below < natural && above > below;
+  // Abajo es lo habitual: se abre hacia arriba solo si abajo no entra ni una lista corta.
+  const up = below < Math.min(natural, 180) && above > below;
   const room = up ? above : below;
   list.style.position = 'fixed';
   list.style.zIndex = '30';
@@ -842,9 +843,13 @@ document.addEventListener('scroll', function (e) {
 // hacia arriba, y la lista toma el alto que quede. En teléfono es una hoja inferior (CSS).
 function fitBarDropdown(wrap, panel, list) {
   if (!wrap || !panel) return;
-  wrap.classList.remove('is-up');
+  wrap.classList.remove('is-up', 'is-start');
   if (list) list.style.maxHeight = '';
   if (!isShown(panel) || getComputedStyle(panel).position === 'fixed') return;
+  // Alineado al borde derecho del botón, el panel no puede meterse bajo el menú lateral (pasa
+  // en tablet, cuando los filtros bajan a la izquierda): en ese caso arranca en el botón.
+  const area = (wrap.closest('.main-content') || document.documentElement).getBoundingClientRect();
+  if (panel.getBoundingClientRect().left < Math.max(0, area.left) + 8) wrap.classList.add('is-start');
   const r = wrap.getBoundingClientRect(), vh = window.innerHeight, edge = 8, gap = 8;
   const below = vh - r.bottom - gap - edge, above = r.top - gap - edge;
   const h = panel.offsetHeight;

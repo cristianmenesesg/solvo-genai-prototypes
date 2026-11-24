@@ -3595,6 +3595,7 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
 
 /* Cerca del borde de abajo el panel se abre hacia arriba (fitBarDropdown en rbac.js) */
 .op-states.is-up .op-states-panel { top: auto; bottom: calc(100% + var(--space-2)); }
+.op-states.is-start .op-states-panel { left: 0; right: auto; }
 
 .op-states-search {
   width: 100%;
@@ -5910,6 +5911,8 @@ body.sidebar-collapsed .main-content { margin-left: 0; }
   }
   .op-states.open .op-states-panel { display: flex; flex-direction: column; overflow: hidden; }
   .op-states-list { max-height: none; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  /* El buscador y los botones de la hoja no se aplastan: solo la lista cede alto */
+  .op-states-search, .op-states-foot { flex: 0 0 auto; }
   .op-states-list label { min-height: 40px; }
 
   /* Filtros activos: los chips se parten; "Clear all" queda a la derecha */
