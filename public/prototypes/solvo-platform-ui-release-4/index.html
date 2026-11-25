@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign in - Solvo Sales Platform</title>
-  <link rel="stylesheet" href="tokens.css?v=20261125a" />
-  <link rel="stylesheet" href="theme.css?v=20261125a" />
-  <link rel="stylesheet" href="styles.css?v=20261125a">
-  <script src="theme.js?v=20261125a"></script>
+  <link rel="stylesheet" href="tokens.css?v=20261125b" />
+  <link rel="stylesheet" href="theme.css?v=20261125b" />
+  <link rel="stylesheet" href="styles.css?v=20261125b">
+  <script src="theme.js?v=20261125b"></script>
   <style>
     /* ------------------------------------------------------------------------
        Login de Solvo Platform: una tarjeta centrada con el logo, el nombre y la
@@ -53,6 +53,7 @@
       background: var(--status-error-bg); color: var(--status-error-fg); font-size: 13px; line-height: 1.45;
     }
     .lg-error.show { display: block; }
+    .lg-error.is-info { background: var(--status-info-bg); color: var(--status-info-fg); }
     .lg-sso {
       width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px;
       border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg-surface);
@@ -85,7 +86,7 @@
       <img class="lg-logo" src="SolvoGlobal_Logo_Color.png" alt="Solvo Global">
       <h1>Solvo Sales Platform</h1>
       <p class="lg-desc">The hub for detecting open positions, companies and contacts across Solvo Global's market.</p>
-      <div class="lg-error" id="loginError" role="alert">Your account does not have access to Solvo Sales Platform. Ask an administrator to add you.</div>
+      <div class="lg-error" id="loginError" role="alert"></div>
       <button type="button" class="lg-sso" id="ssoBtn">
         <svg class="ms" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true">
           <rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
@@ -109,8 +110,18 @@
       document.getElementById('ssoLabel').textContent = 'Signing in…';
       setTimeout(function () { window.location.href = 'demo-access.html'; }, 700);
     });
-    // ?error=unauthorized muestra el estado de cuenta sin acceso.
-    if (new URLSearchParams(location.search).get('error') === 'unauthorized') document.getElementById('loginError').classList.add('show');
+    /* Avisos del login: ?error=signin llega de una página de la plataforma abierta sin
+       sesión; ?error=unauthorized, de una cuenta de Microsoft sin acceso a la plataforma. */
+    const NOTICES = {
+      signin: ['is-info', 'Sign in to continue.'],
+      unauthorized: ['', 'Your account does not have access to Solvo Sales Platform. Ask an administrator to add you.']
+    };
+    const notice = NOTICES[new URLSearchParams(location.search).get('error')];
+    if (notice) {
+      const box = document.getElementById('loginError');
+      box.textContent = notice[1];
+      box.className = 'lg-error show ' + notice[0];
+    }
   </script>
 </body>
 </html>

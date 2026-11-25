@@ -618,7 +618,7 @@ function getVisibleVacancies() {
 
 function initSession() {
   const user = getCurrentUser();
-  if (!user) { window.location.href = 'index.html'; return null; }
+  if (!user) { window.location.href = 'index.html?error=signin'; return null; }
   return user;
 }
 
