@@ -10,44 +10,38 @@
   <script src="theme.js?v=20261125a"></script>
   <style>
     /* ------------------------------------------------------------------------
-       Login de Solvo Platform (HUSPL-1.9). Dos columnas: el panel de marca con
-       el mapa de puntos de las ciudades donde se detectan vacantes (EE. UU. y
-       España) y la tarjeta de acceso con Microsoft (Entra ID). En tablet y
+       Login de Solvo Platform. Dos columnas: el panel de marca con una
+       composición abstracta (líneas que entran desde el borde y convergen en un
+       punto naranja) y la tarjeta de acceso con Microsoft (Entra ID). En tablet y
        celular el panel queda arriba como una franja.
        ------------------------------------------------------------------------ */
-    body { margin: 0; background: var(--bg-page, var(--bg-surface)); }
+    body { margin: 0; background: var(--bg-surface); }
     .lg {
       min-height: 100vh; min-height: 100dvh;
       display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr);
     }
     .lg-brand {
-      position: relative; overflow: hidden;
+      position: relative; overflow: hidden; isolation: isolate;
       display: flex; flex-direction: column; justify-content: space-between;
       padding: 40px 48px;
-      background:
-        radial-gradient(120% 90% at 15% 10%, color-mix(in srgb, var(--color-secondary) 55%, transparent), transparent 60%),
-        linear-gradient(160deg, #00495A 0%, #003440 55%, #002530 100%);
+      background: linear-gradient(165deg, #005A70 0%, #003B4A 50%, #00222C 100%);
       color: #fff;
     }
-    .lg-brand::before {
-      content: ''; position: absolute; inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,.09) 1px, transparent 1.2px);
-      background-size: 18px 18px;
-      mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 75%, transparent 100%);
+    .lg-art { position: absolute; inset: 0; z-index: -1; }
+    .lg-art svg { display: block; width: 100%; height: 100%; }
+    .lg-art .ln { fill: none; stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .lg-art .ln.is-blue { stroke: #4DB2CB; }
+    .lg-art .core { fill: #ED7422; }
+    /* Velo inferior para que el texto se lea sobre las líneas. */
+    .lg-brand::after {
+      content: ''; position: absolute; inset: auto 0 0 0; height: 55%; z-index: -1;
+      background: linear-gradient(180deg, transparent, rgba(0, 28, 36, .78) 70%);
       pointer-events: none;
     }
-    .lg-logo { position: relative; display: flex; align-items: center; gap: 12px; }
-    .lg-logo img { height: 34px; width: auto; filter: brightness(0) invert(1); }
-    .lg-map { position: relative; width: 100%; margin: 24px 0; }
-    .lg-map svg { display: block; width: 100%; height: auto; overflow: visible; }
-    .lg-map .dot { fill: #F19453; }
-    .lg-map .dot.is-es { fill: #fff; }
-    .lg-map .halo { fill: none; stroke: #F19453; stroke-width: 1.2; opacity: 0; transform-box: fill-box; transform-origin: center; }
-    .lg-map .label { fill: rgba(255,255,255,.72); font: 600 13px var(--font-heading); letter-spacing: .02em; }
-    .lg-map .count { fill: rgba(255,255,255,.5); font: 12px var(--font-body); }
-    .lg-copy { position: relative; max-width: 30rem; }
-    .lg-copy h1 { margin: 0 0 10px; color: #fff; font-family: var(--font-heading); font-size: 34px; line-height: 1.15; font-weight: 600; letter-spacing: -.01em; }
-    .lg-copy p { margin: 0; font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.78); }
+    .lg-logo img { display: block; height: 34px; width: auto; filter: brightness(0) invert(1); }
+    .lg-copy { max-width: 26rem; }
+    .lg-copy h1 { margin: 0 0 12px; color: #fff; font-family: var(--font-heading); font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -.015em; }
+    .lg-copy p { margin: 0; font-size: 16px; line-height: 1.55; color: rgba(255,255,255,.8); }
 
     .lg-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--bg-surface); }
     .lg-card { width: 100%; max-width: 360px; }
@@ -57,7 +51,7 @@
       width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px;
       border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg-surface);
       font: 600 15px var(--font-body); color: var(--text-strong); cursor: pointer;
-      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
     .lg-sso:hover { border-color: var(--color-secondary); box-shadow: 0 6px 18px color-mix(in srgb, var(--color-secondary) 22%, transparent); }
     .lg-sso:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -73,37 +67,28 @@
     }
     .lg-error.show { display: block; }
     .lg-foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border-default); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .lg-foot a { color: var(--text-secondary); }
-    .lg-theme { position: absolute; top: 16px; right: 16px; }
 
     @media (max-width: 960px) {
-      .lg { grid-template-columns: 1fr; }
-      .lg-brand { padding: 24px 24px 20px; }
-      .lg-map { margin: 12px 0; }
-      .lg-copy h1 { font-size: 26px; }
+      .lg { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .lg-brand { min-height: 260px; padding: 24px 24px 22px; gap: 48px; }
+      .lg-copy h1 { font-size: 28px; }
       .lg-copy p { font-size: 14px; }
       .lg-side { align-items: flex-start; padding: 32px 20px 40px; }
     }
     @media (max-width: 480px) {
-      .lg-map { display: none; }
-      .lg-brand { gap: 20px; }
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .lg-map .dot { opacity: 0; animation: lgin .5s ease forwards; animation-delay: calc(var(--i) * 18ms); }
-      .lg-map .halo.is-live { animation: lgpulse 2.8s ease-out infinite; animation-delay: calc(1.2s + var(--k) * .9s); }
-      @keyframes lgin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-      @keyframes lgpulse { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
+      .lg-brand { min-height: 200px; gap: 36px; }
+      .lg-art { opacity: .7; }
     }
   </style>
 </head>
 <body>
   <main class="lg">
     <section class="lg-brand" aria-label="Solvo Sales Platform">
+      <div class="lg-art" aria-hidden="true"><svg id="lgArt" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice"></svg></div>
       <div class="lg-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global"></div>
-      <div class="lg-map" aria-hidden="true"><svg id="lgMap" viewBox="0 0 800 300"></svg></div>
       <div class="lg-copy">
         <h1>Solvo Sales Platform</h1>
-        <p>Openings detected in the United States and Spain, with the companies that publish them and their decision makers.</p>
+        <p>The hub for detecting open positions, companies and contacts across Solvo Global's market.</p>
       </div>
     </section>
 
@@ -127,33 +112,52 @@
   </main>
 
   <script>
-    /* Mapa de puntos: ciudades donde se detectan vacantes. Proyección equirectangular con
-       el Atlántico recortado: EE. UU. (longitud -125 a -66) ocupa la izquierda y España
-       (-10 a 5) la derecha. Unos pocos puntos laten. */
-    (function drawMap() {
-      const US = [[25.76,-80.19],[27.95,-82.46],[28.54,-81.38],[40.71,-74.01],[41.88,-87.63],[30.27,-97.74],[32.78,-96.80],[29.76,-95.37],
-        [47.61,-122.33],[42.36,-71.06],[34.05,-118.24],[37.77,-122.42],[39.95,-75.17],[33.75,-84.39],[33.45,-112.07],[39.74,-104.99],
-        [35.23,-80.84],[36.16,-86.78],[44.98,-93.27],[42.33,-83.05],[39.96,-83.00],[39.77,-86.16],[39.10,-94.58],[40.76,-111.89],
-        [45.52,-122.68],[36.17,-115.14],[32.72,-117.16],[35.78,-78.64],[38.63,-90.20],[38.91,-77.04],[29.42,-98.49],[30.33,-81.66],
-        [35.47,-97.52],[36.85,-75.98],[43.04,-87.91],[35.15,-90.05],[41.25,-95.93],[38.25,-85.76],[44.05,-123.09],[31.76,-106.49]];
-      const ES = [[40.42,-3.70],[41.39,2.17],[39.47,-0.38],[37.39,-5.98],[43.26,-2.93],[36.72,-4.42],[41.65,-0.89],[43.36,-8.41],[39.57,2.65],[37.99,-1.13]];
-      const W = 800, H = 300, A0 = 24, A1 = 50;
-      const x = lon => lon < -40 ? (lon + 125) / 59 * 540 + 10 : 640 + (lon + 10) / 15 * 150;
-      const y = lat => (A1 - lat) / (A1 - A0) * (H - 40) + 10;
-      const live = [3, 4, 10, 0];            // NY, Chicago, LA, Miami
-      const liveEs = [0, 1];                 // Madrid, Barcelona
-      let i = 0, k = 0, out = '';
-      function pts(list, cls, liveIdx) {
-        list.forEach(function (c, n) {
-          const cx = x(c[1]).toFixed(1), cy = y(c[0]).toFixed(1);
-          if (liveIdx.indexOf(n) >= 0) out += '<circle class="halo is-live" cx="' + cx + '" cy="' + cy + '" r="4" style="--k:' + (k++) + '"/>';
-          out += '<circle class="dot ' + cls + '" cx="' + cx + '" cy="' + cy + '" r="' + (liveIdx.indexOf(n) >= 0 ? 4 : 2.6) + '" style="--i:' + (i++) + '"/>';
-        });
+    /* Composición abstracta: líneas que entran por el borde izquierdo y convergen en
+       un punto naranja, el hub. Al cargar se dibujan una vez;
+       después unos pocos puntos recorren las líneas. Con «reducir movimiento» queda
+       la composición quieta. */
+    (function drawArt() {
+      const svg = document.getElementById('lgArt');
+      const NS = 'http://www.w3.org/2000/svg';
+      const N = 26, FX = 610, FY = 420;
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+
+      const defs = el('defs', {});
+      const glow = el('radialGradient', { id: 'lgGlow' });
+      glow.appendChild(el('stop', { offset: '0', 'stop-color': '#ED7422', 'stop-opacity': '.55' }));
+      glow.appendChild(el('stop', { offset: '.45', 'stop-color': '#ED7422', 'stop-opacity': '.12' }));
+      glow.appendChild(el('stop', { offset: '1', 'stop-color': '#ED7422', 'stop-opacity': '0' }));
+      defs.appendChild(glow); svg.appendChild(defs);
+      svg.appendChild(el('circle', { cx: FX, cy: FY, r: 210, fill: 'url(#lgGlow)' }));
+
+      const paths = [];
+      for (let i = 0; i < N; i++) {
+        const t = i / (N - 1), y0 = 20 + t * 860, d = y0 - FY;
+        const bend = Math.sin(i * 1.7) * 40;
+        const p = 'M -20 ' + y0.toFixed(1) +
+          ' C 220 ' + (y0 + bend).toFixed(1) + ', 420 ' + (FY + d * .16).toFixed(1) + ', ' + FX + ' ' + FY;
+        const mid = 1 - Math.abs(t - .5) * 2;                 // las del centro, más visibles
+        const path = el('path', { d: p, class: 'ln' + (i % 6 === 3 ? ' is-blue' : ''), 'stroke-opacity': (.08 + mid * .22).toFixed(2) });
+        svg.appendChild(path); paths.push(path);
       }
-      pts(US, 'is-us', live); pts(ES, 'is-es', liveEs);
-      out += '<text class="label" x="' + x(-112) + '" y="' + (H - 6) + '">United States</text>';
-      out += '<text class="label" x="' + x(-9) + '" y="' + (H - 6) + '">Spain</text>';
-      document.getElementById('lgMap').innerHTML = out;
+      svg.appendChild(el('circle', { cx: FX, cy: FY, r: 14, fill: 'none', stroke: '#ED7422', 'stroke-opacity': '.45', 'vector-effect': 'non-scaling-stroke' }));
+      svg.appendChild(el('circle', { cx: FX, cy: FY, r: 6, class: 'core' }));
+
+      if (still) return;
+      paths.forEach(function (path, i) {
+        const len = path.getTotalLength();
+        path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+        path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
+          { duration: 1600, delay: 80 + Math.abs(i - N / 2) * 45, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' });
+      });
+      [5, 11, 16, 21].forEach(function (i, k) {
+        const dot = el('circle', { r: 2.6, fill: k % 2 ? '#fff' : '#F5B47C', opacity: 0 });
+        const begin = (2 + k * 2.3) + 's', dur = (9 + k * 1.5) + 's';
+        dot.appendChild(el('animateMotion', { path: paths[i].getAttribute('d'), dur: dur, begin: begin, repeatCount: 'indefinite' }));
+        dot.appendChild(el('animate', { attributeName: 'opacity', values: '0;.9;.9;0', keyTimes: '0;.15;.8;1', dur: dur, begin: begin, repeatCount: 'indefinite' }));
+        svg.appendChild(dot);
+      });
     })();
 
     /* Prototipo: el botón simula el inicio de sesión con Microsoft y lleva a la
