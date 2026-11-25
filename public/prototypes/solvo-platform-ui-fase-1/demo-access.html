@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo access - Solvo Sales Platform</title>
+  <link rel="stylesheet" href="tokens.css?v=20261125a" />
+  <link rel="stylesheet" href="theme.css?v=20261125a" />
+  <link rel="stylesheet" href="styles.css?v=20261125a">
+  <script src="theme.js?v=20261125a"></script>
+  <style>
+    /* ------------------------------------------------------------------------
+       Acceso demo: SOLO DEL PROTOTIPO. No forma parte del producto ni de ninguna
+       HU. Reemplaza el rol que en la plataforma da la cuenta de Microsoft (grupo
+       de seguridad de Entra ID) para poder recorrer el prototipo como cada rol.
+       Guarda en localStorage `user` = { id, name, shortName, email, role }.
+       ------------------------------------------------------------------------ */
+    body { margin: 0; background: var(--bg-muted); }
+    .da { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+    .da-box { width: 100%; max-width: 760px; }
+    .da-flag {
+      display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; padding: 4px 12px; border-radius: 999px;
+      background: var(--status-warning-bg); color: var(--status-warning-fg); font-size: 12px; font-weight: 600;
+    }
+    .da h1 { margin: 0 0 6px; font-family: var(--font-heading); font-size: 26px; font-weight: 600; color: var(--text-strong); }
+    .da .sub { margin: 0 0 24px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); max-width: 36rem; }
+    .da-roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .da-role {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; text-align: left; cursor: pointer;
+      border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface);
+      font: inherit; color: var(--text-primary);
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .da-role:hover { border-color: var(--color-secondary-300); box-shadow: 0 6px 18px color-mix(in srgb, var(--color-secondary) 20%, transparent); }
+    .da-role:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    .da-avatar {
+      flex: 0 0 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: var(--color-secondary-50); color: var(--color-secondary-700); font-weight: 700; font-size: 14px;
+    }
+    .da-role[data-role="administrador"] .da-avatar { background: var(--color-primary-50); color: var(--color-primary-700); }
+    .da-name { display: block; font-weight: 600; color: var(--text-strong); }
+    .da-person { display: block; font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .da-back { display: inline-block; margin-top: 24px; font-size: 13px; color: var(--text-secondary); }
+    @media (prefers-reduced-motion: reduce) { .da-role { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="da">
+    <div class="da-box">
+      <span class="da-flag">Prototype only</span>
+      <h1>Choose a role</h1>
+      <p class="sub">See the platform as each user. In the product, the role comes from the Microsoft account.</p>
+      <div class="da-roles" id="roles"></div>
+      <a class="da-back" href="index.html">Back to sign in</a>
+    </div>
+  </main>
+  <script src="rbac.js?v=20261125a"></script>
+  <script>
+    const DEMO_ROLES = [
+      ['comercial', 'Sales Rep'], ['sdr', 'SDR'], ['coordinador', 'Coordinator'],
+      ['supervisor', 'Supervisor'], ['administrador', 'Administrator']
+    ];
+    const initials = n => n.split(' ').map(p => p[0]).slice(0, 2).join('');
+    document.getElementById('roles').innerHTML = DEMO_ROLES.map(function (r) {
+      const u = DEMO_USERS[r[0]];
+      return '<button type="button" class="da-role" data-role="' + r[0] + '">' +
+        '<span class="da-avatar" aria-hidden="true">' + initials(u.name) + '</span>' +
+        '<span><span class="da-name">' + r[1] + '</span><span class="da-person">' + u.name + '</span></span></button>';
+    }).join('');
+    document.querySelectorAll('.da-role').forEach(function (b) {
+      b.addEventListener('click', function () {
+        const role = b.dataset.role, u = DEMO_USERS[role];
+        localStorage.setItem('user', JSON.stringify({ id: u.id, name: u.name, shortName: u.shortName, email: u.email, role: role }));
+        window.location.href = 'dashboard.html';
+      });
+    });
+  </script>
+</body>
+</html>

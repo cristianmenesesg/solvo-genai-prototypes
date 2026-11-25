@@ -3,121 +3,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Solvo Platform</title>
-  <link rel="stylesheet" href="tokens.css?v=20261124d" />
-  <link rel="stylesheet" href="theme.css?v=20261124d" />
-  <link rel="stylesheet" href="styles.css?v=20261124d">
-  <script src="theme.js?v=20261124d"></script>
+  <title>Sign in - Solvo Sales Platform</title>
+  <link rel="stylesheet" href="tokens.css?v=20261125a" />
+  <link rel="stylesheet" href="theme.css?v=20261125a" />
+  <link rel="stylesheet" href="styles.css?v=20261125a">
+  <script src="theme.js?v=20261125a"></script>
+  <style>
+    /* ------------------------------------------------------------------------
+       Login de Solvo Platform (HUSPL-1.9). Dos columnas: el panel de marca con
+       el mapa de puntos de las ciudades donde se detectan vacantes (EE. UU. y
+       España) y la tarjeta de acceso con Microsoft (Entra ID). En tablet y
+       celular el panel queda arriba como una franja.
+       ------------------------------------------------------------------------ */
+    body { margin: 0; background: var(--bg-page, var(--bg-surface)); }
+    .lg {
+      min-height: 100vh; min-height: 100dvh;
+      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(380px, 1fr);
+    }
+    .lg-brand {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 40px 48px;
+      background:
+        radial-gradient(120% 90% at 15% 10%, color-mix(in srgb, var(--color-secondary) 55%, transparent), transparent 60%),
+        linear-gradient(160deg, #00495A 0%, #003440 55%, #002530 100%);
+      color: #fff;
+    }
+    .lg-brand::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.09) 1px, transparent 1.2px);
+      background-size: 18px 18px;
+      mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 75%, transparent 100%);
+      pointer-events: none;
+    }
+    .lg-logo { position: relative; display: flex; align-items: center; gap: 12px; }
+    .lg-logo img { height: 34px; width: auto; filter: brightness(0) invert(1); }
+    .lg-map { position: relative; width: 100%; margin: 24px 0; }
+    .lg-map svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .lg-map .dot { fill: #F19453; }
+    .lg-map .dot.is-es { fill: #fff; }
+    .lg-map .halo { fill: none; stroke: #F19453; stroke-width: 1.2; opacity: 0; transform-box: fill-box; transform-origin: center; }
+    .lg-map .label { fill: rgba(255,255,255,.72); font: 600 13px var(--font-heading); letter-spacing: .02em; }
+    .lg-map .count { fill: rgba(255,255,255,.5); font: 12px var(--font-body); }
+    .lg-copy { position: relative; max-width: 30rem; }
+    .lg-copy h1 { margin: 0 0 10px; color: #fff; font-family: var(--font-heading); font-size: 34px; line-height: 1.15; font-weight: 600; letter-spacing: -.01em; }
+    .lg-copy p { margin: 0; font-size: 15px; line-height: 1.55; color: rgba(255,255,255,.78); }
+
+    .lg-side { display: flex; align-items: center; justify-content: center; padding: 40px 24px; background: var(--bg-surface); }
+    .lg-card { width: 100%; max-width: 360px; }
+    .lg-card h2 { margin: 0 0 6px; font-family: var(--font-heading); font-size: 24px; font-weight: 600; color: var(--text-strong); }
+    .lg-card .lg-sub { margin: 0 0 28px; font-size: 14px; line-height: 1.5; color: var(--text-secondary); }
+    .lg-sso {
+      width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px;
+      border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg-surface);
+      font: 600 15px var(--font-body); color: var(--text-strong); cursor: pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+    .lg-sso:hover { border-color: var(--color-secondary); box-shadow: 0 6px 18px color-mix(in srgb, var(--color-secondary) 22%, transparent); }
+    .lg-sso:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    .lg-sso[disabled] { cursor: progress; opacity: .75; }
+    .lg-sso .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border-default); border-top-color: var(--color-secondary); animation: lgspin .8s linear infinite; display: none; }
+    .lg-sso[disabled] .spin { display: inline-block; }
+    .lg-sso[disabled] .ms { display: none; }
+    @keyframes lgspin { to { transform: rotate(360deg); } }
+    .lg-hint { margin: 14px 0 0; font-size: 13px; color: var(--text-muted); text-align: center; }
+    .lg-error {
+      display: none; margin: 0 0 16px; padding: 10px 12px; border-radius: 8px;
+      background: var(--status-error-bg); color: var(--status-error-fg); font-size: 13px; line-height: 1.45;
+    }
+    .lg-error.show { display: block; }
+    .lg-foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border-default); font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .lg-foot a { color: var(--text-secondary); }
+    .lg-theme { position: absolute; top: 16px; right: 16px; }
+
+    @media (max-width: 960px) {
+      .lg { grid-template-columns: 1fr; }
+      .lg-brand { padding: 24px 24px 20px; }
+      .lg-map { margin: 12px 0; }
+      .lg-copy h1 { font-size: 26px; }
+      .lg-copy p { font-size: 14px; }
+      .lg-side { align-items: flex-start; padding: 32px 20px 40px; }
+    }
+    @media (max-width: 480px) {
+      .lg-map { display: none; }
+      .lg-brand { gap: 20px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .lg-map .dot { opacity: 0; animation: lgin .5s ease forwards; animation-delay: calc(var(--i) * 18ms); }
+      .lg-map .halo.is-live { animation: lgpulse 2.8s ease-out infinite; animation-delay: calc(1.2s + var(--k) * .9s); }
+      @keyframes lgin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+      @keyframes lgpulse { 0% { opacity: .7; transform: scale(1); } 100% { opacity: 0; transform: scale(3.2); } }
+    }
+  </style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-header">
-        <div class="login-logo">S</div>
-        <h1 class="login-title">Solvo Platform</h1>
-        <p class="login-subtitle">Access your account to continue</p>
+  <main class="lg">
+    <section class="lg-brand" aria-label="Solvo Sales Platform">
+      <div class="lg-logo"><img src="SolvoGlobal_Logo_Color.png" alt="Solvo Global"></div>
+      <div class="lg-map" aria-hidden="true"><svg id="lgMap" viewBox="0 0 800 300"></svg></div>
+      <div class="lg-copy">
+        <h1>Solvo Sales Platform</h1>
+        <p>Openings detected in the United States and Spain, with the companies that publish them and their decision makers.</p>
       </div>
+    </section>
 
-      <div class="role-selector">
-        <span class="role-selector-label">Select a role to demo</span>
-        <div class="role-cards" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-          <button class="role-card active" data-role="comercial">
-            <span class="role-card-name">Sales Rep</span>
-            <span class="role-card-desc">Carlos Mendoza</span>
-          </button>
-          <button class="role-card" data-role="sdr">
-            <span class="role-card-name">SDR</span>
-            <span class="role-card-desc">Daniela López</span>
-          </button>
-          <button class="role-card" data-role="coordinador">
-            <span class="role-card-name">Coordinator</span>
-            <span class="role-card-desc">Ana Rodríguez</span>
-          </button>
-          <button class="role-card" data-role="supervisor">
-            <span class="role-card-name">Supervisor</span>
-            <span class="role-card-desc">Patricia Morales</span>
-          </button>
-          <button class="role-card" data-role="administrador">
-            <span class="role-card-name">Administrator</span>
-            <span class="role-card-desc">Pedro Sánchez</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="login-error" id="loginError">
-        Unauthorized user. Contact the administrator.
-      </div>
-
-      <div class="login-form">
-        <button type="button" class="btn btn-microsoft" id="microsoftLoginBtn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
-            <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-            <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-            <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+    <section class="lg-side">
+      <div class="lg-card">
+        <h2>Sign in</h2>
+        <p class="lg-sub">Use your Solvo Global Microsoft account.</p>
+        <div class="lg-error" id="loginError" role="alert">Your account does not have access to Solvo Sales Platform. Ask an administrator to add you.</div>
+        <button type="button" class="lg-sso" id="ssoBtn">
+          <svg class="ms" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21" aria-hidden="true">
+            <rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+            <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
           </svg>
-          Sign in with Microsoft
+          <span class="spin" aria-hidden="true"></span>
+          <span id="ssoLabel">Sign in with Microsoft</span>
         </button>
-
-        <p class="login-hint">
-          Use your corporate Microsoft account (@solvo.global)
-        </p>
+        <p class="lg-hint">Accounts @solvo.global</p>
+        <div class="lg-foot"><span>© Solvo Global</span><span>Access managed in Microsoft Entra ID</span></div>
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <script src="rbac.js?v=20261124d"></script>
   <script>
-    /* ------------------------------------------------------------------------
-       Login (prototipo). Reemplaza el SSO de Microsoft Entra ID por un selector
-       de usuario demo por rol. Guarda en localStorage `user` = { id, name,
-       shortName, email, role }; el rol es el único permiso (RBAC en rbac.js).
-       En la plataforma: POST /api/auth/login con el token de Entra ID; el rol se
-       resuelve por grupo de seguridad en cada login (Release 2).
-       ------------------------------------------------------------------------ */
-    const loginBtn = document.getElementById('microsoftLoginBtn');
-    const loginError = document.getElementById('loginError');
-    const roleCards = document.querySelectorAll('.role-card');
-    let selectedRole = 'comercial';
+    /* Mapa de puntos: ciudades donde se detectan vacantes. Proyección equirectangular con
+       el Atlántico recortado: EE. UU. (longitud -125 a -66) ocupa la izquierda y España
+       (-10 a 5) la derecha. Unos pocos puntos laten. */
+    (function drawMap() {
+      const US = [[25.76,-80.19],[27.95,-82.46],[28.54,-81.38],[40.71,-74.01],[41.88,-87.63],[30.27,-97.74],[32.78,-96.80],[29.76,-95.37],
+        [47.61,-122.33],[42.36,-71.06],[34.05,-118.24],[37.77,-122.42],[39.95,-75.17],[33.75,-84.39],[33.45,-112.07],[39.74,-104.99],
+        [35.23,-80.84],[36.16,-86.78],[44.98,-93.27],[42.33,-83.05],[39.96,-83.00],[39.77,-86.16],[39.10,-94.58],[40.76,-111.89],
+        [45.52,-122.68],[36.17,-115.14],[32.72,-117.16],[35.78,-78.64],[38.63,-90.20],[38.91,-77.04],[29.42,-98.49],[30.33,-81.66],
+        [35.47,-97.52],[36.85,-75.98],[43.04,-87.91],[35.15,-90.05],[41.25,-95.93],[38.25,-85.76],[44.05,-123.09],[31.76,-106.49]];
+      const ES = [[40.42,-3.70],[41.39,2.17],[39.47,-0.38],[37.39,-5.98],[43.26,-2.93],[36.72,-4.42],[41.65,-0.89],[43.36,-8.41],[39.57,2.65],[37.99,-1.13]];
+      const W = 800, H = 300, A0 = 24, A1 = 50;
+      const x = lon => lon < -40 ? (lon + 125) / 59 * 540 + 10 : 640 + (lon + 10) / 15 * 150;
+      const y = lat => (A1 - lat) / (A1 - A0) * (H - 40) + 10;
+      const live = [3, 4, 10, 0];            // NY, Chicago, LA, Miami
+      const liveEs = [0, 1];                 // Madrid, Barcelona
+      let i = 0, k = 0, out = '';
+      function pts(list, cls, liveIdx) {
+        list.forEach(function (c, n) {
+          const cx = x(c[1]).toFixed(1), cy = y(c[0]).toFixed(1);
+          if (liveIdx.indexOf(n) >= 0) out += '<circle class="halo is-live" cx="' + cx + '" cy="' + cy + '" r="4" style="--k:' + (k++) + '"/>';
+          out += '<circle class="dot ' + cls + '" cx="' + cx + '" cy="' + cy + '" r="' + (liveIdx.indexOf(n) >= 0 ? 4 : 2.6) + '" style="--i:' + (i++) + '"/>';
+        });
+      }
+      pts(US, 'is-us', live); pts(ES, 'is-es', liveEs);
+      out += '<text class="label" x="' + x(-112) + '" y="' + (H - 6) + '">United States</text>';
+      out += '<text class="label" x="' + x(-9) + '" y="' + (H - 6) + '">Spain</text>';
+      document.getElementById('lgMap').innerHTML = out;
+    })();
 
-    // Role card selection
-    roleCards.forEach(card => {
-      card.addEventListener('click', () => {
-        roleCards.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        selectedRole = card.dataset.role;
-      });
+    /* Prototipo: el botón simula el inicio de sesión con Microsoft y lleva a la
+       página de acceso demo, donde se elige el rol. En el producto, el rol lo da la
+       cuenta (grupo de seguridad de Entra ID) y la página de acceso demo no existe. */
+    const btn = document.getElementById('ssoBtn');
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      document.getElementById('ssoLabel').textContent = 'Signing in…';
+      setTimeout(function () { window.location.href = 'demo-access.html'; }, 700);
     });
-
-    function setLoading(isLoading) {
-      loginBtn.disabled = isLoading;
-      if (isLoading) loginError.classList.remove('show');
-    }
-
-    function showError(message) {
-      loginError.textContent = message;
-      loginError.classList.add('show');
-    }
-
-    // Mock Microsoft SSO Login
-    loginBtn.addEventListener('click', function() {
-      setLoading(true);
-
-      setTimeout(() => {
-        const demoUser = DEMO_USERS[selectedRole];
-
-        // Save user with role (el rol es el permiso — no se almacenan permisos)
-        localStorage.setItem('user', JSON.stringify({
-          id: demoUser.id,
-          name: demoUser.name,
-          shortName: demoUser.shortName,
-          email: demoUser.email,
-          role: selectedRole
-        }));
-
-        window.location.href = 'dashboard.html';
-      }, 1000);
-    });
+    // ?error=unauthorized muestra el estado de cuenta sin acceso.
+    if (new URLSearchParams(location.search).get('error') === 'unauthorized') document.getElementById('loginError').classList.add('show');
   </script>
 </body>
 </html>
