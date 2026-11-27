@@ -49,15 +49,15 @@
     .lg-desc { margin: 0 auto 28px; max-width: 30ch; font-size: 14px; line-height: 1.55; color: var(--text-secondary); }
 
     .lg-error {
-      display: none; margin: 0 0 16px; padding: 10px 12px; border-radius: 8px; text-align: left;
-      background: var(--status-error-bg); color: var(--status-error-fg); font-size: 13px; line-height: 1.45;
+      display: none; margin: 0 0 16px; padding: 10px 12px; border-radius: var(--radius-md); text-align: left;
+      background: var(--status-error-bg); color: var(--status-error-fg); font-size: var(--text-sm); line-height: var(--leading-normal);
     }
     .lg-error.show { display: block; }
     .lg-error.is-info { background: var(--status-info-bg); color: var(--status-info-fg); }
     .lg-sso {
-      width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 12px;
-      border: 1px solid var(--border-strong); border-radius: 10px; background: var(--bg-surface);
-      font: 600 15px var(--font-body); color: var(--text-strong); cursor: pointer;
+      width: 100%; min-height: var(--control-h-lg); display: flex; align-items: center; justify-content: center; gap: 12px;
+      border: 1px solid var(--border-strong); border-radius: var(--radius-btn); background: var(--bg-surface);
+      font: var(--font-semibold) var(--text-base) var(--font-body); color: var(--text-strong); cursor: pointer;
       transition: border-color .15s ease, box-shadow .15s ease;
     }
     .lg-sso:hover { border-color: var(--color-secondary); box-shadow: 0 6px 18px color-mix(in srgb, var(--color-secondary) 22%, transparent); }
@@ -67,7 +67,7 @@
     .lg-sso[disabled] .spin { display: inline-block; }
     .lg-sso[disabled] .ms { display: none; }
     @keyframes lgspin { to { transform: rotate(360deg); } }
-    .lg-hint { margin: 14px 0 0; font-size: 13px; color: var(--text-muted); }
+    .lg-hint { margin: 14px 0 0; font-size: var(--text-sm); color: var(--text-muted); }
     .lg-foot { margin: 0; font-size: 12px; color: var(--text-muted); }
 
     @media (max-width: 480px) {
