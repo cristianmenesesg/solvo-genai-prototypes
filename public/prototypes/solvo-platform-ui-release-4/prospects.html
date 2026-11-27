@@ -223,6 +223,8 @@
             </p>
           </div>
         </form>
+        <!-- Aviso de empresa que ya existe (HTTP 409); lo llena showDuplicateNotice() -->
+        <div id="createDuplicate" role="status" hidden style="margin-top:16px; padding:10px 12px; border-radius:var(--radius-md); background:var(--status-warning-bg); color:var(--status-warning-fg); font-size:13px; line-height:1.5;"></div>
       </div>
 
       <div class="modal-footer">
@@ -232,7 +234,7 @@
     </div>
   </div>
 
-  <script src="rbac.js?v=20261125b"></script>
+  <script src="rbac.js?v=20261127a"></script>
   <script>
     /* ------------------------------------------------------------------------
        Companies — listado de empresas.
@@ -244,9 +246,10 @@
        endpoint del listado lo trae con un LEFT JOIN a company_research, que es 1:1.
        Acciones: abrir detalle; Search Positions (solicitud al trigger A pedido,
        openScrapePopup → Requests); New company (POST /api/companies: país, división,
-       ciudad, dominio, industria del catálogo y relación con los valores de la base);
-       Export (prospectos + posiciones como acompañante, FSPL-2, con las columnas de
-       Release 4 agregadas en esta página).
+       ciudad, dominio, industria del catálogo y relación con los valores de la base;
+       los cinco roles, asignada a quien la crea, con aviso si ya existe);
+       Export (coordinación: prospectos + posiciones como acompañante, FSPL-2, con las
+       columnas de Release 4 agregadas en esta página).
        Defaults que recortan: país (Estados Unidos + España, DEFAULT_LIST_COUNTRIES);
        viabilidad; exportación (coordinación); decisores.
        Release 4 (PEM): criterios País (chip y selector de la barra; "limpiar" vuelve al
@@ -799,7 +802,7 @@
           '<button class="btn btn-secondary" onclick="clearEverything()">Clear search and filters</button></div>';
 
       const exportBtn = document.getElementById('exportBtn');
-      exportBtn.style.display = canExport() ? '' : 'none';
+      exportBtn.style.display = canExportCompanies() ? '' : 'none';
       exportBtn.onclick = function () { handleExport(all); };
 
       renderPagination(all.length, pages);
@@ -952,12 +955,32 @@
     function openCreateModal() {
       fillCreateCatalogs();
       document.getElementById('createCompanyForm').reset();
+      hideDuplicateNotice();
       fillCreateDivisions();
       document.getElementById('createModal').classList.add('active');
       setTimeout(function () { document.getElementById('createName').focus(); }, 50);
     }
 
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+    // Aviso de empresa que ya existe: ofrece abrirla solo a quien la tiene a la vista.
+    function showDuplicateNotice(existing, place) {
+      const box = document.getElementById('createDuplicate');
+      const canOpen = getVisibleCompanies().indexOf(existing) !== -1;
+      box.innerHTML = '<strong>' + esc(existing.name) + '</strong> already exists in ' + esc(place) + '. ' +
+        (canOpen
+          ? '<a href="company-detail.html?id=' + encodeURIComponent(existing.id) + '" style="color:inherit; font-weight:600; text-decoration:underline;">Open company</a>'
+          : 'It is not assigned to you.');
+      box.hidden = false;
+      box.scrollIntoView({ block: 'nearest' });
+    }
+
+    function hideDuplicateNotice() {
+      const box = document.getElementById('createDuplicate');
+      box.hidden = true;
+      box.innerHTML = '';
+    }
+    document.getElementById('createCompanyForm').addEventListener('input', hideDuplicateNotice);
 
     function createCompany() {
       const name = document.getElementById('createName').value.trim();
@@ -969,6 +992,16 @@
       const stateCode = countryCode === 'US' ? divisionCode.split('-')[1] : null;
       const website = document.getElementById('createWebsite').value.trim() || null;
 
+      // Ya existe una empresa vigente con ese nombre en esa división: no se crea otra. Quien la
+      // tiene a la vista puede abrirla; a Sales Rep y SDR, si no es de su cartera, el aviso lo
+      // dice sin ofrecerla (HUSPL-1.4).
+      const existing = MOCK_COMPANIES.find(function (c) {
+        return String(c.name).trim().toLowerCase() === name.toLowerCase() && c.divisionCode === divisionCode;
+      });
+      if (existing) { showDuplicateNotice(existing, divisionName(divisionCode)); return; }
+
+      // Queda asignada a quien la crea, en el puesto de su rol; la del Administrador, sin asignar.
+      const slots = creatorAssignment();
       const relationship = document.getElementById('createRelationType').value;
       const company = {
         id: 'comp-new-' + Date.now().toString(36),
@@ -998,7 +1031,7 @@
         contactsSearchedAt: null, isExcluded: false, exclusionReason: null,
         salesPitch: null, valueProposition: null, strengthsDifferentiators: null,
         mission: null, vision: null, companyHistory: null,
-        comercialId: null, sdrId: null, coordinatorId: null, contactsCount: 0,
+        comercialId: slots.comercialId, sdrId: slots.sdrId, coordinatorId: slots.coordinatorId, contactsCount: 0,
         createdAt: new Date().toISOString().slice(0, 10),
         lastExportedBy: null, lastExportedAt: null, exportCount: 0
       };

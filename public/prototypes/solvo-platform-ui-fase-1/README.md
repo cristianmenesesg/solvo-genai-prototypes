@@ -18,7 +18,7 @@ HTML + CSS + JS sin build ni servidor: se abre `index.html`, se elige un usuario
 ## Cómo abrirlo
 
 1. Abrir `index.html` (o la entrada del sitio showcase).
-2. Elegir un rol: Sales Rep y SDR ven solo su cartera; Coordinator y Supervisor ven todo, asignan y exportan; Administrator además entra a Users y Settings. Settings rechaza a los demás roles y los devuelve al Dashboard.
+2. Elegir un rol: Sales Rep y SDR ven solo su cartera y exportan sus posiciones; Coordinator y Supervisor ven todo, asignan, exportan y borran empresas; Administrator además edita y borra posiciones y entra a Users y Settings. Settings rechaza a los demás roles y los devuelve al Dashboard.
 3. `localStorage` guarda la sesión (`user`), el tema (`theme`), el menú (`sidebarCollapsed`), la ventana on-demand (`odoConfig`), la vitrina (`showcaseRoles`, `showcaseLimit`) y los catálogos de Fase 1 (`f1Positions`, `f1Terms`, `f1Geo`, `f1Roles`). `f1SeedVersion` descarta los catálogos guardados cuando cambia la versión del seed. Borrar esas claves devuelve el prototipo al seed.
 
 ## Mapa de páginas
@@ -70,7 +70,7 @@ rbac.js      capa compartida: sesión y roles, datos mock, catálogos del motor,
 
 Índice al inicio del archivo. Lo que importa para implementar:
 
-- **Roles y permisos**: `ROLES`, `TEAM_MEMBERS` (public.solvo_staff), `canViewAll`, `canAssign`, `canDelete`, `canExport`, `canAccessAdmin`, `getVisibleCompanies` / `getVisibleVacancies` (visibilidad por slot para Sales Rep y SDR). Igual que la matriz de permisos del Executive Summary.
+- **Roles y permisos**: `ROLES`, `TEAM_MEMBERS` (public.solvo_staff), `canViewAll`, `canAssign`, `canEditVacancy` / `canDeleteVacancy`, `canDeleteCompany`, `canExportPositions` / `canExportCompanies`, `canAccessAdmin`, `getVisibleCompanies` / `getVisibleVacancies` (visibilidad por slot para Sales Rep y SDR). Igual que la matriz de permisos del Executive Summary.
 - **Entidades mock**: `MOCK_COMPANIES`, `MOCK_VACANCIES`, `MOCK_CONTACTS`, `MOCK_STATE_HISTORY`, `MOCK_EXECUTION_LOGS`. El bloque *Entidades mock y su columna en la base compartida* mapea cada campo a `tabla.columna` y a la HU que lo introduce. Los seeds se completan con funciones autoejecutadas (`seedQualification`, `seedContactAnalysis`, `seedLegacyClassification`, `seedRelease3State`, `seedStateHistory`, `seedExecutionLogs`, `seedCompanyResearch`, …) y son relativos a hoy, así que las antigüedades siempre tienen material.
 - **Catálogos del motor**: `POSITIONS_CATALOG` (21 posiciones, 54 términos; igual al seed de FPEA-0), `LEAD_SIGNALS` (13 señales de empresa, dos descalificantes), `VACANCY_SIGNALS` (11 señales del aviso, `vacancies.ai_signals`), `icpTier` (0–33 / 34–66 / 67–100), `ROLE_CODES` + `ROLE_PATTERNS` + `DECISION_LEVEL_TABLE` + `companySizeBand` (HUPEA-2.3), `EMAIL_VERIFICATION` (qué hace el envío con cada estado), `US_STATES`, `INDUSTRY_CATALOG` (23), `COMPANY_SIZE_RANGES` (5 tramos), `PIPELINE_STAGES`, `SENIORITY_LEVELS`.
 - **Etiquetas**: los objetos guardan el valor de la base y la interfaz lo muestra con su etiqueta — `portalLabel`, `sourceProjectLabel`, `seniorityLabel`, `modalityLabel`, `vacancySignalLabel`, `leadSignalLabel`, `pipelineLabel`, `getIndustryLabel`, `RELATIONSHIP_LABELS`.
@@ -114,7 +114,7 @@ Dos archivos, y cada uno se basta solo:
 - UTF-8 con BOM, CRLF, celda vacía cuando no hay dato, orden por fecha de detección descendente y empresa ascendente. Encabezados en español, que son contrato.
 - Modalidad, seniority, portal e industria se entregan con su etiqueta; relación y etapa del embudo, con el valor crudo de la base.
 - El tope de 10.000 filas se evalúa por archivo: marcar un acompañante que lo supera deshabilita la descarga con el motivo a la vista.
-- Todo registro entregado queda marcado con quién lo exportó y cuándo, también los del acompañante.
+- Todo registro entregado por Coordinator, Supervisor o Administrator queda marcado con quién lo exportó y cuándo, también los del acompañante. Las exportaciones de Sales Rep y SDR no marcan.
 
 Este diseño sustituye al contrato de tres entidades de HUSPL-2.6, que se entregó antes del motor nuevo: necesita una feature propia en Release 3, porque aquellas historias están cerradas.
 

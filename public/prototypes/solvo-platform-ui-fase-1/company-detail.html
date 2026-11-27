@@ -405,7 +405,7 @@
 
   <!-- Toast Container -->
 
-  <script src="rbac.js?v=20261125b"></script>
+  <script src="rbac.js?v=20261127a"></script>
   <script>
     /* ------------------------------------------------------------------------
        Company — detalle de una empresa (?id= y ?tab=).
@@ -426,7 +426,7 @@
        (POST /api/companies/:id/state); Scrape positions (ODO con la empresa
        preseleccionada); Run research, que encola la empresa en el motor
        (POST /api/companies/:id/research/request);
-       Delete (borrado lógico); contactos Add / Edit / Delete
+       Delete (borrado lógico; Coordinador, Supervisor y Administrador); contactos Add / Edit / Delete
        (POST · PUT /api/companies/:companyId/contacts), con el rol derivado del cargo
        en el cliente y la verificación vacía; Manage assignment.
        ------------------------------------------------------------------------ */
@@ -533,7 +533,8 @@
           // Una sola acción: encola la empresa en el motor, que la enriquece y la califica. Sirve
           // tanto la primera vez como para rehacerla sobre lo que ya hay.
           '<button type="button" class="op-actionbtn" onclick="openResearchRequestModal()">Run research</button>' +
-          (canDelete() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteCompany()">Delete</button>' : '') +
+          // Borrar la empresa es de Coordinador, Supervisor y Administrador.
+          (canDeleteCompany() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteCompany()">Delete</button>' : '') +
         '</div>';
     }
 
@@ -838,6 +839,8 @@
               coData.sdrId = newSdrId;
               company.comercialId = newComercialId;
               company.sdrId = newSdrId;
+              coData.coordinatorId = coordinatorSlotOnSave(coData.coordinatorId);
+              company.coordinatorId = coData.coordinatorId;
               renderAssignment();
             }
           });

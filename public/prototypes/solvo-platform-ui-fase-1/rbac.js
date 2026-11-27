@@ -14,7 +14,9 @@
     5. MOCK COMPANIES / CONTACTS / VACANCIES . datos base + seeds autoejecutados
     6. ON-DEMAND OPENINGS (ODO) .............. last_scraped_at, ventana, cool-down
     7. FECHAS · MEMORIA DE EXPORTACIÓN ....... created_at, last_exported_* (HUSPL-0.2)
-    8. ROLE-BASED ACCESS FUNCTIONS ........... canViewAll / canAssign / canDelete / canExport
+    8. ROLE-BASED ACCESS FUNCTIONS ........... canViewAll / canAssign / canEditVacancy /
+                                              canDeleteVacancy / canDeleteCompany /
+                                              canExportPositions / canExportCompanies
     9. SESSION · HEADER · SIDEBAR · TOAST .... shell de la app
    10. POPUPS ............................... asignación, confirmación, exportación, scraping
    11. CSV EXPORT · EMPAQUETADO · COLUMNAS ... contrato de archivos (FSPL-2)
@@ -483,15 +485,44 @@ function canViewAll() {
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
 }
 
-// Can assign — only coordinador and supervisor
+// Can assign («Manage») — coordinador, supervisor and admin
 function canAssign() {
   const role = getCurrentRole();
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
 }
 
-function canDelete() {
+// Vacancy detail «Edit» and «Delete» — only admin (HUSPL-1.3)
+function canEditVacancy() {
+  return getCurrentRole() === 'administrador';
+}
+
+function canDeleteVacancy() {
+  return getCurrentRole() === 'administrador';
+}
+
+// Company detail «Delete» — coordinador, supervisor and admin (HUSPL-1.4)
+function canDeleteCompany() {
   const role = getCurrentRole();
-  return role === 'administrador' || role === 'coordinador';
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// El puesto de coordinador o supervisor a cargo lo toma el Coordinator o el Supervisor que guarda
+// la asignación; si guarda el Administrator, queda como estaba (HUSPL-1.3 / HUSPL-1.4).
+function coordinatorSlotOnSave(currentId) {
+  const user = getCurrentUser();
+  return user && (user.role === 'coordinador' || user.role === 'supervisor') ? user.id : currentId;
+}
+
+// Una empresa creada con «New company» queda asignada a quien la crea, en el puesto de su rol.
+// La que crea el Administrator queda sin asignar (HUSPL-1.4).
+function creatorAssignment() {
+  const user = getCurrentUser();
+  const role = user ? user.role : null;
+  return {
+    comercialId: role === 'comercial' ? user.id : null,
+    sdrId: role === 'sdr' ? user.id : null,
+    coordinatorId: role === 'coordinador' || role === 'supervisor' ? user.id : null
+  };
 }
 
 // Can access admin section — only admin
@@ -511,10 +542,22 @@ function isPersonalRole() {
   return role === 'comercial' || role === 'sdr';
 }
 
-// Can export CSV — only coordinador, supervisor, admin
-function canExport() {
+// Open Positions «Export» — the five roles; each one exports what they see (HUSPL-1.3)
+function canExportPositions() {
+  return !!ROLES[getCurrentRole()];
+}
+
+// Companies «Export» — only coordinador, supervisor, admin (HUSPL-1.4)
+function canExportCompanies() {
   const role = getCurrentRole();
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// La marca de exportación es de coordinación: solo esos roles ven el aviso de registros ya
+// exportados y solo sus exportaciones dejan la marca. Sales Rep y SDR exportan su cartera sin
+// verla ni dejarla (HUSPL-1.3).
+function tracksExportStatus() {
+  return canViewAll();
 }
 
 function getActiveByRole(roleKey) {

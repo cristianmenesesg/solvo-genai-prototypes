@@ -199,7 +199,7 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <script src="rbac.js?v=20261125b"></script>
+  <script src="rbac.js?v=20261127a"></script>
   <script>
     /* ------------------------------------------------------------------------
        Open Position — detalle de una vacante (?id=).
@@ -215,7 +215,7 @@
        Acciones: Open original posting (job_url); Edit (PUT /api/vacancies/:id:
        título, descripción, salario anual, state_code y viabilidad); Change status
        (POST /api/vacancies/:id/state: nota ≥ 10 caracteres + tags → states_history);
-       Delete, borrado lógico para Administrador y Coordinador; Manage assignment
+       Edit y Delete (borrado lógico) solo para Administrador; Manage assignment
        (PUT /api/vacancies/:id/assignment, herencia / override).
        ------------------------------------------------------------------------ */
     /* ========================================================================
@@ -236,10 +236,12 @@
       MOCK_VACANCIES.find(function (v) { return v.id === 'vac-011'; });
     const company = MOCK_COMPANIES.find(function (c) { return c.id === vacancy.companyId; });
 
-    // Copia local de la asignación: el popup la escribe acá.
+    // Copia local de la asignación: el popup la escribe acá. El tercer puesto arranca con el
+    // coordinador o supervisor a cargo de la empresa.
     let vacData = {
       comercialId: vacancy.comercialId, comercialType: vacancy.comercialType,
-      sdrId: vacancy.sdrId, sdrType: vacancy.sdrType
+      sdrId: vacancy.sdrId, sdrType: vacancy.sdrType,
+      coordinatorId: company ? company.coordinatorId : null
     };
 
     const STATUS_LABELS = { detected: 'Detected', contacted: 'Contacted', proposal: 'Proposal', won: 'Won', lost: 'Lost' };
@@ -299,11 +301,12 @@
         '<div class="vd-tags">' + tags + '</div>' +
         '<div class="vd-actions">' +
           '<a class="op-btn-apply" href="' + esc(vacancy.jobUrl) + '" target="_blank" rel="noopener">Open original posting' + ICON.external + '</a>' +
-          '<button type="button" class="op-actionbtn" onclick="openEditModal()">Edit</button>' +
+          // Editar y borrar la vacante es solo del Administrador; el cambio de estado comercial es
+          // de todos sobre las vacantes que ven. El borrado es lógico: el registro conserva su
+          // historial y se puede restaurar.
+          (canEditVacancy() ? '<button type="button" class="op-actionbtn" onclick="openEditModal()">Edit</button>' : '') +
           '<button type="button" class="op-actionbtn" onclick="openStateChangeModal()">Change status</button>' +
-          // El borrado es lógico y solo para Administrador y Coordinador, como en el listado
-          // de empresas; el registro conserva su historial y se puede restaurar.
-          (canDelete() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteVacancy()">Delete</button>' : '') +
+          (canDeleteVacancy() ? '<button type="button" class="op-actionbtn" onclick="confirmDeleteVacancy()">Delete</button>' : '') +
         '</div>';
     }
 
@@ -530,7 +533,7 @@
       renderAssignmentSection('assignmentSection', {
         comercialId: vacData.comercialId,
         sdrId: vacData.sdrId,
-        coordinatorId: company ? company.coordinatorId : null,
+        coordinatorId: vacData.coordinatorId,
         comercialType: vacData.comercialType,
         sdrType: vacData.sdrType,
         companyName: company ? company.name : null,
@@ -541,7 +544,7 @@
             title: vacancy.title,
             currentComercialId: vacData.comercialId,
             currentSdrId: vacData.sdrId,
-            currentCoordinatorId: company ? company.coordinatorId : null,
+            currentCoordinatorId: vacData.coordinatorId,
             comercialType: vacData.comercialType,
             sdrType: vacData.sdrType,
             showInheritance: true,
@@ -558,6 +561,7 @@
                 vacData.sdrId = newSdrId;
                 vacData.sdrType = (company && newSdrId === company.sdrId) ? 'inherited' : 'direct';
               }
+              vacData.coordinatorId = coordinatorSlotOnSave(vacData.coordinatorId);
               renderAssignment();
             }
           });

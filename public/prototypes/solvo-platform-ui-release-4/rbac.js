@@ -14,7 +14,9 @@
     5. MOCK COMPANIES / CONTACTS / VACANCIES . datos base + seeds autoejecutados
     6. ON-DEMAND OPENINGS (ODO) .............. last_scraped_at, ventana, cool-down
     7. FECHAS · MEMORIA DE EXPORTACIÓN ....... created_at, last_exported_* (HUSPL-0.2)
-    8. ROLE-BASED ACCESS FUNCTIONS ........... canViewAll / canAssign / canDelete / canExport
+    8. ROLE-BASED ACCESS FUNCTIONS ........... canViewAll / canAssign / canEditVacancy /
+                                              canDeleteVacancy / canDeleteCompany /
+                                              canExportPositions / canExportCompanies
     9. SESSION · HEADER · SIDEBAR · TOAST .... shell de la app
    10. POPUPS ............................... asignación, confirmación, exportación, scraping
    11. CSV EXPORT · EMPAQUETADO · COLUMNAS ... contrato de archivos (FSPL-2)
@@ -468,15 +470,54 @@ function canViewAll() {
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
 }
 
-// Can assign — only coordinador and supervisor
+// Can assign («Manage») — coordinador, supervisor and admin
 function canAssign() {
   const role = getCurrentRole();
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
 }
 
-function canDelete() {
+// Vacancy detail «Edit» and «Delete» — only admin (HUSPL-1.3)
+function canEditVacancy() {
+  return getCurrentRole() === 'administrador';
+}
+
+function canDeleteVacancy() {
+  return getCurrentRole() === 'administrador';
+}
+
+// Company detail «Delete» — coordinador, supervisor and admin (HUSPL-1.4)
+function canDeleteCompany() {
   const role = getCurrentRole();
-  return role === 'administrador' || role === 'coordinador';
+  return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// El puesto de coordinador o supervisor a cargo lo toma el Coordinator o el Supervisor que guarda
+// la asignación; si guarda el Administrator, queda como estaba (HUSPL-1.3 / HUSPL-1.4).
+function coordinatorSlotOnSave(currentId) {
+  const user = getCurrentUser();
+  return user && (user.role === 'coordinador' || user.role === 'supervisor') ? user.id : currentId;
+}
+
+// Una empresa creada con «New company» queda asignada a quien la crea, en el puesto de su rol.
+// La que crea el Administrator queda sin asignar (HUSPL-1.4).
+function creatorAssignment() {
+  const user = getCurrentUser();
+  const role = user ? user.role : null;
+  return {
+    comercialId: role === 'comercial' ? user.id : null,
+    sdrId: role === 'sdr' ? user.id : null,
+    coordinatorId: role === 'coordinador' || role === 'supervisor' ? user.id : null
+  };
+}
+
+// «Search Positions»: Sales Rep y SDR no buscan una empresa que en su puesto tiene asignada a
+// otra persona. Un puesto vacío no bloquea; coordinación y Administrator no tienen bloqueo (HUSPL-2.3).
+function isAssignedToOther(company) {
+  const user = getCurrentUser();
+  if (!user || !company) return false;
+  if (user.role === 'comercial') return !!company.comercialId && company.comercialId !== user.id;
+  if (user.role === 'sdr') return !!company.sdrId && company.sdrId !== user.id;
+  return false;
 }
 
 // Can access admin section — only admin
@@ -496,10 +537,22 @@ function isPersonalRole() {
   return role === 'comercial' || role === 'sdr';
 }
 
-// Can export CSV — only coordinador, supervisor, admin
-function canExport() {
+// Open Positions «Export» — the five roles; each one exports what they see (HUSPL-1.3)
+function canExportPositions() {
+  return !!ROLES[getCurrentRole()];
+}
+
+// Companies «Export» — only coordinador, supervisor, admin (HUSPL-1.4)
+function canExportCompanies() {
   const role = getCurrentRole();
   return role === 'coordinador' || role === 'supervisor' || role === 'administrador';
+}
+
+// La marca de exportación es de coordinación: solo esos roles ven el aviso de registros ya
+// exportados y solo sus exportaciones dejan la marca. Sales Rep y SDR exportan su cartera sin
+// verla ni dejarla (HUSPL-1.3).
+function tracksExportStatus() {
+  return canViewAll();
 }
 
 function getActiveByRole(roleKey) {
@@ -1526,6 +1579,8 @@ function openExportPopup(options) {
 // del trigger en el país de la empresa; sin ciudades, todo el país.
 // Se abre desde Open Positions y Companies (options = {}) y desde el detalle de una empresa
 // (options = { company }: la empresa queda preseleccionada y no se puede cambiar).
+// Disponible para los cinco roles y con sugerencias de todo el catálogo; a Sales Rep y SDR la
+// empresa que en su puesto tiene otra persona les muestra el aviso y no deja enviar (isAssignedToOther).
 // options: { company, onSent(request) }
 function openScrapePopup(options) {
   options = options || {};
@@ -1721,7 +1776,8 @@ function openScrapePopup(options) {
     }
 
     var covered = trigger.countries.indexOf(cc) >= 0;
-    if (covered) {
+    // Una empresa que no se puede buscar (país sin cobertura o asignada a otra persona) no ofrece el recorte.
+    if (covered && !isAssignedToOther(state.company)) {
       // Posiciones (opcional)
       html += '<label style="' + labelCss + '" for="odr-pos">Positions <span style="' + optCss + '">(optional)</span></label>' +
         (state.positionIds.length ? '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">' + chips(state.positionIds, getPositionName, 'pos') + '</div>' : '') +
@@ -1825,7 +1881,9 @@ function openScrapePopup(options) {
     var cc = country();
     var block = null;
     if (!state.company && !norm(state.typed)) block = '';
-    else if (trigger.countries.indexOf(cc) < 0) {
+    else if (isAssignedToOther(state.company)) {
+      block = 'This company is assigned to another ' + (getCurrentRole() === 'sdr' ? 'SDR' : 'Sales Rep') + '.';
+    } else if (trigger.countries.indexOf(cc) < 0) {
       block = 'Searches are not available in ' + (countryName(cc) || 'the company’s country') + '.';
     } else if (!services().length) {
       block = 'Searches are not available in ' + countryName(cc) + '.';
